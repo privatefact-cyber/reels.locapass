@@ -1,0 +1,38 @@
+{
+  "name": "modella",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "register-cast": "tsx scripts/register-cast.ts",
+    "geocode-shops": "tsx scripts/geocode-shops.ts",
+    "translate-addresses": "tsx scripts/translate-addresses.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.45.4",
+    "date-fns": "^4.4.0",
+    "lucide-react": "^1.34.0",
+    "maplibre-gl": "^3.6.2",
+    "next": "^15.0.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.0.0",
+    "@types/web-push": "^3.6.4",
+    "autoprefixer": "^10.4.20",
+    "dotenv": "^17.4.2",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.23.13",
+    "typescript": "^5.6.0"
+  }
+}

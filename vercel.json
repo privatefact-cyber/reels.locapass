@@ -1,0 +1,9 @@
+{
+  "regions": ["hnd1"],
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-reels",
+      "schedule": "0 18 * * *"
+    }
+  ]
+}

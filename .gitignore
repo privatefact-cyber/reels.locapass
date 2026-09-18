@@ -1,0 +1,18 @@
+node_modules/
+.next/
+.env.local
+next-env.d.ts
+.DS_Store
+tsconfig.tsbuildinfo
+*のコピー*
+.vercel
+.env*
+test-results/
+health-checks-report/
+health-checks/.auth/
+
+# キャスト一括登録: 実写真・ログイン情報(結果CSV)はコミットしない
+scripts/cast-intake/photos/*
+!scripts/cast-intake/photos/.gitkeep
+scripts/cast-intake/results/*
+!scripts/cast-intake/results/.gitkeep
