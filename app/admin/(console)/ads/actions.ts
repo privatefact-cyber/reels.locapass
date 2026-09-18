@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin/require-admin";
+import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 
 export async function createAd(formData: FormData) {
-  await requireAdmin();
+  await requireRootAdmin();
 
   const title = String(formData.get("title") ?? "").trim();
   const linkUrl = String(formData.get("linkUrl") ?? "").trim();
@@ -52,7 +52,7 @@ export async function createAd(formData: FormData) {
 }
 
 export async function setAdActive(id: string, isActive: boolean) {
-  await requireAdmin();
+  await requireRootAdmin();
   const supabase = createAdminClient();
   const { error } = await supabase.from("ads").update({ is_active: isActive }).eq("id", id);
   if (error) throw new Error(error.message);
@@ -60,7 +60,7 @@ export async function setAdActive(id: string, isActive: boolean) {
 }
 
 export async function updateAdFrequency(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireRootAdmin();
   const frequency = Number(formData.get("frequency") ?? 0);
   if (!Number.isFinite(frequency) || frequency < 2) {
     throw new Error("表示頻度は2以上の数値で指定してください");
@@ -72,7 +72,7 @@ export async function updateAdFrequency(id: string, formData: FormData) {
 }
 
 export async function deleteAd(id: string) {
-  await requireAdmin();
+  await requireRootAdmin();
   const supabase = createAdminClient();
   const { error } = await supabase.from("ads").delete().eq("id", id);
   if (error) throw new Error(error.message);

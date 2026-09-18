@@ -28,12 +28,11 @@ export default function AdminLoginPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const { data: rootAdmin } = await supabase
-      .from("locapass_root_admins")
-      .select("user_id")
-      .eq("user_id", user?.id ?? "")
-      .maybeSingle();
-    if (!rootAdmin) {
+    const [{ data: rootAdmin }, { data: siteAdminRows }] = await Promise.all([
+      supabase.from("locapass_root_admins").select("user_id").eq("user_id", user?.id ?? "").maybeSingle(),
+      supabase.from("locapass_site_admins").select("site_id").eq("user_id", user?.id ?? ""),
+    ]);
+    if (!rootAdmin && (!siteAdminRows || siteAdminRows.length === 0)) {
       await supabase.auth.signOut();
       setLoading(false);
       setError("運営者アカウントではありません");

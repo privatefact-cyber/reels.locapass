@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireRootAdmin } from "@/lib/admin/require-admin";
 
 export async function deleteCommentAsAdmin(commentId: string) {
+  await requireRootAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reel_comments")
@@ -19,6 +21,7 @@ export async function deleteCommentAsAdmin(commentId: string) {
 
 /** 悪質ユーザーの投稿権限をサイト全体で剥奪する(以後、新しいコメントを一切投稿できなくなる)。 */
 export async function banUser(userId: string, reason: string) {
+  await requireRootAdmin();
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,6 +36,7 @@ export async function banUser(userId: string, reason: string) {
 }
 
 export async function unbanUser(userId: string) {
+  await requireRootAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("banned_users").delete().eq("user_id", userId);
   if (error) throw new Error(`BAN解除に失敗しました: ${error.message}`);

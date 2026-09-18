@@ -1,7 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { banUser, deleteCommentAsAdmin, unbanUser } from "./actions";
 
 export default async function AdminCommentsPage() {
+  // 全site横断のLUXELA機能のため、site_id限定のサイト管理者には見せない。
+  await requireRootAdmin();
   const supabase = await createClient();
 
   const [{ data: comments }, { data: banned }] = await Promise.all([

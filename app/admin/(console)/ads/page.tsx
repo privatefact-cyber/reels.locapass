@@ -1,9 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireAdmin } from "@/lib/admin/require-admin";
+import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAd, deleteAd, setAdActive, updateAdFrequency } from "./actions";
 
 export default async function AdminAdsPage() {
-  await requireAdmin();
+  await requireRootAdmin();
 
   const supabase = createAdminClient();
   const { data: ads } = await supabase

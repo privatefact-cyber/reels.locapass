@@ -1,8 +1,8 @@
-import { requireAdmin } from "@/lib/admin/require-admin";
+import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { ChangePasswordForm } from "@/components/admin/ChangePasswordForm";
 
 export default async function AdminAccountPage() {
-  const user = await requireAdmin();
+  const user = await requireRootAdmin();
 
   return (
     <div className="max-w-lg space-y-6">

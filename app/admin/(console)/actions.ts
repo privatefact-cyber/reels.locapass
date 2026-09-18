@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin, requireRootAdmin } from "@/lib/admin/require-admin";
 
 export type CreateShopState =
   | { status: "idle" }
@@ -13,6 +14,7 @@ export async function createShop(
   _prevState: CreateShopState,
   formData: FormData,
 ): Promise<CreateShopState> {
+  await requireRootAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const area = String(formData.get("area") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
@@ -69,6 +71,7 @@ export async function issueShopLogin(
   _prevState: IssueLoginState,
   formData: FormData,
 ): Promise<IssueLoginState> {
+  await requireRootAdmin();
   // 空欄なら店舗コード(例: 4sw7cg@shop.modella.local)から自動採番、埋まっていればそれを使う。
   // "@"を含まない入力(例: liric-roppongi)は、そのままローカル部として扱いドメインを補う。
   const raw = String(formData.get("login_id") ?? "").trim().toLowerCase();
@@ -99,6 +102,7 @@ export async function resetShopLoginPassword(
   shopStaffId: string,
   _prevState: ResetPasswordState,
 ): Promise<ResetPasswordState> {
+  await requireRootAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .rpc("admin_reset_shop_login_password", { p_shop_staff_id: shopStaffId })
@@ -114,6 +118,7 @@ export async function resetShopLoginPassword(
 // 運営者が自分自身のセッションのまま、対象店舗を代理閲覧・操作できるようにする。
 // 店舗側のパスワードやログイン情報には一切触れない(admin_impersonationsに記録するだけ)。
 export async function startImpersonation(shopId: string) {
+  await requireRootAdmin();
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_start_impersonation", { p_shop_id: shopId });
   if (error) throw new Error(`代理ログインの開始に失敗しました: ${error.message}`);
@@ -121,6 +126,7 @@ export async function startImpersonation(shopId: string) {
 }
 
 export async function stopImpersonation() {
+  await requireRootAdmin();
   const supabase = await createClient();
   await supabase.rpc("admin_stop_impersonation");
   redirect("/admin");
@@ -131,6 +137,7 @@ export async function stopImpersonation() {
  * shops.map_video_enabled はDBのトリガーで運営者以外は変更できないようにしてある。
  */
 export async function setShopMapVideo(shopId: string, enabled: boolean) {
+  await requireRootAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("shops")
@@ -152,6 +159,7 @@ export async function setShopMapVideo(shopId: string, enabled: boolean) {
  * 紹介文/料金)は消さず、表示だけを止める。RLSで運営者以外は更新できない(00077参照)。
  */
 export async function setFeaturedSectionEnabled(enabled: boolean) {
+  await requireRootAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("platform_settings")
@@ -169,6 +177,7 @@ export async function setFeaturedSectionEnabled(enabled: boolean) {
 }
 
 export async function setShopStatus(shopId: string, status: "active" | "inactive") {
+  await requireRootAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("shops")
@@ -183,4 +192,27 @@ export async function setShopStatus(shopId: string, status: "active" | "inactive
 
   revalidatePath("/admin");
   revalidatePath(`/admin/shops/${shopId}`);
+}
+
+/**
+ * locapass_shops用の公開/非公開切り替え。site管理者は自分のsite_idの店舗のみ、
+ * root管理者は全site操作可(requireAdminのsiteIdsがnullかどうかで判定)。
+ * DB側のRLS(locapass_is_site_admin経由でroot管理者も許可)でも二重に保護されている。
+ */
+export async function setLocapassShopStatus(shopId: string, status: "active" | "inactive") {
+  const scope = await requireAdmin();
+  const supabase = await createClient();
+
+  let query = supabase.from("locapass_shops").update({ status }).eq("id", shopId);
+  if (scope.siteIds !== null) {
+    query = query.in("site_id", scope.siteIds);
+  }
+  const { data, error } = await query.select("id");
+
+  if (error) throw new Error(`店舗の状態変更に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) {
+    throw new Error("店舗の状態変更に失敗しました(対象の店舗が見つからないか、権限がありません)");
+  }
+
+  revalidatePath("/admin");
 }

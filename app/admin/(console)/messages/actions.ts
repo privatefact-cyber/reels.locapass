@@ -1,12 +1,12 @@
 "use server";
 
-import { requireAdmin } from "@/lib/admin/require-admin";
+import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // 運営から全ユーザーへの一斉お知らせ。件数が多くなる想定のため、notifications直挿入で
 // user_idを一括select+insertする(1ユーザー=1行)。カテゴリ別トグルの対象外(常時配信)。
 export async function sendAdminBroadcast(formData: FormData) {
-  await requireAdmin();
+  await requireRootAdmin();
 
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
