@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { VenueMapExplorer } from "@/components/map/VenueMapExplorer";
 import { getVenueGenres } from "@/lib/map/getVenues";
+import { siteConfig } from "@/config/site";
 
 export const revalidate = 60;
 
@@ -19,5 +20,8 @@ export default async function MapPage() {
   // (app/api/venues)。サーバー側で全国分を先読みしない。
   // ジャンルピルだけは掲載中店舗の実カテゴリ(全site横断)をここで集計して渡す。
   const genres = await getVenueGenres();
-  return <VenueMapExplorer autoLocate genres={genres} />;
+  // 位置情報が拒否/未許可/取得失敗のときのフォールバック中心。
+  // 未指定だと東京駅にフォールバックしてしまい、掲載店舗が無い地域になるため、
+  // config/site.tsに用意済みの初期中心(現状は水戸)を渡す。
+  return <VenueMapExplorer autoLocate initialCenter={siteConfig.map.initialCenter} genres={genres} />;
 }
