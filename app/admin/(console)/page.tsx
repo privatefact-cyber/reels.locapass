@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { CreateShopForm } from "@/components/admin/CreateShopForm";
@@ -133,7 +134,14 @@ export default async function AdminShopsPage({
                 const site = Array.isArray(shop.locapass_sites) ? shop.locapass_sites[0] : shop.locapass_sites;
                 return (
                   <tr key={shop.id} className="text-slate-700 hover:bg-slate-50">
-                    <td className="px-5 py-3 font-semibold text-slate-900">{shop.name}</td>
+                    <td className="px-5 py-3">
+                      <Link
+                        href={`/admin/locapass-shops/${shop.id}`}
+                        className="font-semibold text-slate-900 hover:text-indigo-600 hover:underline"
+                      >
+                        {shop.name}
+                      </Link>
+                    </td>
                     <td className="px-5 py-3 text-slate-500">
                       {site?.name ?? "-"} / {shop.category || "-"}
                     </td>
