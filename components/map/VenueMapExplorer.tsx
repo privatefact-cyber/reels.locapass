@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import * as maplibregl from "maplibre-gl";
 import { MapReelOverlay, type CardRect } from "@/components/map/MapReelOverlay";
 import { CheckCircle2, Globe2, Navigation, Play, Search } from "lucide-react";
-import { AFTER_GENRE, SHOP_GENRES } from "@/lib/shop/genres";
+import { AFTER_GENRE } from "@/lib/shop/genres";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
@@ -33,11 +33,6 @@ const PIN_TAP_TOLERANCE_PX = 22;
 /** ピンが「画面内に見えている」とみなす余白(px)。上は検索バー+ジャンルピルぶん広めに取る。 */
 const REVEAL_MARGIN_PX = 48;
 const REVEAL_TOP_PX = 120;
-
-const GENRE_PILLS: { value: NightlifeGenre; label: string }[] = [
-  { value: "all", label: "ALL" },
-  ...SHOP_GENRES.map((g) => ({ value: g as NightlifeGenre, label: g })),
-];
 
 function toFeatureCollection(pins: VenuePin[]) {
   return {
@@ -70,6 +65,7 @@ export function VenueMapExplorer({
   initialCenter,
   initialBounds,
   autoLocate = false,
+  genres = [],
 }: {
   /** 指定エリアのマップとして開くときの初期中心。 */
   initialCenter?: { lat: number; lng: number };
@@ -80,7 +76,13 @@ export function VenueMapExplorer({
   initialBounds?: { minLat: number; maxLat: number; minLng: number; maxLng: number };
   /** 開いた直後に現在地へ寄せる(エリア指定なしのマップ入口用)。 */
   autoLocate?: boolean;
+  /** ジャンル絞り込みピルの選択肢(ALL以外)。掲載中店舗の実カテゴリをサーバー側で集計して渡す。 */
+  genres?: string[];
 }) {
+  const genrePills = useMemo<{ value: NightlifeGenre; label: string }[]>(
+    () => [{ value: "all", label: "ALL" }, ...genres.map((g) => ({ value: g, label: g }))],
+    [genres],
+  );
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const carouselRef = useRef<HTMLDivElement | null>(null);
@@ -822,7 +824,7 @@ export function VenueMapExplorer({
             </p>
           )}
           <div className="pointer-events-auto flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {GENRE_PILLS.map((pill) => (
+            {genrePills.map((pill) => (
               <button
                 key={pill.value}
                 onClick={() => setGenre(pill.value)}

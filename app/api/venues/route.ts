@@ -17,8 +17,6 @@ export async function GET(request: NextRequest) {
   const limitParam = Number(request.nextUrl.searchParams.get("limit"));
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : MAX_CARD_LIMIT;
 
-  // after=1 のときだけアフター(深夜飲食店)を返す。無指定ではアフター以外。
-  const afterMode = request.nextUrl.searchParams.get("after") === "1";
-  const venues = await getVenueCards(parsed.bounds, parsed.center, limit, afterMode);
+  const venues = await getVenueCards(parsed.bounds, parsed.center, limit);
   return NextResponse.json({ venues }, { headers: VENUE_CACHE_HEADERS });
 }

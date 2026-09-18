@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
 
-type ReelRow = {
+export type ReelRow = {
   id: string;
   video_url: string | null;
   images: unknown;
@@ -16,7 +16,7 @@ type ReelRow = {
   locapass_shops: { name: string; address: string | null; category: string | null } | { name: string; address: string | null; category: string | null }[] | null;
 };
 
-function toReelItem(row: ReelRow): ReelItem | null {
+export function toReelItem(row: ReelRow): ReelItem | null {
   const shop = Array.isArray(row.locapass_shops) ? row.locapass_shops[0] : row.locapass_shops;
   if (!shop || !row.shop_id) return null;
 
@@ -50,7 +50,7 @@ function toReelItem(row: ReelRow): ReelItem | null {
   };
 }
 
-const REEL_SELECT =
+export const REEL_SELECT =
   "id, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category )";
 
 export type PortalFeedData = {

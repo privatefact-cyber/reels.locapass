@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  // after=1 のときだけアフター(深夜飲食店)を返す。無指定ではアフター以外。
-  const afterMode = request.nextUrl.searchParams.get("after") === "1";
-  const pins = await getVenuePins(parsed.bounds, undefined, afterMode);
+  const pins = await getVenuePins(parsed.bounds);
   return NextResponse.json({ pins }, { headers: VENUE_CACHE_HEADERS });
 }

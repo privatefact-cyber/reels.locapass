@@ -1,6 +1,6 @@
-import type { ShopGenre } from "@/lib/shop/genres";
-
-export type NightlifeGenre = "all" | ShopGenre;
+// locapass_shops.categoryはサイトごとの自由入力のため、LUXELA側のような固定ジャンル
+// 列挙(ShopGenre)ではなくstringで扱う。
+export type NightlifeGenre = "all" | string;
 
 export interface CastSummary {
   id: string;
@@ -22,7 +22,7 @@ export interface VenuePin {
   id: string;
   lat: number;
   lng: number;
-  genre: ShopGenre | null;
+  genre: string | null;
   isSponsored: boolean;
 }
 
@@ -30,7 +30,7 @@ export interface VenueCardData {
   id: string;
   name: string;
   area: string | null;
-  genre: ShopGenre | null;
+  genre: string | null;
   location: VenueLocation;
   distanceMeter: number | null;
   /**

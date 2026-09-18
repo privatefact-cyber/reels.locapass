@@ -2,8 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import { VENUE_CACHE_HEADERS } from "@/lib/map/cacheHeaders";
 import { distanceMeters } from "@/lib/map/getVenues";
-import { slugToArea } from "@/lib/seo/area";
-import { AFTER_GENRE } from "@/lib/shop/genres";
 
 /** 1回の検索で見るマッチ件数の上限。 */
 const MATCH_LIMIT = 200;
@@ -18,6 +16,9 @@ const MATCH_LIMIT = 200;
  *
  * 返すのは範囲と件数だけで、カードのデータは含めない
  * (カードは移動後に /api/venues が表示範囲ぶんだけ取る)。
+ *
+ * locapass_shopsには店舗単位のエリア列が無いため、サイト名(locapass_sites.name/slug、
+ * 例:「水戸」「大洗」)でのマッチをエリア名の代わりに使う。
  */
 export async function GET(request: NextRequest) {
   const q = (request.nextUrl.searchParams.get("q") ?? "").trim();
@@ -39,32 +40,27 @@ export async function GET(request: NextRequest) {
       ? { lat, lng }
       : null;
 
-  // URLスラッグと同じローマ字表記(渋谷=shibuya 等)なら、エリアを直接特定できる。
-  // 翻訳結果に依存しないぶん確実なので、住所の部分一致より優先して扱う。
-  const romajiArea = slugToArea(safe.toLowerCase());
-
-  // 通常の検索ではアフター(深夜飲食店)を対象にしない。アフタータグ選択中だけ after=1 で来る。
-  const afterMode = request.nextUrl.searchParams.get("after") === "1";
-
   // 公開中の店舗だけを見るので、cookieに依存しないクライアントで引く(CDNキャッシュできるように)。
   const supabase = createStaticClient();
+
+  // サイト名(「水戸」「大洗」等)に一致したら、そのサイトの店舗を優先的に検索対象にする。
+  const { data: matchedSites } = await supabase
+    .from("locapass_sites")
+    .select("id, name, slug")
+    .or([`name.ilike.%${safe}%`, `slug.ilike.%${safe}%`].join(","));
+  const siteIds = (matchedSites ?? []).map((s) => s.id);
+
   const { data } = await supabase
-    .from("shops")
-    .select("id, name, area, lat, lng")
+    .from("locapass_shops")
+    .select("id, site_id, name, address, lat, lng")
     .eq("status", "active")
-    .or(afterMode ? `genre.eq.${AFTER_GENRE}` : `genre.is.null,genre.neq.${AFTER_GENRE}`)
     .not("lat", "is", null)
     .not("lng", "is", null)
     .or(
       [
-        `area.ilike.%${safe}%`,
         `name.ilike.%${safe}%`,
         `address.ilike.%${safe}%`,
-        `building_name.ilike.%${safe}%`,
-        // ローマ字入力("shinjuku" / "kabukicho")はここで拾う。
-        // address_en は日本語住所から自動生成している(lib/map/translateAddress.ts)。
-        `address_en.ilike.%${safe}%`,
-        ...(romajiArea ? [`area.eq.${romajiArea}`] : []),
+        ...(siteIds.length ? [`site_id.in.(${siteIds.join(",")})`] : []),
       ].join(","),
     )
     .limit(MATCH_LIMIT);
@@ -72,14 +68,17 @@ export async function GET(request: NextRequest) {
   const shops = data ?? [];
   if (shops.length === 0) return NextResponse.json({ match: null }, { headers: VENUE_CACHE_HEADERS });
 
-  // エリアごとにまとめる。「渋谷」で渋谷の店舗群、「NOBLE」で系列店が複数エリアに散る、
-  // といったケースをここで分ける。
-  const groups = new Map<string, { area: string; shops: typeof shops }>();
+  const siteNameById = new Map((matchedSites ?? []).map((s) => [s.id, s.name]));
+
+  // サイトごとにまとめる。「水戸」で水戸の店舗群、店名一致が複数サイトに散る、といったケースをここで分ける。
+  const groups = new Map<number, { area: string; shops: typeof shops }>();
   for (const s of shops) {
-    const key = s.area ?? "";
-    const g = groups.get(key) ?? { area: key, shops: [] as typeof shops };
+    const g = groups.get(s.site_id) ?? {
+      area: siteNameById.get(s.site_id) ?? "",
+      shops: [] as typeof shops,
+    };
     g.shops.push(s);
-    groups.set(key, g);
+    groups.set(s.site_id, g);
   }
 
   const scored = [...groups.values()].map((g) => {
@@ -95,15 +94,14 @@ export async function GET(request: NextRequest) {
       lat: (bounds.minLat + bounds.maxLat) / 2,
       lng: (bounds.minLng + bounds.maxLng) / 2,
     };
-    // エリア名そのものが一致するものを最優先(「渋谷」→ area='渋谷')。
-    const areaExact = g.area === safe || (romajiArea !== null && g.area === romajiArea);
-    const areaPartial = g.area.includes(safe);
+    // サイト名そのものが一致するものを最優先(「水戸」→ locapass_sites.name='水戸まちあるきポータル')。
+    const areaExact = g.area !== "" && (g.area === safe || g.area.includes(safe));
     return {
       area: g.area,
       count: g.shops.length,
       bounds,
       center,
-      rank: areaExact ? 0 : areaPartial ? 1 : 2,
+      rank: areaExact ? 0 : 1,
       distance: origin ? distanceMeters(origin.lat, origin.lng, center.lat, center.lng) : 0,
     };
   });

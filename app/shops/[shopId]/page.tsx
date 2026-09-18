@@ -26,9 +26,7 @@ import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
 import { JsonLd } from "@/components/JsonLd";
-import { areaToSlug, PREFECTURE_SLUG } from "@/lib/seo/area";
-import { AFTER_GENRE, genreToSlug } from "@/lib/shop/genres";
-import type { Cast, PriceItem, ShopEvent, SnsLinks, Store } from "@/lib/types/shop";
+import type { Cast, PriceItem, ShopEvent, Store } from "@/lib/types/shop";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
@@ -47,8 +45,8 @@ export async function generateMetadata({
   const { shopId } = await params;
   const supabase = await createClient();
   const { data: shop } = await supabase
-    .from("shops")
-    .select("name, area, genre, tagline, description, cover_image_url")
+    .from("locapass_shops")
+    .select("name, category, tagline, description, cover_url, icon_url")
     .eq("id", shopId)
     .eq("status", "active")
     .single();
@@ -57,20 +55,13 @@ export async function generateMetadata({
     return { title: "店舗が見つかりません | LOCAPASS" };
   }
 
-  const areaGenre = [shop.area, shop.genre].filter(Boolean).join(" ");
-  // アフター(深夜飲食店)にはキャスト・出勤が無いので、それを謳うタイトルにしない。
-  const isAfter = shop.genre === AFTER_GENRE;
-  const title = isAfter
-    ? `${shop.name}｜${shop.area ?? ""}の深夜営業・アフター向け飲食店 - LOCAPASS`
-    : `${shop.name}｜${areaGenre || "ナイトワーク"}の出勤・キャスト情報 - LOCAPASS`;
+  const title = `${shop.name}｜${shop.category ?? "掲載店舗"}情報 - LOCAPASS`;
   const description =
     shop.tagline ||
     (shop.description ? shop.description.slice(0, 120) : null) ||
-    (isAfter
-      ? `${shop.area ?? ""}で深夜営業している「${shop.name}」。営業時間・アクセスをチェック。`
-      : `${areaGenre ? `${areaGenre}の` : ""}「${shop.name}」。本日の出勤キャスト・料金・アクセスを今すぐチェック。`);
-  const url = `https://luxela.jp/shops/${shopId}`;
-  const image = shop.cover_image_url ?? undefined;
+    `「${shop.name}」の店舗情報・リールを今すぐチェック。`;
+  const url = `https://reels.locapass.net/shops/${shopId}`;
+  const image = shop.cover_url ?? shop.icon_url ?? undefined;
 
   return {
     title,
@@ -105,55 +96,48 @@ export default async function ShopDetailPage({
   const mapsHl = locale === "zh" ? "zh-CN" : locale;
 
   const { data: shopRow, error: shopError } = await supabase
-    .from("shops")
+    .from("locapass_shops")
     .select(
-      "id, name, area, genre, address, phone, business_hours, price_info, description, cover_image_url, website_url, usage_notes, sns_links, hero_media_type, hero_media_url, tagline, line_url, line_qr_image_url, address_en, translations",
+      "id, name, category, address, tel, business_hours, description, cover_url, icon_url, url, tagline, line_url",
     )
     .eq("id", shopId)
     .single();
 
   if (shopError && shopError.code !== "PGRST116") {
-    throw new Error(`shops取得に失敗しました: ${shopError.message}`);
+    throw new Error(`locapass_shops取得に失敗しました: ${shopError.message}`);
   }
 
   if (!shopRow) {
     notFound();
   }
 
-  // 店舗が日本語で入力した文章は、英語・中国語表示では保存時に自動翻訳しておいた文を出す
-  // (翻訳が無い項目は日本語のまま)。1項目でも翻訳を使ったら「自動翻訳」の注記を出す。
-  let usedTranslation = false;
-  const tr = (original: string | null, key: string) => {
-    const picked = pickTranslation(locale, original, shopRow.translations, key);
-    if (picked.translated) usedTranslation = true;
-    return picked.text;
-  };
+  // locapass_shopsには項目別自動翻訳(translations列)が無いため、原文をそのまま出す。
+  const usedTranslation = false;
 
   const store: Store = {
     id: shopRow.id,
     name: shopRow.name,
-    area: shopRow.area,
-    genre: shopRow.genre,
+    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはsite_idで分かれる)
+    genre: shopRow.category,
     address: shopRow.address,
-    phone: shopRow.phone,
-    businessHours: tr(shopRow.business_hours, "business_hours"),
-    priceInfo: tr(shopRow.price_info, "price_info"),
-    description: tr(shopRow.description, "description"),
-    coverImageUrl: shopRow.cover_image_url,
-    websiteUrl: shopRow.website_url,
-    usageNotes: tr(shopRow.usage_notes, "usage_notes"),
-    snsLinks: (shopRow.sns_links as SnsLinks) ?? {},
+    phone: shopRow.tel,
+    businessHours: shopRow.business_hours,
+    priceInfo: null, // locapass_shopsに料金情報の列は無い
+    description: shopRow.description,
+    coverImageUrl: shopRow.cover_url ?? shopRow.icon_url,
+    websiteUrl: shopRow.url,
+    usageNotes: null,
+    snsLinks: {},
     hero: {
-      type: shopRow.hero_media_url ? (shopRow.hero_media_type as "image" | "video") : "image",
-      url: shopRow.hero_media_url ?? shopRow.cover_image_url,
+      type: "image",
+      url: shopRow.cover_url ?? shopRow.icon_url,
     },
-    tagline: tr(shopRow.tagline, "tagline"),
+    tagline: shopRow.tagline,
     lineContactUrl: shopRow.line_url,
-    lineQrImageUrl: shopRow.line_qr_image_url,
+    lineQrImageUrl: null,
   };
-  // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
-  // Googleマップの検索・ルート案内には、確実に位置が解決できる日本語の住所(store.address)を使い続ける。
-  const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
+  // locapass_shopsに住所の英語表記(address_en)は無いため、常に原文の住所を使う。
+  const addressDisplay = store.address;
 
   const [{ data: castMembers }, { data: priceItemRows }, { data: eventRows }] = await Promise.all([
     supabase
@@ -275,22 +259,16 @@ export default async function ShopDetailPage({
 
   const hasPriceSection = priceItems.length > 0 || events.length > 0;
 
-  const areaSlug = store.area ? areaToSlug(store.area) : null;
-  const categorySlug = store.genre ? genreToSlug(store.genre) : null;
-  const areaPageUrl =
-    areaSlug && categorySlug ? `https://luxela.jp/${PREFECTURE_SLUG}/${areaSlug}/${categorySlug}` : null;
-  const shopUrl = `https://luxela.jp/shops/${store.id}`;
+  const shopUrl = `https://reels.locapass.net/shops/${store.id}`;
 
-  // コンカフェは飲食メインの業態のためNightClubではなくCafeOrCoffeeShopの方が実態に近い。
-  // アフターは深夜営業の飲食店なのでRestaurant。
-  const schemaType =
-    store.genre === "コンカフェ" ? "CafeOrCoffeeShop" : store.genre === AFTER_GENRE ? "Restaurant" : "NightClub";
+  // locapass_shops.categoryはサイトごとの自由入力(観光・飲食・宿泊等)なので、
+  // LUXELA側のようなジャンル別スキーマ判定はせず汎用のLocalBusinessにする。
+  const schemaType = "LocalBusiness";
 
-  const breadcrumbItems: { name: string; item: string }[] = [{ name: "ホーム", item: "https://luxela.jp" }];
-  if (areaPageUrl) {
-    breadcrumbItems.push({ name: `${store.area}の${store.genre}`, item: areaPageUrl });
-  }
-  breadcrumbItems.push({ name: store.name, item: shopUrl });
+  const breadcrumbItems: { name: string; item: string }[] = [
+    { name: "ホーム", item: "https://reels.locapass.net" },
+    { name: store.name, item: shopUrl },
+  ];
 
   return (
     <div className="space-y-10 pb-44 md:pb-24">
@@ -307,7 +285,6 @@ export default async function ShopDetailPage({
             ? {
                 "@type": "PostalAddress",
                 streetAddress: store.address,
-                addressRegion: PREFECTURE_SLUG === "tokyo" ? "東京都" : undefined,
                 addressCountry: "JP",
               }
             : undefined,
