@@ -120,8 +120,8 @@ export function MypageClient({
     const newAvatarUrl = publicUrlData.publicUrl;
 
     const { data, error: updateError } = await supabase
-      .from("user_profiles")
-      .upsert({ id: userId, avatar_url: newAvatarUrl }, { onConflict: "id" })
+      .from("locapass_members")
+      .upsert({ id: userId, nickname, avatar_url: newAvatarUrl }, { onConflict: "id" })
       .select("id")
       .single();
 
@@ -146,7 +146,7 @@ export function MypageClient({
 
     const supabase = createClient();
     const { data, error } = await supabase
-      .from("user_profiles")
+      .from("locapass_members")
       .upsert({ id: userId, nickname: editNickname.trim() }, { onConflict: "id" })
       .select("id")
       .single();
@@ -184,13 +184,8 @@ export function MypageClient({
   }
 
   async function handleUnfavoriteShop(shopId: string) {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("user_shop_favorites")
-      .delete()
-      .eq("user_id", userId)
-      .eq("shop_id", shopId);
-    if (error) return;
+    // locapass_member_favorite_shopsにはshop_id列が無く(site_id+author_urlの別設計で
+    // お気に入り店舗機能としては未整備)、favoriteShopsは現状常に空なのでこの関数は呼ばれない。
     setFavoriteShops((prev) => prev.filter((s) => s.id !== shopId));
   }
 

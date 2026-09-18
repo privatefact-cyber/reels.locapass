@@ -1,104 +1,49 @@
 import { requireCurrentUser } from "@/lib/user/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { MypageClient, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
-import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
+
+function buildMedia(videoUrl: string | null, posterUrl: string | null, images: unknown): SavedReel["media"] {
+  if (videoUrl) return [{ type: "video", url: videoUrl, poster: posterUrl ?? undefined }];
+  const imageList = (images as { url: string }[] | null) ?? [];
+  if (imageList.length > 0) return imageList.map((img) => ({ type: "image", url: img.url }));
+  return posterUrl ? [{ type: "image", url: posterUrl }] : [];
+}
 
 export default async function MypagePage() {
   const user = await requireCurrentUser();
   const supabase = await createClient();
-  const today = toJstDateString(getJstNow());
 
-  const [likesRes, followsRes, favoritesRes, commentsRes] = await Promise.all([
-    supabase
-      .from("reel_likes")
-      // shopsとreelsの間には外部キーが2本(reels.shop_id / shops.map_preview_reel_id)あるので、使うキーを明示する。
-      .select("reel_id, reels ( id, caption, media, likes_count, shop_id, shops!reels_shop_id_fkey ( name ) )")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("user_cast_follows")
-      .select(
-        "cast_id, cast_members ( id, name, avatar_url, shop_id, shops ( name ), schedules ( is_working_today, date ) )",
-      )
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("user_shop_favorites")
-      .select("shop_id, shops ( id, name, area, status )")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("reel_comments")
-      .select("id, body, created_at, reel_id, reels ( id, caption, media ) ")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false }),
-  ]);
+  // locapassにはキャストフォロー・リールコメントの受け皿が無いため、常に空で返す。
+  // 店舗お気に入り(locapass_member_favorite_shops)はshop_id列が無く(site_id+author_urlの
+  // 別設計)、店舗単位のお気に入り機能としてはまだ使えないため、こちらも当面は空で返す
+  // (マイページのタブUIは既存のまま、対応データが無い分だけ0件表示になる)。
+  const followedCasts: FollowedCast[] = [];
+  const myComments: MyComment[] = [];
+  const favoriteShops: FavoriteShop[] = [];
 
-  const savedReels: SavedReel[] = (likesRes.data ?? [])
+  const favoriteReelsRes = await supabase
+    .from("locapass_member_favorite_reels")
+    .select(
+      "reel_id, locapass_reels ( id, caption, video_url, poster_url, images, like_count, shop_id, locapass_shops ( name ) )",
+    )
+    .eq("member_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const savedReels: SavedReel[] = (favoriteReelsRes.data ?? [])
     .map((row) => {
-      const reel = Array.isArray(row.reels) ? row.reels[0] : row.reels;
-      if (!reel) return null;
-      const shop = Array.isArray(reel.shops) ? reel.shops[0] : reel.shops;
+      const reel = Array.isArray(row.locapass_reels) ? row.locapass_reels[0] : row.locapass_reels;
+      if (!reel || !reel.shop_id) return null;
+      const shop = Array.isArray(reel.locapass_shops) ? reel.locapass_shops[0] : reel.locapass_shops;
       return {
         id: reel.id,
         caption: reel.caption,
-        media: (reel.media as SavedReel["media"]) ?? [],
-        likesCount: reel.likes_count,
+        media: buildMedia(reel.video_url, reel.poster_url, reel.images),
+        likesCount: reel.like_count,
         shopId: reel.shop_id,
         shopName: shop?.name ?? null,
       };
     })
     .filter((r): r is SavedReel => r !== null);
-
-  const followedCasts: FollowedCast[] = (followsRes.data ?? [])
-    .map((row) => {
-      const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
-      if (!cast) return null;
-      const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
-      const schedules = Array.isArray(cast.schedules) ? cast.schedules : cast.schedules ? [cast.schedules] : [];
-      const isWorkingToday = schedules.some(
-        (s: { date: string; is_working_today: boolean }) => s.date === today && s.is_working_today,
-      );
-      return {
-        id: cast.id,
-        name: cast.name,
-        avatarUrl: cast.avatar_url,
-        shopName: shop?.name ?? null,
-        isWorkingToday,
-      };
-    })
-    .filter((c): c is FollowedCast => c !== null);
-
-  const favoriteShops: FavoriteShop[] = (favoritesRes.data ?? [])
-    .map((row) => {
-      const shop = Array.isArray(row.shops) ? row.shops[0] : row.shops;
-      if (!shop) return null;
-      return {
-        id: shop.id,
-        name: shop.name,
-        area: shop.area,
-        status: shop.status,
-      };
-    })
-    .filter((s): s is FavoriteShop => s !== null);
-
-  const myComments: MyComment[] = (commentsRes.data ?? [])
-    .map((row) => {
-      const reel = Array.isArray(row.reels) ? row.reels[0] : row.reels;
-      return {
-        id: row.id,
-        body: row.body,
-        createdAt: row.created_at,
-        reelId: row.reel_id,
-        reelCaption: reel?.caption ?? null,
-        reelThumbnailUrl:
-          reel?.media && Array.isArray(reel.media) && reel.media[0]
-            ? (reel.media[0] as { type: string; url: string; poster?: string }).poster ??
-              (reel.media[0] as { type: string; url: string; poster?: string }).url
-            : null,
-      };
-    })
-    .filter((c): c is MyComment => c !== null);
 
   return (
     <MypageClient

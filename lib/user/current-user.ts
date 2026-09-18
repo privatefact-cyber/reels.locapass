@@ -12,34 +12,29 @@ export async function requireCurrentUser(redirectTo = "/mypage") {
     redirect(`/mypage/login?redirect=${encodeURIComponent(redirectTo)}`);
   }
 
-  // キャスト・店舗スタッフ・運営(店舗ダッシュボード/プラットフォーム管理者)アカウントは
-  // Cookieを共有しているだけの「たまたまログイン中の別人格」であり、一般ユーザーの
-  // プライベートマイページを開かせるべきではない。それぞれの管理画面へ弾く。
-  const [{ data: isAdmin }, { data: shopIds }, { data: castId }, { data: staffId }] = await Promise.all([
-    supabase.rpc("is_platform_admin"),
-    supabase.rpc("current_shop_ids"),
-    supabase.rpc("current_cast_id"),
-    supabase.rpc("current_staff_member_id"),
-  ]);
+  // locapassの運営者(root admin)アカウントは、一般会員のプライベートマイページを
+  // 開かせるべきではないので管理画面へ弾く。店舗メンバー用ダッシュボードはlocapass側に
+  // まだ無いため、ここでは判定しない(⑥ダッシュボード対応時に追加する)。
+  const { data: rootAdmin } = await supabase
+    .from("locapass_root_admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  if (isAdmin) {
+  if (rootAdmin) {
     redirect("/admin");
-  }
-  if (shopIds && shopIds.length > 0) {
-    redirect("/dashboard");
-  }
-  if (castId) {
-    redirect("/cast/mypage");
-  }
-  if (staffId) {
-    redirect("/staff/mypage");
   }
 
   const { data: profile } = await supabase
-    .from("user_profiles")
+    .from("locapass_members")
     .select("id, nickname, avatar_url")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (!profile) {
+    // 初回ログイン。locapass_membersに自分の行を作る(id=auth.users.id、RLSでid=auth.uid()のみ許可)。
+    await supabase.from("locapass_members").insert({ id: user.id, nickname: "ゲスト" });
+  }
 
   return {
     id: user.id,

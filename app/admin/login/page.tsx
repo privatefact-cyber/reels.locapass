@@ -25,8 +25,15 @@ export default function AdminLoginPage() {
       return;
     }
 
-    const { data: isAdmin } = await supabase.rpc("is_platform_admin");
-    if (!isAdmin) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { data: rootAdmin } = await supabase
+      .from("locapass_root_admins")
+      .select("user_id")
+      .eq("user_id", user?.id ?? "")
+      .maybeSingle();
+    if (!rootAdmin) {
       await supabase.auth.signOut();
       setLoading(false);
       setError("運営者アカウントではありません");

@@ -12,9 +12,13 @@ export async function requireAdmin() {
     redirect("/admin/login");
   }
 
-  const { data: isAdmin } = await supabase.rpc("is_platform_admin");
+  const { data: rootAdmin } = await supabase
+    .from("locapass_root_admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  if (!isAdmin) {
+  if (!rootAdmin) {
     redirect("/admin/login");
   }
 
