@@ -20,9 +20,16 @@ function toReelItem(row: ReelRow): ReelItem | null {
   const shop = Array.isArray(row.locapass_shops) ? row.locapass_shops[0] : row.locapass_shops;
   if (!shop || !row.shop_id) return null;
 
+  // 動画が無いリールはimages配列を使うが、WordPress取込データはimagesが空でも
+  // poster_urlだけに静止画が入っているケースが多いため、その場合はposter_urlを画像として使う。
+  const images = (row.images as { url: string }[] | null) ?? [];
   const media: ReelItem["media"] = row.video_url
     ? [{ type: "video", url: row.video_url, poster: row.poster_url ?? undefined }]
-    : ((row.images as { url: string }[]) ?? []).map((img) => ({ type: "image", url: img.url }));
+    : images.length > 0
+      ? images.map((img) => ({ type: "image", url: img.url }))
+      : row.poster_url
+        ? [{ type: "image", url: row.poster_url }]
+        : [];
 
   return {
     id: row.id,
