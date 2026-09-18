@@ -179,20 +179,20 @@ export type Database = {
       area_photo_follows: {
         Row: {
           created_at: string
-          followee_id: number
-          follower_id: number
+          followee_member_id: string
+          follower_member_id: string
           id: number
         }
         Insert: {
           created_at?: string
-          followee_id: number
-          follower_id: number
+          followee_member_id: string
+          follower_member_id: string
           id?: never
         }
         Update: {
           created_at?: string
-          followee_id?: number
-          follower_id?: number
+          followee_member_id?: string
+          follower_member_id?: string
           id?: never
         }
         Relationships: []
@@ -201,20 +201,20 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          member_id: string
           post_id: string
-          wp_user_id: number
         }
         Insert: {
           created_at?: string
           id?: string
+          member_id: string
           post_id: string
-          wp_user_id: number
         }
         Update: {
           created_at?: string
           id?: string
+          member_id?: string
           post_id?: string
-          wp_user_id?: number
         }
         Relationships: [
           {
@@ -236,11 +236,12 @@ export type Database = {
           image_url: string
           latitude: number
           longitude: number
+          member_id: string | null
           site: string
           spot_name: string
           tags: Json
           user_name: string
-          wp_user_id: number
+          venue_id: string | null
         }
         Insert: {
           address?: string | null
@@ -251,11 +252,12 @@ export type Database = {
           image_url: string
           latitude: number
           longitude: number
+          member_id?: string | null
           site?: string
           spot_name: string
           tags?: Json
           user_name: string
-          wp_user_id: number
+          venue_id?: string | null
         }
         Update: {
           address?: string | null
@@ -266,47 +268,62 @@ export type Database = {
           image_url?: string
           latitude?: number
           longitude?: number
+          member_id?: string | null
           site?: string
           spot_name?: string
           tags?: Json
           user_name?: string
-          wp_user_id?: number
+          venue_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "area_photo_posts_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       area_photo_routes: {
         Row: {
           created_at: string
+          creator_avatar_url: string | null
+          creator_name: string | null
           id: string
           is_public: boolean
+          member_id: string | null
           memo: string | null
           name: string
           share_id: string | null
           site: string
           spot_ids: Json
-          wp_user_id: number
         }
         Insert: {
           created_at?: string
+          creator_avatar_url?: string | null
+          creator_name?: string | null
           id?: string
           is_public?: boolean
+          member_id?: string | null
           memo?: string | null
           name: string
           share_id?: string | null
           site?: string
           spot_ids: Json
-          wp_user_id: number
         }
         Update: {
           created_at?: string
+          creator_avatar_url?: string | null
+          creator_name?: string | null
           id?: string
           is_public?: boolean
+          member_id?: string | null
           memo?: string | null
           name?: string
           share_id?: string | null
           site?: string
           spot_ids?: Json
-          wp_user_id?: number
         }
         Relationships: []
       }
@@ -550,6 +567,27 @@ export type Database = {
           },
         ]
       }
+      cast_login_recovery_attempts: {
+        Row: {
+          attempted_at: string
+          id: number
+          phone_key: string
+          succeeded: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          id?: never
+          phone_key: string
+          succeeded: boolean
+        }
+        Update: {
+          attempted_at?: string
+          id?: never
+          phone_key?: string
+          succeeded?: boolean
+        }
+        Relationships: []
+      }
       cast_login_tokens: {
         Row: {
           cast_id: string
@@ -684,6 +722,143 @@ export type Database = {
         }
         Relationships: []
       }
+      locapass_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          distance_m: number
+          id: string
+          lat: number
+          lng: number
+          member_id: string
+          shop_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          distance_m: number
+          id?: string
+          lat: number
+          lng: number
+          member_id: string
+          shop_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          distance_m?: number
+          id?: string
+          lat?: number
+          lng?: number
+          member_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_checkins_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_member_favorite_reels: {
+        Row: {
+          created_at: string
+          member_id: string
+          reel_id: string
+        }
+        Insert: {
+          created_at?: string
+          member_id: string
+          reel_id: string
+        }
+        Update: {
+          created_at?: string
+          member_id?: string
+          reel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_member_favorite_reels_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_member_favorite_reels_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_member_favorite_shops: {
+        Row: {
+          author_icon_url: string | null
+          author_name: string | null
+          author_url: string
+          created_at: string
+          member_id: string
+          site_id: number
+        }
+        Insert: {
+          author_icon_url?: string | null
+          author_name?: string | null
+          author_url: string
+          created_at?: string
+          member_id: string
+          site_id: number
+        }
+        Update: {
+          author_icon_url?: string | null
+          author_name?: string | null
+          author_url?: string
+          created_at?: string
+          member_id?: string
+          site_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_member_favorite_shops_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_member_favorite_shops_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_members: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          nickname: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          nickname: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nickname?: string
+        }
+        Relationships: []
+      }
       locapass_reels: {
         Row: {
           action_label: string | null
@@ -692,19 +867,25 @@ export type Database = {
           author_name: string | null
           author_url: string | null
           caption: string | null
+          caption_en: string | null
+          created_by: string | null
           expires_at: string | null
           genres: string[]
           id: string
           images: Json
+          like_count: number
           poster_url: string | null
+          published_at: string | null
           reel_type: string
+          shop_id: string | null
           site_id: number
           status: string
           title: string | null
+          title_en: string | null
           updated_at: string
           video_url: string | null
           wp_created_at: string | null
-          wp_post_id: number
+          wp_post_id: number | null
         }
         Insert: {
           action_label?: string | null
@@ -713,19 +894,25 @@ export type Database = {
           author_name?: string | null
           author_url?: string | null
           caption?: string | null
+          caption_en?: string | null
+          created_by?: string | null
           expires_at?: string | null
           genres?: string[]
           id?: string
           images?: Json
+          like_count?: number
           poster_url?: string | null
+          published_at?: string | null
           reel_type?: string
+          shop_id?: string | null
           site_id: number
           status?: string
           title?: string | null
+          title_en?: string | null
           updated_at?: string
           video_url?: string | null
           wp_created_at?: string | null
-          wp_post_id: number
+          wp_post_id?: number | null
         }
         Update: {
           action_label?: string | null
@@ -734,21 +921,34 @@ export type Database = {
           author_name?: string | null
           author_url?: string | null
           caption?: string | null
+          caption_en?: string | null
+          created_by?: string | null
           expires_at?: string | null
           genres?: string[]
           id?: string
           images?: Json
+          like_count?: number
           poster_url?: string | null
+          published_at?: string | null
           reel_type?: string
+          shop_id?: string | null
           site_id?: number
           status?: string
           title?: string | null
+          title_en?: string | null
           updated_at?: string
           video_url?: string | null
           wp_created_at?: string | null
-          wp_post_id?: number
+          wp_post_id?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "locapass_reels_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "locapass_reels_site_id_fkey"
             columns: ["site_id"]
@@ -758,32 +958,328 @@ export type Database = {
           },
         ]
       }
+      locapass_root_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      locapass_shop_events: {
+        Row: {
+          body: string | null
+          created_at: string
+          ends_at: string | null
+          gallery_image_urls: string[]
+          id: string
+          image_url: string | null
+          shop_id: string
+          starts_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          ends_at?: string | null
+          gallery_image_urls?: string[]
+          id?: string
+          image_url?: string | null
+          shop_id: string
+          starts_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          ends_at?: string | null
+          gallery_image_urls?: string[]
+          id?: string
+          image_url?: string | null
+          shop_id?: string
+          starts_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_shop_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_shop_favorites: {
+        Row: {
+          created_at: string
+          member_id: string
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          member_id: string
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          member_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_shop_favorites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_shop_members: {
+        Row: {
+          created_at: string
+          role: string
+          shop_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role?: string
+          shop_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: string
+          shop_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_shop_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_shops: {
+        Row: {
+          address: string | null
+          business_hours: string | null
+          category: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          icon_url: string | null
+          id: string
+          lat: number | null
+          line_url: string | null
+          lng: number | null
+          name: string
+          plan: string
+          site_id: number
+          slug: string
+          status: string
+          tagline: string | null
+          tel: string | null
+          updated_at: string
+          url: string | null
+          venue_id: string | null
+          wp_author_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_hours?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          lat?: number | null
+          line_url?: string | null
+          lng?: number | null
+          name: string
+          plan?: string
+          site_id: number
+          slug: string
+          status?: string
+          tagline?: string | null
+          tel?: string | null
+          updated_at?: string
+          url?: string | null
+          venue_id?: string | null
+          wp_author_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_hours?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          lat?: number | null
+          line_url?: string | null
+          lng?: number | null
+          name?: string
+          plan?: string
+          site_id?: number
+          slug?: string
+          status?: string
+          tagline?: string | null
+          tel?: string | null
+          updated_at?: string
+          url?: string | null
+          venue_id?: string | null
+          wp_author_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_shops_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_shops_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_site_admins: {
+        Row: {
+          created_at: string
+          site_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          site_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          site_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_site_admins_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locapass_sites: {
         Row: {
+          cover_image_url: string | null
           created_at: string
           home_url: string | null
           id: number
           name: string
+          name_en: string | null
           slug: string
+          tagline: string | null
           wp_blog_id: number
         }
         Insert: {
+          cover_image_url?: string | null
           created_at?: string
           home_url?: string | null
           id?: number
           name: string
+          name_en?: string | null
           slug: string
+          tagline?: string | null
           wp_blog_id: number
         }
         Update: {
+          cover_image_url?: string | null
           created_at?: string
           home_url?: string | null
           id?: number
           name?: string
+          name_en?: string | null
           slug?: string
+          tagline?: string | null
           wp_blog_id?: number
         }
         Relationships: []
+      }
+      locapass_ugc_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          image_url: string
+          lat: number
+          lng: number
+          member_id: string
+          shop_id: string | null
+          site_id: number
+          status: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          lat: number
+          lng: number
+          member_id: string
+          shop_id?: string | null
+          site_id: number
+          status?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          lat?: number
+          lng?: number
+          member_id?: string
+          shop_id?: string | null
+          site_id?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_ugc_photos_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_ugc_photos_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       locapass_vehicles: {
         Row: {
@@ -876,6 +1372,95 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "locapass_vehicles_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_venues: {
+        Row: {
+          address: string | null
+          category: string | null
+          category_en: string | null
+          category_parent: string | null
+          category_parent_en: string | null
+          detail_url: string | null
+          holiday: string | null
+          hours: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          maps_url: string | null
+          name: string
+          name_en: string | null
+          photo_url: string | null
+          site_id: number
+          status: string
+          tagline: string | null
+          tagline_en: string | null
+          tel: string | null
+          updated_at: string
+          url: string | null
+          wp_created_at: string | null
+          wp_post_id: number
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          category_en?: string | null
+          category_parent?: string | null
+          category_parent_en?: string | null
+          detail_url?: string | null
+          holiday?: string | null
+          hours?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          maps_url?: string | null
+          name: string
+          name_en?: string | null
+          photo_url?: string | null
+          site_id: number
+          status?: string
+          tagline?: string | null
+          tagline_en?: string | null
+          tel?: string | null
+          updated_at?: string
+          url?: string | null
+          wp_created_at?: string | null
+          wp_post_id: number
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          category_en?: string | null
+          category_parent?: string | null
+          category_parent_en?: string | null
+          detail_url?: string | null
+          holiday?: string | null
+          hours?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          maps_url?: string | null
+          name?: string
+          name_en?: string | null
+          photo_url?: string | null
+          site_id?: number
+          status?: string
+          tagline?: string | null
+          tagline_en?: string | null
+          tel?: string | null
+          updated_at?: string
+          url?: string | null
+          wp_created_at?: string | null
+          wp_post_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_venues_site_id_fkey"
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "locapass_sites"
@@ -1221,7 +1806,6 @@ export type Database = {
       }
       reels: {
         Row: {
-          area: string | null
           caption: string | null
           cast_id: string | null
           created_at: string
@@ -1239,7 +1823,6 @@ export type Database = {
           status: string
         }
         Insert: {
-          area?: string | null
           caption?: string | null
           cast_id?: string | null
           created_at?: string
@@ -1257,7 +1840,6 @@ export type Database = {
           status?: string
         }
         Update: {
-          area?: string | null
           caption?: string | null
           cast_id?: string | null
           created_at?: string
@@ -1485,6 +2067,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shop_login_recovery_attempts: {
+        Row: {
+          attempt_key: string
+          attempted_at: string
+          id: number
+          succeeded: boolean
+        }
+        Insert: {
+          attempt_key: string
+          attempted_at?: string
+          id?: never
+          succeeded: boolean
+        }
+        Update: {
+          attempt_key?: string
+          attempted_at?: string
+          id?: never
+          succeeded?: boolean
+        }
+        Relationships: []
       }
       shop_price_items: {
         Row: {
@@ -1957,15 +2560,6 @@ export type Database = {
       }
       count_cast_followers: { Args: { p_cast_id: string }; Returns: number }
       count_shop_favorites: { Args: { p_shop_id: string }; Returns: number }
-      venue_card_reels: {
-        Args: { p_shop_ids: string[] }
-        Returns: {
-          shop_id: string
-          reel_count: number
-          latest_video_url: string | null
-          latest_preview_url: string | null
-        }[]
-      }
       create_cast_invite: {
         Args: { p_cast_id: string }
         Returns: {
@@ -2018,6 +2612,69 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
+      locapass_add_shop_member: {
+        Args: { p_email: string; p_role: string; p_shop_id: string }
+        Returns: undefined
+      }
+      locapass_add_site_admin: {
+        Args: { p_email: string; p_site_id: number }
+        Returns: undefined
+      }
+      locapass_can_manage_shop: {
+        Args: { p_shop_id: string }
+        Returns: boolean
+      }
+      locapass_checkin: {
+        Args: { p_lat: number; p_lng: number; p_shop_id: string }
+        Returns: {
+          checkin_date: string
+          created_at: string
+          distance_m: number
+          id: string
+          lat: number
+          lng: number
+          member_id: string
+          shop_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "locapass_checkins"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      locapass_haversine_meters: {
+        Args: { p_lat1: number; p_lat2: number; p_lng1: number; p_lng2: number }
+        Returns: number
+      }
+      locapass_is_root_admin: { Args: never; Returns: boolean }
+      locapass_is_shop_owner: { Args: { p_shop_id: string }; Returns: boolean }
+      locapass_is_site_admin: { Args: { p_site_id: number }; Returns: boolean }
+      locapass_list_shop_members: {
+        Args: { p_shop_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          role: string
+          user_id: string
+        }[]
+      }
+      locapass_list_site_admins: {
+        Args: { p_site_id: number }
+        Returns: {
+          created_at: string
+          email: string
+          user_id: string
+        }[]
+      }
+      locapass_list_site_shop_owners: {
+        Args: { p_site_id: number }
+        Returns: {
+          owner_emails: string
+          shop_id: string
+        }[]
+      }
+      locapass_my_roles: { Args: never; Returns: Json }
       recover_cast_login: {
         Args: { p_birth_date: string; p_phone: string }
         Returns: {
@@ -2061,6 +2718,15 @@ export type Database = {
       update_own_staff_profile: {
         Args: { p_avatar_url?: string; p_bio: string; p_name: string }
         Returns: undefined
+      }
+      venue_card_reels: {
+        Args: { p_shop_ids: string[] }
+        Returns: {
+          latest_preview_url: string
+          latest_video_url: string
+          reel_count: number
+          shop_id: string
+        }[]
       }
     }
     Enums: {
