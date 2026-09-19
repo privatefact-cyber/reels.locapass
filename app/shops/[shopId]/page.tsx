@@ -98,7 +98,7 @@ export default async function ShopDetailPage({
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, address, tel, business_hours, description, cover_url, icon_url, url, tagline, line_url, site_id",
+      "id, name, category, address, address_en, tel, business_hours, description, cover_url, icon_url, url, tagline, line_url, site_id",
     )
     .eq("id", shopId)
     .single();
@@ -141,8 +141,8 @@ export default async function ShopDetailPage({
     lineContactUrl: shopRow.line_url,
     lineQrImageUrl: null,
   };
-  // locapass_shopsに住所の英語表記(address_en)は無いため、常に原文の住所を使う。
-  const addressDisplay = store.address;
+  // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
+  const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
 
   const [{ data: castMembers }, { data: priceItemRows }, { data: eventRows }] = await Promise.all([
     supabase

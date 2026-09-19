@@ -1081,6 +1081,7 @@ export type Database = {
       locapass_shops: {
         Row: {
           address: string | null
+          address_en: string | null
           business_hours: string | null
           category: string | null
           cover_url: string | null
@@ -1105,6 +1106,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          address_en?: string | null
           business_hours?: string | null
           category?: string | null
           cover_url?: string | null
@@ -1129,6 +1131,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          address_en?: string | null
           business_hours?: string | null
           category?: string | null
           cover_url?: string | null
