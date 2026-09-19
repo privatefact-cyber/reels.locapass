@@ -21,6 +21,6 @@ export default function robots(): MetadataRoute.Robots {
         "/api/",
       ],
     },
-    sitemap: "https://luxela.jp/sitemap.xml",
+    sitemap: "https://reels.locapass.net/sitemap.xml",
   };
 }

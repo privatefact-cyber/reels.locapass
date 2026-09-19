@@ -117,7 +117,7 @@ async function guardedFetch(raw: string, accept: string, maxBytes: number) {
       res = await fetch(url, {
         redirect: "manual",
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        headers: { "User-Agent": "LOCAPASS-ShopImporter/1.0 (+https://luxela.jp)", Accept: accept },
+        headers: { "User-Agent": "LOCAPASS-ShopImporter/1.0 (+https://reels.locapass.net)", Accept: accept },
       });
     } catch {
       throw new ImportError("サイトに接続できませんでした。時間をおいて再度お試しください");

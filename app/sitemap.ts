@@ -3,7 +3,7 @@ import { createStaticClient } from "@/lib/supabase/static";
 import { PREFECTURE_SLUG, listAreaCategorySlugs } from "@/lib/seo/area";
 import { genreToSlug } from "@/lib/shop/genres";
 
-const BASE_URL = "https://luxela.jp";
+const BASE_URL = "https://reels.locapass.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createStaticClient();

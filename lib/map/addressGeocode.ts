@@ -93,7 +93,7 @@ async function geocodeGsi(query: string): Promise<AddressGeocodeResult | null> {
 async function geocodeNominatim(query: string): Promise<AddressGeocodeResult | null> {
   const res = await fetch(
     `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(query)}`,
-    { headers: { "User-Agent": "luxela.jp map geocoder (contact: admin@luxela.jp)" } },
+    { headers: { "User-Agent": "locapass.net map geocoder (contact: admin@locapass.net)" } },
   );
   if (!res.ok) return null;
   const hits = (await res.json()) as { lat?: string; lon?: string; display_name?: string }[];

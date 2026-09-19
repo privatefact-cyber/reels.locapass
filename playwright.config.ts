@@ -7,7 +7,7 @@ export default defineConfig({
   globalSetup: "./health-checks/global-setup.ts",
   reporter: [["list"], ["html", { open: "never", outputFolder: "health-checks-report" }]],
   use: {
-    baseURL: process.env.HEALTH_CHECK_BASE_URL ?? "https://luxela.jp",
+    baseURL: process.env.HEALTH_CHECK_BASE_URL ?? "https://reels.locapass.net",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     storageState: process.env.HEALTH_CHECK_PASSCODE ? "health-checks/.auth/gate.json" : undefined,

@@ -3,7 +3,7 @@ import { chromium, type FullConfig } from "@playwright/test";
 // サイト全体が合言葉ゲート(/gate)で覆われているため、各テストの前に一度だけ
 // パスコードを送信して認証Cookieを取得し、storageStateとして全テストで使い回す。
 async function globalSetup(config: FullConfig) {
-  const baseURL = config.projects[0]?.use?.baseURL ?? "https://luxela.jp";
+  const baseURL = config.projects[0]?.use?.baseURL ?? "https://reels.locapass.net";
   const passcode = process.env.HEALTH_CHECK_PASSCODE;
   if (!passcode) return;
 

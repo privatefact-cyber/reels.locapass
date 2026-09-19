@@ -38,7 +38,7 @@ export async function generateMetadata({
   const description =
     cast.pr_text?.slice(0, 120) ||
     `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」在籍、${cast.name}のプロフィール・出勤情報・投稿リール。`;
-  const url = `https://luxela.jp/cast/${castId}`;
+  const url = `https://reels.locapass.net/cast/${castId}`;
   const image = cast.avatar_url ?? undefined;
 
   return {
@@ -126,14 +126,14 @@ export default async function CastDetailPage({
   const totalLikes = reelItems.reduce((sum, r) => sum + r.likes_count, 0);
 
   const breadcrumbItems = [
-    { name: "ホーム", item: "https://luxela.jp" },
-    ...(shop ? [{ name: shop.name, item: `https://luxela.jp/shops/${shop.id}` }] : []),
-    { name: cast.name, item: `https://luxela.jp/cast/${castId}` },
+    { name: "ホーム", item: "https://reels.locapass.net" },
+    ...(shop ? [{ name: shop.name, item: `https://reels.locapass.net/shops/${shop.id}` }] : []),
+    { name: cast.name, item: `https://reels.locapass.net/cast/${castId}` },
   ];
 
   // 店舗ページ(app/shops/[shopId]/page.tsx)と同じ判定基準(コンカフェのみ業態を分ける)。
   const worksForSchemaType = shop?.genre === "コンカフェ" ? "CafeOrCoffeeShop" : "NightClub";
-  const castUrl = `https://luxela.jp/cast/${castId}`;
+  const castUrl = `https://reels.locapass.net/cast/${castId}`;
   // sizes.t は「身長(cm)」の自由入力欄のため、数値として読み取れる場合だけ構造化データに含める。
   const heightCm = sizes?.t ? Number(sizes.t.replace(/[^0-9.]/g, "")) : NaN;
 
@@ -160,7 +160,7 @@ export default async function CastDetailPage({
               ? {
                   "@type": worksForSchemaType,
                   name: shop.name,
-                  url: `https://luxela.jp/shops/${shop.id}`,
+                  url: `https://reels.locapass.net/shops/${shop.id}`,
                   address: shop.area
                     ? { "@type": "PostalAddress", addressLocality: shop.area, addressCountry: "JP" }
                     : undefined,

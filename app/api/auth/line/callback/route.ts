@@ -102,7 +102,7 @@ export async function GET(request: Request) {
   let userEmail: string | null = null;
 
   if (!userId) {
-    userEmail = profile.email ?? `line-${profile.sub}@line.placeholder.luxela.jp`;
+    userEmail = profile.email ?? `line-${profile.sub}@line.placeholder.locapass.net`;
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email: userEmail,
       email_confirm: true,

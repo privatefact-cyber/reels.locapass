@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://luxela.jp"),
+  metadataBase: new URL("https://reels.locapass.net"),
   title: "LOCAPASS - ナイト＆キャスト特化リールメディア",
   description: "エリア・ジャンルから探せるナイトワークポータル",
   keywords: ["LOCAPASS", "ナイトワーク", "キャスト", "リール", "ポータル"],
@@ -15,10 +15,10 @@ export const metadata: Metadata = {
     title: "LOCAPASS - ナイト＆キャスト特化リールメディア",
     description: "エリア・ジャンルから探せるナイトワークポータル",
     siteName: "LOCAPASS",
-    url: "https://luxela.jp",
+    url: "https://reels.locapass.net",
   },
   alternates: {
-    canonical: "https://luxela.jp",
+    canonical: "https://reels.locapass.net",
   },
 };
 

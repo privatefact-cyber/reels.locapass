@@ -171,7 +171,7 @@ export function CreateShopForm() {
             <div>
               <dt className="text-xs text-amber-700/70">店舗管理ログインURL</dt>
               <dd className="select-all font-mono text-sm text-slate-900">
-                https://luxela.jp/login
+                https://reels.locapass.net/login
               </dd>
             </div>
             <div>

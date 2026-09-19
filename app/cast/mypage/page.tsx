@@ -10,7 +10,7 @@ export default async function CastMypage() {
     redirect("/cast/login");
   }
 
-  const qrDataUrl = await QRCode.toDataURL(`https://luxela.jp/c/${cast.cast_code}`, {
+  const qrDataUrl = await QRCode.toDataURL(`https://reels.locapass.net/c/${cast.cast_code}`, {
     margin: 1,
     width: 220,
   });

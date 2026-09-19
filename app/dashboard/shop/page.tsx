@@ -120,7 +120,7 @@ export default async function ShopSettingsPage() {
     castCount: castRows?.length ?? 0,
     reelCount: reelCount ?? 0,
   });
-  const shopPageUrl = `https://luxela.jp/s/${shop.shop_code}`;
+  const shopPageUrl = `https://reels.locapass.net/s/${shop.shop_code}`;
   const shopQrDataUrl = await QRCode.toDataURL(shopPageUrl, { margin: 1, width: 220 });
 
   return (
