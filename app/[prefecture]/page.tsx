@@ -5,6 +5,7 @@ import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
+import { PortalHero } from "@/components/portal/PortalHero";
 
 // 注記: このディレクトリ名は[prefecture]だが、既存の/[prefecture]/[city]/[category]
 // (LUXELA側のSEO用ルート、lib/seo/area.tsのPREFECTURE_SLUG="tokyo"固定)と同じNext.jsの
@@ -16,24 +17,37 @@ export const revalidate = 60;
 
 type PageParams = { prefecture: string };
 
-async function resolveSiteId(slug: string): Promise<number | null> {
+async function resolvePortal(slug: string) {
   const supabase = await createClient();
-  const { data } = await supabase.from("locapass_portals").select("id").eq("slug", slug).maybeSingle();
-  return data?.id ?? null;
+  const { data } = await supabase
+    .from("locapass_portals")
+    .select("id, name, tagline, description, accent_color, background_color, hero_media_type, hero_media_url")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data;
 }
 
 export default async function AreaPortalPage({ params }: { params: Promise<PageParams> }) {
   const { prefecture: slug } = await params;
-  const siteId = await resolveSiteId(slug);
-  if (siteId === null) notFound();
+  const portal = await resolvePortal(slug);
+  if (!portal) notFound();
 
   const locale = await getServerLocale();
   const featuredShops = await getFeaturedShops(locale);
-  const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(siteId);
+  const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(portal.id);
   const nowReels: ReelItem[] = [];
 
   return (
-    <div className="space-y-4">
+    <div id="portal-feed" className="space-y-4" style={{ backgroundColor: portal.background_color }}>
+      <PortalHero
+        name={portal.name}
+        tagline={portal.tagline}
+        description={portal.description}
+        accentColor={portal.accent_color}
+        backgroundColor={portal.background_color}
+        heroMediaType={portal.hero_media_type}
+        heroMediaUrl={portal.hero_media_url}
+      />
       <FeaturedSection shops={featuredShops} />
       <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} />
     </div>

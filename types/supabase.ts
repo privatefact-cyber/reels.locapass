@@ -1435,8 +1435,13 @@ export type Database = {
       }
       locapass_portals: {
         Row: {
+          accent_color: string
+          background_color: string
           cover_image_url: string | null
           created_at: string
+          description: string | null
+          hero_media_type: string
+          hero_media_url: string | null
           home_url: string | null
           id: number
           name: string
@@ -1448,8 +1453,13 @@ export type Database = {
           wp_blog_id: number | null
         }
         Insert: {
+          accent_color?: string
+          background_color?: string
           cover_image_url?: string | null
           created_at?: string
+          description?: string | null
+          hero_media_type?: string
+          hero_media_url?: string | null
           home_url?: string | null
           id?: number
           name: string
@@ -1461,8 +1471,13 @@ export type Database = {
           wp_blog_id?: number | null
         }
         Update: {
+          accent_color?: string
+          background_color?: string
           cover_image_url?: string | null
           created_at?: string
+          description?: string | null
+          hero_media_type?: string
+          hero_media_url?: string | null
           home_url?: string | null
           id?: number
           name?: string

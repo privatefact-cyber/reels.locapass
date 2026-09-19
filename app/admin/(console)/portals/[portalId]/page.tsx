@@ -13,6 +13,7 @@ import {
   RevokePortalAdminButton,
   RevokeShopAdminButton,
 } from "@/components/admin/portal/ShopAdminControls";
+import { PortalBrandingForm } from "@/components/admin/portal/PortalBrandingForm";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   active: { label: "公開中", className: "bg-emerald-50 text-emerald-700" },
@@ -38,7 +39,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
     await Promise.all([
       supabase
         .from("locapass_portals")
-        .select("id, name, slug, home_url, tagline, status")
+        .select("id, name, slug, home_url, tagline, description, status, accent_color, background_color, hero_media_type, hero_media_url")
         .eq("id", portalId)
         .maybeSingle(),
       supabase
@@ -89,6 +90,8 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
         <StatCard label="公開中" value={activeCount} accent="text-emerald-600" />
         <StatCard label="公開リール数" value={publishedReelCount} />
       </div>
+
+      <PortalBrandingForm portal={portal} />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-bold text-slate-900">ポータル管理者(portal_admin)</h2>
