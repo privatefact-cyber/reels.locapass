@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
+import { MapVideoOptionToggle } from "@/components/admin/MapVideoOptionToggle";
 import { GrantPortalAdminForm } from "@/components/admin/portal/GrantPortalAdminForm";
 import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
 import {
@@ -42,7 +43,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
         .maybeSingle(),
       supabase
         .from("locapass_shops")
-        .select("id, name, category, status, shop_code, created_at")
+        .select("id, name, category, status, shop_code, created_at, map_video_enabled")
         .eq("portal_id", portalId)
         .order("created_at", { ascending: false }),
       supabase.from("locapass_reels").select("id, status").eq("portal_id", portalId),
@@ -129,6 +130,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
               <tr className="text-xs text-slate-500">
                 <th className="px-5 py-3 font-medium">店舗名</th>
                 <th className="px-5 py-3 font-medium">状態</th>
+                <th className="px-5 py-3 font-medium">動画オプション</th>
                 <th className="px-5 py-3 font-medium">店舗管理者(shop_admin)</th>
                 <th className="px-5 py-3 font-medium"></th>
               </tr>
@@ -154,6 +156,20 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>
                         {status.label}
                       </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span
+                        className={
+                          shop.map_video_enabled
+                            ? "rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700"
+                            : "rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-500"
+                        }
+                      >
+                        {shop.map_video_enabled ? "契約中" : "未契約"}
+                      </span>
+                      <div className="mt-2">
+                        <MapVideoOptionToggle portalId={portalId} shopId={shop.id} enabled={shop.map_video_enabled} />
+                      </div>
                     </td>
                     <td className="px-5 py-3">
                       {admins.length > 0 ? (
@@ -194,7 +210,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
               })}
               {(shops ?? []).length === 0 && !shopsError && (
                 <tr>
-                  <td colSpan={4} className="px-5 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-400">
                     このポータルにはまだ店舗がありません
                   </td>
                 </tr>

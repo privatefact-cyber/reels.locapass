@@ -375,3 +375,32 @@ export async function upsertTodaySchedule(
   }
   revalidateShop(shopId);
 }
+
+// ---------- マップのカード動画(本家 setMapPreviewReel) ----------
+/**
+ * マップのカードで流す動画リールを選ぶ(nullで解除＝最新の動画リールに戻す)。
+ * 実際に再生されるのは動画オプション契約店舗だけ。
+ * 選べるのは自店舗の公開中の動画リールだけで、DBのトリガーでも同じ条件を強制している。
+ */
+export async function setMapPreviewReel(shopId: string, reelId: string | null) {
+  const supabase = await requireShopAccess(shopId);
+  const { data, error } = await supabase
+    .from("locapass_shops")
+    .update({ map_preview_reel_id: reelId })
+    .eq("id", shopId)
+    .select("id");
+
+  if (error) {
+    throw new Error(
+      error.message.includes("map preview reel")
+        ? "カード動画に使えるのは、この店舗の公開中の動画リールだけです"
+        : `カード動画の設定に失敗しました: ${error.message}`,
+    );
+  }
+  if (!data || data.length === 0) {
+    throw new Error("カード動画の設定に失敗しました(対象の店舗が見つからないか、権限がありません)");
+  }
+
+  revalidatePath(`/dashboard/shop/${shopId}/reels`);
+  revalidatePath("/map");
+}

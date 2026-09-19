@@ -202,3 +202,26 @@ export async function deletePortalShop(portalId: number, shopId: string) {
   if (!data || data.length === 0) throw new Error("店舗の削除に失敗しました(対象が見つからないか、権限がありません)");
   revalidatePortal(portalId);
 }
+
+/**
+ * マップのカードで動画を流す「動画オプション」の切り替え(本家 setShopMapVideo。プランとは別の契約)。
+ * locapass_shops.map_video_enabled はDBのトリガーで portal_admin 以上しか変更できない。
+ */
+export async function setShopMapVideo(portalId: number, shopId: string, enabled: boolean) {
+  await requirePortalAccess(portalId);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("locapass_shops")
+    .update({ map_video_enabled: enabled })
+    .eq("id", shopId)
+    .eq("portal_id", portalId)
+    .select("id");
+
+  if (error) throw new Error(`動画オプションの変更に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) {
+    throw new Error("動画オプションの変更に失敗しました(対象の店舗が見つからないか、権限がありません)");
+  }
+
+  revalidatePortal(portalId);
+  revalidatePath("/map");
+}

@@ -1630,6 +1630,7 @@ export type Database = {
           portal_id: number
           posted_by_staff_id: string | null
           poster_url: string | null
+          preview_url: string | null
           published_at: string | null
           reel_type: string
           shop_id: string | null
@@ -1661,6 +1662,7 @@ export type Database = {
           portal_id: number
           posted_by_staff_id?: string | null
           poster_url?: string | null
+          preview_url?: string | null
           published_at?: string | null
           reel_type?: string
           shop_id?: string | null
@@ -1692,6 +1694,7 @@ export type Database = {
           portal_id?: number
           posted_by_staff_id?: string | null
           poster_url?: string | null
+          preview_url?: string | null
           published_at?: string | null
           reel_type?: string
           shop_id?: string | null
@@ -2085,6 +2088,8 @@ export type Database = {
           line_qr_image_url: string | null
           line_url: string | null
           lng: number | null
+          map_preview_reel_id: string | null
+          map_video_enabled: boolean
           name: string
           occupancy_status: Json | null
           plan: string
@@ -2121,6 +2126,8 @@ export type Database = {
           line_qr_image_url?: string | null
           line_url?: string | null
           lng?: number | null
+          map_preview_reel_id?: string | null
+          map_video_enabled?: boolean
           name: string
           occupancy_status?: Json | null
           plan?: string
@@ -2157,6 +2164,8 @@ export type Database = {
           line_qr_image_url?: string | null
           line_url?: string | null
           lng?: number | null
+          map_preview_reel_id?: string | null
+          map_video_enabled?: boolean
           name?: string
           occupancy_status?: Json | null
           plan?: string
@@ -2176,6 +2185,13 @@ export type Database = {
           wp_author_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "locapass_shops_map_preview_reel_id_fkey"
+            columns: ["map_preview_reel_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_reels"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "locapass_shops_portal_id_fkey"
             columns: ["portal_id"]

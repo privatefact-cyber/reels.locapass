@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generateTextCard";
 
 /**
@@ -89,11 +90,12 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
     }
 
     // locapass では店舗フォルダ配下(locapass-reels バケット)に置き、cast_id 付きで locapass_reels に登録する。
-    // マップのカード用軽量プレビュー(本家 preview_url)は locapass_reels に受け皿が無いため作らない。
     const path = `${shopId}/${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("locapass-reels")
-      .upload(path, uploadBlob, { contentType });
+    // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
+    const [{ error: uploadError }, previewUrl] = await Promise.all([
+      supabase.storage.from("locapass-reels").upload(path, uploadBlob, { contentType: contentType }),
+      isVideo && file ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
+    ]);
 
     if (uploadError) {
       setUploading(false);
@@ -113,6 +115,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
       images: isVideo ? [] : [{ url: publicUrlData.publicUrl }],
       reel_type: "permanent",
       status: "publish",
+      preview_url: previewUrl,
     });
 
     setUploading(false);

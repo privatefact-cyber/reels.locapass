@@ -1,5 +1,6 @@
 import { createStaticClient } from "@/lib/supabase/static";
-import type { VenueCardData, VenuePin } from "@/types/venue";
+import type { CastSummary, VenueCardData, VenuePin } from "@/types/venue";
+import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 
 /**
  * 地図の取得範囲。全国一括取得はメモリ・転送量が破綻するため、
@@ -96,11 +97,12 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
 }
 
 /**
- * カルーセル用のカードデータ。範囲内の店舗を中心に近い順に最大limit件だけ取り、
- * その店舗ぶんの公開リール件数・サムネイルを追加で引く。
- * locapass_shopsにはキャスト・スポンサー枠・動画オプション契約の概念が無いため、
- * casts/sponsoredRank/supportsEnglish/isVerifiedは常に空/falseで返す
- * (受け皿はUI側に残るが対応データが無いため)。
+ * カルーセル用のカードデータ(本家 getVenueCards と同じ組み立て)。範囲内の店舗を中心に近い順に
+ * 最大limit件だけ取り、その店舗ぶんの公開リール件数・動画・在籍キャストを追加で引く。
+ * - 動画 … 動画オプション(map_video_enabled)契約店舗だけ。店舗が選んだリール → 最新の動画リール。
+ *   軽量プレビュー(preview_url)があればそちらを流す。
+ * - 写真 … トップ画像(画像のとき) → メイン画像 → アイコン。
+ * locapass_shops にはスポンサー枠・英語対応・認証バッジの概念が無いため、その3つは常に false で返す。
  */
 export async function getVenueCards(
   bounds: VenueBounds,
@@ -112,7 +114,9 @@ export async function getVenueCards(
 
   const { data: shopRows } = await supabase
     .from("locapass_shops")
-    .select("id, name, category, lat, lng, icon_url, cover_url")
+    .select(
+      "id, name, area, category, lat, lng, address_en, icon_url, cover_url, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id",
+    )
     .eq("status", "active")
     .not("lat", "is", null)
     .not("lng", "is", null)
@@ -134,39 +138,111 @@ export async function getVenueCards(
   if (shops.length === 0) return [];
 
   const shopIds = shops.map((s) => s.id);
-  const { data: reelRows } = await supabase
-    .from("locapass_reels")
-    .select("shop_id, video_url, published_at")
-    .in("shop_id", shopIds)
-    .eq("status", "publish")
-    .order("published_at", { ascending: false });
+  // 動画オプション契約店舗が選んだリール。未選択・契約なしの店舗のぶんは引かない。
+  const chosenReelIds = shops
+    .filter((s) => s.map_video_enabled && s.map_preview_reel_id)
+    .map((s) => s.map_preview_reel_id as string);
+
+  const [{ data: reelRows }, { data: chosenReels }, { data: castRows }] = await Promise.all([
+    supabase
+      .from("locapass_reels")
+      .select("shop_id, video_url, preview_url, reel_type, published_at")
+      .in("shop_id", shopIds)
+      .eq("status", "publish")
+      .order("published_at", { ascending: false }),
+    chosenReelIds.length
+      ? supabase
+          .from("locapass_reels")
+          .select("id, shop_id, video_url, preview_url")
+          .in("id", chosenReelIds)
+          .eq("status", "publish")
+          .eq("reel_type", "permanent")
+      : Promise.resolve({
+          data: [] as { id: string; shop_id: string | null; video_url: string | null; preview_url: string | null }[],
+        }),
+    // 公開用ビュー(個人情報を含まない・公開中店舗のキャストだけ)。
+    supabase.from("locapass_public_casts").select("id, name, shop_id").in("shop_id", shopIds),
+  ]);
 
   const reelCountByShopId = new Map<string, number>();
   const latestVideoByShopId = new Map<string, string>();
   for (const r of reelRows ?? []) {
     if (!r.shop_id) continue;
     reelCountByShopId.set(r.shop_id, (reelCountByShopId.get(r.shop_id) ?? 0) + 1);
-    if (r.video_url && !latestVideoByShopId.has(r.shop_id)) {
-      latestVideoByShopId.set(r.shop_id, r.video_url);
+    if (r.reel_type === "permanent" && r.video_url && !latestVideoByShopId.has(r.shop_id)) {
+      latestVideoByShopId.set(r.shop_id, r.preview_url ?? r.video_url);
     }
   }
+  const chosenVideoByShopId = new Map<string, string>();
+  for (const r of chosenReels ?? []) {
+    const url = r.preview_url ?? r.video_url;
+    if (r.shop_id && url) chosenVideoByShopId.set(r.shop_id, url);
+  }
 
-  const venues: VenueCardData[] = shops.map((s) => ({
-    id: s.id,
-    name: s.name,
-    area: null,
-    genre: s.category,
-    location: { lat: s.lat as number, lng: s.lng as number },
-    distanceMeter: Math.round(s.distance),
-    previewVideoUrl: latestVideoByShopId.get(s.id) ?? null,
-    imageUrl: s.cover_url ?? s.icon_url ?? null,
-    reelCount: reelCountByShopId.get(s.id) ?? 0,
-    isSponsored: false,
-    sponsoredRank: undefined,
-    supportsEnglish: false,
-    isVerified: false,
-    casts: [],
-  }));
+  const casts = castRows ?? [];
+  const castIds = casts.map((c) => c.id);
+  const [{ data: mediaRows }, { data: scheduleRows }] = await Promise.all([
+    castIds.length
+      ? supabase
+          .from("locapass_media")
+          .select("cast_id, url, display_order")
+          .in("cast_id", castIds)
+          .order("display_order", { ascending: true })
+      : Promise.resolve({ data: [] as { cast_id: string | null; url: string; display_order: number }[] }),
+    castIds.length
+      ? supabase
+          .from("locapass_schedules")
+          .select("cast_id")
+          .in("cast_id", castIds)
+          .eq("date", toJstDateString(getJstNow()))
+          .eq("is_working_today", true)
+      : Promise.resolve({ data: [] as { cast_id: string }[] }),
+  ]);
+
+  const avatarByCastId = new Map<string, string>();
+  for (const m of mediaRows ?? []) {
+    if (!m.cast_id || avatarByCastId.has(m.cast_id)) continue;
+    avatarByCastId.set(m.cast_id, m.url);
+  }
+  const workingCastIds = new Set((scheduleRows ?? []).map((s) => s.cast_id));
+  const castsByShopId = new Map<string, CastSummary[]>();
+  for (const c of casts) {
+    const list = castsByShopId.get(c.shop_id) ?? [];
+    list.push({
+      id: c.id,
+      name: c.name,
+      avatarUrl: avatarByCastId.get(c.id) ?? null,
+      isWorkingNow: workingCastIds.has(c.id),
+    });
+    castsByShopId.set(c.shop_id, list);
+  }
+
+  const venues: VenueCardData[] = shops.map((s) => {
+    const videoUrl = s.map_video_enabled
+      ? (chosenVideoByShopId.get(s.id) ?? latestVideoByShopId.get(s.id) ?? null)
+      : null;
+    const heroImage = s.hero_media_url && s.hero_media_type === "image" ? s.hero_media_url : null;
+    return {
+      id: s.id,
+      name: s.name,
+      area: s.area ?? null,
+      genre: s.category,
+      location: {
+        lat: s.lat as number,
+        lng: s.lng as number,
+        addressEn: s.address_en ?? undefined,
+      },
+      distanceMeter: Math.round(s.distance),
+      previewVideoUrl: videoUrl,
+      imageUrl: heroImage ?? s.cover_url ?? s.icon_url ?? null,
+      reelCount: reelCountByShopId.get(s.id) ?? 0,
+      isSponsored: false,
+      sponsoredRank: undefined,
+      supportsEnglish: false,
+      isVerified: false,
+      casts: (castsByShopId.get(s.id) ?? []).slice(0, 6),
+    };
+  });
 
   venues.sort((a, b) => b.reelCount - a.reelCount);
 

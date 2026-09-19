@@ -2,13 +2,11 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { ShopReelPostForm } from "@/components/locapass-dashboard/ShopReelPostForm";
-import { deleteReel } from "../actions";
-import { setMapPreviewReel } from "../not-connected";
+import { deleteReel, setMapPreviewReel } from "../actions";
 
 /**
  * LUXELA本家のリール投稿画面(app/dashboard/reels/page.tsx)と同じ画面。一覧・投稿・削除は
- * locapass_reelsにつないである。マップのカード動画(本家shops.map_video_enabled /
- * map_preview_reel_id)はlocapass_shopsに列が無いので、未契約・未選択の表示のまま(未接続)。
+ * locapass_reels、マップのカード動画は locapass_shops.map_video_enabled / map_preview_reel_id につないである。
  */
 export default async function LocapassShopReelsPage({
   params,
@@ -21,6 +19,11 @@ export default async function LocapassShopReelsPage({
   const shop = viewer.shop;
 
   const supabase = await createClient();
+  const { data: shopRow } = await supabase
+    .from("locapass_shops")
+    .select("map_video_enabled, map_preview_reel_id")
+    .eq("id", shop.id)
+    .maybeSingle();
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
@@ -52,8 +55,8 @@ export default async function LocapassShopReelsPage({
     };
   });
 
-  const mapVideoEnabled = false;
-  const selectedReelId: string | null = null;
+  const mapVideoEnabled = shopRow?.map_video_enabled ?? false;
+  const selectedReelId = shopRow?.map_preview_reel_id ?? null;
 
   return (
     <div className="space-y-6">
@@ -85,7 +88,7 @@ export default async function LocapassShopReelsPage({
             : "現在マップのカードには店舗のトップ画像が表示されます。動画を流すには動画オプションのご契約が必要です(運営者にお問い合わせください)。選んでおいた動画は契約後に反映されます。"}
         </p>
         {selectedReelId && (
-          <form action={setMapPreviewReel.bind(null, null)} className="mt-2">
+          <form action={setMapPreviewReel.bind(null, shop.id, null)} className="mt-2">
             <button type="submit" className="text-xs text-slate-500 underline hover:text-slate-900">
               選択を解除して最新の動画リールに戻す
             </button>
@@ -133,7 +136,7 @@ export default async function LocapassShopReelsPage({
                         カード動画に設定中
                       </span>
                     ) : (
-                      <form action={setMapPreviewReel.bind(null, r.id)}>
+                      <form action={setMapPreviewReel.bind(null, shop.id, r.id)}>
                         <button
                           type="submit"
                           className="w-full rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-900 hover:bg-white"

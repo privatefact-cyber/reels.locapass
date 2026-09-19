@@ -10,6 +10,7 @@ import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPane
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { RevealableQr } from "@/components/RevealableQr";
 import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 
 export type MyReel = {
   id: string;
@@ -145,9 +146,11 @@ export function CastDashboardClient({
     const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
     const path = `${shopId}/${Date.now()}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("locapass-reels")
-      .upload(path, file, { contentType: file.type });
+    // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
+    const [{ error: uploadError }, previewUrl] = await Promise.all([
+      supabase.storage.from("locapass-reels").upload(path, file, { contentType: file.type }),
+      isVideo && postType !== "story" ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
+    ]);
 
     if (uploadError) {
       setUploading(false);
@@ -207,6 +210,7 @@ export function CastDashboardClient({
           caption: caption.trim() || null,
           action_url: linkUrl.trim() || null,
           is_comments_enabled: commentsEnabled,
+          preview_url: previewUrl,
           ...mediaColumns,
           author_name: name,
           author_icon_url: avatarUrl,

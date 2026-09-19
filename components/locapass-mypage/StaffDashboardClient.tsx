@@ -9,6 +9,7 @@ import { SingleImageDropzone, EventGalleryDropzone } from "@/components/locapass
 import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 
 export type MyReel = {
   id: string;
@@ -275,9 +276,11 @@ export function StaffDashboardClient({
     const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
     const path = `${shopId}/${Date.now()}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("locapass-reels")
-      .upload(path, file, { contentType: file.type });
+    // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
+    const [{ error: uploadError }, previewUrl] = await Promise.all([
+      supabase.storage.from("locapass-reels").upload(path, file, { contentType: file.type }),
+      isVideo ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
+    ]);
     if (uploadError) {
       setUploading(false);
       setError(`アップロードに失敗しました: ${uploadError.message}`);
@@ -300,6 +303,7 @@ export function StaffDashboardClient({
         author_icon_url: avatarUrl,
         reel_type: "permanent",
         status: "publish",
+        preview_url: previewUrl,
       })
       .select("id, caption, like_count, published_at, updated_at")
       .single();
