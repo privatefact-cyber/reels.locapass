@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { CreatePortalForm } from "@/components/admin/portal/CreatePortalForm";
 import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
 
@@ -67,6 +68,8 @@ export default async function AdminShopsPage({
         <StatCard label="公開中" value={activeCount} accent="text-emerald-600" />
         <StatCard label="非公開" value={inactiveCount} accent="text-red-600" />
       </div>
+
+      {scope.portalIds === null && <CreatePortalForm />}
 
       <CreatePortalShopForm portals={portals ?? []} />
 
