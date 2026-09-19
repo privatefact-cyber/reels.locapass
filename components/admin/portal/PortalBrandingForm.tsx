@@ -15,6 +15,7 @@ type Props = {
     background_color: string;
     hero_media_type: string;
     hero_media_url: string | null;
+    hero_link_url: string | null;
   };
 };
 
@@ -31,6 +32,7 @@ export function PortalBrandingForm({ portal }: Props) {
   const [backgroundColor, setBackgroundColor] = useState(portal.background_color);
   const [heroUrl, setHeroUrl] = useState(portal.hero_media_url);
   const [heroType, setHeroType] = useState<"image" | "video">(portal.hero_media_type === "video" ? "video" : "image");
+  const [heroLinkUrl, setHeroLinkUrl] = useState(portal.hero_link_url ?? "");
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export function PortalBrandingForm({ portal }: Props) {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updatePortalBranding(portal.id, { name, tagline, description, accentColor, backgroundColor, heroMediaType: heroType, heroMediaUrl: heroUrl });
+        await updatePortalBranding(portal.id, { name, tagline, description, accentColor, backgroundColor, heroMediaType: heroType, heroMediaUrl: heroUrl, heroLinkUrl });
         setMessage("保存しました。公開ポータルに反映されています。");
         router.refresh();
       } catch (e) {
@@ -102,6 +104,7 @@ export function PortalBrandingForm({ portal }: Props) {
           <label className="block text-xs font-semibold text-slate-600">ポータル名<input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /></label>
           <label className="block text-xs font-semibold text-slate-600">キャッチコピー<textarea value={tagline} onChange={(e) => setTagline(e.target.value)} className="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /></label>
           <label className="block text-xs font-semibold text-slate-600">サブコピー・説明文<textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /></label>
+          <label className="block text-xs font-semibold text-slate-600">EXPLORE NOW のリンク先（任意）<input value={heroLinkUrl} onChange={(e) => setHeroLinkUrl(e.target.value)} placeholder="未入力ならページ内フィード / 例: /events" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /><span className="mt-1 block text-[11px] font-normal text-slate-400">/motors/map、/events、https://example.com、#portal-feed など</span></label>
           <div className="grid grid-cols-2 gap-3"><label className="block text-xs font-semibold text-slate-600">アクセント<input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label><label className="block text-xs font-semibold text-slate-600">背景<input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label></div>
         </div>
       </div>

@@ -8,9 +8,10 @@ type Props = {
   backgroundColor: string;
   heroMediaType: string;
   heroMediaUrl: string | null;
+  heroLinkUrl: string | null;
 };
 
-export function PortalHero({ name, tagline, description, accentColor, backgroundColor, heroMediaType, heroMediaUrl }: Props) {
+export function PortalHero({ name, tagline, description, accentColor, backgroundColor, heroMediaType, heroMediaUrl, heroLinkUrl }: Props) {
   if (!heroMediaUrl && !tagline && !description) return null;
   return (
     <section className="relative isolate min-h-[300px] overflow-hidden" style={{ backgroundColor }}>
@@ -26,7 +27,7 @@ export function PortalHero({ name, tagline, description, accentColor, background
           <h1 className="text-3xl font-semibold tracking-wide text-white drop-shadow-lg md:text-5xl">{name}</h1>
           {tagline && <p className="mt-4 max-w-xl text-sm leading-7 text-white/80 md:text-base">{tagline}</p>}
           {description && <p className="mt-2 max-w-2xl text-xs leading-6 text-white/65 md:text-sm">{description}</p>}
-          <Link href="#portal-feed" className="mt-6 inline-flex border px-5 py-2.5 text-xs font-semibold tracking-[0.2em] text-white transition hover:bg-white hover:text-black" style={{ borderColor: accentColor }}>
+          <Link href={heroLinkUrl || "#portal-feed"} className="mt-6 inline-flex border px-5 py-2.5 text-xs font-semibold tracking-[0.2em] text-white transition hover:bg-white hover:text-black" style={{ borderColor: accentColor }}>
             EXPLORE NOW
           </Link>
         </div>

@@ -21,7 +21,7 @@ async function resolvePortal(slug: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("locapass_portals")
-    .select("id, name, tagline, description, accent_color, background_color, hero_media_type, hero_media_url")
+    .select("id, name, tagline, description, accent_color, background_color, hero_media_type, hero_media_url, hero_link_url")
     .eq("slug", slug)
     .maybeSingle();
   return data;
@@ -47,6 +47,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
         backgroundColor={portal.background_color}
         heroMediaType={portal.hero_media_type}
         heroMediaUrl={portal.hero_media_url}
+        heroLinkUrl={portal.hero_link_url}
       />
       <FeaturedSection shops={featuredShops} />
       <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} />

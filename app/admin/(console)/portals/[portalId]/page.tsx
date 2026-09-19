@@ -39,7 +39,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
     await Promise.all([
       supabase
         .from("locapass_portals")
-        .select("id, name, slug, home_url, tagline, description, status, accent_color, background_color, hero_media_type, hero_media_url")
+        .select("id, name, slug, home_url, tagline, description, status, accent_color, background_color, hero_media_type, hero_media_url, hero_link_url")
         .eq("id", portalId)
         .maybeSingle(),
       supabase

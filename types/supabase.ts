@@ -1442,6 +1442,7 @@ export type Database = {
           description: string | null
           hero_media_type: string
           hero_media_url: string | null
+          hero_link_url: string | null
           home_url: string | null
           id: number
           name: string
@@ -1460,6 +1461,7 @@ export type Database = {
           description?: string | null
           hero_media_type?: string
           hero_media_url?: string | null
+          hero_link_url?: string | null
           home_url?: string | null
           id?: number
           name: string
@@ -1478,6 +1480,7 @@ export type Database = {
           description?: string | null
           hero_media_type?: string
           hero_media_url?: string | null
+          hero_link_url?: string | null
           home_url?: string | null
           id?: number
           name?: string
