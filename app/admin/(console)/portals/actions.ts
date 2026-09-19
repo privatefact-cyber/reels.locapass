@@ -38,11 +38,17 @@ export async function updatePortalBranding(
     heroMediaType: "image" | "video";
     heroMediaUrl: string | null;
     heroLinkUrl: string | null;
+    headerColor: string;
+    headerOpacity: number;
   },
 ) {
   await requirePortalAccess(portalId);
   if (!/^#[0-9a-f]{6}$/i.test(input.accentColor) || !/^#[0-9a-f]{6}$/i.test(input.backgroundColor)) {
     throw new Error("カラーコードは6桁のHEX形式で入力してください");
+  }
+  if (!/^#[0-9a-f]{6}$/i.test(input.headerColor)) throw new Error("ヘッダー色は6桁のHEX形式で入力してください");
+  if (!Number.isFinite(input.headerOpacity) || input.headerOpacity < 0 || input.headerOpacity > 1) {
+    throw new Error("ヘッダー透過率が不正です");
   }
   if (input.heroLinkUrl && !(/^(https?:\/\/|\/|#)/i.test(input.heroLinkUrl))) {
     throw new Error("リンク先は https://、/、# から始まるURLを入力してください");
@@ -59,6 +65,8 @@ export async function updatePortalBranding(
       hero_media_type: input.heroMediaType,
       hero_media_url: input.heroMediaUrl,
       hero_link_url: input.heroLinkUrl?.trim() || null,
+      header_color: input.headerColor.toUpperCase(),
+      header_opacity: input.headerOpacity,
     })
     .eq("id", portalId);
   if (error) throw new Error(`ポータル設定の保存に失敗しました: ${error.message}`);

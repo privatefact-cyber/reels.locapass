@@ -1443,6 +1443,8 @@ export type Database = {
           hero_media_type: string
           hero_media_url: string | null
           hero_link_url: string | null
+          header_color: string
+          header_opacity: number
           home_url: string | null
           id: number
           name: string
@@ -1462,6 +1464,8 @@ export type Database = {
           hero_media_type?: string
           hero_media_url?: string | null
           hero_link_url?: string | null
+          header_color?: string
+          header_opacity?: number
           home_url?: string | null
           id?: number
           name: string
@@ -1481,6 +1485,8 @@ export type Database = {
           hero_media_type?: string
           hero_media_url?: string | null
           hero_link_url?: string | null
+          header_color?: string
+          header_opacity?: number
           home_url?: string | null
           id?: number
           name?: string

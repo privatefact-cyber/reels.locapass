@@ -6,6 +6,7 @@ import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
 import { PortalHero } from "@/components/portal/PortalHero";
+import { PortalHeaderTheme } from "@/components/portal/PortalHeaderTheme";
 
 // 注記: このディレクトリ名は[prefecture]だが、既存の/[prefecture]/[city]/[category]
 // (LUXELA側のSEO用ルート、lib/seo/area.tsのPREFECTURE_SLUG="tokyo"固定)と同じNext.jsの
@@ -21,7 +22,7 @@ async function resolvePortal(slug: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("locapass_portals")
-    .select("id, name, tagline, description, accent_color, background_color, hero_media_type, hero_media_url, hero_link_url")
+    .select("id, name, tagline, description, accent_color, background_color, hero_media_type, hero_media_url, hero_link_url, header_color, header_opacity")
     .eq("slug", slug)
     .maybeSingle();
   return data;
@@ -39,6 +40,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
 
   return (
     <div id="portal-feed" className="space-y-4" style={{ backgroundColor: portal.background_color }}>
+      <PortalHeaderTheme color={portal.header_color} opacity={portal.header_opacity} />
       <PortalHero
         name={portal.name}
         tagline={portal.tagline}

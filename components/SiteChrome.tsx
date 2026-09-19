@@ -51,7 +51,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
     <>
       {/* 高級感のあるゴールド調ヘッダー(すりガラス+光暈の装飾背景) */}
       {!mapImmersive && (
-      <header className="sticky top-0 z-40 transform-gpu overflow-hidden border-b border-white/10 bg-black/60 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30 will-change-transform">
+      <header className="sticky top-0 z-40 transform-gpu overflow-hidden border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30 will-change-transform" style={{ backgroundColor: "rgba(var(--portal-header-rgb, 0 0 0), var(--portal-header-opacity, .6))" }}>
         {/* 背景の光暈(装飾、クリック不可) */}
         <div
           aria-hidden
