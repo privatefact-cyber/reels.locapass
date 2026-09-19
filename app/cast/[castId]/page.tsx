@@ -186,7 +186,7 @@ export default async function CastDetailPage({
       />
       {shop && (
         <Link href={`/shops/${shop.id}`} className="text-sm text-brand hover:underline">
-          ← {shop.name} の一覧に戻る
+          {t.cast.backToShop(shop.name)}
         </Link>
       )}
 
@@ -212,7 +212,7 @@ export default async function CastDetailPage({
 
         <h1 className="mt-3 text-lg font-bold">
           {cast.name}
-          {cast.age != null && <span className="ml-2 text-base text-white/50">{cast.age}歳</span>}
+          {cast.age != null && <span className="ml-2 text-base text-white/50">{t.cast.age(cast.age)}</span>}
         </h1>
         {shop && <p className="text-xs text-neutral-400">{shop.name} ・ {shop.area}</p>}
 
@@ -331,7 +331,7 @@ export default async function CastDetailPage({
                   {d.body}
                 </p>
                 <p className="mt-2 text-xs text-neutral-500">
-                  {new Date(d.created_at).toLocaleString("ja-JP")}
+                  {new Date(d.created_at).toLocaleString(locale === "zh" ? "zh-CN" : locale)}
                 </p>
               </li>
             ))}

@@ -86,6 +86,8 @@ export type Dictionary = {
     inquirySending: string;
     inquirySubmit: string;
     autoTranslated: string;
+    areaNotSet: string;
+    genreNotSet: string;
   };
   featured: {
     pickUp: string;
@@ -118,6 +120,8 @@ export type Dictionary = {
     dayOff: string;
     untitled: string;
     storyNotFound: string;
+    backToShop: (name: string) => string;
+    age: (age: number) => string;
   };
   contact: {
     title: string;
@@ -301,6 +305,8 @@ const ja: Dictionary = {
     inquirySending: "送信中...",
     inquirySubmit: "送信する",
     autoTranslated: "店舗情報は自動翻訳です",
+    areaNotSet: "エリア未設定",
+    genreNotSet: "ジャンル未設定",
   },
   featured: {
     pickUp: "PICK UP",
@@ -333,6 +339,8 @@ const ja: Dictionary = {
     dayOff: "お休み",
     untitled: "(無題)",
     storyNotFound: "ストーリーは見つかりませんでした",
+    backToShop: (name) => `← ${name} の一覧に戻る`,
+    age: (age) => `${age}歳`,
   },
   contact: {
     title: "お店に連絡する",
@@ -516,6 +524,8 @@ const en: Dictionary = {
     inquirySending: "Sending...",
     inquirySubmit: "Send",
     autoTranslated: "Shop details are machine-translated from Japanese.",
+    areaNotSet: "Area not set",
+    genreNotSet: "Genre not set",
   },
   featured: {
     pickUp: "PICK UP",
@@ -548,6 +558,8 @@ const en: Dictionary = {
     dayOff: "Off",
     untitled: "(Untitled)",
     storyNotFound: "Story not found",
+    backToShop: (name) => `← Back to ${name}`,
+    age: (age) => `${age} yrs`,
   },
   contact: {
     title: "Contact the shop",
@@ -731,6 +743,8 @@ const zh: Dictionary = {
     inquirySending: "发送中...",
     inquirySubmit: "发送",
     autoTranslated: "店铺信息由日语自动翻译。",
+    areaNotSet: "地区未设置",
+    genreNotSet: "类型未设置",
   },
   featured: {
     pickUp: "PICK UP",
@@ -763,6 +777,8 @@ const zh: Dictionary = {
     dayOff: "休息",
     untitled: "(无标题)",
     storyNotFound: "未找到该动态",
+    backToShop: (name) => `← 返回${name}`,
+    age: (age) => `${age}岁`,
   },
   contact: {
     title: "联系店铺",

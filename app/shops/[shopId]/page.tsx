@@ -333,7 +333,7 @@ export default async function ShopDetailPage({
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-6">
           <p className="text-[11px] tracking-[0.2em] text-amber-300/80">
-            {store.area ?? "エリア未設定"} / {store.genre ? genreLabel(locale, store.genre) : "ジャンル未設定"}
+            {store.area ?? t.shop.areaNotSet} / {store.genre ? genreLabel(locale, store.genre) : t.shop.genreNotSet}
           </p>
           <h1 className="font-display mt-1 text-3xl font-semibold tracking-wide text-white drop-shadow-lg sm:text-4xl">
             {store.name}
