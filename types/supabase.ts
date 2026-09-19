@@ -1087,18 +1087,21 @@ export type Database = {
           cover_url: string | null
           created_at: string
           description: string | null
+          gallery_image_urls: string[]
           icon_url: string | null
           id: string
           lat: number | null
           line_url: string | null
           lng: number | null
           name: string
+          occupancy_status: Json | null
           plan: string
           site_id: number
           slug: string
           status: string
           tagline: string | null
           tel: string | null
+          translations: Json
           updated_at: string
           url: string | null
           venue_id: string | null
@@ -1112,18 +1115,21 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          gallery_image_urls?: string[]
           icon_url?: string | null
           id?: string
           lat?: number | null
           line_url?: string | null
           lng?: number | null
           name: string
+          occupancy_status?: Json | null
           plan?: string
           site_id: number
           slug: string
           status?: string
           tagline?: string | null
           tel?: string | null
+          translations?: Json
           updated_at?: string
           url?: string | null
           venue_id?: string | null
@@ -1137,18 +1143,21 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          gallery_image_urls?: string[]
           icon_url?: string | null
           id?: string
           lat?: number | null
           line_url?: string | null
           lng?: number | null
           name?: string
+          occupancy_status?: Json | null
           plan?: string
           site_id?: number
           slug?: string
           status?: string
           tagline?: string | null
           tel?: string | null
+          translations?: Json
           updated_at?: string
           url?: string | null
           venue_id?: string | null

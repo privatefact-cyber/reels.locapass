@@ -98,7 +98,7 @@ export default async function ShopDetailPage({
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, address, address_en, tel, business_hours, description, cover_url, icon_url, url, tagline, line_url, site_id",
+      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, site_id, gallery_image_urls",
     )
     .eq("id", shopId)
     .single();
@@ -116,8 +116,8 @@ export default async function ShopDetailPage({
     ? await supabase.from("locapass_sites").select("slug, name").eq("id", shopRow.site_id).maybeSingle()
     : { data: null };
 
-  // locapass_shopsには項目別自動翻訳(translations列)が無いため、原文をそのまま出す。
-  const usedTranslation = false;
+  const translatedDescription = pickTranslation(locale, shopRow.description, shopRow.translations, "description");
+  const usedTranslation = translatedDescription.translated;
 
   const store: Store = {
     id: shopRow.id,
@@ -128,7 +128,7 @@ export default async function ShopDetailPage({
     phone: shopRow.tel,
     businessHours: shopRow.business_hours,
     priceInfo: null, // locapass_shopsに料金情報の列は無い
-    description: shopRow.description,
+    description: translatedDescription.text,
     coverImageUrl: shopRow.cover_url ?? shopRow.icon_url,
     websiteUrl: shopRow.url,
     usageNotes: null,
@@ -140,6 +140,7 @@ export default async function ShopDetailPage({
     tagline: shopRow.tagline,
     lineContactUrl: shopRow.line_url,
     lineQrImageUrl: null,
+    galleryImageUrls: shopRow.gallery_image_urls ?? [],
   };
   // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
   const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
@@ -494,6 +495,20 @@ export default async function ShopDetailPage({
             </p>
           )}
           {usedTranslation && <p className="text-[11px] text-neutral-500">{t.shop.autoTranslated}</p>}
+
+          {store.galleryImageUrls.length > 0 && (
+            <div className="-mx-1 flex snap-x gap-2 overflow-x-auto pb-1">
+              {store.galleryImageUrls.map((url) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={url}
+                  src={url}
+                  alt=""
+                  className="h-32 w-24 flex-none snap-start rounded-lg border border-white/10 object-cover"
+                />
+              ))}
+            </div>
+          )}
 
           <div className="space-y-3 rounded-2xl border border-amber-500/20 bg-zinc-900/60 p-5 shadow-2xl backdrop-blur-xl">
             {store.address && (

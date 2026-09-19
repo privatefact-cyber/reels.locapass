@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { LocapassShopEditForm } from "@/components/admin/LocapassShopEditForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
+import { LocapassFloorStatusDropzone } from "@/components/admin/LocapassFloorStatusDropzone";
+import { LocapassShopGalleryUploader } from "@/components/admin/LocapassShopGalleryUploader";
 
 export default async function AdminLocapassShopDetailPage({
   params,
@@ -17,7 +19,7 @@ export default async function AdminLocapassShopDetailPage({
   const { data: shop } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, tagline, description, address, tel, business_hours, url, line_url, cover_url, icon_url, status, created_at, site_id, locapass_sites ( id, name )",
+      "id, name, category, tagline, description, address, tel, business_hours, url, line_url, cover_url, icon_url, status, created_at, site_id, occupancy_status, gallery_image_urls, locapass_sites ( id, name )",
     )
     .eq("id", shopId)
     .maybeSingle();
@@ -32,6 +34,21 @@ export default async function AdminLocapassShopDetailPage({
     .from("locapass_reels")
     .select("id", { count: "exact", head: true })
     .eq("shop_id", shopId);
+
+  const occupancyStatus = shop.occupancy_status as {
+    status: "available" | "few_seats" | "full";
+    captured_at: string;
+  } | null;
+  const OCCUPANCY_LABEL: Record<string, string> = {
+    available: "空席あり",
+    few_seats: "残りわずか",
+    full: "満席",
+  };
+  const initialOccupancyText = occupancyStatus
+    ? `${OCCUPANCY_LABEL[occupancyStatus.status] ?? occupancyStatus.status}(撮影 ${new Date(
+        occupancyStatus.captured_at,
+      ).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })})`
+    : null;
 
   return (
     <div className="space-y-6">
@@ -66,6 +83,26 @@ export default async function AdminLocapassShopDetailPage({
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-xs text-slate-500">リール投稿数</p>
         <p className="mt-1 text-2xl font-bold text-slate-900">{reelCount ?? 0}件</p>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">混雑状況(AIコンシェルジュ連携)</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          フロア写真をアップロードすると、AIが混雑状況を判定して案内AIの回答に反映します。
+        </p>
+        <div className="mt-3">
+          <LocapassFloorStatusDropzone shopId={shop.id} initialStatusText={initialOccupancyText} />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">店舗紹介ギャラリー</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          店内の雰囲気が伝わる写真を最大10枚まで登録できます。表側の店舗ページに表示されます。
+        </p>
+        <div className="mt-3">
+          <LocapassShopGalleryUploader shopId={shop.id} initialUrls={shop.gallery_image_urls ?? []} />
+        </div>
       </div>
 
       <LocapassShopEditForm

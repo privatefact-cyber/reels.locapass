@@ -31,6 +31,8 @@ export interface Store {
   lineContactUrl: string | null;
   /** 上記LINEのQRコード画像URL。設定されていれば連絡モーダルにプレビュー表示する。 */
   lineQrImageUrl: string | null;
+  /** 店舗紹介ギャラリー(最大10枚)。並び順のまま表示する。 */
+  galleryImageUrls: string[];
 }
 
 export interface CastMedia {
