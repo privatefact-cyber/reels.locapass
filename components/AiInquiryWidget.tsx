@@ -8,12 +8,12 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 
 const CHAT_ENDPOINT =
   "https://ezhbjfkbfjgijdcvmzdi.supabase.co/functions/v1/wp-inquiry-chat";
-const SITE_DOMAIN = "luxela.jp";
+const SITE_DOMAIN = "locapass.net";
 // このキーはサイト識別用の公開キー相当(publishable keyと同じ扱い)。
 // 秘匿すべき認証情報ではなく、サーバー側でこのサイトのナレッジベース範囲を
 // 特定するためだけに使う。
-const SITE_SECRET = "dBPRpzktj4StUM0RRjJNhRmQmhL46eekn1QgGrYY";
-const SESSION_STORAGE_KEY = "luxela_ai_inquiry_session_id";
+const SITE_SECRET = "x4m1GU0B5kSoBW3JkKAFReBwLp3pTFpDz5NEHNWy";
+const SESSION_STORAGE_KEY = "locapass_ai_inquiry_session_id";
 
 type ChatLink = { title: string; url: string };
 
@@ -29,7 +29,7 @@ type ChatMessage = {
 // 埋め込んでしまう)。
 function toPath(url: string): string {
   try {
-    return new URL(url, "https://luxela.jp").pathname;
+    return new URL(url, "https://reels.locapass.net").pathname;
   } catch {
     return url;
   }
