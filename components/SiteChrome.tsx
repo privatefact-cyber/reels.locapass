@@ -26,10 +26,20 @@ const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
 
 // 公開ローンチ前の合言葉ゲート(/gate)では、ヘッダー・ボトムナビ・AI問い合わせウィジェットを
 // 一切表示しない(合言葉を通していない訪問者にサイトの中身・機能を一切見せないため)。
+// 管理画面(/admin)・店舗ダッシュボード(/dashboard)・キャスト/スタッフ用ログインも、
+// 一般客向けのゴールド調ヘッダー/ボトムナビ/AIコンシェルジュを出す対象ではない
+// (スタッフ・運営者しか来ない画面に客向けチャットが浮いて出てしまっていたため除外する)。
+// 一般会員向けの/login・/mypage/loginはAIコンシェルジュを含め通常どおり表示する。
+const EXCLUDED_PREFIXES = ["/gate", "/admin", "/dashboard", "/cast/login", "/staff/login"];
+
+function isExcludedPath(pathname: string): boolean {
+  return EXCLUDED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
   const pathname = usePathname();
   const { t } = useLocale();
-  if (pathname === "/gate") return null;
+  if (isExcludedPath(pathname ?? "")) return null;
   const mapImmersive = FULL_BLEED_PATTERN.test(pathname ?? "");
 
   return (

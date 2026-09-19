@@ -199,6 +199,16 @@ export type Dictionary = {
     avatarUploadFailed: string;
     avatarSaveFailed: string;
     unknownError: string;
+    back: string;
+    passwordTitle: string;
+    passwordDesc: string;
+    pushTitle: string;
+    pushDesc: string;
+  };
+  error: {
+    title: string;
+    body: string;
+    retry: string;
   };
   notifications: {
     empty: string;
@@ -404,6 +414,16 @@ const ja: Dictionary = {
     avatarUploadFailed: "アイコンのアップロードに失敗しました",
     avatarSaveFailed: "アイコンの保存に失敗しました",
     unknownError: "不明なエラー",
+    back: "戻る",
+    passwordTitle: "パスワード",
+    passwordDesc: "パスワードを設定しておくと、メールが使えないときでもメールアドレスとパスワードでログインできます。",
+    pushTitle: "プッシュ通知",
+    pushDesc: "フォロー中キャストの出勤や新着投稿などをこの端末に通知します(準備中の機能も含みます)。",
+  },
+  error: {
+    title: "一時的に読み込めませんでした",
+    body: "通信状況が不安定な可能性があります。もう一度お試しください。",
+    retry: "再読み込み",
   },
   notifications: {
     empty: "まだお知らせはありません。",
@@ -609,6 +629,16 @@ const en: Dictionary = {
     avatarUploadFailed: "Failed to upload avatar",
     avatarSaveFailed: "Failed to save avatar",
     unknownError: "Unknown error",
+    back: "Back",
+    passwordTitle: "Password",
+    passwordDesc: "Set a password so you can log in with your email and password even when email isn't available.",
+    pushTitle: "Push Notifications",
+    pushDesc: "Get notified on this device about shifts and new posts from cast you follow (including upcoming features).",
+  },
+  error: {
+    title: "Couldn't load this page",
+    body: "Your connection may be unstable. Please try again.",
+    retry: "Reload",
   },
   notifications: {
     empty: "No notifications yet.",
@@ -814,6 +844,16 @@ const zh: Dictionary = {
     avatarUploadFailed: "头像上传失败",
     avatarSaveFailed: "头像保存失败",
     unknownError: "未知错误",
+    back: "返回",
+    passwordTitle: "密码",
+    passwordDesc: "设置密码后，即使无法使用邮箱验证，也能通过邮箱地址和密码登录。",
+    pushTitle: "推送通知",
+    pushDesc: "将关注成员的出勤和新帖子等推送到此设备(包含部分开发中的功能)。",
+  },
+  error: {
+    title: "暂时无法加载",
+    body: "网络状况可能不稳定，请重试。",
+    retry: "重新加载",
   },
   notifications: {
     empty: "暂无通知。",

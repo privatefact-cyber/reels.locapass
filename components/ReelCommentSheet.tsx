@@ -64,7 +64,7 @@ export function ReelCommentSheet({
     );
     if (customerIds.length > 0) {
       const { data: profiles } = await supabase
-        .from("user_profiles")
+        .from("locapass_members")
         .select("id, nickname, avatar_url")
         .in("id", customerIds);
       const map: Record<string, CommenterProfile> = {};

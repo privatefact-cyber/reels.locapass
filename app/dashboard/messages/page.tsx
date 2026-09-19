@@ -11,14 +11,23 @@ export default async function DashboardMessagesPage() {
   const supabase = createAdminClient();
   const { data: favorites } = await supabase
     .from("user_shop_favorites")
-    .select("user_id, created_at, user_profiles ( nickname )")
+    .select("user_id, created_at")
     .eq("shop_id", shop.id)
     .order("created_at", { ascending: false });
 
-  const favoriteUsers = (favorites ?? []).map((f) => {
-    const profile = Array.isArray(f.user_profiles) ? f.user_profiles[0] : f.user_profiles;
-    return { userId: f.user_id, nickname: profile?.nickname ?? "ゲスト" };
-  });
+  // user_shop_favorites.user_idにFKが無く埋め込みselectができないため、
+  // プロフィール(locapass_members、実際の会員データが入っているテーブル)は別クエリで引く。
+  const userIds = Array.from(new Set((favorites ?? []).map((f) => f.user_id)));
+  const { data: profiles } =
+    userIds.length > 0
+      ? await supabase.from("locapass_members").select("id, nickname").in("id", userIds)
+      : { data: [] as { id: string; nickname: string | null }[] };
+  const nicknameById = new Map((profiles ?? []).map((p) => [p.id, p.nickname]));
+
+  const favoriteUsers = (favorites ?? []).map((f) => ({
+    userId: f.user_id,
+    nickname: nicknameById.get(f.user_id) ?? "ゲスト",
+  }));
 
   return (
     <div className="max-w-xl space-y-4">

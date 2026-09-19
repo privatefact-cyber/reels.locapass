@@ -37,12 +37,12 @@ export default async function RootLayout({
   let myPageInitial: string | null = null;
   if (user) {
     const { data: profile } = await supabase
-      .from("user_profiles")
+      .from("locapass_members")
       .select("nickname, avatar_url")
       .eq("id", user.id)
-      .single();
-    myPageAvatarUrl = profile?.avatar_url ?? null;
-    myPageInitial = profile?.nickname?.slice(0, 1) ?? "ゲ";
+      .maybeSingle();
+    myPageAvatarUrl = profile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined) ?? null;
+    myPageInitial = profile?.nickname?.slice(0, 1) ?? null;
   }
 
   return (

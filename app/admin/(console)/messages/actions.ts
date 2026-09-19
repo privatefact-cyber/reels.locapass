@@ -15,7 +15,7 @@ export async function sendAdminBroadcast(formData: FormData) {
 
   const supabase = createAdminClient();
 
-  const { data: users, error: usersError } = await supabase.from("user_profiles").select("id");
+  const { data: users, error: usersError } = await supabase.from("locapass_members").select("id");
   if (usersError) throw new Error(usersError.message);
   if (!users || users.length === 0) return;
 
