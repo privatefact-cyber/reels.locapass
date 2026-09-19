@@ -96,19 +96,6 @@ function tileKey(tile: Tile) {
   return `ad:${tile.adKey}`;
 }
 
-/**
- * タイルのサムネイル/ポスター画像URL。縦スワイプ表示(md以上)で9:16動画の左右に
- * できる余白を、同じ画像をぼかして敷き詰めて埋めるための背景として使う。
- */
-function tileBackdropUrl(tile: Tile): string | undefined {
-  if (tile.kind === "cast") {
-    const media = tile.reel.media[0];
-    return (media?.type === "video" ? media.poster : media?.url) ?? undefined;
-  }
-  if (tile.kind === "shop") return tile.shop.coverImageUrl ?? undefined;
-  return (tile.ad.media.type === "video" ? tile.ad.media.poster : tile.ad.media.url) ?? undefined;
-}
-
 /** CAST(投稿リール)とSHOP(店舗ディレクトリ)のタイルを交互に混ぜて1つのグリッドにする。 */
 function buildTiles(castReels: ReelItem[], shopItems: ShopGridItem[]): Tile[] {
   const merged: Tile[] = [];
@@ -757,16 +744,8 @@ export function ReelFeed({
             <div
               key={loopKey}
               ref={setOverlayItemRef(index)}
-              className="relative mx-auto w-full overflow-hidden md:flex md:h-[85dvh] md:items-center md:justify-center"
+              className="relative mx-auto w-full overflow-hidden bg-black md:flex md:h-[85dvh] md:items-center md:justify-center"
             >
-              {/* iPad等、9:16動画より横に余裕がある画面(md以上)で左右にできる黒帯を、
-                  同じ画像をぼかして敷き詰めて埋める(TikTok/Spotify等と同じ手法)。
-                  スマホ幅では動画自体が横幅いっぱいになり隙間が無いため出さない。 */}
-              <div
-                aria-hidden
-                className="absolute inset-0 hidden scale-110 bg-neutral-950 bg-cover bg-center blur-2xl brightness-[0.45] md:block"
-                style={{ backgroundImage: `url(${tileBackdropUrl(tile) ?? ""})` }}
-              />
               {tile.kind === "cast" ? (
                 (() => {
                   const media = tile.reel.media[0];
