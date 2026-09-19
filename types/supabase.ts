@@ -1084,6 +1084,7 @@ export type Database = {
           hero_media_type: string
           hero_media_url: string | null
           line_qr_image_url: string | null
+          price_info: string | null
           shop_code: string
           sns_links: Json
           usage_notes: string | null
@@ -1119,6 +1120,7 @@ export type Database = {
           hero_media_type?: string
           hero_media_url?: string | null
           line_qr_image_url?: string | null
+          price_info?: string | null
           shop_code?: string
           sns_links?: Json
           usage_notes?: string | null
@@ -1154,6 +1156,7 @@ export type Database = {
           hero_media_type?: string
           hero_media_url?: string | null
           line_qr_image_url?: string | null
+          price_info?: string | null
           shop_code?: string
           sns_links?: Json
           usage_notes?: string | null

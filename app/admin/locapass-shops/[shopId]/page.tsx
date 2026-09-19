@@ -47,7 +47,7 @@ export default async function LocapassShopSettingsPage({
       supabase
         .from("locapass_shops")
         .select(
-          "id, name, category, address, tel, business_hours, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, shop_code",
+          "id, name, category, address, tel, business_hours, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code",
         )
         .eq("id", currentShop.id)
         .single(),
@@ -78,7 +78,7 @@ export default async function LocapassShopSettingsPage({
     address: shopRow.address,
     phone: shopRow.tel,
     business_hours: shopRow.business_hours,
-    price_info: null as string | null,
+    price_info: shopRow.price_info,
     description: shopRow.description,
     cover_image_url: shopRow.cover_url,
     hero_media_url: shopRow.hero_media_url,

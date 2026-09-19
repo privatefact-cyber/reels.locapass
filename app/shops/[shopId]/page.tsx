@@ -98,7 +98,7 @@ export default async function ShopDetailPage({
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, site_id, gallery_image_urls",
+      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, site_id, gallery_image_urls, price_info, usage_notes",
     )
     .eq("id", shopId)
     .single();
@@ -116,8 +116,14 @@ export default async function ShopDetailPage({
     ? await supabase.from("locapass_sites").select("slug, name").eq("id", shopRow.site_id).maybeSingle()
     : { data: null };
 
-  const translatedDescription = pickTranslation(locale, shopRow.description, shopRow.translations, "description");
-  const usedTranslation = translatedDescription.translated;
+  // 店舗が日本語で入力した文章は、英語・中国語表示では保存時に自動翻訳しておいた文を出す
+  // (翻訳が無い項目は日本語のまま)。1項目でも翻訳を使ったら「自動翻訳」の注記を出す(本家と同じ)。
+  let usedTranslation = false;
+  const tr = (original: string | null, key: string) => {
+    const picked = pickTranslation(locale, original, shopRow.translations, key);
+    if (picked.translated) usedTranslation = true;
+    return picked.text;
+  };
 
   const store: Store = {
     id: shopRow.id,
@@ -126,12 +132,12 @@ export default async function ShopDetailPage({
     genre: shopRow.category,
     address: shopRow.address,
     phone: shopRow.tel,
-    businessHours: shopRow.business_hours,
-    priceInfo: null, // locapass_shopsに料金情報の列は無い
-    description: translatedDescription.text,
+    businessHours: tr(shopRow.business_hours, "business_hours"),
+    priceInfo: tr(shopRow.price_info, "price_info"),
+    description: tr(shopRow.description, "description"),
     coverImageUrl: shopRow.cover_url ?? shopRow.icon_url,
     websiteUrl: shopRow.url,
-    usageNotes: null,
+    usageNotes: tr(shopRow.usage_notes, "usage_notes"),
     snsLinks: {},
     hero: {
       type: "image",

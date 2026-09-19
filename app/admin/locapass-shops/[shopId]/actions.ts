@@ -9,7 +9,7 @@ import type { Json } from "@/types/supabase";
 
 /**
  * LUXELA本家(app/dashboard/shop/actions.ts)の店舗情報画面をlocapass_shopsにつないだ版。
- * エリア・SNS・LINE QR・トップ画像/動画・利用説明は00082で追加した列に保存する(列名は本家と同じ)。
+ * エリア・SNS・LINE QR・トップ画像/動画・利用説明は00082、料金情報は00083で追加した列に保存する(列名は本家と同じ)。
  */
 
 /** 管理コンソールにログイン中で、かつこの店舗のサイトを担当していることを確認する。 */
@@ -53,7 +53,8 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   const lineQrImageUrl = String(formData.get("line_qr_image_url") ?? "").trim();
   const heroMediaUrl = String(formData.get("hero_media_url") ?? "").trim();
   const heroMediaType = String(formData.get("hero_media_url_type") ?? "").trim() === "video" ? "video" : "image";
-  const usageNotes = String(formData.get("usage_notes") ?? "").trim();
+  const usageNotes = String(formData.get("usage_notes") ?? "").trim() || null;
+  const priceInfo = String(formData.get("price_info") ?? "").trim() || null;
 
   if (!name) throw new Error("店舗名は必須です");
 
@@ -82,7 +83,11 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
     description,
     tagline: currentShop?.tagline ?? null,
     business_hours: businessHours,
+    price_info: priceInfo,
+    usage_notes: usageNotes,
   };
+  // 紹介文・営業時間・料金情報・利用説明などが変わっていたら、英語・中国語の翻訳を作り直す
+  // (本家refreshShopTranslationsと同じ項目。変わっていなければ翻訳APIは呼ばない)。
   if (needsTranslation(translationFields, currentShop?.translations)) {
     try {
       const translations = await translateFields(translationFields);
@@ -114,7 +119,8 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
       line_qr_image_url: lineQrImageUrl || null,
       hero_media_url: heroMediaUrl || null,
       ...(heroMediaUrl ? { hero_media_type: heroMediaType } : {}),
-      usage_notes: usageNotes || null,
+      usage_notes: usageNotes,
+      price_info: priceInfo,
       ...translationsPatch,
     })
     .eq("id", shopId)
