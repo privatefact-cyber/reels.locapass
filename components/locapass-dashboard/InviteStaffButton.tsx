@@ -1,16 +1,18 @@
 "use client";
 
 import { useActionState } from "react";
-import { inviteStaff, type InviteStaffState } from "@/app/admin/locapass-shops/[shopId]/not-connected";
+import { inviteStaff, type InviteStaffState } from "@/app/dashboard/shop/[shopId]/staff/actions";
 
 export function InviteStaffButton({
+  shopId,
   staffMemberId,
   hasLogin,
 }: {
+  shopId: string;
   staffMemberId: string;
   hasLogin: boolean;
 }) {
-  const boundInvite = inviteStaff.bind(null, staffMemberId);
+  const boundInvite = inviteStaff.bind(null, shopId, staffMemberId);
   const [state, formAction, pending] = useActionState<InviteStaffState, FormData>(
     boundInvite,
     { status: "idle" },

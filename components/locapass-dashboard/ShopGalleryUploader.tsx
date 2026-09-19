@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { addGalleryImage, deleteGalleryImage } from "@/app/admin/locapass-shops/[shopId]/actions";
+import { addGalleryImage, deleteGalleryImage } from "@/app/dashboard/shop/[shopId]/actions";
 
 const MAX_IMAGES = 10;
 

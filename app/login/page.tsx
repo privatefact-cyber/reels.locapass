@@ -4,6 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+/** ログイン後に戻す先。同一サイト内の相対パスだけ許可する(外部URLへのオープンリダイレクト防止)。 */
+function safeNextPath(): string | null {
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return null;
+  return next;
+}
+
+/**
+ * 店舗・スタッフ・キャスト共通のログイン。ログイン後は /dashboard がロールを判定して
+ * 各画面(/admin, /dashboard/shop/[shopId], /dashboard/staff, /dashboard/cast, /mypage)へ振り分ける。
+ */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -24,7 +35,8 @@ export default function LoginPage() {
       setError(error.message);
       return;
     }
-    router.push("/dashboard/applicants");
+    // next(元いたページ)があればそこへ。権限が無いページなら遷移先で404になる。
+    router.push(safeNextPath() ?? "/dashboard");
     router.refresh();
   }
 
@@ -33,7 +45,7 @@ export default function LoginPage() {
       <h1 className="text-xl font-bold">加盟店ログイン</h1>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium">メールアドレス</label>
+          <label className="block text-sm font-medium">メールアドレス / ログインID</label>
           <input
             type="email"
             required
@@ -61,10 +73,8 @@ export default function LoginPage() {
           {loading ? "ログイン中..." : "ログイン"}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm">
-        <a href="/login/recover" className="text-slate-500 underline hover:text-slate-900">
-          ログインできない方はこちら
-        </a>
+      <p className="mt-4 text-center text-xs text-slate-500">
+        ログインIDやパスワードがわからない場合は、所属店舗またはポータルの管理者に再発行を依頼してください。
       </p>
     </div>
   );

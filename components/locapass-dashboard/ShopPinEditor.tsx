@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import { MapPin, Search } from "lucide-react";
 import { geocodeAddress } from "@/lib/map/addressGeocode";
-import { updateShopPin } from "@/app/admin/locapass-shops/[shopId]/actions";
+import { updateShopPin } from "@/app/dashboard/shop/[shopId]/actions";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 

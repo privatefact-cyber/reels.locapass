@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function DashboardSignOutButton() {
+export function DashboardSignOutButton({ redirectTo = "/login" }: { redirectTo?: string }) {
   const router = useRouter();
 
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/admin/login");
+    router.push(redirectTo);
     router.refresh();
   }
 

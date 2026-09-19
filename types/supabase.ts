@@ -794,7 +794,7 @@ export type Database = {
           age?: number | null
           avatar_url?: string | null
           birth_date?: string | null
-          cast_code: string
+          cast_code?: string
           created_at?: string
           id?: string
           id_check_hit_count?: number | null
@@ -3013,6 +3013,15 @@ export type Database = {
           login_email: string
           one_time_password: string
         }[]
+      }
+      locapass_current_cast_shop_id: { Args: never; Returns: string }
+      locapass_update_own_cast_profile: {
+        Args: { p_avatar_url?: string; p_name: string; p_pr_text: string }
+        Returns: undefined
+      }
+      locapass_update_own_staff_profile: {
+        Args: { p_avatar_url?: string; p_bio: string; p_name: string }
+        Returns: undefined
       }
       locapass_regenerate_cast_login_token: {
         Args: { p_cast_id: string }

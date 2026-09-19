@@ -141,7 +141,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
                   <tr key={shop.id} className="align-top text-slate-700">
                     <td className="px-5 py-3">
                       <Link
-                        href={`/admin/locapass-shops/${shop.id}`}
+                        href={`/dashboard/shop/${shop.id}`}
                         className="font-semibold text-slate-900 hover:text-indigo-600 hover:underline"
                       >
                         {shop.name}
@@ -180,7 +180,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
                     <td className="px-5 py-3">
                       <div className="flex flex-wrap justify-end gap-2">
                         <Link
-                          href={`/admin/locapass-shops/${shop.id}`}
+                          href={`/dashboard/shop/${shop.id}`}
                           className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                         >
                           編集

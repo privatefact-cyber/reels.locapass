@@ -1,0 +1,774 @@
+"use client";
+
+import { useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Camera, Pencil, Pin, PinOff, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { AvatarCropModal } from "@/components/AvatarCropModal";
+import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPanel";
+import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
+import { RevealableQr } from "@/components/RevealableQr";
+import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+
+export type MyReel = {
+  id: string;
+  caption: string | null;
+  media: { type: "video" | "image"; url: string }[];
+  likesCount: number;
+  createdAt: string;
+  isCommentsEnabled: boolean;
+  pinnedAt: string | null;
+};
+
+export type MyStory = {
+  id: string;
+  media: { type: "video" | "image"; url: string }[];
+  createdAt: string;
+  expiresAt: string;
+};
+
+const MAX_PINNED_REELS = 3;
+
+/**
+ * cast 本人の画面(/dashboard/cast)。LUXELA本家のキャストマイページ(CastMypageClient)と同じUI。
+ * プロフィール(locapass_update_own_cast_profile)・リール/ストーリー投稿と削除(locapass_reels・
+ * locapass-reelsバケット)は locapass につないである。自分の投稿は locapass_reels.created_by で判定する。
+ * コメント・コメント可否・ピン留めは locapass_reels に受け皿が無いため未接続。
+ */
+export function CastDashboardClient({
+  userId,
+  portalId,
+  castId,
+  shopId,
+  shopName,
+  castCode,
+  qrDataUrl,
+  initialName,
+  initialPrText,
+  initialAvatarUrl,
+  initialReels,
+  initialStories,
+}: {
+  userId: string;
+  portalId: number;
+  castId: string;
+  shopId: string;
+  shopName: string | null;
+  castCode: string;
+  qrDataUrl: string;
+  initialName: string;
+  initialPrText: string | null;
+  initialAvatarUrl: string | null;
+  initialReels: MyReel[];
+  initialStories: MyStory[];
+}) {
+  const router = useRouter();
+  const [reels, setReels] = useState(initialReels);
+  const [stories, setStories] = useState(initialStories);
+
+  // プロフィール(名前・自己紹介・アイコン)
+  const [name, setName] = useState(initialName);
+  const [prText, setPrText] = useState(initialPrText ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState(initialName);
+  const [editPrText, setEditPrText] = useState(initialPrText ?? "");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  // アイコン変更(選択→円形クロップ→即保存)
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // リール投稿フォーム
+  const [formOpen, setFormOpen] = useState(false);
+  const [postType, setPostType] = useState<"reel" | "story">("reel");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [caption, setCaption] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [commentsEnabled, setCommentsEnabled] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const postCount = reels.length;
+  const totalLikes = reels.reduce((sum, r) => sum + r.likesCount, 0);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    if (!f) {
+      setFile(null);
+      setPreview(null);
+      return;
+    }
+
+    const validationError = await validateReelFile(f);
+    if (validationError) {
+      setError(validationError);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    setError(null);
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+
+    if (f.type.startsWith("video/")) {
+      setOptimizing(true);
+      const optimized = await optimizeReelVideo(f);
+      setOptimizing(false);
+      setFile(optimized);
+      setPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(optimized);
+      });
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!file) {
+      setError("写真か動画を選んでください");
+      return;
+    }
+    setUploading(true);
+    setError(null);
+
+    // 自店舗フォルダ配下(locapass-reelsバケット)に置き、locapass_reels に登録する。
+    // 投稿者(created_by)はDBのトリガーで本人に固定される。
+    const supabase = createClient();
+    const isVideo = file.type.startsWith("video/");
+    const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+    const path = `${shopId}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("locapass-reels")
+      .upload(path, file, { contentType: file.type });
+
+    if (uploadError) {
+      setUploading(false);
+      setError(`アップロードに失敗しました: ${uploadError.message}`);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
+    const media: MyReel["media"] = [{ type: isVideo ? "video" : "image", url: publicUrlData.publicUrl }];
+    const mediaColumns = {
+      video_url: isVideo ? publicUrlData.publicUrl : null,
+      images: isVideo ? [] : [{ url: publicUrlData.publicUrl }],
+    };
+
+    if (postType === "story") {
+      // 本家と同じく、ストーリーは24時間で消える。
+      const { data: insertedStory, error: insertError } = await supabase
+        .from("locapass_reels")
+        .insert({
+          shop_id: shopId,
+          portal_id: portalId,
+          caption: caption.trim() || null,
+          ...mediaColumns,
+          author_name: name,
+          author_icon_url: avatarUrl,
+          reel_type: "story",
+          status: "publish",
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        })
+        .select("id, published_at, updated_at, expires_at")
+        .single();
+
+      setUploading(false);
+
+      if (insertError || !insertedStory) {
+        setError(`投稿の保存に失敗しました: ${insertError?.message ?? ""}`);
+        return;
+      }
+
+      setStories((prev) => [
+        {
+          id: insertedStory.id,
+          media,
+          createdAt: insertedStory.published_at ?? insertedStory.updated_at,
+          expiresAt: insertedStory.expires_at!,
+        },
+        ...prev,
+      ]);
+    } else {
+      const { data: inserted, error: insertError } = await supabase
+        .from("locapass_reels")
+        .insert({
+          shop_id: shopId,
+          portal_id: portalId,
+          caption: caption.trim() || null,
+          action_url: linkUrl.trim() || null,
+          ...mediaColumns,
+          author_name: name,
+          author_icon_url: avatarUrl,
+          reel_type: "permanent",
+          status: "publish",
+        })
+        .select("id, caption, like_count, published_at, updated_at")
+        .single();
+
+      setUploading(false);
+
+      if (insertError || !inserted) {
+        setError(`投稿の保存に失敗しました: ${insertError?.message ?? ""}`);
+        return;
+      }
+
+      setReels((prev) => [
+        {
+          id: inserted.id,
+          caption: inserted.caption,
+          media,
+          likesCount: inserted.like_count,
+          createdAt: inserted.published_at ?? inserted.updated_at,
+          isCommentsEnabled: commentsEnabled,
+          pinnedAt: null,
+        },
+        ...prev,
+      ]);
+    }
+
+    setFile(null);
+    setPreview(null);
+    setCaption("");
+    setLinkUrl("");
+    setCommentsEnabled(true);
+    setPostType("reel");
+    setFormOpen(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    router.refresh();
+  }
+
+  async function handleDeleteStory(storyId: string) {
+    if (!confirm("このストーリーを削除しますか?")) return;
+    const supabase = createClient();
+    setStories((prev) => prev.filter((s) => s.id !== storyId));
+    await supabase.from("locapass_reels").delete().eq("id", storyId);
+  }
+
+  async function handleDelete(reelId: string) {
+    const supabase = createClient();
+    const { data, error: deleteError } = await supabase
+      .from("locapass_reels")
+      .delete()
+      .eq("id", reelId)
+      .select("id");
+
+    if (deleteError || !data || data.length === 0) {
+      setError("削除に失敗しました");
+      return;
+    }
+    setReels((prev) => prev.filter((r) => r.id !== reelId));
+  }
+
+  // コメント可否(本家 reels.is_comments_enabled)は locapass_reels に受け皿が無いため未接続。
+  async function handleToggleComments(_reelId: string, _next: boolean) {
+    setError("この機能はまだlocapassのデータベースに接続されていません");
+  }
+
+  // ピン留め(本家 reels.pinned_at)は locapass_reels に受け皿が無いため未接続。
+  async function handleTogglePin(_reelId: string, _currentlyPinned: boolean) {
+    setError("この機能はまだlocapassのデータベースに接続されていません");
+  }
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
+  function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    if (f) setPendingAvatarFile(f);
+    e.target.value = "";
+  }
+
+  async function handleAvatarCropped(blob: Blob) {
+    setPendingAvatarFile(null);
+    setAvatarUploading(true);
+    setProfileError(null);
+
+    const supabase = createClient();
+    // アイコンは本人フォルダ(auth.uid())配下にだけ置ける locapass-ugc バケットに保存する。
+    const path = `${userId}/cast-avatar-${Date.now()}.jpg`;
+    const { error: uploadError } = await supabase.storage.from("locapass-ugc").upload(path, blob, {
+      contentType: "image/jpeg",
+    });
+
+    if (uploadError) {
+      setAvatarUploading(false);
+      setProfileError(`アイコンのアップロードに失敗しました: ${uploadError.message}`);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("locapass-ugc").getPublicUrl(path);
+    const newAvatarUrl = publicUrlData.publicUrl;
+
+    const { error: rpcError } = await supabase.rpc("locapass_update_own_cast_profile", {
+      p_name: name,
+      p_pr_text: prText,
+      p_avatar_url: newAvatarUrl,
+    });
+
+    setAvatarUploading(false);
+
+    if (rpcError) {
+      setProfileError(`アイコンの保存に失敗しました: ${rpcError.message}`);
+      return;
+    }
+
+    setAvatarUrl(newAvatarUrl);
+    router.refresh();
+  }
+
+  function openEditSheet() {
+    setEditName(name);
+    setEditPrText(prText);
+    setProfileError(null);
+    setEditOpen(true);
+  }
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editName.trim()) {
+      setProfileError("名前を入力してください");
+      return;
+    }
+    setProfileSaving(true);
+    setProfileError(null);
+
+    const supabase = createClient();
+    const { error: rpcError } = await supabase.rpc("locapass_update_own_cast_profile", {
+      p_name: editName.trim(),
+      p_pr_text: editPrText.trim(),
+    });
+
+    setProfileSaving(false);
+
+    if (rpcError) {
+      setProfileError(`プロフィールの保存に失敗しました: ${rpcError.message}`);
+      return;
+    }
+
+    setName(editName.trim());
+    setPrText(editPrText.trim());
+    setEditOpen(false);
+    router.refresh();
+  }
+
+  return (
+    <div className="pb-8">
+      {/* ストーリー(24時間で自動的に消える、フォロワー限定の投稿)。本人には常に見える。 */}
+      {stories.length > 0 && (
+        <section className="flex gap-3 overflow-x-auto px-4 pt-4 no-scrollbar">
+          {stories.map((s) => {
+            const thumb = s.media[0];
+            return (
+              <div key={s.id} className="relative flex-shrink-0">
+                <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px]">
+                  <div className="rounded-full bg-black p-[2px]">
+                    {thumb?.type === "video" ? (
+                      <video src={thumb.url} className="h-14 w-14 rounded-full object-cover" muted />
+                    ) : thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumb.url} alt="" className="h-14 w-14 rounded-full object-cover" />
+                    ) : null}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteStory(s.id)}
+                  aria-label="ストーリーを削除"
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-black bg-neutral-700 text-white"
+                >
+                  <X size={11} />
+                </button>
+              </div>
+            );
+          })}
+        </section>
+      )}
+
+      {/* プロフィールヘッダー(Instagramのプロフィール画面と同じ構成) */}
+      <section className="px-4 pt-6 text-center">
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleAvatarFileChange}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          disabled={avatarUploading}
+          aria-label="アイコン画像を変更"
+          className="relative mx-auto block h-20 w-20 rounded-full disabled:opacity-60"
+        >
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt=""
+              className="h-20 w-20 rounded-full border border-white/10 object-cover"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-neutral-800 text-2xl font-semibold text-neutral-500">
+              {name.slice(0, 1)}
+            </div>
+          )}
+          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-black bg-brand text-white">
+            <Camera size={12} />
+          </span>
+        </button>
+
+        <h1 className="mt-3 text-lg font-bold">{name}</h1>
+        {shopName && <p className="text-xs text-neutral-400">{shopName}</p>}
+
+        <div className="mt-4 flex justify-center gap-8">
+          <div className="text-center">
+            <p className="text-base font-bold">{postCount}</p>
+            <p className="text-[11px] text-neutral-400">投稿</p>
+          </div>
+          <div className="text-center">
+            <p className="text-base font-bold">{totalLikes}</p>
+            <p className="text-[11px] text-neutral-400">いいね</p>
+          </div>
+        </div>
+
+        {prText && (
+          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+            {prText}
+          </p>
+        )}
+
+        {profileError && <p className="mt-2 text-sm text-red-400">{profileError}</p>}
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setFormOpen((v) => !v)}
+            className="flex-1 rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          >
+            ＋ 新規投稿
+          </button>
+          <button
+            type="button"
+            onClick={openEditSheet}
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-white/20 py-2 text-sm text-neutral-200"
+          >
+            <Pencil size={13} /> プロフィール編集
+          </button>
+        </div>
+
+        {/* インスタのプロフィール欄などに貼るための短縮URL。
+            /cast/[uuid]は長すぎて改行・文字数制限にかかるため、6桁の短縮コードを案内する。 */}
+        <div className="mx-auto mt-4 max-w-xs rounded-lg border border-white/10 bg-neutral-900 p-3 text-left">
+          <p className="text-[11px] font-semibold text-neutral-300">
+            あなたの公開プロフィールURL(インスタ等に貼る用)
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              readOnly
+              value={`https://reels.locapass.net/c/${castCode}`}
+              className="w-full rounded border border-white/20 bg-white/5 px-2 py-1.5 text-xs text-white"
+            />
+            <CopyButton value={`https://reels.locapass.net/c/${castCode}`} />
+          </div>
+          <div className="mt-2">
+            <RevealableQr qrDataUrl={qrDataUrl} label="QRコードを表示(お客様にその場で見せる用)" />
+          </div>
+        </div>
+      </section>
+
+      {/* 投稿フォーム */}
+      {formOpen && (
+        <form
+          onSubmit={handleSubmit}
+          className="mx-4 mt-4 space-y-3 rounded-xl border border-white/10 bg-neutral-900 p-4"
+        >
+          <div className="flex rounded-full border border-white/20 bg-white/5 p-1 text-sm font-semibold">
+            <button
+              type="button"
+              onClick={() => setPostType("reel")}
+              className={`flex-1 rounded-full py-1.5 transition ${
+                postType === "reel" ? "bg-brand text-white" : "text-neutral-400"
+              }`}
+            >
+              リール
+            </button>
+            <button
+              type="button"
+              onClick={() => setPostType("story")}
+              className={`flex-1 rounded-full py-1.5 transition ${
+                postType === "story" ? "bg-gold text-black" : "text-neutral-400"
+              }`}
+            >
+              ストーリー(24時間)
+            </button>
+          </div>
+          <p className="text-[11px] text-neutral-500">
+            {postType === "reel"
+              ? "ポータル全体に公開され、ずっと残ります。"
+              : "フォロワーだけに見え、24時間で自動的に消えます。"}
+          </p>
+          <label className="block cursor-pointer rounded-xl border-2 border-dashed border-white/20 bg-white/5 px-4 py-6 text-center transition hover:border-brand">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {preview ? (
+              file?.type.startsWith("video/") ? (
+                <video src={preview} className="mx-auto max-h-64 w-full rounded-lg object-cover" controls />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={preview} alt="" className="mx-auto max-h-64 w-full rounded-lg object-cover" />
+              )
+            ) : (
+              <span className="text-sm font-medium text-neutral-300">写真・動画を選択</span>
+            )}
+          </label>
+          <p className="text-xs text-neutral-500">
+            ※カメラロールから選ぶか、その場で撮影できます。写真1枚または動画1本を投稿できます。
+          </p>
+          <textarea
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="ひとことコメントを入力"
+            rows={2}
+            className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+          />
+          {postType === "reel" && (
+            <>
+              <div>
+                <input
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="リンク先URL(任意)"
+                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+                />
+                <p className="mt-1 text-[11px] text-neutral-500">
+                  空欄なら通常のリンク先(自分のリール一覧)になります。入力するとタップ時にそのURLへ飛びます。
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-white">
+                <input
+                  type="checkbox"
+                  checked={commentsEnabled}
+                  onChange={(e) => setCommentsEnabled(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                コメントを許可する
+              </label>
+            </>
+          )}
+          {optimizing && (
+            <p className="text-xs text-neutral-400">動画をスマホ向けに最適化しています…</p>
+          )}
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={uploading || optimizing}
+              className="flex-1 rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+            >
+              {uploading ? "投稿中..." : optimizing ? "最適化中..." : "投稿する"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFormOpen(false);
+                setFile(null);
+                setPreview(null);
+                setPostType("reel");
+              }}
+              className="rounded border border-white/20 px-4 py-2 text-sm text-neutral-300"
+            >
+              やめる
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* 投稿グリッド(ピン留めした投稿を先頭に固定表示) */}
+      <div className="mt-6 grid grid-cols-3 gap-1 border-t border-white/10 pt-1">
+        {[...reels]
+          .sort((a, b) => {
+            if (a.pinnedAt && b.pinnedAt) return b.pinnedAt.localeCompare(a.pinnedAt);
+            if (a.pinnedAt) return -1;
+            if (b.pinnedAt) return 1;
+            return 0;
+          })
+          .map((r) => (
+            <Link
+              key={r.id}
+              href={`/cast/${castId}/reels?start=${r.id}`}
+              className="relative block aspect-[9/16] overflow-hidden bg-neutral-900"
+            >
+              {r.media[0]?.type === "video" ? (
+                <video src={r.media[0].url} className="h-full w-full object-cover" muted />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={r.media[0]?.url} alt="" className="h-full w-full object-cover" />
+              )}
+              {r.pinnedAt && (
+                <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-gold px-1.5 py-0.5 text-[10px] font-semibold text-black">
+                  <Pin size={10} className="fill-black" /> 固定
+                </span>
+              )}
+              <div className="absolute right-1 top-1 flex flex-col items-end gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDelete(r.id);
+                  }}
+                  className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white"
+                >
+                  削除
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleTogglePin(r.id, !!r.pinnedAt);
+                  }}
+                  className="flex items-center gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white"
+                >
+                  {r.pinnedAt ? (
+                    <>
+                      <PinOff size={10} /> ピン解除
+                    </>
+                  ) : (
+                    <>
+                      <Pin size={10} /> ピン留め
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleComments(r.id, !r.isCommentsEnabled);
+                  }}
+                  className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white"
+                >
+                  {r.isCommentsEnabled ? "コメント:許可" : "コメント:停止中"}
+                </button>
+              </div>
+              <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
+                ♥ {r.likesCount}
+              </span>
+            </Link>
+          ))}
+      </div>
+      {reels.length === 0 && (
+        <p className="px-4 py-8 text-center text-sm text-neutral-500">
+          まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。
+        </p>
+      )}
+
+      <CastCommentsPanel castId={castId} />
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mx-auto mt-6 block text-xs text-neutral-500 underline"
+      >
+        ログアウト
+      </button>
+
+      {/* プロフィール編集シート(Instagram風スライドイン) */}
+      {editOpen && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center">
+          <div className="w-full max-w-sm rounded-t-2xl bg-neutral-900 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <button type="button" onClick={() => setEditOpen(false)} className="text-sm text-neutral-400">
+                キャンセル
+              </button>
+              <h2 className="text-sm font-semibold">プロフィールを編集</h2>
+              <span className="w-10" />
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div className="flex items-center gap-3">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-800 text-lg font-semibold text-neutral-500">
+                    {name.slice(0, 1)}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="text-sm text-brand disabled:opacity-50"
+                >
+                  {avatarUploading ? "アップロード中..." : "写真を変更"}
+                </button>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-neutral-400">名前</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  maxLength={50}
+                  required
+                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-neutral-400">自己紹介</label>
+                <textarea
+                  value={editPrText}
+                  onChange={(e) => setEditPrText(e.target.value)}
+                  rows={4}
+                  maxLength={600}
+                  placeholder="出勤時間帯やSNSリンクなど"
+                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+                />
+              </div>
+
+              {profileError && <p className="text-sm text-red-400">{profileError}</p>}
+
+              <button
+                type="submit"
+                disabled={profileSaving}
+                className="w-full rounded bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+              >
+                {profileSaving ? "保存中..." : "保存する"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {pendingAvatarFile && (
+        <AvatarCropModal
+          file={pendingAvatarFile}
+          onCancel={() => setPendingAvatarFile(null)}
+          onCropped={handleAvatarCropped}
+        />
+      )}
+    </div>
+  );
+}

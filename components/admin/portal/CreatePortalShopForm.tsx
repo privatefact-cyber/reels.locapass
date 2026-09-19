@@ -114,7 +114,7 @@ export function CreatePortalShopForm({
             <div className="mt-2">
               <p className="text-sm text-emerald-700">
                 「{state.shopName}」を発行しました。
-                <Link href={`/admin/locapass-shops/${state.shopId}`} className="ml-1 font-semibold underline">
+                <Link href={`/dashboard/shop/${state.shopId}`} className="ml-1 font-semibold underline">
                   店舗情報を編集する →
                 </Link>
               </p>

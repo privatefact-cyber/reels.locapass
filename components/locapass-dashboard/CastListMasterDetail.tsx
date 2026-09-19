@@ -17,9 +17,11 @@ interface CastMember {
 
 interface CastListMasterDetailProps {
   castMembers: CastMember[];
+  /** キャスト詳細ページの親パス(例: /dashboard/shop/[shopId]/cast)。本家の /dashboard/cast に相当。 */
+  detailBasePath: string;
 }
 
-export function CastListMasterDetail({ castMembers }: CastListMasterDetailProps) {
+export function CastListMasterDetail({ castMembers, detailBasePath }: CastListMasterDetailProps) {
   const [selectedCastId, setSelectedCastId] = useState<string | null>(null);
 
   const selectedCast = castMembers.find((c) => c.id === selectedCastId);
@@ -138,7 +140,7 @@ export function CastListMasterDetail({ castMembers }: CastListMasterDetailProps)
                 )}
               </div>
               <Link
-                href={`/dashboard/cast/${selectedCast.id}`}
+                href={`${detailBasePath}/${selectedCast.id}`}
                 className="inline-block mt-3 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 詳細を編集
@@ -150,13 +152,13 @@ export function CastListMasterDetail({ castMembers }: CastListMasterDetailProps)
               <h3 className="font-semibold text-slate-700 text-sm">クイックアクション</h3>
               <div className="grid gap-2">
                 <Link
-                  href={`/dashboard/cast/${selectedCast.id}#schedule`}
+                  href={`${detailBasePath}/${selectedCast.id}#schedule`}
                   className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-semibold rounded-lg transition-colors text-center"
                 >
                   出勤スケジュール
                 </Link>
                 <Link
-                  href={`/dashboard/cast/${selectedCast.id}#diary`}
+                  href={`${detailBasePath}/${selectedCast.id}#diary`}
                   className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-semibold rounded-lg transition-colors text-center"
                 >
                   日記・投稿

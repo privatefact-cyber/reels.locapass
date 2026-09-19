@@ -27,7 +27,9 @@ export async function requireAdmin(): Promise<AdminScope> {
   const portalIds = (siteAdminRows ?? []).map((r) => r.portal_id);
 
   if (!rootAdmin && portalIds.length === 0) {
-    redirect("/admin/login");
+    // ログイン済みだが運営者ではない(shop_admin / staff / cast / 一般会員)。
+    // /dashboard がロールに応じた画面へ振り分ける。
+    redirect("/dashboard");
   }
 
   return {

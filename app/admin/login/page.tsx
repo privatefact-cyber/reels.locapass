@@ -25,21 +25,9 @@ export default function AdminLoginPage() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const [{ data: rootAdmin }, { data: siteAdminRows }] = await Promise.all([
-      supabase.from("locapass_super_admins").select("user_id").eq("user_id", user?.id ?? "").maybeSingle(),
-      supabase.from("locapass_portal_admins").select("portal_id").eq("user_id", user?.id ?? ""),
-    ]);
-    if (!rootAdmin && (!siteAdminRows || siteAdminRows.length === 0)) {
-      await supabase.auth.signOut();
-      setLoading(false);
-      setError("運営者アカウントではありません");
-      return;
-    }
-
-    router.push("/admin");
+    // ロール(super_admin / portal_admin / shop_admin / staff / cast / user)の判定と
+    // 各画面へのリダイレクトは /dashboard で一元的に行う。
+    router.push("/dashboard");
     router.refresh();
   }
 

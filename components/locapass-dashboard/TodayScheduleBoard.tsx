@@ -18,7 +18,10 @@ export function TodayScheduleBoard({
   date,
   rows,
   upsertTodaySchedule,
+  castDetailBasePath,
 }: {
+  /** キャスト詳細ページの親パス(例: /dashboard/shop/[shopId]/cast)。本家の /dashboard/cast に相当。 */
+  castDetailBasePath: string;
   date: string;
   rows: TodayScheduleRow[];
   upsertTodaySchedule: (
@@ -88,7 +91,7 @@ export function TodayScheduleBoard({
                   </div>
                 )}
                 <Link
-                  href={`/dashboard/cast/${row.castId}`}
+                  href={`${castDetailBasePath}/${row.castId}`}
                   className="w-24 flex-shrink-0 truncate text-sm font-semibold text-slate-900 hover:underline"
                 >
                   {row.name}

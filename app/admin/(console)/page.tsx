@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
-import { FeaturedSectionToggle } from "@/components/admin/FeaturedSectionToggle";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "無料",
@@ -42,15 +41,11 @@ export default async function AdminShopsPage({
   let portalsQuery = supabase.from("locapass_portals").select("id, name").order("id", { ascending: true });
   if (scope.portalIds !== null) portalsQuery = portalsQuery.in("id", scope.portalIds);
 
-  const [{ data: shops, error }, { data: allShops }, { data: settings }, { data: portals }] = await Promise.all([
+  const [{ data: shops, error }, { data: allShops }, { data: portals }] = await Promise.all([
     query,
     countsQuery,
-    scope.portalIds === null
-      ? supabase.from("platform_settings").select("featured_section_enabled").eq("id", true).maybeSingle()
-      : Promise.resolve({ data: null }),
     portalsQuery,
   ]);
-  const featuredSectionEnabled = settings?.featured_section_enabled ?? false;
 
   const totalCount = allShops?.length ?? 0;
   const activeCount = allShops?.filter((s) => s.status === "active").length ?? 0;
@@ -72,29 +67,6 @@ export default async function AdminShopsPage({
         <StatCard label="公開中" value={activeCount} accent="text-emerald-600" />
         <StatCard label="非公開" value={inactiveCount} accent="text-red-600" />
       </div>
-
-      {scope.portalIds === null && (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-900">トップページのFEATURED枠</h2>
-              <span
-                className={
-                  featuredSectionEnabled
-                    ? "rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700"
-                    : "rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-500"
-                }
-              >
-                {featuredSectionEnabled ? "表示中" : "非表示"}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              提携店舗のヒーロー・特集カードの表示可否だけを切り替える。featured_rankや取り込んだ紹介文・料金は消えない。
-            </p>
-          </div>
-          <FeaturedSectionToggle enabled={featuredSectionEnabled} />
-        </div>
-      )}
 
       <CreatePortalShopForm portals={portals ?? []} />
 
@@ -143,7 +115,7 @@ export default async function AdminShopsPage({
                   <tr key={shop.id} className="text-slate-700 hover:bg-slate-50">
                     <td className="px-5 py-3">
                       <Link
-                        href={`/admin/locapass-shops/${shop.id}`}
+                        href={`/dashboard/shop/${shop.id}`}
                         className="font-semibold text-slate-900 hover:text-indigo-600 hover:underline"
                       >
                         {shop.name}

@@ -1,118 +1,86 @@
-import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireCurrentShop } from "@/lib/dashboard/current-shop";
-import { InviteStaffButton } from "@/components/InviteStaffButton";
-import { StaffLoginLinkCard } from "@/components/dashboard/StaffLoginLinkCard";
-import { addStaffMember, deleteStaffMember, regenerateStaffLoginToken } from "./actions";
+import { requireCurrentStaff } from "@/lib/staff/current-staff";
+import {
+  StaffDashboardClient,
+  type MyReel,
+  type ShopEventRow,
+  type InquiryRow,
+} from "@/components/locapass-mypage/StaffDashboardClient";
 
-export default async function DashboardStaffPage() {
-  const shop = await requireCurrentShop();
-  if (!shop) {
-    return (
-      <p className="text-sm text-red-600">
-        所属店舗が見つかりません。運営者にお問い合わせください。
-      </p>
-    );
-  }
+/**
+ * staff 本人の画面。LUXELA本家のスタッフマイページ(app/staff/mypage)と同じUI。
+ * 本人の所属店舗(locapass_shop_staff_members.shop_id)の情報だけを扱い、スタッフでなければ振り分けに戻す。
+ */
+export default async function StaffDashboardPage() {
+  const staff = await requireCurrentStaff();
+  if (!staff) redirect("/dashboard");
 
   const supabase = await createClient();
-  const { data: staffMembers } = await supabase
-    .from("shop_staff_members")
-    .select("id, name, avatar_url, user_id, created_at, staff_login_tokens ( token )")
-    .eq("shop_id", shop.id)
-    .order("created_at", { ascending: true });
+  const [{ data: reels }, { data: events }] = await Promise.all([
+    // 自分が投稿したリール(投稿者はDBトリガーで created_by に固定される)。
+    supabase
+      .from("locapass_reels")
+      .select("id, caption, video_url, images, poster_url, like_count, published_at, updated_at")
+      .eq("shop_id", staff.shop_id)
+      .eq("created_by", staff.user_id ?? "")
+      .order("published_at", { ascending: false, nullsFirst: false }),
+    supabase
+      .from("locapass_shop_events")
+      .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_at")
+      .eq("shop_id", staff.shop_id)
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const requestHeaders = await headers();
-  const origin =
-    requestHeaders.get("origin") ??
-    `${requestHeaders.get("x-forwarded-proto") ?? "https"}://${requestHeaders.get("host")}`;
+  const myReels: MyReel[] = (reels ?? []).map((r) => {
+    const images = (r.images as { url: string }[] | null) ?? [];
+    const media: MyReel["media"] = r.video_url
+      ? [{ type: "video", url: r.video_url }]
+      : images.length > 0
+        ? images.map((img) => ({ type: "image" as const, url: img.url }))
+        : r.poster_url
+          ? [{ type: "image", url: r.poster_url }]
+          : [];
+    return {
+      id: r.id,
+      caption: r.caption,
+      media,
+      likesCount: r.like_count,
+      createdAt: r.published_at ?? r.updated_at,
+    };
+  });
+
+  // locapass_shop_events には投稿者の列が無いため、本人投稿かどうか(isOwn)は判定できない(false)。
+  const shopEvents: ShopEventRow[] = (events ?? []).map((e) => ({
+    id: e.id,
+    title: e.title,
+    body: e.body,
+    startsAt: e.starts_at,
+    endsAt: e.ends_at,
+    imageUrl: e.image_url,
+    galleryImageUrls: e.gallery_image_urls ?? [],
+    isOwn: false,
+    isEnded: !!e.ends_at && new Date(e.ends_at).getTime() < Date.now(),
+  }));
+
+  // お問い合わせは locapass に受け皿が無いため未接続(空)。
+  const inquiryRows: InquiryRow[] = [];
+
+  const shop = Array.isArray(staff.locapass_shops) ? staff.locapass_shops[0] : staff.locapass_shops;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">スタッフ管理</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          黒服・店長など、個人単位のアカウントを発行できます。各スタッフは専用マイページ(リール投稿・イベント投稿・お問い合わせ対応・プロフィール編集)を持ち、自分が投稿したものだけを編集・削除できます。
-        </p>
-      </div>
-
-      <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">スタッフを追加</h2>
-        <form action={addStaffMember} className="flex gap-2">
-          <input
-            name="name"
-            required
-            placeholder="名前"
-            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-          >
-            追加
-          </button>
-        </form>
-      </section>
-
-      <div className="space-y-4">
-        {(staffMembers ?? []).map((s) => {
-          const tokenRow = Array.isArray(s.staff_login_tokens)
-            ? s.staff_login_tokens[0]
-            : s.staff_login_tokens;
-          const loginUrl = tokenRow ? `${origin}/staff/link/${tokenRow.token}` : null;
-          const boundRegenerate = regenerateStaffLoginToken.bind(null, s.id);
-
-          return (
-            <section key={s.id} className="rounded-xl border border-slate-200 bg-white p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  {s.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-500">
-                      {s.name.slice(0, 1)}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{s.name}</p>
-                    <p className="text-xs text-slate-400">
-                      {s.user_id ? "ログイン発行済み" : "ログイン未発行"}
-                    </p>
-                  </div>
-                </div>
-                <form action={deleteStaffMember.bind(null, s.id)}>
-                  <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
-                    削除
-                  </button>
-                </form>
-              </div>
-
-              <div className="mt-3">
-                <InviteStaffButton staffMemberId={s.id} hasLogin={!!s.user_id} />
-              </div>
-
-              {s.user_id && loginUrl && (
-                <div className="mt-3 border-t border-slate-200 pt-3">
-                  <p className="mb-2 text-xs font-semibold text-slate-500">
-                    マイページ用リンク(URL紛失・ログアウト時もいつでも再確認・再送できます)
-                  </p>
-                  <StaffLoginLinkCard
-                    staffName={s.name}
-                    loginUrl={loginUrl}
-                    regenerateAction={boundRegenerate}
-                  />
-                </div>
-              )}
-            </section>
-          );
-        })}
-        {(!staffMembers || staffMembers.length === 0) && (
-          <p className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-            まだスタッフが登録されていません。
-          </p>
-        )}
-      </div>
-    </div>
+    <StaffDashboardClient
+      userId={staff.user_id ?? ""}
+      portalId={shop?.portal_id ?? 0}
+      staffId={staff.id}
+      shopId={staff.shop_id}
+      shopName={shop?.name ?? null}
+      initialName={staff.name}
+      initialBio={staff.bio}
+      initialAvatarUrl={staff.avatar_url}
+      initialReels={myReels}
+      initialEvents={shopEvents}
+      initialInquiries={inquiryRows}
+    />
   );
 }

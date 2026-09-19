@@ -20,7 +20,7 @@ export default function StaffLoginLinkPage() {
     async function login() {
       const supabase = createClient();
       const { data, error } = await supabase
-        .rpc("redeem_staff_login_token", { p_token: params.token })
+        .rpc("locapass_redeem_staff_login_token", { p_token: params.token })
         .single();
 
       if (cancelled) return;
@@ -40,7 +40,7 @@ export default function StaffLoginLinkPage() {
         return;
       }
 
-      router.push("/staff/mypage");
+      router.push("/dashboard/staff");
       router.refresh();
     }
 

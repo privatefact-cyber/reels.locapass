@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { applyImportAction, previewImportAction } from "@/app/admin/locapass-shops/[shopId]/not-connected";
-import type { ApplyImportInput } from "@/app/dashboard/shop/importActions";
+import { applyImportAction, previewImportAction } from "@/app/dashboard/shop/[shopId]/not-connected";
+import type { ApplyImportInput } from "@/lib/shop/importTypes";
 import type { ImportPreview } from "@/lib/shop/importFromWebsite";
 
 /**

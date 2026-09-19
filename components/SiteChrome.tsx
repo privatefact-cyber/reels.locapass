@@ -32,8 +32,13 @@ const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
 // 一般会員向けの/login・/mypage/loginはAIコンシェルジュを含め通常どおり表示する。
 const EXCLUDED_PREFIXES = ["/gate", "/admin", "/dashboard", "/cast/login", "/staff/login"];
 
+// スタッフ/キャスト本人の画面は、本家(旧 /staff/mypage・/cast/mypage)と同じく通常のヘッダー付きで表示する。
+const CHROME_INCLUDED_PREFIXES = ["/dashboard/staff", "/dashboard/cast"];
+
 function isExcludedPath(pathname: string): boolean {
-  return EXCLUDED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  const matches = (prefix: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
+  if (CHROME_INCLUDED_PREFIXES.some(matches)) return false;
+  return EXCLUDED_PREFIXES.some(matches);
 }
 
 export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
