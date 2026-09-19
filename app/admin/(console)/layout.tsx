@@ -20,10 +20,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               店舗一覧
             </Link>
             <Link
-              href="/admin/portals"
+              href="/admin#portals"
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >
-              ポータル管理
+              ポータル発行・管理
             </Link>
             <Link
               href="/admin/comments"

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { CreatePortalForm } from "@/components/admin/portal/CreatePortalForm";
 import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
+import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -39,18 +40,43 @@ export default async function AdminShopsPage({
     query = query.ilike("name", `%${q.trim()}%`);
   }
 
-  let portalsQuery = supabase.from("locapass_portals").select("id, name").order("id", { ascending: true });
+  let portalsQuery = supabase
+    .from("locapass_portals")
+    .select("id, name, slug, home_url, status, created_at")
+    .order("id", { ascending: true });
   if (scope.portalIds !== null) portalsQuery = portalsQuery.in("id", scope.portalIds);
 
-  const [{ data: shops, error }, { data: allShops }, { data: portals }] = await Promise.all([
+  const portalIds = scope.portalIds;
+  const [{ data: shops, error }, { data: allShops }, { data: portals }, { data: portalShopRows }, { data: portalAdminRows }] = await Promise.all([
     query,
     countsQuery,
     portalsQuery,
+    portalIds === null
+      ? supabase.from("locapass_shops").select("portal_id, status")
+      : portalIds.length
+        ? supabase.from("locapass_shops").select("portal_id, status").in("portal_id", portalIds)
+        : Promise.resolve({ data: [] as { portal_id: number; status: string }[] }),
+    portalIds === null
+      ? supabase.from("locapass_portal_admins").select("portal_id")
+      : portalIds.length
+        ? supabase.from("locapass_portal_admins").select("portal_id").in("portal_id", portalIds)
+        : Promise.resolve({ data: [] as { portal_id: number }[] }),
   ]);
 
   const totalCount = allShops?.length ?? 0;
   const activeCount = allShops?.filter((s) => s.status === "active").length ?? 0;
   const inactiveCount = totalCount - activeCount;
+  const portalShopCounts = new Map<number, { total: number; active: number }>();
+  for (const row of portalShopRows ?? []) {
+    const count = portalShopCounts.get(row.portal_id) ?? { total: 0, active: 0 };
+    count.total += 1;
+    if (row.status === "active") count.active += 1;
+    portalShopCounts.set(row.portal_id, count);
+  }
+  const portalAdminCounts = new Map<number, number>();
+  for (const row of portalAdminRows ?? []) {
+    portalAdminCounts.set(row.portal_id, (portalAdminCounts.get(row.portal_id) ?? 0) + 1);
+  }
 
   return (
     <div className="space-y-6">
@@ -58,7 +84,7 @@ export default async function AdminShopsPage({
         <h1 className="text-lg font-bold text-slate-900">店舗一覧</h1>
         <p className="mt-1 text-sm text-slate-500">
           {scope.portalIds === null
-            ? "全ポータルの店舗です。新規店舗の発行、公開/非公開の切り替えを行います。店舗管理者の発行はポータル管理から行えます。"
+            ? "ポータルの発行・管理と、全ポータルの店舗管理を行います。"
             : "担当ポータルの店舗のみ表示しています。新規店舗の発行、公開/非公開の切り替えを行います。"}
         </p>
       </div>
@@ -70,6 +96,30 @@ export default async function AdminShopsPage({
       </div>
 
       {scope.portalIds === null && <CreatePortalForm />}
+
+      <section id="portals" className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 p-6">
+          <h2 className="text-base font-bold text-slate-900">ポータル管理</h2>
+          <p className="mt-1 text-sm text-slate-500">発行済みポータルの確認、名称変更、各ポータルの詳細管理を行えます。</p>
+        </div>
+        <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
+          {(portals ?? []).map((portal) => {
+            const counts = portalShopCounts.get(portal.id) ?? { total: 0, active: 0 };
+            return (
+              <div key={portal.id} className="rounded-xl border border-slate-200 p-4">
+                <Link href={`/admin/portals/${portal.id}`} className="block hover:text-indigo-600">
+                  <h3 className="text-sm font-bold text-slate-900">{portal.name || `(無題) #${portal.id}`}</h3>
+                  <p className="mt-1 text-xs text-slate-400">{portal.slug || "-"}{portal.home_url ? ` / ${portal.home_url}` : ""}</p>
+                  <p className="mt-3 text-sm text-slate-600">店舗 {counts.total}件（公開中 {counts.active}件）</p>
+                  <p className="mt-1 text-xs text-slate-500">ポータル管理者 {portalAdminCounts.get(portal.id) ?? 0}名</p>
+                </Link>
+                {scope.portalIds === null && <EditPortalNameForm portalId={portal.id} currentName={portal.name ?? ""} />}
+              </div>
+            );
+          })}
+          {(portals ?? []).length === 0 && <p className="text-sm text-slate-400">表示できるポータルがありません</p>}
+        </div>
+      </section>
 
       <CreatePortalShopForm portals={portals ?? []} />
 

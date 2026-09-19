@@ -19,7 +19,7 @@ export async function fetchMyRoles(supabase: SupabaseClient<Database>): Promise<
 
 /**
  * ログイン後の行き先。権限が複数あるときは上位を優先する。
- *   super_admin → /admin/portals(最上位の子ポータル管理)
+ *   super_admin → /admin(最上位のポータル発行・管理)
  *   portal_admin → /admin(担当ポータル配下の店舗管理)
  *   shop_admin → /dashboard/shop/[shopId](複数店舗なら /dashboard/shop の選択画面)
  *   staff → /dashboard/staff
@@ -28,7 +28,7 @@ export async function fetchMyRoles(supabase: SupabaseClient<Database>): Promise<
  */
 export function homePathForRoles(roles: MyRoles | null): string {
   if (!roles) return "/mypage";
-  if (roles.super_admin) return "/admin/portals";
+  if (roles.super_admin) return "/admin";
   if (roles.portal_ids.length > 0) return "/admin";
   if (roles.shop_admin_shop_ids.length === 1) return `/dashboard/shop/${roles.shop_admin_shop_ids[0]}`;
   if (roles.shop_admin_shop_ids.length > 1) return "/dashboard/shop";
