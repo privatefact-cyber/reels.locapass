@@ -14,6 +14,8 @@ type ReelRow = {
   published_at: string | null;
   updated_at: string;
   expires_at: string | null;
+  is_comments_enabled: boolean;
+  pinned_at: string | null;
 };
 
 function toMedia(r: ReelRow): MyReel["media"] {
@@ -25,7 +27,7 @@ function toMedia(r: ReelRow): MyReel["media"] {
 
 /**
  * cast 本人の画面。LUXELA本家のキャストマイページ(app/cast/mypage)と同じUI。
- * 本人の投稿(locapass_reels.created_by = 本人)だけを扱い、キャストでなければ振り分けに戻す。
+ * 本人の投稿(locapass_reels.cast_id = 本人)だけを扱い、キャストでなければ振り分けに戻す。
  */
 export default async function CastDashboardPage() {
   const cast = await requireCurrentCast();
@@ -37,34 +39,33 @@ export default async function CastDashboardPage() {
   });
 
   const supabase = await createClient();
-  const select = "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, expires_at";
+  const select =
+    "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, expires_at, is_comments_enabled, pinned_at";
   const [{ data: reels }, { data: stories }] = await Promise.all([
     supabase
       .from("locapass_reels")
       .select(select)
-      .eq("shop_id", cast.shop_id)
-      .eq("created_by", cast.user_id ?? "")
+      .eq("cast_id", cast.id)
       .eq("reel_type", "permanent")
+      .order("pinned_at", { ascending: false, nullsFirst: false })
       .order("published_at", { ascending: false, nullsFirst: false }),
     supabase
       .from("locapass_reels")
       .select(select)
-      .eq("shop_id", cast.shop_id)
-      .eq("created_by", cast.user_id ?? "")
+      .eq("cast_id", cast.id)
       .eq("reel_type", "story")
       .gt("expires_at", new Date().toISOString())
       .order("published_at", { ascending: false, nullsFirst: false }),
   ]);
 
-  // コメント可否・ピン留めは locapass_reels に列が無いため、本家の初期値(コメント可・ピン無し)で表示する。
   const myReels: MyReel[] = ((reels ?? []) as ReelRow[]).map((r) => ({
     id: r.id,
     caption: r.caption,
     media: toMedia(r),
     likesCount: r.like_count,
     createdAt: r.published_at ?? r.updated_at,
-    isCommentsEnabled: true,
-    pinnedAt: null,
+    isCommentsEnabled: r.is_comments_enabled,
+    pinnedAt: r.pinned_at,
   }));
 
   const myStories: MyStory[] = ((stories ?? []) as ReelRow[]).map((s) => ({

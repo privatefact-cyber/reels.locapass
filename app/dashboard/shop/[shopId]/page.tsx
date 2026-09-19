@@ -15,19 +15,19 @@ import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopComple
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import type { ShopEvent } from "@/lib/types/shop";
 import { toJstDateString, getJstNow } from "@/lib/reels/nowWorking";
-import { updateShopProfile } from "./actions";
 import {
   addEvent,
   addPriceItem,
   deleteEvent,
   deletePriceItem,
+  updateShopProfile,
   upsertTodaySchedule,
-} from "./not-connected";
+} from "./actions";
 
 /**
  * LUXELA本家の店舗情報画面(app/dashboard/shop/page.tsx)と同じ画面。
- * データはlocapass側だけを参照し、LUXELAのテーブルは一切読まない。
- * locapassに受け皿が無い項目(料金表・本日の出勤)は、本家と同じUIを出したうえで空のまま表示する。
+ * データはlocapass側だけを参照し、LUXELAのテーブルは一切読まない
+ * (料金表 locapass_shop_price_items、イベント locapass_shop_events、本日の出勤 locapass_cast_members + locapass_schedules)。
  */
 export default async function LocapassShopSettingsPage({
   params,
@@ -41,8 +41,15 @@ export default async function LocapassShopSettingsPage({
 
   const supabase = await createClient();
   const today = toJstDateString(getJstNow());
-  const [{ data: shopRow }, { data: eventRows }, { count: reelCount }, { data: categoryRows }] =
-    await Promise.all([
+  const [
+    { data: shopRow },
+    { data: eventRows },
+    { count: reelCount },
+    { data: categoryRows },
+    { data: priceItemRows },
+    { data: castRows },
+    { data: favoriteCountRaw },
+  ] = await Promise.all([
       supabase
         .from("locapass_shops")
         .select(
@@ -63,6 +70,18 @@ export default async function LocapassShopSettingsPage({
         .eq("status", "publish")
         .eq("reel_type", "permanent"),
       supabase.from("locapass_shops").select("category").not("category", "is", null),
+      supabase
+        .from("locapass_shop_price_items")
+        .select("id, name, duration_minutes, price, display_order")
+        .eq("shop_id", currentShop.id)
+        .order("display_order", { ascending: true }),
+      supabase
+        .from("locapass_cast_members")
+        .select("id, name, avatar_url, locapass_schedules ( id, start_time, end_time, is_working_today, date )")
+        .eq("shop_id", currentShop.id)
+        .eq("locapass_schedules.date", today)
+        .order("name", { ascending: true }),
+      supabase.rpc("locapass_count_shop_favorites", { p_shop_id: currentShop.id }),
     ]);
 
   if (!shopRow) {
@@ -101,11 +120,25 @@ export default async function LocapassShopSettingsPage({
     new Set([...(categoryRows ?? []).map((r) => r.category as string), ...(shop.genre ? [shop.genre] : [])]),
   ).sort((a, b) => a.localeCompare(b, "ja"));
 
-  // お気に入り数: locapass_shop_favoritesは本人の行しか読めないRLSで、本家のような集計RPCも
-  // locapass側に無いため未接続(0表示)。
-  const favoriteCount = 0;
-  const priceItems: { id: string; name: string; duration_minutes: number | null; price: number }[] = [];
-  const todayScheduleRows: TodayScheduleRow[] = [];
+  const favoriteCount = favoriteCountRaw ?? 0;
+  const priceItems = priceItemRows ?? [];
+  const todayScheduleRows: TodayScheduleRow[] = (castRows ?? []).map((c) => {
+    const schedulesForCast = Array.isArray(c.locapass_schedules)
+      ? c.locapass_schedules
+      : c.locapass_schedules
+        ? [c.locapass_schedules]
+        : [];
+    const todaySchedule = schedulesForCast[0] ?? null;
+    return {
+      castId: c.id,
+      name: c.name,
+      avatarUrl: c.avatar_url,
+      scheduleId: todaySchedule?.id ?? null,
+      isWorkingToday: todaySchedule?.is_working_today ?? false,
+      startTime: todaySchedule?.start_time ?? null,
+      endTime: todaySchedule?.end_time ?? null,
+    };
+  });
 
   const now = Date.now();
   const events: ShopEvent[] = (eventRows ?? []).map((e) => ({
@@ -132,7 +165,7 @@ export default async function LocapassShopSettingsPage({
     address: shop.address,
     lat: shop.lat,
     priceItemCount: priceItems.length,
-    castCount: todayScheduleRows.length,
+    castCount: castRows?.length ?? 0,
     reelCount: reelCount ?? 0,
   });
   const completenessItems = completeness.items.map((item) =>
@@ -176,7 +209,7 @@ export default async function LocapassShopSettingsPage({
       <TodayScheduleBoard
         date={today}
         rows={todayScheduleRows}
-        upsertTodaySchedule={upsertTodaySchedule}
+        upsertTodaySchedule={upsertTodaySchedule.bind(null, currentShop.id)}
         castDetailBasePath={`${basePath}/cast`}
       />
 
@@ -239,6 +272,7 @@ export default async function LocapassShopSettingsPage({
       </section>
 
       <ShopImportPanel
+        shopId={currentShop.id}
         defaultUrl={shop.website_url}
         current={{
           description: !!shop.description?.trim(),
@@ -440,7 +474,7 @@ export default async function LocapassShopSettingsPage({
                 </span>
                 <div className="flex items-center gap-3">
                   <span>¥{item.price.toLocaleString()}</span>
-                  <form action={deletePriceItem.bind(null, item.id)}>
+                  <form action={deletePriceItem.bind(null, currentShop.id, item.id)}>
                     <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
                       削除
                     </button>
@@ -450,7 +484,7 @@ export default async function LocapassShopSettingsPage({
             ))}
           </ul>
         )}
-        <form action={addPriceItem} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <form action={addPriceItem.bind(null, currentShop.id)} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <input
             name="name"
             required
@@ -482,8 +516,8 @@ export default async function LocapassShopSettingsPage({
       <EventFormSection
         shopId={currentShop.id}
         events={events}
-        addEvent={addEvent}
-        deleteEvent={deleteEvent}
+        addEvent={addEvent.bind(null, currentShop.id)}
+        deleteEvent={deleteEvent.bind(null, currentShop.id)}
       />
     </div>
   );

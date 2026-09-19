@@ -33,8 +33,8 @@ const MAX_PINNED_REELS = 3;
 /**
  * cast 本人の画面(/dashboard/cast)。LUXELA本家のキャストマイページ(CastMypageClient)と同じUI。
  * プロフィール(locapass_update_own_cast_profile)・リール/ストーリー投稿と削除(locapass_reels・
- * locapass-reelsバケット)は locapass につないである。自分の投稿は locapass_reels.created_by で判定する。
- * コメント・コメント可否・ピン留めは locapass_reels に受け皿が無いため未接続。
+ * locapass-reelsバケット、cast_id=本人)・コメント可否・ピン留め・コメント(locapass_reel_comments)は
+ * locapass につないである。
  */
 export function CastDashboardClient({
   userId,
@@ -167,6 +167,7 @@ export function CastDashboardClient({
       const { data: insertedStory, error: insertError } = await supabase
         .from("locapass_reels")
         .insert({
+          cast_id: castId,
           shop_id: shopId,
           portal_id: portalId,
           caption: caption.trim() || null,
@@ -200,10 +201,12 @@ export function CastDashboardClient({
       const { data: inserted, error: insertError } = await supabase
         .from("locapass_reels")
         .insert({
+          cast_id: castId,
           shop_id: shopId,
           portal_id: portalId,
           caption: caption.trim() || null,
           action_url: linkUrl.trim() || null,
+          is_comments_enabled: commentsEnabled,
           ...mediaColumns,
           author_name: name,
           author_icon_url: avatarUrl,
@@ -267,14 +270,39 @@ export function CastDashboardClient({
     setReels((prev) => prev.filter((r) => r.id !== reelId));
   }
 
-  // コメント可否(本家 reels.is_comments_enabled)は locapass_reels に受け皿が無いため未接続。
-  async function handleToggleComments(_reelId: string, _next: boolean) {
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+  async function handleToggleComments(reelId: string, next: boolean) {
+    setReels((prev) => prev.map((r) => (r.id === reelId ? { ...r, isCommentsEnabled: next } : r)));
+    const supabase = createClient();
+    const { error: updateError } = await supabase
+      .from("locapass_reels")
+      .update({ is_comments_enabled: next })
+      .eq("id", reelId);
+    if (updateError) {
+      setReels((prev) => prev.map((r) => (r.id === reelId ? { ...r, isCommentsEnabled: !next } : r)));
+      setError("コメント設定の変更に失敗しました");
+    }
   }
 
-  // ピン留め(本家 reels.pinned_at)は locapass_reels に受け皿が無いため未接続。
-  async function handleTogglePin(_reelId: string, _currentlyPinned: boolean) {
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+  async function handleTogglePin(reelId: string, currentlyPinned: boolean) {
+    if (!currentlyPinned && reels.filter((r) => r.pinnedAt).length >= MAX_PINNED_REELS) {
+      setError(`ピン留めは最大${MAX_PINNED_REELS}件までです`);
+      return;
+    }
+
+    const nextPinnedAt = currentlyPinned ? null : new Date().toISOString();
+    const prevReels = reels;
+    setReels((prev) => prev.map((r) => (r.id === reelId ? { ...r, pinnedAt: nextPinnedAt } : r)));
+
+    const supabase = createClient();
+    const { error: updateError } = await supabase
+      .from("locapass_reels")
+      .update({ pinned_at: nextPinnedAt })
+      .eq("id", reelId);
+
+    if (updateError) {
+      setReels(prevReels);
+      setError("ピン留めの変更に失敗しました");
+    }
   }
 
   async function handleLogout() {

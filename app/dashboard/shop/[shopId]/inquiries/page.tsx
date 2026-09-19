@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import Link from "next/link";
@@ -10,7 +11,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 /**
  * LUXELA本家のお問い合わせ画面(app/dashboard/inquiries/page.tsx)と同じ画面。
- * locapassに問い合わせの受け皿テーブルが無いため空表示(LUXELAのshop_inquiriesは読まない)。
+ * locapass_shop_inquiries につないである。
  */
 export default async function LocapassShopInquiriesPage({
   params,
@@ -22,13 +23,12 @@ export default async function LocapassShopInquiriesPage({
   if (!viewer) notFound();
   const shop = viewer.shop;
 
-  const inquiries: {
-    id: string;
-    customer_name: string | null;
-    contact: string | null;
-    status: string;
-    updated_at: string;
-  }[] = [];
+  const supabase = await createClient();
+  const { data: inquiries } = await supabase
+    .from("locapass_shop_inquiries")
+    .select("id, customer_name, contact, status, created_at, updated_at")
+    .eq("shop_id", shop.id)
+    .order("updated_at", { ascending: false });
 
   return (
     <div className="space-y-4">

@@ -1,28 +1,68 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { setIdDocument, deleteIdDocument } from "@/app/dashboard/shop/[shopId]/cast/actions";
 
 export function CastIdDocumentUploader({
+  shopId,
   castId,
   hasDocument,
 }: {
+  shopId: string;
   castId: string;
   hasDocument: boolean;
 }) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 本家はid-documentsバケットに保存する。locapassには身分証画像の受け皿が無いため未接続。
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     e.target.value = "";
     if (!file) return;
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+
+    setUploading(true);
+    setError(null);
+
+    const supabase = createClient();
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${castId}/id-document.${ext}`;
+
+    const { error: uploadError } = await supabase.storage.from("locapass-id-documents").upload(path, file, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+    if (uploadError) {
+      setUploading(false);
+      setError(`アップロードに失敗しました: ${uploadError.message}`);
+      return;
+    }
+
+    try {
+      await setIdDocument(shopId, castId, path);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "登録に失敗しました");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleDelete() {
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+    setUploading(true);
+    setError(null);
+    try {
+      await deleteIdDocument(shopId, castId);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "削除に失敗しました");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (

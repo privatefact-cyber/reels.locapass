@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { ApplicantListMasterDetail } from "@/components/locapass-dashboard/ApplicantListMasterDetail";
-import { addApplicant } from "../not-connected";
+import { createClient } from "@/lib/supabase/server";
+import { addApplicant } from "./actions";
 
 /**
  * LUXELA本家の応募者管理画面(app/dashboard/applicants/page.tsx)と同じ画面。
- * locapassに応募者・与信照会の受け皿が無いため一覧は空で、登録は「未接続」を返す。
+ * locapass_applicants と与信照会(locapass_check_person_risk)につないである。
  */
 export default async function LocapassShopApplicantsPage({
   params,
@@ -17,16 +18,12 @@ export default async function LocapassShopApplicantsPage({
   if (!viewer) notFound();
   const shop = viewer.shop;
 
-  const applicants: {
-    id: string;
-    name: string;
-    phone: string;
-    dob: string | null;
-    status: string;
-    created_at: string;
-    last_check_match_level: string | null;
-    last_check_hit_count: number | null;
-  }[] = [];
+  const supabase = await createClient();
+  const { data: applicants } = await supabase
+    .from("locapass_applicants")
+    .select("id, name, phone, dob, status, created_at, last_check_match_level, last_check_hit_count")
+    .eq("shop_id", shop.id)
+    .order("created_at", { ascending: false });
 
   return (
     <div className="space-y-8">
@@ -40,7 +37,7 @@ export default async function LocapassShopApplicantsPage({
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">新規応募者を登録</h2>
-        <form action={addApplicant} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <form action={addApplicant.bind(null, shop.id)} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <input
             name="name"
             required

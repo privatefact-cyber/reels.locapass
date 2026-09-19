@@ -9,7 +9,7 @@ import { needsTranslation, translateFields, translateFieldsBatch } from "@/lib/i
  */
 export async function refreshShopTranslations(supabase: SupabaseClient<Database>, shopId: string): Promise<void> {
   const { data } = await supabase
-    .from("shops")
+    .from("locapass_shops")
     .select("description, tagline, business_hours, price_info, usage_notes, translations")
     .eq("id", shopId)
     .maybeSingle();
@@ -32,7 +32,7 @@ export async function refreshShopTranslations(supabase: SupabaseClient<Database>
   }
 
   await supabase
-    .from("shops")
+    .from("locapass_shops")
     .update({ translations: (translations ?? {}) as unknown as Json })
     .eq("id", shopId);
 }

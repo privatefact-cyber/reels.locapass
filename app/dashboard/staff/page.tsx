@@ -17,19 +17,22 @@ export default async function StaffDashboardPage() {
   if (!staff) redirect("/dashboard");
 
   const supabase = await createClient();
-  const [{ data: reels }, { data: events }] = await Promise.all([
-    // 自分が投稿したリール(投稿者はDBトリガーで created_by に固定される)。
+  const [{ data: reels }, { data: events }, { data: inquiries }] = await Promise.all([
     supabase
       .from("locapass_reels")
       .select("id, caption, video_url, images, poster_url, like_count, published_at, updated_at")
-      .eq("shop_id", staff.shop_id)
-      .eq("created_by", staff.user_id ?? "")
+      .eq("posted_by_staff_id", staff.id)
       .order("published_at", { ascending: false, nullsFirst: false }),
     supabase
       .from("locapass_shop_events")
-      .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_at")
+      .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_by_staff_id, created_at")
       .eq("shop_id", staff.shop_id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("locapass_shop_inquiries")
+      .select("id, customer_name, contact, status, updated_at")
+      .eq("shop_id", staff.shop_id)
+      .order("updated_at", { ascending: false }),
   ]);
 
   const myReels: MyReel[] = (reels ?? []).map((r) => {
@@ -50,7 +53,6 @@ export default async function StaffDashboardPage() {
     };
   });
 
-  // locapass_shop_events には投稿者の列が無いため、本人投稿かどうか(isOwn)は判定できない(false)。
   const shopEvents: ShopEventRow[] = (events ?? []).map((e) => ({
     id: e.id,
     title: e.title,
@@ -59,12 +61,17 @@ export default async function StaffDashboardPage() {
     endsAt: e.ends_at,
     imageUrl: e.image_url,
     galleryImageUrls: e.gallery_image_urls ?? [],
-    isOwn: false,
+    isOwn: e.created_by_staff_id === staff.id,
     isEnded: !!e.ends_at && new Date(e.ends_at).getTime() < Date.now(),
   }));
 
-  // お問い合わせは locapass に受け皿が無いため未接続(空)。
-  const inquiryRows: InquiryRow[] = [];
+  const inquiryRows: InquiryRow[] = (inquiries ?? []).map((i) => ({
+    id: i.id,
+    customerName: i.customer_name,
+    contact: i.contact,
+    status: i.status,
+    updatedAt: i.updated_at,
+  }));
 
   const shop = Array.isArray(staff.locapass_shops) ? staff.locapass_shops[0] : staff.locapass_shops;
 

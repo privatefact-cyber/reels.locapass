@@ -23,7 +23,9 @@ export default async function LocapassShopReelsPage({
   const supabase = await createClient();
   const { data: reelRows } = await supabase
     .from("locapass_reels")
-    .select("id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name")
+    .select(
+      "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
+    )
     .eq("shop_id", shop.id)
     .order("published_at", { ascending: false, nullsFirst: false });
 
@@ -45,6 +47,8 @@ export default async function LocapassShopReelsPage({
       status: r.status === "publish" ? "published" : r.status,
       post_type: r.reel_type === "story" ? "story" : "reel",
       author_name: r.author_name,
+      cast_members: r.locapass_cast_members,
+      shop_staff_members: r.locapass_shop_staff_members,
     };
   });
 
@@ -94,7 +98,9 @@ export default async function LocapassShopReelsPage({
       {reels && reels.length > 0 ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {reels.map((r) => {
-            const authorName = r.author_name ?? `${shop.name}(店舗)`;
+            const cast = Array.isArray(r.cast_members) ? r.cast_members[0] : r.cast_members;
+            const staff = Array.isArray(r.shop_staff_members) ? r.shop_staff_members[0] : r.shop_staff_members;
+            const authorName = cast?.name ?? staff?.name ?? r.author_name ?? `${shop.name}(店舗)`;
             const media = r.media[0];
             const canBeCardVideo =
               media?.type === "video" && r.status === "published" && r.post_type === "reel";

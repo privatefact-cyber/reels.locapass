@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { containsNgWord } from "@/lib/reels/ngWords";
 
 const MAX_LEN = 15;
@@ -19,40 +20,81 @@ type CommentRow = {
 export function CastCommentsPanel({ castId }: { castId: string }) {
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busyId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
 
-  // 本家は reel_comments / cast_blocked_users を読み書きする。locapass にはコメントの受け皿が無いため、
-  // 一覧は空で表示し、返信・削除・ブロックは「未接続」を返す。
-  useEffect(() => {
-    setComments([]);
+  const load = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("locapass_reel_comments")
+      .select("id, body, author_type, user_id, parent_comment_id, created_at, reel_id, locapass_reels!inner(cast_id)")
+      .eq("locapass_reels.cast_id", castId)
+      .order("created_at", { ascending: false });
+    setComments((data as unknown as CommentRow[]) ?? []);
     setLoading(false);
   }, [castId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const topLevels = comments.filter((c) => c.author_type === "customer");
   const repliesByParent = new Map(
     comments.filter((c) => c.author_type === "cast" && c.parent_comment_id).map((c) => [c.parent_comment_id, c]),
   );
 
-  async function reply(_parentCommentId: string, _reelId: string, body: string) {
+  async function reply(parentCommentId: string, reelId: string, body: string) {
     const trimmed = body.trim().slice(0, MAX_LEN);
     if (!trimmed || busyId) return;
     if (containsNgWord(trimmed)) {
       setError("この内容は投稿できません。表現を変えてお試しください。");
       return;
     }
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+    setBusyId(parentCommentId);
+    setError(null);
+    const supabase = createClient();
+    const { error: insertError } = await supabase.from("locapass_reel_comments").insert({
+      reel_id: reelId,
+      author_type: "cast",
+      cast_id: castId,
+      parent_comment_id: parentCommentId,
+      body: trimmed,
+    });
+    if (insertError) setError("返信できませんでした。");
+    else {
+      setReplyDrafts((prev) => ({ ...prev, [parentCommentId]: "" }));
+      await load();
+    }
+    setBusyId(null);
   }
 
-  async function remove(_commentId: string) {
+  async function remove(commentId: string) {
     if (busyId) return;
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+    setBusyId(commentId);
+    setError(null);
+    const supabase = createClient();
+    const { error: updateError } = await supabase
+      .from("locapass_reel_comments")
+      .update({ is_deleted: true })
+      .eq("id", commentId);
+    if (updateError) setError("削除できませんでした。");
+    else await load();
+    setBusyId(null);
   }
 
   async function block(userId: string | null) {
     if (busyId || !userId) return;
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+    if (!window.confirm("このユーザーをブロックしますか?今後のコメントはあなた以外から見えなくなります。")) return;
+    setBusyId(userId);
+    setError(null);
+    const supabase = createClient();
+    const { error: insertError } = await supabase
+      .from("locapass_cast_blocked_users")
+      .insert({ cast_id: castId, blocked_user_id: userId });
+    if (insertError) setError("ブロックできませんでした。");
+    else await load();
+    setBusyId(null);
   }
 
   if (loading) return null;

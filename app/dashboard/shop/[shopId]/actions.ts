@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { translateAddressToEnglish } from "@/lib/map/translateAddress";
 import { needsTranslation, translateFields } from "@/lib/i18n/contentTranslation";
 import type { Json } from "@/types/supabase";
+import { translateEventText, translatePriceItemNames } from "@/lib/shop/shopTranslations";
 
 /**
  * LUXELA本家(app/dashboard/shop/actions.ts)の店舗情報画面をlocapass_shopsにつないだ版。
@@ -223,4 +224,154 @@ export async function deleteReel(shopId: string, reelId: string) {
 
   revalidatePath(`/dashboard/shop/${shopId}/reels`);
   revalidatePath("/");
+}
+
+// ---------- 料金表(本家 addPriceItem / deletePriceItem) ----------
+export async function addPriceItem(shopId: string, formData: FormData) {
+  const supabase = await requireShopAccess(shopId);
+
+  const name = String(formData.get("name") ?? "").trim();
+  const durationRaw = String(formData.get("duration_minutes") ?? "").trim();
+  const priceRaw = String(formData.get("price") ?? "").trim();
+  if (!name || !priceRaw) throw new Error("コース名と料金は必須です");
+
+  const [nameTranslations] = await translatePriceItemNames([name]);
+  const { error } = await supabase.from("locapass_shop_price_items").insert({
+    shop_id: shopId,
+    name,
+    duration_minutes: durationRaw ? Number(durationRaw) : null,
+    price: Number(priceRaw),
+    name_translations: nameTranslations ?? {},
+  });
+  if (error) throw new Error(`料金項目の登録に失敗しました: ${error.message}`);
+  revalidateShop(shopId);
+}
+
+export async function deletePriceItem(shopId: string, itemId: string) {
+  const supabase = await requireShopAccess(shopId);
+  const { data, error } = await supabase
+    .from("locapass_shop_price_items")
+    .delete()
+    .eq("id", itemId)
+    .eq("shop_id", shopId)
+    .select("id");
+  if (error) throw new Error(`料金項目の削除に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) throw new Error("料金項目の削除に失敗しました(対象が見つからないか、権限がありません)");
+  revalidateShop(shopId);
+}
+
+// ---------- イベント(本家 addEvent / deleteEvent) ----------
+/** "HH:MM" 形式の時刻文字列(15分刻み想定)を検証する。空文字は許可(時刻未指定)。 */
+function parseTimeOfDay(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!/^\d{2}:\d{2}$/.test(trimmed)) throw new Error("時刻の形式が不正です");
+  return trimmed;
+}
+
+/** 日付 + 時刻(JST)を timestamptz 用のISO文字列に変換する。時刻未指定時は fallbackTime を使う。 */
+function toJstIso(date: string, time: string | null, fallbackTime: string): string | null {
+  if (!date) return null;
+  return `${date}T${time ?? fallbackTime}:00+09:00`;
+}
+
+export async function addEvent(shopId: string, formData: FormData) {
+  const supabase = await requireShopAccess(shopId);
+
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  const startDate = String(formData.get("start_date") ?? "").trim();
+  const startTime = parseTimeOfDay(String(formData.get("start_time") ?? ""));
+  const endDate = String(formData.get("end_date") ?? "").trim();
+  const endTime = parseTimeOfDay(String(formData.get("end_time") ?? ""));
+  const imageUrl = String(formData.get("image_url") ?? "").trim();
+  const galleryUrlsRaw = String(formData.get("gallery_image_urls") ?? "").trim();
+
+  if (!title) throw new Error("タイトルは必須です");
+  if (!imageUrl) throw new Error("イベントリール用のサムネイル画像は必須です");
+  if (endDate && !startDate) throw new Error("終了日を設定する場合は開始日も設定してください");
+
+  const startsAt = toJstIso(startDate, startTime, "00:00");
+  const endsAt = toJstIso(endDate, endTime, "23:45");
+  if (startsAt && endsAt && endsAt < startsAt) {
+    throw new Error("終了日時は開始日時より後に設定してください");
+  }
+
+  let galleryImageUrls: string[] = [];
+  if (galleryUrlsRaw) {
+    try {
+      const parsed = JSON.parse(galleryUrlsRaw);
+      if (Array.isArray(parsed)) galleryImageUrls = parsed.filter((u) => typeof u === "string");
+    } catch {
+      throw new Error("詳細ページ用画像の形式が不正です");
+    }
+  }
+
+  const translations = await translateEventText(title, body || null);
+  const { error } = await supabase.from("locapass_shop_events").insert({
+    shop_id: shopId,
+    title,
+    body: body || null,
+    starts_at: startsAt,
+    ends_at: endsAt,
+    image_url: imageUrl,
+    gallery_image_urls: galleryImageUrls,
+    translations,
+  });
+  if (error) throw new Error(`イベントの登録に失敗しました: ${error.message}`);
+  revalidateShop(shopId);
+  revalidatePath("/events");
+}
+
+export async function deleteEvent(shopId: string, eventId: string) {
+  const supabase = await requireShopAccess(shopId);
+  const { data, error } = await supabase
+    .from("locapass_shop_events")
+    .delete()
+    .eq("id", eventId)
+    .eq("shop_id", shopId)
+    .select("id");
+  if (error) throw new Error(`イベントの削除に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) throw new Error("イベントの削除に失敗しました(対象が見つからないか、権限がありません)");
+  revalidateShop(shopId);
+}
+
+// ---------- 本日の出勤(本家 upsertTodaySchedule) ----------
+export async function upsertTodaySchedule(
+  shopId: string,
+  castId: string,
+  scheduleId: string | null,
+  date: string,
+  formData: FormData,
+) {
+  const supabase = await requireShopAccess(shopId);
+
+  const isWorking = formData.get("is_working_today") === "on";
+  const startTime = String(formData.get("start_time") ?? "").trim();
+  const endTime = String(formData.get("end_time") ?? "").trim();
+
+  const { data: cast } = await supabase
+    .from("locapass_cast_members")
+    .select("id")
+    .eq("id", castId)
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (!cast) throw new Error("対象のキャストが見つかりません");
+
+  const payload = {
+    cast_id: castId,
+    date,
+    is_working_today: isWorking,
+    start_time: startTime || null,
+    end_time: endTime || null,
+  };
+  const { data, error } = scheduleId
+    ? await supabase.from("locapass_schedules").update(payload).eq("id", scheduleId).eq("cast_id", castId).select("id")
+    : await supabase.from("locapass_schedules").insert(payload).select("id");
+
+  if (error) throw new Error(`出勤予定の更新に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) {
+    throw new Error("出勤予定の更新に失敗しました(対象が見つからないか、権限がありません)");
+  }
+  revalidateShop(shopId);
 }

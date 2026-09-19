@@ -1,18 +1,50 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { addPhoto } from "@/app/dashboard/shop/[shopId]/cast/actions";
 
 export function CastPhotoUploader({ castId, shopId }: { castId: string; shopId: string }) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 本家はcast-mediaバケット+mediaテーブルに保存する。locapassには写真の受け皿が無いため未接続。
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     e.target.value = "";
     if (!file) return;
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+
+    setUploading(true);
+    setError(null);
+
+    const supabase = createClient();
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${castId}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage.from("locapass-cast-media").upload(path, file, {
+      contentType: file.type,
+    });
+
+    if (uploadError) {
+      setUploading(false);
+      setError(`アップロードに失敗しました: ${uploadError.message}`);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("locapass-cast-media").getPublicUrl(path);
+
+    const formData = new FormData();
+    formData.set("url", publicUrlData.publicUrl);
+    try {
+      await addPhoto(shopId, castId, formData);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "画像の登録に失敗しました");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (

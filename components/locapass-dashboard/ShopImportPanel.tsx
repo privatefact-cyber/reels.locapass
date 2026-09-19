@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { applyImportAction, previewImportAction } from "@/app/dashboard/shop/[shopId]/not-connected";
+import { applyImportAction, previewImportAction } from "@/app/dashboard/shop/[shopId]/import-actions";
 import type { ApplyImportInput } from "@/lib/shop/importTypes";
 import type { ImportPreview } from "@/lib/shop/importFromWebsite";
 
@@ -12,9 +12,11 @@ import type { ImportPreview } from "@/lib/shop/importFromWebsite";
  * 既に入力済みの項目は、上書き事故を防ぐため初期状態でチェックを外しておく。
  */
 export function ShopImportPanel({
+  shopId,
   defaultUrl,
   current,
 }: {
+  shopId: string;
   defaultUrl: string | null;
   current: { description: boolean; hours: boolean; phone: boolean; cover: boolean; hero: boolean };
 }) {
@@ -40,7 +42,7 @@ export function ShopImportPanel({
     setAppliedMessage(null);
     setPreview(null);
     startLoading(async () => {
-      const result = await previewImportAction(url);
+      const result = await previewImportAction(shopId, url);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -70,7 +72,7 @@ export function ShopImportPanel({
       rightsConfirmed: rights,
     };
     startApplying(async () => {
-      const result = await applyImportAction(input);
+      const result = await applyImportAction(shopId, input);
       if (!result.ok) {
         setError(result.error);
         return;

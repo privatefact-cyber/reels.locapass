@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
-import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generateTextCard";
 
 /**
@@ -13,7 +12,7 @@ import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generate
  * 画像を自動生成して投稿する(本文全体はcaptionにそのまま保存され、フィード側で
  * 40文字を超える分は「続きを読む」から読める)。
  */
-export function CastReelPostForm({ castId, shopId }: { castId: string; shopId: string }) {
+export function CastReelPostForm({ castId, shopId, portalId }: { castId: string; shopId: string; portalId: number }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -65,9 +64,71 @@ export function CastReelPostForm({ castId, shopId }: { castId: string; shopId: s
       return;
     }
 
-    // 本家は reels テーブル(cast_id付き)+reelsバケットに保存する。locapass_reels にはキャスト本人の
-    // 投稿を区別する列が無いため、店舗画面からのキャスト代理投稿は未接続。
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+    setUploading(true);
+    setError(null);
+
+    const supabase = createClient();
+    let isVideo = false;
+    let uploadBlob: Blob = file ?? new Blob();
+    let ext = "png";
+    let contentType = "image/png";
+
+    if (file) {
+      isVideo = file.type.startsWith("video/");
+      ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+      contentType = file.type;
+      uploadBlob = file;
+    } else {
+      try {
+        uploadBlob = await generateTextCardImage(trimmedCaption);
+      } catch (genError) {
+        setUploading(false);
+        setError(genError instanceof Error ? genError.message : "画像の生成に失敗しました");
+        return;
+      }
+    }
+
+    // locapass では店舗フォルダ配下(locapass-reels バケット)に置き、cast_id 付きで locapass_reels に登録する。
+    // マップのカード用軽量プレビュー(本家 preview_url)は locapass_reels に受け皿が無いため作らない。
+    const path = `${shopId}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("locapass-reels")
+      .upload(path, uploadBlob, { contentType });
+
+    if (uploadError) {
+      setUploading(false);
+      setError(`アップロードに失敗しました: ${uploadError.message}`);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
+
+    const { error: insertError } = await supabase.from("locapass_reels").insert({
+      cast_id: castId,
+      shop_id: shopId,
+      portal_id: portalId,
+      caption: trimmedCaption || null,
+      action_url: linkUrl.trim() || null,
+      video_url: isVideo ? publicUrlData.publicUrl : null,
+      images: isVideo ? [] : [{ url: publicUrlData.publicUrl }],
+      reel_type: "permanent",
+      status: "publish",
+    });
+
+    setUploading(false);
+
+    if (insertError) {
+      setError(`投稿の保存に失敗しました: ${insertError.message}`);
+      return;
+    }
+
+    setFile(null);
+    setPreview(null);
+    setCaption("");
+    setLinkUrl("");
+    setOpen(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    router.refresh();
   }
 
   if (!open) {

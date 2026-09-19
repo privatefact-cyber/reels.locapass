@@ -60,9 +60,9 @@ type Tab = "posts" | "events" | "inquiries";
 
 /**
  * スタッフ本人の画面(/dashboard/staff)。LUXELA本家のスタッフマイページ(StaffMypageClient)と同じUI。
- * プロフィール(locapass_update_own_staff_profile)・リール投稿/削除(locapass_reels・locapass-reelsバケット)は
- * locapassにつないである。自分のリールは locapass_reels.created_by(投稿者)で判定する。
- * コメント・イベント投稿・お問い合わせ対応は locapass に受け皿/書き込み経路が無いため未接続。
+ * プロフィール(locapass_update_own_staff_profile)・リール(locapass_reels.posted_by_staff_id)・
+ * コメント(locapass_reel_comments)・イベント(locapass_shop_events)・お問い合わせ(locapass_shop_inquiry_messages)に
+ * つないである。
  */
 export function StaffDashboardClient({
   userId,
@@ -289,6 +289,7 @@ export function StaffDashboardClient({
     const { data: inserted, error: insertError } = await supabase
       .from("locapass_reels")
       .insert({
+        posted_by_staff_id: staffId,
         shop_id: shopId,
         portal_id: portalId,
         caption: caption.trim() || null,
@@ -344,7 +345,6 @@ export function StaffDashboardClient({
   }
 
   // ---------- コメント ----------
-  // コメントは locapass に受け皿が無いため未接続(本家は reel_comments)。一覧は空で開く。
   async function toggleComments(reelId: string) {
     if (openCommentsFor === reelId) {
       setOpenCommentsFor(null);
@@ -353,39 +353,184 @@ export function StaffDashboardClient({
     setOpenCommentsFor(reelId);
     setCommentDraft("");
     if (!comments[reelId]) {
-      setComments((prev) => ({ ...prev, [reelId]: [] }));
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("locapass_reel_comments")
+        .select("id, author_type, body, created_at")
+        .eq("reel_id", reelId)
+        .order("created_at", { ascending: true });
+      setComments((prev) => ({
+        ...prev,
+        [reelId]: (data ?? []).map((c) => ({
+          id: c.id,
+          authorType: c.author_type as "customer" | "staff",
+          body: c.body,
+          createdAt: c.created_at,
+        })),
+      }));
     }
   }
 
-  async function handleReplyComment(_reelId: string) {
+  async function handleReplyComment(reelId: string) {
     if (!commentDraft.trim()) return;
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+    setCommentLoading(true);
+    const supabase = createClient();
+    const { data, error: insertError } = await supabase
+      .from("locapass_reel_comments")
+      .insert({
+        reel_id: reelId,
+        author_type: "staff",
+        staff_member_id: staffId,
+        body: commentDraft.trim(),
+      })
+      .select("id, author_type, body, created_at")
+      .single();
+
+    setCommentLoading(false);
+    if (insertError || !data) return;
+
+    setComments((prev) => ({
+      ...prev,
+      [reelId]: [
+        ...(prev[reelId] ?? []),
+        { id: data.id, authorType: "staff", body: data.body, createdAt: data.created_at },
+      ],
+    }));
+    setCommentDraft("");
   }
 
   // ---------- イベント投稿 ----------
-  // イベントは locapass_shop_events に書き込み経路が無いため未接続(本家は shop_events)。
-  async function handleSubmitEvent(_formData: FormData) {
-    setEventError("この機能はまだlocapassのデータベースに接続されていません");
+  async function handleSubmitEvent(formData: FormData) {
+    setEventSaving(true);
+    setEventError(null);
+
+    const title = String(formData.get("title") ?? "").trim();
+    const bodyText = String(formData.get("body") ?? "").trim();
+    const startDate = String(formData.get("start_date") ?? "").trim();
+    const startTime = parseTimeOfDay(String(formData.get("start_time") ?? ""));
+    const endDate = String(formData.get("end_date") ?? "").trim();
+    const endTime = parseTimeOfDay(String(formData.get("end_time") ?? ""));
+    const galleryRaw = String(formData.get("gallery_image_urls") ?? "").trim();
+
+    if (!title) {
+      setEventSaving(false);
+      setEventError("タイトルは必須です");
+      return;
+    }
+    if (!eventThumbnailUrl) {
+      setEventSaving(false);
+      setEventError("サムネイル画像は必須です");
+      return;
+    }
+
+    let galleryImageUrls: string[] = [];
+    if (galleryRaw) {
+      try {
+        const parsed = JSON.parse(galleryRaw);
+        if (Array.isArray(parsed)) galleryImageUrls = parsed.filter((u) => typeof u === "string");
+      } catch {
+        // ignore
+      }
+    }
+
+    const startsAt = toJstIso(startDate, startTime, "00:00");
+    const endsAt = toJstIso(endDate, endTime, "23:45");
+
+    const supabase = createClient();
+    const { data: inserted, error: insertError } = await supabase
+      .from("locapass_shop_events")
+      .insert({
+        shop_id: shopId,
+        created_by_staff_id: staffId,
+        title,
+        body: bodyText || null,
+        starts_at: startsAt,
+        ends_at: endsAt,
+        image_url: eventThumbnailUrl,
+        gallery_image_urls: galleryImageUrls,
+      })
+      .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_at")
+      .single();
+
+    setEventSaving(false);
+    if (insertError || !inserted) {
+      setEventError(`イベントの登録に失敗しました: ${insertError?.message ?? ""}`);
+      return;
+    }
+
+    setEvents((prev) => [
+      {
+        id: inserted.id,
+        title: inserted.title,
+        body: inserted.body,
+        startsAt: inserted.starts_at,
+        endsAt: inserted.ends_at,
+        imageUrl: inserted.image_url,
+        galleryImageUrls: inserted.gallery_image_urls ?? [],
+        isOwn: true,
+        isEnded: false,
+      },
+      ...prev,
+    ]);
+    setEventThumbnailUrl(null);
+    setEventGalleryKey((k) => k + 1);
+    setEventFormOpen(false);
+    router.refresh();
   }
 
-  async function handleDeleteEvent(_eventId: string) {
-    setEventError("この機能はまだlocapassのデータベースに接続されていません");
+  async function handleDeleteEvent(eventId: string) {
+    const supabase = createClient();
+    const { error: deleteError } = await supabase.from("locapass_shop_events").delete().eq("id", eventId);
+    if (deleteError) return;
+    setEvents((prev) => prev.filter((e) => e.id !== eventId));
   }
 
   // ---------- お問い合わせ ----------
-  // お問い合わせは locapass に受け皿が無いため未接続(本家は shop_inquiry_messages)。
   async function openInquiry(inquiryId: string) {
     if (openInquiryId === inquiryId) {
       setOpenInquiryId(null);
       return;
     }
     setOpenInquiryId(inquiryId);
-    setThread([]);
+    setThreadLoading(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("locapass_shop_inquiry_messages")
+      .select("sender_type, body, created_at")
+      .eq("inquiry_id", inquiryId)
+      .order("created_at", { ascending: true });
+    setThread(
+      (data ?? []).map((m) => ({
+        senderType: m.sender_type as "customer" | "shop",
+        body: m.body,
+        createdAt: m.created_at,
+      })),
+    );
+    setThreadLoading(false);
   }
 
-  async function handleReplyInquiry(_inquiryId: string) {
+  async function handleReplyInquiry(inquiryId: string) {
     if (!replyDraft.trim()) return;
-    setError("この機能はまだlocapassのデータベースに接続されていません");
+    setReplySending(true);
+    const supabase = createClient();
+    const { error: insertError } = await supabase.from("locapass_shop_inquiry_messages").insert({
+      inquiry_id: inquiryId,
+      sender_type: "shop",
+      staff_member_id: staffId,
+      body: replyDraft.trim(),
+    });
+
+    setReplySending(false);
+    if (insertError) return;
+
+    setThread((prev) => [
+      ...prev,
+      { senderType: "shop", body: replyDraft.trim(), createdAt: new Date().toISOString() },
+    ]);
+    setInquiries((prev) =>
+      prev.map((i) => (i.id === inquiryId ? { ...i, status: "responded" } : i)),
+    );
+    setReplyDraft("");
   }
 
   return (

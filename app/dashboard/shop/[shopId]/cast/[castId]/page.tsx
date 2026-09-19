@@ -10,20 +10,20 @@ import { CastIdDocumentUploader } from "@/components/locapass-dashboard/CastIdDo
 import { CastReelPostForm } from "@/components/locapass-dashboard/CastReelPostForm";
 import { CastReelCaptionCell } from "@/components/locapass-dashboard/CastReelCaptionCell";
 import { TimeSelect } from "@/components/locapass-dashboard/TimeSelect";
-import { regenerateCastLoginToken, updateCastProfile } from "../actions";
 import {
   addSchedule,
   deleteCastReel,
   deleteCastReelComment,
   deletePhoto,
   deleteSchedule,
-} from "../../not-connected";
+  regenerateCastLoginToken,
+  updateCastProfile,
+} from "../actions";
 
 /**
  * LUXELA本家のキャスト詳細画面(app/dashboard/cast/[castId]/page.tsx)と同じ画面。
- * プロフィール・本人確認情報・ログイン発行・投稿用リンクは locapass_cast_members /
- * locapass_cast_login_tokens につないである。写真(本家media)・出勤(schedules)・リール(reels.cast_id)・
- * コメント(reel_comments)・身分証画像(id-documentsバケット)は locapass に受け皿が無いため空(未接続)。
+ * locapass_cast_members / locapass_cast_login_tokens / locapass_media / locapass_schedules /
+ * locapass_reels(cast_id) / locapass_reel_comments / locapass-id-documents バケットにつないである。
  * 開けるのはこの店舗の shop_admin 以上のみ(他店舗のキャストIDを指定しても404)。
  */
 export default async function LocapassCastEditPage({
@@ -51,16 +51,50 @@ export default async function LocapassCastEditPage({
     notFound();
   }
 
-  const { data: loginToken } = await supabase
-    .from("locapass_cast_login_tokens")
-    .select("token")
-    .eq("cast_id", castId)
-    .maybeSingle();
-  // 以下は locapass に受け皿が無い(未接続)。
-  const media: { id: string; url: string; display_order: number }[] = [];
-  const schedules: { id: string; date: string; start_time: string | null; end_time: string | null; is_working_today: boolean }[] = [];
-  const castReels: { id: string; caption: string | null; media: unknown; likes_count: number; created_at: string }[] = [];
-  const reelComments: { id: string; body: string; author_type: string; parent_comment_id: string | null; created_at: string }[] = [];
+  const [{ data: media }, { data: schedules }, { data: castReelRows }, { data: loginToken }, { data: reelComments }] =
+    await Promise.all([
+      supabase
+        .from("locapass_media")
+        .select("id, url, display_order")
+        .eq("cast_id", castId)
+        .order("display_order", { ascending: true }),
+      supabase
+        .from("locapass_schedules")
+        .select("id, date, start_time, end_time, is_working_today")
+        .eq("cast_id", castId)
+        .order("date", { ascending: false })
+        .limit(14),
+      supabase
+        .from("locapass_reels")
+        .select("id, caption, video_url, images, poster_url, like_count, published_at, updated_at")
+        .eq("cast_id", castId)
+        .order("published_at", { ascending: false, nullsFirst: false }),
+      supabase.from("locapass_cast_login_tokens").select("token").eq("cast_id", castId).maybeSingle(),
+      supabase
+        .from("locapass_reel_comments")
+        .select("id, body, author_type, parent_comment_id, created_at, locapass_reels!inner(cast_id)")
+        .eq("locapass_reels.cast_id", castId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
+  // 本家 reels の形(media配列・likes_count・created_at)に揃える。
+  const castReels = (castReelRows ?? []).map((r) => {
+    const images = (r.images as { url: string }[] | null) ?? [];
+    const media = r.video_url
+      ? [{ type: "video", url: r.video_url }]
+      : images.length > 0
+        ? images.map((img) => ({ type: "image", url: img.url }))
+        : r.poster_url
+          ? [{ type: "image", url: r.poster_url }]
+          : [];
+    return {
+      id: r.id,
+      caption: r.caption,
+      media,
+      likes_count: r.like_count,
+      created_at: r.published_at ?? r.updated_at,
+    };
+  });
 
   const requestHeaders = await headers();
   const origin =
@@ -71,10 +105,16 @@ export default async function LocapassCastEditPage({
 
   const sizes = (cast.sizes as { t?: string; b?: string; w?: string; h?: string } | null) ?? {};
 
-  const idDocumentSignedUrl: string | null = null;
+  const idDocumentSignedUrl = cast.id_document_path
+    ? (
+        await supabase.storage
+          .from("locapass-id-documents")
+          .createSignedUrl(cast.id_document_path, 300)
+      ).data?.signedUrl ?? null
+    : null;
 
   const boundUpdateProfile = updateCastProfile.bind(null, shop.id, castId);
-  const boundAddSchedule = addSchedule.bind(null, castId);
+  const boundAddSchedule = addSchedule.bind(null, shop.id, castId);
 
   const commentTopLevels = (reelComments ?? []).filter((c) => c.author_type === "customer");
   const commentRepliesByParent = new Map(
@@ -187,7 +227,7 @@ export default async function LocapassCastEditPage({
             className="mb-3 max-h-64 rounded-lg border border-slate-200 object-contain"
           />
         )}
-        <CastIdDocumentUploader castId={castId} hasDocument={!!cast.id_document_path} />
+        <CastIdDocumentUploader shopId={shop.id} castId={castId} hasDocument={!!cast.id_document_path} />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
@@ -214,7 +254,7 @@ export default async function LocapassCastEditPage({
             <div key={m.id} className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={m.url} alt="" className="h-32 w-24 rounded object-cover" />
-              <form action={deletePhoto.bind(null, castId, m.id)}>
+              <form action={deletePhoto.bind(null, shop.id, castId, m.id)}>
                 <button
                   type="submit"
                   className="mt-1 w-full rounded bg-slate-50 px-1 py-0.5 text-xs text-slate-600 hover:bg-red-100 hover:text-red-700"
@@ -266,7 +306,7 @@ export default async function LocapassCastEditPage({
                     ? `${s.start_time ?? "--:--"} 〜 ${s.end_time ?? "--:--"}`
                     : "お休み"}
                 </span>
-                <form action={deleteSchedule.bind(null, castId, s.id)}>
+                <form action={deleteSchedule.bind(null, shop.id, castId, s.id)}>
                   <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
                     削除
                   </button>
@@ -286,7 +326,7 @@ export default async function LocapassCastEditPage({
           「リール投稿」ページから)。
         </p>
         <div className="mb-4">
-          <CastReelPostForm castId={castId} shopId={shop.id} />
+          <CastReelPostForm castId={castId} shopId={shop.id} portalId={shop.portal_id} />
         </div>
         {castReels && castReels.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -313,7 +353,7 @@ export default async function LocapassCastEditPage({
                     {r.caption && <CastReelCaptionCell caption={r.caption} />}
                     <p className="text-[10px] text-white/70">♥ {r.likes_count}</p>
                   </div>
-                  <form action={deleteCastReel.bind(null, castId, r.id)} className="absolute right-1 top-1">
+                  <form action={deleteCastReel.bind(null, shop.id, castId, r.id)} className="absolute right-1 top-1">
                     <button
                       type="submit"
                       className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white hover:bg-red-600"
@@ -343,7 +383,7 @@ export default async function LocapassCastEditPage({
                 <li key={c.id} className="pt-2 first:pt-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm text-slate-900">{c.body}</p>
-                    <form action={deleteCastReelComment.bind(null, castId, c.id)}>
+                    <form action={deleteCastReelComment.bind(null, shop.id, castId, c.id)}>
                       <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
                         削除
                       </button>
@@ -352,7 +392,7 @@ export default async function LocapassCastEditPage({
                   {reply && (
                     <div className="mt-1 flex items-center justify-between gap-2 pl-3">
                       <p className="text-xs text-slate-500">キャストより: {reply.body}</p>
-                      <form action={deleteCastReelComment.bind(null, castId, reply.id)}>
+                      <form action={deleteCastReelComment.bind(null, shop.id, castId, reply.id)}>
                         <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
                           削除
                         </button>

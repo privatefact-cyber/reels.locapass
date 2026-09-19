@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
-import { sendShopMessage } from "../not-connected";
+import { createClient } from "@/lib/supabase/server";
+import { sendShopMessage } from "./actions";
 
 /**
  * LUXELA本家のお客様へのメッセージ画面(app/dashboard/messages/page.tsx)と同じ画面。
- * お気に入り登録者の一覧・送信はlocapass側に受け皿が無いため未接続(空表示・送信は「未接続」)。
+ * 送信先のお気に入り登録者は locapass_shop_favorites(DB関数 locapass_list_shop_favorite_users)、
+ * 送信は locapass_notifications(DB関数 locapass_send_shop_message)につないである。
  */
 export default async function LocapassShopMessagesPage({
   params,
@@ -16,9 +18,9 @@ export default async function LocapassShopMessagesPage({
   if (!viewer) notFound();
   const shop = viewer.shop;
 
-  // お気に入り登録者: locapass_shop_favoritesは本人の行しか読めないRLSで、本家のような
-  // 集計の受け皿もlocapass側に無いため未接続(空)。
-  const favoriteUsers: { userId: string; nickname: string }[] = [];
+  const supabase = await createClient();
+  const { data: favorites } = await supabase.rpc("locapass_list_shop_favorite_users", { p_shop_id: shop.id });
+  const favoriteUsers = (favorites ?? []).map((f) => ({ userId: f.user_id, nickname: f.nickname }));
 
   return (
     <div className="max-w-xl space-y-4">
@@ -29,7 +31,7 @@ export default async function LocapassShopMessagesPage({
         </p>
       </div>
 
-      <form action={sendShopMessage} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
+      <form action={sendShopMessage.bind(null, shop.id)} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
         <div>
           <label className="block text-sm font-semibold text-slate-700">送信先</label>
           <select

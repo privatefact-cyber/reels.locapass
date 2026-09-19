@@ -8,8 +8,7 @@ import { addCast } from "./actions";
 
 /**
  * LUXELA本家のキャスト管理画面(app/dashboard/cast/page.tsx)と同じ画面。
- * キャスト本体は locapass_cast_members につないである。写真(本家media)・フォロワー数
- * (本家user_cast_follows)は locapass に受け皿が無いため空/0 のまま(未接続)。
+ * locapass_cast_members / locapass_media / locapass_cast_follows(フォロワー数)につないである。
  */
 export default async function LocapassShopCastPage({
   params,
@@ -28,11 +27,25 @@ export default async function LocapassShopCastPage({
     .eq("shop_id", shop.id)
     .order("created_at", { ascending: false });
 
-  const castMembersWithMedia = (castMembers ?? []).map((cast) => ({
-    ...cast,
-    media: [] as { url: string }[],
-    followerCount: 0,
-  }));
+  // 各キャストの先頭写真とフォロワー数(本家と同じく1人ずつ取得)。
+  const castMembersWithMedia = await Promise.all(
+    (castMembers ?? []).map(async (cast) => {
+      const [{ data: media }, { data: followerCount }] = await Promise.all([
+        supabase
+          .from("locapass_media")
+          .select("url")
+          .eq("cast_id", cast.id)
+          .order("display_order", { ascending: true })
+          .limit(1),
+        supabase.rpc("locapass_count_cast_followers", { p_cast_id: cast.id }),
+      ]);
+      return {
+        ...cast,
+        media: media ?? [],
+        followerCount: followerCount ?? 0,
+      };
+    }),
+  );
 
   return (
     <div className="space-y-8">
