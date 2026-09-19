@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
-import { CreateShopForm } from "@/components/admin/CreateShopForm";
+import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
 import { FeaturedSectionToggle } from "@/components/admin/FeaturedSectionToggle";
 
@@ -18,7 +18,7 @@ export default async function AdminShopsPage({
   const scope = await requireAdmin();
   const supabase = await createClient();
 
-  // site管理者は自分のportal_idの店舗のみ、root管理者(portalIds===null)は全site。
+  // portal_admin は担当ポータルの店舗のみ、super_admin(portalIds===null)は全ポータル。
   let query = supabase
     .from("locapass_shops")
     .select("id, name, category, status, plan, portal_id, created_at, locapass_portals ( name )")
@@ -29,19 +29,26 @@ export default async function AdminShopsPage({
     query = query.in("portal_id", scope.portalIds);
     countsQuery = countsQuery.in("portal_id", scope.portalIds);
   }
-  if (status === "active" || status === "inactive") {
-    query = query.eq("status", status);
+  if (status === "active") {
+    query = query.eq("status", "active");
+  } else if (status === "inactive") {
+    // 準備中(draft)と停止中(suspended)をまとめて「非公開」として扱う。
+    query = query.neq("status", "active");
   }
   if (q.trim()) {
     query = query.ilike("name", `%${q.trim()}%`);
   }
 
-  const [{ data: shops, error }, { data: allShops }, { data: settings }] = await Promise.all([
+  let portalsQuery = supabase.from("locapass_portals").select("id, name").order("id", { ascending: true });
+  if (scope.portalIds !== null) portalsQuery = portalsQuery.in("id", scope.portalIds);
+
+  const [{ data: shops, error }, { data: allShops }, { data: settings }, { data: portals }] = await Promise.all([
     query,
     countsQuery,
     scope.portalIds === null
       ? supabase.from("platform_settings").select("featured_section_enabled").eq("id", true).maybeSingle()
       : Promise.resolve({ data: null }),
+    portalsQuery,
   ]);
   const featuredSectionEnabled = settings?.featured_section_enabled ?? false;
 
@@ -55,8 +62,8 @@ export default async function AdminShopsPage({
         <h1 className="text-lg font-bold text-slate-900">店舗一覧</h1>
         <p className="mt-1 text-sm text-slate-500">
           {scope.portalIds === null
-            ? "新規店舗の発行、公開/非公開の切り替えを行います。"
-            : "担当エリアの店舗のみ表示しています。公開/非公開の切り替えができます。"}
+            ? "全ポータルの店舗です。新規店舗の発行、公開/非公開の切り替えを行います。店舗管理者の発行はポータル管理から行えます。"
+            : "担当ポータルの店舗のみ表示しています。新規店舗の発行、公開/非公開の切り替えを行います。"}
         </p>
       </div>
 
@@ -89,7 +96,7 @@ export default async function AdminShopsPage({
         </div>
       )}
 
-      {scope.portalIds === null && <CreateShopForm />}
+      <CreatePortalShopForm portals={portals ?? []} />
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <form className="flex flex-wrap items-center gap-2 border-b border-slate-200 p-4">
@@ -123,7 +130,7 @@ export default async function AdminShopsPage({
             <thead>
               <tr className="text-xs text-slate-500">
                 <th className="px-5 py-3 font-medium">店舗名</th>
-                <th className="px-5 py-3 font-medium">サイト / ジャンル</th>
+                <th className="px-5 py-3 font-medium">ポータル / 業種</th>
                 <th className="px-5 py-3 font-medium">契約プラン</th>
                 <th className="px-5 py-3 font-medium">状態</th>
                 <th className="px-5 py-3 font-medium"></th>

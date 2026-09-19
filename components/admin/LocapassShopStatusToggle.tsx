@@ -15,7 +15,7 @@ export function LocapassShopStatusToggle({
 
   function handleClick() {
     startTransition(async () => {
-      await setLocapassShopStatus(shopId, isActive ? "inactive" : "active");
+      await setLocapassShopStatus(shopId, isActive ? "suspended" : "active");
     });
   }
 
