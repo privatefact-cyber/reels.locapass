@@ -81,7 +81,7 @@ export default async function MypagePage() {
   const favoriteReelsRes = await supabase
     .from("locapass_member_favorite_reels")
     .select(
-      "reel_id, locapass_reels ( id, caption, video_url, poster_url, images, like_count, shop_id, locapass_shops ( name ) )",
+      "reel_id, locapass_reels ( id, caption, video_url, poster_url, images, like_count, shop_id, locapass_shops!locapass_reels_shop_id_fkey ( name ) )",
     )
     .eq("member_id", user.id)
     .order("created_at", { ascending: false });
