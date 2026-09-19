@@ -88,6 +88,7 @@ export type Dictionary = {
     autoTranslated: string;
     areaNotSet: string;
     genreNotSet: string;
+    backToSite: (name: string) => string;
   };
   featured: {
     pickUp: string;
@@ -307,6 +308,7 @@ const ja: Dictionary = {
     autoTranslated: "店舗情報は自動翻訳です",
     areaNotSet: "エリア未設定",
     genreNotSet: "ジャンル未設定",
+    backToSite: (name) => `← ${name} に戻る`,
   },
   featured: {
     pickUp: "PICK UP",
@@ -526,6 +528,7 @@ const en: Dictionary = {
     autoTranslated: "Shop details are machine-translated from Japanese.",
     areaNotSet: "Area not set",
     genreNotSet: "Genre not set",
+    backToSite: (name) => `← Back to ${name}`,
   },
   featured: {
     pickUp: "PICK UP",
@@ -745,6 +748,7 @@ const zh: Dictionary = {
     autoTranslated: "店铺信息由日语自动翻译。",
     areaNotSet: "地区未设置",
     genreNotSet: "类型未设置",
+    backToSite: (name) => `← 返回${name}`,
   },
   featured: {
     pickUp: "PICK UP",

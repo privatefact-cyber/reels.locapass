@@ -98,7 +98,7 @@ export default async function ShopDetailPage({
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, address, tel, business_hours, description, cover_url, icon_url, url, tagline, line_url",
+      "id, name, category, address, tel, business_hours, description, cover_url, icon_url, url, tagline, line_url, site_id",
     )
     .eq("id", shopId)
     .single();
@@ -110,6 +110,11 @@ export default async function ShopDetailPage({
   if (!shopRow) {
     notFound();
   }
+
+  // 子ポータル(サイト)トップへ戻る導線用。site_idが無い店舗(旧データ等)では出さない。
+  const { data: site } = shopRow.site_id
+    ? await supabase.from("locapass_sites").select("slug, name").eq("id", shopRow.site_id).maybeSingle()
+    : { data: null };
 
   // locapass_shopsには項目別自動翻訳(translations列)が無いため、原文をそのまま出す。
   const usedTranslation = false;
@@ -305,6 +310,11 @@ export default async function ShopDetailPage({
       {/* モバイルは固定のフローティングアクションバー(ShopSectionNav)+ボトムナビが二重に
           画面下に重なるため、最後のコンテンツがその下に隠れないよう大きめの余白を確保する。
           PCはボトムナビが無く、ShopSectionNavもmd:bottom-6と控えめなので余白は少なくてよい。 */}
+      {site && (
+        <Link href={`/${site.slug}`} className="block px-4 pt-4 text-sm text-brand hover:underline sm:px-6">
+          {t.shop.backToSite(site.name)}
+        </Link>
+      )}
       {/* 1. トップヒーローセクション */}
       <section className="relative -mt-px h-[300px] w-full overflow-hidden sm:h-[380px]">
         {store.hero.url ? (
