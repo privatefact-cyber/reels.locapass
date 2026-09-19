@@ -105,6 +105,7 @@ export default async function AdminShopsPage({
                 <th className="px-5 py-3 font-medium">ポータル / 業種</th>
                 <th className="px-5 py-3 font-medium">契約プラン</th>
                 <th className="px-5 py-3 font-medium">状態</th>
+                <th className="px-5 py-3 font-medium">管理画面ログイン</th>
                 <th className="px-5 py-3 font-medium"></th>
               </tr>
             </thead>
@@ -140,6 +141,14 @@ export default async function AdminShopsPage({
                         {shop.status === "active" ? "公開中" : "非公開"}
                       </span>
                     </td>
+                    <td className="px-5 py-3">
+                      <Link
+                        href={`/dashboard/shop/${shop.id}`}
+                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
+                      >
+                        この店舗の管理画面に入る
+                      </Link>
+                    </td>
                     <td className="px-5 py-3 text-right">
                       <LocapassShopStatusToggle shopId={shop.id} status={shop.status} />
                     </td>
@@ -148,7 +157,7 @@ export default async function AdminShopsPage({
               })}
               {(shops ?? []).length === 0 && !error && (
                 <tr>
-                  <td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-slate-400">
                     該当する店舗がありません
                   </td>
                 </tr>
