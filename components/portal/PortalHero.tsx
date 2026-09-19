@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 
 type Props = {
   name: string;
@@ -16,7 +17,7 @@ export function PortalHero({ name, tagline, description, accentColor, background
   return (
     <section className="relative isolate min-h-[300px] overflow-hidden" style={{ backgroundColor }}>
       {heroMediaUrl && (heroMediaType === "video" ? (
-        <video src={heroMediaUrl} autoPlay muted loop playsInline className="absolute inset-0 h-full w-full object-cover" />
+        <AutoplayVideo src={heroMediaUrl} />
       ) : (
         <img src={heroMediaUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
       ))}
