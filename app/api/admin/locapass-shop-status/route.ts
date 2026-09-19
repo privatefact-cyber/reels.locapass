@@ -5,8 +5,8 @@ import { geminiGenerateContentUrl } from "@/lib/gemini";
 
 // locapass_shops版の混雑状況判定API。luxela.jp(shops.occupancy_status)と同じ仕組みだが、
 // ログインしているのは店舗本人ではなく管理コンソールの運営者/サイト管理者なので、
-// shop_idをリクエストボディで受け取り、保存はlocapass_shopsのRLS(locapass_is_shop_owner)に
-// 判定を委ねる(自分のsite_id以外の店舗をshop_idで指定してもRLSで弾かれる)。
+// shop_idをリクエストボディで受け取り、保存はlocapass_shopsのRLS(locapass_is_shop_admin)に
+// 判定を委ねる(自分のportal_id以外の店舗をshop_idで指定してもRLSで弾かれる)。
 export const runtime = "nodejs";
 
 const PROMPT = `これは飲食店・接客店のフロアを撮影した写真です。写っている座席の埋まり具合から

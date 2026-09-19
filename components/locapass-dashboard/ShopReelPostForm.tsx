@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
 
-export function ShopReelPostForm({ shopId, siteId }: { shopId: string; siteId: number }) {
+export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalId: number }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -78,8 +78,8 @@ export function ShopReelPostForm({ shopId, siteId }: { shopId: string; siteId: n
 
     const { error: insertError } = await supabase.from("locapass_reels").insert({
       shop_id: shopId,
-      // site_idはDBトリガーが店舗から強制上書きするが、型上必須なので店舗のsite_idを渡す。
-      site_id: siteId,
+      // portal_idはDBトリガーが店舗から強制上書きするが、型上必須なので店舗のportal_idを渡す。
+      portal_id: portalId,
       caption: caption.trim() || null,
       action_url: linkUrl.trim() || null,
       video_url: isVideo ? publicUrlData.publicUrl : null,

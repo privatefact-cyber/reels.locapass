@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AvatarPeek } from "@/components/AvatarPeek";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
-// app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_sites.slug
+// app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_portals.slug
 // (例: "mito", "oarai")を受け取る動的ルートだが、Next.jsは静的ルートを優先するため、
 // これらのパスはエリアポータルとして扱わない(現在地ヒントの誤検出を避ける)。
 const RESERVED_TOP_SEGMENTS = new Set([
@@ -29,7 +29,7 @@ const RESERVED_TOP_SEGMENTS = new Set([
   "staff",
 ]);
 
-// 現在のパスから、今見ているエリアポータル(locapass_sites.slug)らしき値を推測する。
+// 現在のパスから、今見ているエリアポータル(locapass_portals.slug)らしき値を推測する。
 // 該当しなければnull(チャットバックエンドはこれを「エリア不明」として扱う)。
 function guessCurrentAreaSlug(pathname: string | null): string | null {
   if (!pathname) return null;

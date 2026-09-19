@@ -18,16 +18,16 @@ export default async function AdminShopsPage({
   const scope = await requireAdmin();
   const supabase = await createClient();
 
-  // site管理者は自分のsite_idの店舗のみ、root管理者(siteIds===null)は全site。
+  // site管理者は自分のportal_idの店舗のみ、root管理者(portalIds===null)は全site。
   let query = supabase
     .from("locapass_shops")
-    .select("id, name, category, status, plan, site_id, created_at, locapass_sites ( name )")
+    .select("id, name, category, status, plan, portal_id, created_at, locapass_portals ( name )")
     .order("created_at", { ascending: false });
   let countsQuery = supabase.from("locapass_shops").select("status");
 
-  if (scope.siteIds !== null) {
-    query = query.in("site_id", scope.siteIds);
-    countsQuery = countsQuery.in("site_id", scope.siteIds);
+  if (scope.portalIds !== null) {
+    query = query.in("portal_id", scope.portalIds);
+    countsQuery = countsQuery.in("portal_id", scope.portalIds);
   }
   if (status === "active" || status === "inactive") {
     query = query.eq("status", status);
@@ -39,7 +39,7 @@ export default async function AdminShopsPage({
   const [{ data: shops, error }, { data: allShops }, { data: settings }] = await Promise.all([
     query,
     countsQuery,
-    scope.siteIds === null
+    scope.portalIds === null
       ? supabase.from("platform_settings").select("featured_section_enabled").eq("id", true).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
@@ -54,7 +54,7 @@ export default async function AdminShopsPage({
       <div>
         <h1 className="text-lg font-bold text-slate-900">店舗一覧</h1>
         <p className="mt-1 text-sm text-slate-500">
-          {scope.siteIds === null
+          {scope.portalIds === null
             ? "新規店舗の発行、公開/非公開の切り替えを行います。"
             : "担当エリアの店舗のみ表示しています。公開/非公開の切り替えができます。"}
         </p>
@@ -66,7 +66,7 @@ export default async function AdminShopsPage({
         <StatCard label="非公開" value={inactiveCount} accent="text-red-600" />
       </div>
 
-      {scope.siteIds === null && (
+      {scope.portalIds === null && (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
             <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export default async function AdminShopsPage({
         </div>
       )}
 
-      {scope.siteIds === null && <CreateShopForm />}
+      {scope.portalIds === null && <CreateShopForm />}
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <form className="flex flex-wrap items-center gap-2 border-b border-slate-200 p-4">
@@ -131,7 +131,7 @@ export default async function AdminShopsPage({
             </thead>
             <tbody className="divide-y divide-slate-100">
               {(shops ?? []).map((shop) => {
-                const site = Array.isArray(shop.locapass_sites) ? shop.locapass_sites[0] : shop.locapass_sites;
+                const site = Array.isArray(shop.locapass_portals) ? shop.locapass_portals[0] : shop.locapass_portals;
                 return (
                   <tr key={shop.id} className="text-slate-700 hover:bg-slate-50">
                     <td className="px-5 py-3">

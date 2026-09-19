@@ -10,7 +10,7 @@ export default async function TopPage() {
   const locale = await getServerLocale();
   const featuredShops = await getFeaturedShops(locale);
 
-  // 全体トップは特定エリアに絞らず、全locapass_sitesを横断してshops/reelsを取得する。
+  // 全体トップは特定エリアに絞らず、全locapass_portalsを横断してshops/reelsを取得する。
   const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(null);
 
   // locapass_reels/locapass_shopsにはキャスト稼働スケジュールの概念が無いため、

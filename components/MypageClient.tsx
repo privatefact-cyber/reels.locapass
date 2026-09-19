@@ -184,7 +184,7 @@ export function MypageClient({
   }
 
   async function handleUnfavoriteShop(shopId: string) {
-    // locapass_member_favorite_shopsにはshop_id列が無く(site_id+author_urlの別設計で
+    // locapass_member_favorite_shopsにはshop_id列が無く(portal_id+author_urlの別設計で
     // お気に入り店舗機能としては未整備)、favoriteShopsは現状常に空なのでこの関数は呼ばれない。
     setFavoriteShops((prev) => prev.filter((s) => s.id !== shopId));
   }

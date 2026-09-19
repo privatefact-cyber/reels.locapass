@@ -12,11 +12,11 @@ export const getLocapassShopForDashboard = cache(async (shopId: string, scope: A
   const supabase = await createClient();
   const { data: shop } = await supabase
     .from("locapass_shops")
-    .select("id, name, site_id")
+    .select("id, name, portal_id")
     .eq("id", shopId)
     .maybeSingle();
 
   if (!shop) return null;
-  if (scope.siteIds !== null && !scope.siteIds.includes(shop.site_id)) return null;
+  if (scope.portalIds !== null && !scope.portalIds.includes(shop.portal_id)) return null;
   return shop;
 });

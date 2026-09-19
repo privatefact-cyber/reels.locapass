@@ -98,7 +98,7 @@ export default async function ShopDetailPage({
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, site_id, gallery_image_urls, price_info, usage_notes",
+      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes",
     )
     .eq("id", shopId)
     .single();
@@ -111,9 +111,9 @@ export default async function ShopDetailPage({
     notFound();
   }
 
-  // 子ポータル(サイト)トップへ戻る導線用。site_idが無い店舗(旧データ等)では出さない。
-  const { data: site } = shopRow.site_id
-    ? await supabase.from("locapass_sites").select("slug, name").eq("id", shopRow.site_id).maybeSingle()
+  // 子ポータル(サイト)トップへ戻る導線用。portal_idが無い店舗(旧データ等)では出さない。
+  const { data: site } = shopRow.portal_id
+    ? await supabase.from("locapass_portals").select("slug, name").eq("id", shopRow.portal_id).maybeSingle()
     : { data: null };
 
   // 店舗が日本語で入力した文章は、英語・中国語表示では保存時に自動翻訳しておいた文を出す
@@ -128,7 +128,7 @@ export default async function ShopDetailPage({
   const store: Store = {
     id: shopRow.id,
     name: shopRow.name,
-    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはsite_idで分かれる)
+    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
     genre: shopRow.category,
     address: shopRow.address,
     phone: shopRow.tel,

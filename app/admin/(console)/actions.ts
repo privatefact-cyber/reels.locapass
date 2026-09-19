@@ -195,17 +195,17 @@ export async function setShopStatus(shopId: string, status: "active" | "inactive
 }
 
 /**
- * locapass_shops用の公開/非公開切り替え。site管理者は自分のsite_idの店舗のみ、
- * root管理者は全site操作可(requireAdminのsiteIdsがnullかどうかで判定)。
- * DB側のRLS(locapass_is_site_admin経由でroot管理者も許可)でも二重に保護されている。
+ * locapass_shops用の公開/非公開切り替え。site管理者は自分のportal_idの店舗のみ、
+ * root管理者は全site操作可(requireAdminのportalIdsがnullかどうかで判定)。
+ * DB側のRLS(locapass_is_portal_admin経由でroot管理者も許可)でも二重に保護されている。
  */
 export async function setLocapassShopStatus(shopId: string, status: "active" | "inactive") {
   const scope = await requireAdmin();
   const supabase = await createClient();
 
   let query = supabase.from("locapass_shops").update({ status }).eq("id", shopId);
-  if (scope.siteIds !== null) {
-    query = query.in("site_id", scope.siteIds);
+  if (scope.portalIds !== null) {
+    query = query.in("portal_id", scope.portalIds);
   }
   const { data, error } = await query.select("id");
 

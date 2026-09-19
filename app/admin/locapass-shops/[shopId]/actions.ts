@@ -18,11 +18,11 @@ async function requireShopAccess(shopId: string) {
   const supabase = await createClient();
   const { data: shop } = await supabase
     .from("locapass_shops")
-    .select("id, site_id")
+    .select("id, portal_id")
     .eq("id", shopId)
     .maybeSingle();
   if (!shop) throw new Error("店舗が見つかりません");
-  if (scope.siteIds !== null && !scope.siteIds.includes(shop.site_id)) {
+  if (scope.portalIds !== null && !scope.portalIds.includes(shop.portal_id)) {
     throw new Error("この店舗を編集する権限がありません");
   }
   return supabase;

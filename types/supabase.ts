@@ -722,6 +722,129 @@ export type Database = {
         }
         Relationships: []
       }
+      locapass_cast_login_tokens: {
+        Row: {
+          cast_id: string
+          created_at: string
+          shop_id: string
+          token: string
+        }
+        Insert: {
+          cast_id: string
+          created_at?: string
+          shop_id: string
+          token?: string
+        }
+        Update: {
+          cast_id?: string
+          created_at?: string
+          shop_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_cast_login_tokens_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: true
+            referencedRelation: "locapass_cast_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_cast_login_tokens_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: true
+            referencedRelation: "locapass_public_casts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_cast_login_tokens_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_cast_members: {
+        Row: {
+          address: string | null
+          age: number | null
+          avatar_url: string | null
+          birth_date: string | null
+          cast_code: string
+          created_at: string
+          id: string
+          id_check_hit_count: number | null
+          id_check_match_level: string | null
+          id_checked_at: string | null
+          id_document_path: string | null
+          legal_name: string | null
+          legal_name_kana: string | null
+          metadata: Json
+          name: string
+          phone: string | null
+          pr_text: string | null
+          shop_id: string
+          sizes: Json | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          avatar_url?: string | null
+          birth_date?: string | null
+          cast_code: string
+          created_at?: string
+          id?: string
+          id_check_hit_count?: number | null
+          id_check_match_level?: string | null
+          id_checked_at?: string | null
+          id_document_path?: string | null
+          legal_name?: string | null
+          legal_name_kana?: string | null
+          metadata?: Json
+          name: string
+          phone?: string | null
+          pr_text?: string | null
+          shop_id: string
+          sizes?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          avatar_url?: string | null
+          birth_date?: string | null
+          cast_code?: string
+          created_at?: string
+          id?: string
+          id_check_hit_count?: number | null
+          id_check_match_level?: string | null
+          id_checked_at?: string | null
+          id_document_path?: string | null
+          legal_name?: string | null
+          legal_name_kana?: string | null
+          metadata?: Json
+          name?: string
+          phone?: string | null
+          pr_text?: string | null
+          shop_id?: string
+          sizes?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_cast_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locapass_checkins: {
         Row: {
           checkin_date: string
@@ -803,7 +926,7 @@ export type Database = {
           author_url: string
           created_at: string
           member_id: string
-          site_id: number
+          portal_id: number
         }
         Insert: {
           author_icon_url?: string | null
@@ -811,7 +934,7 @@ export type Database = {
           author_url: string
           created_at?: string
           member_id: string
-          site_id: number
+          portal_id: number
         }
         Update: {
           author_icon_url?: string | null
@@ -819,7 +942,7 @@ export type Database = {
           author_url?: string
           created_at?: string
           member_id?: string
-          site_id?: number
+          portal_id?: number
         }
         Relationships: [
           {
@@ -830,10 +953,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "locapass_member_favorite_shops_site_id_fkey"
-            columns: ["site_id"]
+            foreignKeyName: "locapass_member_favorite_shops_portal_id_fkey"
+            columns: ["portal_id"]
             isOneToOne: false
-            referencedRelation: "locapass_sites"
+            referencedRelation: "locapass_portals"
             referencedColumns: ["id"]
           },
         ]
@@ -862,6 +985,74 @@ export type Database = {
         }
         Relationships: []
       }
+      locapass_portal_admins: {
+        Row: {
+          created_at: string
+          portal_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          portal_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          portal_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_portal_admins_portal_id_fkey"
+            columns: ["portal_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_portals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_portals: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          home_url: string | null
+          id: number
+          name: string
+          name_en: string | null
+          slug: string
+          status: string
+          tagline: string | null
+          updated_at: string
+          wp_blog_id: number | null
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          home_url?: string | null
+          id?: number
+          name: string
+          name_en?: string | null
+          slug: string
+          status?: string
+          tagline?: string | null
+          updated_at?: string
+          wp_blog_id?: number | null
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          home_url?: string | null
+          id?: number
+          name?: string
+          name_en?: string | null
+          slug?: string
+          status?: string
+          tagline?: string | null
+          updated_at?: string
+          wp_blog_id?: number | null
+        }
+        Relationships: []
+      }
       locapass_reels: {
         Row: {
           action_label: string | null
@@ -877,11 +1068,11 @@ export type Database = {
           id: string
           images: Json
           like_count: number
+          portal_id: number
           poster_url: string | null
           published_at: string | null
           reel_type: string
           shop_id: string | null
-          site_id: number
           status: string
           title: string | null
           title_en: string | null
@@ -904,11 +1095,11 @@ export type Database = {
           id?: string
           images?: Json
           like_count?: number
+          portal_id: number
           poster_url?: string | null
           published_at?: string | null
           reel_type?: string
           shop_id?: string | null
-          site_id: number
           status?: string
           title?: string | null
           title_en?: string | null
@@ -931,11 +1122,11 @@ export type Database = {
           id?: string
           images?: Json
           like_count?: number
+          portal_id?: number
           poster_url?: string | null
           published_at?: string | null
           reel_type?: string
           shop_id?: string | null
-          site_id?: number
           status?: string
           title?: string | null
           title_en?: string | null
@@ -946,35 +1137,52 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "locapass_reels_portal_id_fkey"
+            columns: ["portal_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_portals"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "locapass_reels_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "locapass_shops"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "locapass_reels_site_id_fkey"
-            columns: ["site_id"]
-            isOneToOne: false
-            referencedRelation: "locapass_sites"
-            referencedColumns: ["id"]
-          },
         ]
       }
-      locapass_root_admins: {
+      locapass_shop_admins: {
         Row: {
           created_at: string
+          id: string
+          login_email: string | null
+          shop_id: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          id?: string
+          login_email?: string | null
+          shop_id: string
           user_id: string
         }
         Update: {
           created_at?: string
+          id?: string
+          login_email?: string | null
+          shop_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "locapass_shop_admins_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       locapass_shop_events: {
         Row: {
@@ -1049,28 +1257,37 @@ export type Database = {
           },
         ]
       }
-      locapass_shop_members: {
+      locapass_shop_staff_members: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
-          role: string
+          id: string
+          name: string
           shop_id: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
-          role?: string
+          id?: string
+          name: string
           shop_id: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
-          role?: string
+          id?: string
+          name?: string
           shop_id?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "locapass_shop_members_shop_id_fkey"
+            foreignKeyName: "locapass_shop_staff_members_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "locapass_shops"
@@ -1080,119 +1297,119 @@ export type Database = {
       }
       locapass_shops: {
         Row: {
-          area: string | null
-          hero_media_type: string
-          hero_media_url: string | null
-          line_qr_image_url: string | null
-          price_info: string | null
-          shop_code: string
-          sns_links: Json
-          usage_notes: string | null
           address: string | null
           address_en: string | null
+          area: string | null
           business_hours: string | null
           category: string | null
           cover_url: string | null
           created_at: string
           description: string | null
           gallery_image_urls: string[]
+          hero_media_type: string
+          hero_media_url: string | null
           icon_url: string | null
           id: string
           lat: number | null
+          line_qr_image_url: string | null
           line_url: string | null
           lng: number | null
           name: string
           occupancy_status: Json | null
           plan: string
-          site_id: number
+          portal_id: number
+          price_info: string | null
+          shop_code: string
           slug: string
+          sns_links: Json
           status: string
           tagline: string | null
           tel: string | null
           translations: Json
           updated_at: string
           url: string | null
+          usage_notes: string | null
           venue_id: string | null
           wp_author_url: string | null
         }
         Insert: {
-          area?: string | null
-          hero_media_type?: string
-          hero_media_url?: string | null
-          line_qr_image_url?: string | null
-          price_info?: string | null
-          shop_code?: string
-          sns_links?: Json
-          usage_notes?: string | null
           address?: string | null
           address_en?: string | null
+          area?: string | null
           business_hours?: string | null
           category?: string | null
           cover_url?: string | null
           created_at?: string
           description?: string | null
           gallery_image_urls?: string[]
+          hero_media_type?: string
+          hero_media_url?: string | null
           icon_url?: string | null
           id?: string
           lat?: number | null
+          line_qr_image_url?: string | null
           line_url?: string | null
           lng?: number | null
           name: string
           occupancy_status?: Json | null
           plan?: string
-          site_id: number
+          portal_id: number
+          price_info?: string | null
+          shop_code?: string
           slug: string
+          sns_links?: Json
           status?: string
           tagline?: string | null
           tel?: string | null
           translations?: Json
           updated_at?: string
           url?: string | null
+          usage_notes?: string | null
           venue_id?: string | null
           wp_author_url?: string | null
         }
         Update: {
-          area?: string | null
-          hero_media_type?: string
-          hero_media_url?: string | null
-          line_qr_image_url?: string | null
-          price_info?: string | null
-          shop_code?: string
-          sns_links?: Json
-          usage_notes?: string | null
           address?: string | null
           address_en?: string | null
+          area?: string | null
           business_hours?: string | null
           category?: string | null
           cover_url?: string | null
           created_at?: string
           description?: string | null
           gallery_image_urls?: string[]
+          hero_media_type?: string
+          hero_media_url?: string | null
           icon_url?: string | null
           id?: string
           lat?: number | null
+          line_qr_image_url?: string | null
           line_url?: string | null
           lng?: number | null
           name?: string
           occupancy_status?: Json | null
           plan?: string
-          site_id?: number
+          portal_id?: number
+          price_info?: string | null
+          shop_code?: string
           slug?: string
+          sns_links?: Json
           status?: string
           tagline?: string | null
           tel?: string | null
           translations?: Json
           updated_at?: string
           url?: string | null
+          usage_notes?: string | null
           venue_id?: string | null
           wp_author_url?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "locapass_shops_site_id_fkey"
-            columns: ["site_id"]
+            foreignKeyName: "locapass_shops_portal_id_fkey"
+            columns: ["portal_id"]
             isOneToOne: false
-            referencedRelation: "locapass_sites"
+            referencedRelation: "locapass_portals"
             referencedColumns: ["id"]
           },
           {
@@ -1204,65 +1421,54 @@ export type Database = {
           },
         ]
       }
-      locapass_site_admins: {
+      locapass_staff_login_tokens: {
         Row: {
           created_at: string
-          site_id: number
-          user_id: string
+          shop_id: string
+          staff_member_id: string
+          token: string
         }
         Insert: {
           created_at?: string
-          site_id: number
-          user_id: string
+          shop_id: string
+          staff_member_id: string
+          token?: string
         }
         Update: {
           created_at?: string
-          site_id?: number
-          user_id?: string
+          shop_id?: string
+          staff_member_id?: string
+          token?: string
         }
         Relationships: [
           {
-            foreignKeyName: "locapass_site_admins_site_id_fkey"
-            columns: ["site_id"]
+            foreignKeyName: "locapass_staff_login_tokens_shop_id_fkey"
+            columns: ["shop_id"]
             isOneToOne: false
-            referencedRelation: "locapass_sites"
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_staff_login_tokens_staff_member_id_fkey"
+            columns: ["staff_member_id"]
+            isOneToOne: true
+            referencedRelation: "locapass_shop_staff_members"
             referencedColumns: ["id"]
           },
         ]
       }
-      locapass_sites: {
+      locapass_super_admins: {
         Row: {
-          cover_image_url: string | null
           created_at: string
-          home_url: string | null
-          id: number
-          name: string
-          name_en: string | null
-          slug: string
-          tagline: string | null
-          wp_blog_id: number
+          user_id: string
         }
         Insert: {
-          cover_image_url?: string | null
           created_at?: string
-          home_url?: string | null
-          id?: number
-          name: string
-          name_en?: string | null
-          slug: string
-          tagline?: string | null
-          wp_blog_id: number
+          user_id: string
         }
         Update: {
-          cover_image_url?: string | null
           created_at?: string
-          home_url?: string | null
-          id?: number
-          name?: string
-          name_en?: string | null
-          slug?: string
-          tagline?: string | null
-          wp_blog_id?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -1275,8 +1481,8 @@ export type Database = {
           lat: number
           lng: number
           member_id: string
+          portal_id: number
           shop_id: string | null
-          site_id: number
           status: string
         }
         Insert: {
@@ -1287,8 +1493,8 @@ export type Database = {
           lat: number
           lng: number
           member_id: string
+          portal_id: number
           shop_id?: string | null
-          site_id: number
           status?: string
         }
         Update: {
@@ -1299,23 +1505,23 @@ export type Database = {
           lat?: number
           lng?: number
           member_id?: string
+          portal_id?: number
           shop_id?: string | null
-          site_id?: number
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "locapass_ugc_photos_portal_id_fkey"
+            columns: ["portal_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_portals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "locapass_ugc_photos_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "locapass_shops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "locapass_ugc_photos_site_id_fkey"
-            columns: ["site_id"]
-            isOneToOne: false
-            referencedRelation: "locapass_sites"
             referencedColumns: ["id"]
           },
         ]
@@ -1332,10 +1538,10 @@ export type Database = {
           line_contact_url: string | null
           mileage_km: number | null
           model_code: string | null
+          portal_id: number
           price_body: number | null
           price_total: number | null
           repair_history: boolean | null
-          site_id: number
           sold: boolean
           status: string
           stripe_payment_url: string | null
@@ -1361,10 +1567,10 @@ export type Database = {
           line_contact_url?: string | null
           mileage_km?: number | null
           model_code?: string | null
+          portal_id: number
           price_body?: number | null
           price_total?: number | null
           repair_history?: boolean | null
-          site_id: number
           sold?: boolean
           status?: string
           stripe_payment_url?: string | null
@@ -1390,10 +1596,10 @@ export type Database = {
           line_contact_url?: string | null
           mileage_km?: number | null
           model_code?: string | null
+          portal_id?: number
           price_body?: number | null
           price_total?: number | null
           repair_history?: boolean | null
-          site_id?: number
           sold?: boolean
           status?: string
           stripe_payment_url?: string | null
@@ -1410,10 +1616,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "locapass_vehicles_site_id_fkey"
-            columns: ["site_id"]
+            foreignKeyName: "locapass_vehicles_portal_id_fkey"
+            columns: ["portal_id"]
             isOneToOne: false
-            referencedRelation: "locapass_sites"
+            referencedRelation: "locapass_portals"
             referencedColumns: ["id"]
           },
         ]
@@ -1435,7 +1641,7 @@ export type Database = {
           name: string
           name_en: string | null
           photo_url: string | null
-          site_id: number
+          portal_id: number
           status: string
           tagline: string | null
           tagline_en: string | null
@@ -1461,7 +1667,7 @@ export type Database = {
           name: string
           name_en?: string | null
           photo_url?: string | null
-          site_id: number
+          portal_id: number
           status?: string
           tagline?: string | null
           tagline_en?: string | null
@@ -1487,7 +1693,7 @@ export type Database = {
           name?: string
           name_en?: string | null
           photo_url?: string | null
-          site_id?: number
+          portal_id?: number
           status?: string
           tagline?: string | null
           tagline_en?: string | null
@@ -1499,10 +1705,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "locapass_venues_site_id_fkey"
-            columns: ["site_id"]
+            foreignKeyName: "locapass_venues_portal_id_fkey"
+            columns: ["portal_id"]
             isOneToOne: false
-            referencedRelation: "locapass_sites"
+            referencedRelation: "locapass_portals"
             referencedColumns: ["id"]
           },
         ]
@@ -2254,6 +2460,7 @@ export type Database = {
           description: string | null
           featured_rank: number | null
           floor: string | null
+          gallery_image_urls: string[]
           genre: string | null
           geocode_source: string | null
           geocoded_at: string | null
@@ -2270,6 +2477,7 @@ export type Database = {
           map_video_enabled: boolean
           metadata: Json
           name: string
+          occupancy_status: Json | null
           phone: string | null
           plan: string
           price_info: string | null
@@ -2294,6 +2502,7 @@ export type Database = {
           description?: string | null
           featured_rank?: number | null
           floor?: string | null
+          gallery_image_urls?: string[]
           genre?: string | null
           geocode_source?: string | null
           geocoded_at?: string | null
@@ -2310,6 +2519,7 @@ export type Database = {
           map_video_enabled?: boolean
           metadata?: Json
           name: string
+          occupancy_status?: Json | null
           phone?: string | null
           plan?: string
           price_info?: string | null
@@ -2334,6 +2544,7 @@ export type Database = {
           description?: string | null
           featured_rank?: number | null
           floor?: string | null
+          gallery_image_urls?: string[]
           genre?: string | null
           geocode_source?: string | null
           geocoded_at?: string | null
@@ -2350,6 +2561,7 @@ export type Database = {
           map_video_enabled?: boolean
           metadata?: Json
           name?: string
+          occupancy_status?: Json | null
           phone?: string | null
           plan?: string
           price_info?: string | null
@@ -2511,7 +2723,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      locapass_public_casts: {
+        Row: {
+          age: number | null
+          avatar_url: string | null
+          cast_code: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          pr_text: string | null
+          shop_id: string | null
+          sizes: Json | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_cast_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_user_roles: {
+        Row: {
+          portal_id: number | null
+          role: string | null
+          shop_id: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_inquiry_message: {
@@ -2651,18 +2894,14 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
-      locapass_add_shop_member: {
-        Args: { p_email: string; p_role: string; p_shop_id: string }
-        Returns: undefined
+      locapass__ensure_auth_user: {
+        Args: { p_email: string; p_password: string }
+        Returns: {
+          created: boolean
+          user_id: string
+        }[]
       }
-      locapass_add_site_admin: {
-        Args: { p_email: string; p_site_id: number }
-        Returns: undefined
-      }
-      locapass_can_manage_shop: {
-        Args: { p_shop_id: string }
-        Returns: boolean
-      }
+      locapass__new_password: { Args: never; Returns: string }
       locapass_checkin: {
         Args: { p_lat: number; p_lng: number; p_shop_id: string }
         Returns: {
@@ -2682,38 +2921,122 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      locapass_create_cast_invite: {
+        Args: { p_cast_id: string }
+        Returns: {
+          initial_password: string
+          login_email: string
+        }[]
+      }
+      locapass_create_portal: {
+        Args: {
+          p_home_url?: string
+          p_name: string
+          p_slug: string
+          p_tagline?: string
+        }
+        Returns: number
+      }
+      locapass_create_shop: {
+        Args: {
+          p_address?: string
+          p_category?: string
+          p_name: string
+          p_portal_id: number
+          p_tel?: string
+        }
+        Returns: string
+      }
+      locapass_create_staff_invite: {
+        Args: { p_staff_member_id: string }
+        Returns: {
+          initial_password: string
+          login_email: string
+        }[]
+      }
+      locapass_current_cast_id: { Args: never; Returns: string }
+      locapass_current_staff_member_id: { Args: never; Returns: string }
+      locapass_generate_cast_code: { Args: never; Returns: string }
+      locapass_grant_portal_admin: {
+        Args: { p_email: string; p_portal_id: number }
+        Returns: {
+          initial_password: string
+          login_email: string
+        }[]
+      }
+      locapass_grant_shop_admin: {
+        Args: { p_email?: string; p_password?: string; p_shop_id: string }
+        Returns: {
+          initial_password: string
+          login_email: string
+        }[]
+      }
       locapass_haversine_meters: {
         Args: { p_lat1: number; p_lat2: number; p_lng1: number; p_lng2: number }
         Returns: number
       }
-      locapass_is_root_admin: { Args: never; Returns: boolean }
-      locapass_is_shop_owner: { Args: { p_shop_id: string }; Returns: boolean }
-      locapass_is_site_admin: { Args: { p_site_id: number }; Returns: boolean }
-      locapass_list_shop_members: {
-        Args: { p_shop_id: string }
-        Returns: {
-          created_at: string
-          email: string
-          role: string
-          user_id: string
-        }[]
+      locapass_is_portal_admin: {
+        Args: { p_portal_id: number }
+        Returns: boolean
       }
-      locapass_list_site_admins: {
-        Args: { p_site_id: number }
+      locapass_is_shop_admin: { Args: { p_shop_id: string }; Returns: boolean }
+      locapass_is_shop_staff: { Args: { p_shop_id: string }; Returns: boolean }
+      locapass_is_super_admin: { Args: never; Returns: boolean }
+      locapass_list_portal_admins: {
+        Args: { p_portal_id: number }
         Returns: {
           created_at: string
           email: string
           user_id: string
         }[]
       }
-      locapass_list_site_shop_owners: {
-        Args: { p_site_id: number }
+      locapass_list_portal_shop_admins: {
+        Args: { p_portal_id: number }
         Returns: {
-          owner_emails: string
+          created_at: string
+          email: string
+          shop_admin_id: string
           shop_id: string
         }[]
       }
       locapass_my_roles: { Args: never; Returns: Json }
+      locapass_redeem_cast_login_token: {
+        Args: { p_token: string }
+        Returns: {
+          login_email: string
+          one_time_password: string
+        }[]
+      }
+      locapass_redeem_staff_login_token: {
+        Args: { p_token: string }
+        Returns: {
+          login_email: string
+          one_time_password: string
+        }[]
+      }
+      locapass_regenerate_cast_login_token: {
+        Args: { p_cast_id: string }
+        Returns: string
+      }
+      locapass_regenerate_staff_login_token: {
+        Args: { p_staff_member_id: string }
+        Returns: string
+      }
+      locapass_reset_shop_admin_password: {
+        Args: { p_password?: string; p_shop_admin_id: string }
+        Returns: {
+          login_email: string
+          new_password: string
+        }[]
+      }
+      locapass_revoke_portal_admin: {
+        Args: { p_portal_id: number; p_user_id: string }
+        Returns: undefined
+      }
+      locapass_revoke_shop_admin: {
+        Args: { p_shop_admin_id: string }
+        Returns: undefined
+      }
       recover_cast_login: {
         Args: { p_birth_date: string; p_phone: string }
         Returns: {

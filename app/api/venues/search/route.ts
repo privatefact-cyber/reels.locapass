@@ -17,7 +17,7 @@ const MATCH_LIMIT = 200;
  * 返すのは範囲と件数だけで、カードのデータは含めない
  * (カードは移動後に /api/venues が表示範囲ぶんだけ取る)。
  *
- * locapass_shopsには店舗単位のエリア列が無いため、サイト名(locapass_sites.name/slug、
+ * locapass_shopsには店舗単位のエリア列が無いため、サイト名(locapass_portals.name/slug、
  * 例:「水戸」「大洗」)でのマッチをエリア名の代わりに使う。
  */
 export async function GET(request: NextRequest) {
@@ -45,14 +45,14 @@ export async function GET(request: NextRequest) {
 
   // サイト名(「水戸」「大洗」等)に一致したら、そのサイトの店舗を優先的に検索対象にする。
   const { data: matchedSites } = await supabase
-    .from("locapass_sites")
+    .from("locapass_portals")
     .select("id, name, slug")
     .or([`name.ilike.%${safe}%`, `slug.ilike.%${safe}%`].join(","));
-  const siteIds = (matchedSites ?? []).map((s) => s.id);
+  const portalIds = (matchedSites ?? []).map((s) => s.id);
 
   const { data } = await supabase
     .from("locapass_shops")
-    .select("id, site_id, name, address, lat, lng")
+    .select("id, portal_id, name, address, lat, lng")
     .eq("status", "active")
     .not("lat", "is", null)
     .not("lng", "is", null)
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       [
         `name.ilike.%${safe}%`,
         `address.ilike.%${safe}%`,
-        ...(siteIds.length ? [`site_id.in.(${siteIds.join(",")})`] : []),
+        ...(portalIds.length ? [`portal_id.in.(${portalIds.join(",")})`] : []),
       ].join(","),
     )
     .limit(MATCH_LIMIT);
@@ -73,12 +73,12 @@ export async function GET(request: NextRequest) {
   // サイトごとにまとめる。「水戸」で水戸の店舗群、店名一致が複数サイトに散る、といったケースをここで分ける。
   const groups = new Map<number, { area: string; shops: typeof shops }>();
   for (const s of shops) {
-    const g = groups.get(s.site_id) ?? {
-      area: siteNameById.get(s.site_id) ?? "",
+    const g = groups.get(s.portal_id) ?? {
+      area: siteNameById.get(s.portal_id) ?? "",
       shops: [] as typeof shops,
     };
     g.shops.push(s);
-    groups.set(s.site_id, g);
+    groups.set(s.portal_id, g);
   }
 
   const scored = [...groups.values()].map((g) => {
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
       lat: (bounds.minLat + bounds.maxLat) / 2,
       lng: (bounds.minLng + bounds.maxLng) / 2,
     };
-    // サイト名そのものが一致するものを最優先(「水戸」→ locapass_sites.name='水戸まちあるきポータル')。
+    // サイト名そのものが一致するものを最優先(「水戸」→ locapass_portals.name='水戸まちあるきポータル')。
     const areaExact = g.area !== "" && (g.area === safe || g.area.includes(safe));
     return {
       area: g.area,

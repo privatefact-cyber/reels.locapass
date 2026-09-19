@@ -14,7 +14,7 @@ export default async function MypagePage() {
   const supabase = await createClient();
 
   // locapassにはキャストフォロー・リールコメントの受け皿が無いため、常に空で返す。
-  // 店舗お気に入り(locapass_member_favorite_shops)はshop_id列が無く(site_id+author_urlの
+  // 店舗お気に入り(locapass_member_favorite_shops)はshop_id列が無く(portal_id+author_urlの
   // 別設計)、店舗単位のお気に入り機能としてはまだ使えないため、こちらも当面は空で返す
   // (マイページのタブUIは既存のまま、対応データが無い分だけ0件表示になる)。
   const followedCasts: FollowedCast[] = [];

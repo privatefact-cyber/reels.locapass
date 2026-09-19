@@ -6,23 +6,23 @@ export default async function AdminSitesPage() {
   const scope = await requireAdmin();
   const supabase = await createClient();
 
-  let query = supabase.from("locapass_sites").select("id, name, slug, home_url").order("id", { ascending: true });
-  if (scope.siteIds !== null) {
-    query = query.in("id", scope.siteIds);
+  let query = supabase.from("locapass_portals").select("id, name, slug, home_url").order("id", { ascending: true });
+  if (scope.portalIds !== null) {
+    query = query.in("id", scope.portalIds);
   }
   const { data: sites, error } = await query;
 
-  const siteIds = (sites ?? []).map((s) => s.id);
-  const { data: shopRows } = siteIds.length
-    ? await supabase.from("locapass_shops").select("site_id, status").in("site_id", siteIds)
-    : { data: [] as { site_id: number; status: string }[] };
+  const portalIds = (sites ?? []).map((s) => s.id);
+  const { data: shopRows } = portalIds.length
+    ? await supabase.from("locapass_shops").select("portal_id, status").in("portal_id", portalIds)
+    : { data: [] as { portal_id: number; status: string }[] };
 
   const countsBySite = new Map<number, { total: number; active: number }>();
   for (const row of shopRows ?? []) {
-    const c = countsBySite.get(row.site_id) ?? { total: 0, active: 0 };
+    const c = countsBySite.get(row.portal_id) ?? { total: 0, active: 0 };
     c.total += 1;
     if (row.status === "active") c.active += 1;
-    countsBySite.set(row.site_id, c);
+    countsBySite.set(row.portal_id, c);
   }
 
   return (
@@ -30,7 +30,7 @@ export default async function AdminSitesPage() {
       <div>
         <h1 className="text-lg font-bold text-slate-900">サイト管理</h1>
         <p className="mt-1 text-sm text-slate-500">
-          {scope.siteIds === null
+          {scope.portalIds === null
             ? "全ポータル(サイト)の一覧です。クリックするとサイトごとのダッシュボードに入れます。"
             : "担当ポータル(サイト)の一覧です。"}
         </p>

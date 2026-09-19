@@ -16,7 +16,7 @@ export async function requireCurrentUser(redirectTo = "/mypage") {
   // 開かせるべきではないので管理画面へ弾く。店舗メンバー用ダッシュボードはlocapass側に
   // まだ無いため、ここでは判定しない(⑥ダッシュボード対応時に追加する)。
   const { data: rootAdmin } = await supabase
-    .from("locapass_root_admins")
+    .from("locapass_super_admins")
     .select("user_id")
     .eq("user_id", user.id)
     .maybeSingle();

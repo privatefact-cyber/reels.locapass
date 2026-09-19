@@ -90,7 +90,7 @@ export default async function LocapassShopReelsPage({
         )}
       </section>
 
-      <ShopReelPostForm shopId={shop.id} siteId={shop.site_id} />
+      <ShopReelPostForm shopId={shop.id} portalId={shop.portal_id} />
 
       {reels && reels.length > 0 ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">

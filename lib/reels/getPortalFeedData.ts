@@ -41,7 +41,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
     castAvatarUrl: row.author_icon_url,
     shopId: row.shop_id,
     shopName: shop.name,
-    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはsite_idで分かれる)
+    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
     address: shop.address,
     genre: shop.category,
     linkUrl: row.action_url,
@@ -72,7 +72,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     .select("id, name, address, category, icon_url, cover_url")
     .eq("status", "active")
     .order("created_at", { ascending: false });
-  if (siteId !== null) shopsQuery = shopsQuery.eq("site_id", siteId);
+  if (siteId !== null) shopsQuery = shopsQuery.eq("portal_id", siteId);
 
   let reelsQuery = supabase
     .from("locapass_reels")
@@ -81,7 +81,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     .or("expires_at.is.null,expires_at.gt.now()")
     .order("published_at", { ascending: false })
     .limit(40);
-  if (siteId !== null) reelsQuery = reelsQuery.eq("site_id", siteId);
+  if (siteId !== null) reelsQuery = reelsQuery.eq("portal_id", siteId);
 
   const [{ data: shops }, { data: reelRows }, { data: adRows }] = await Promise.all([
     shopsQuery,
@@ -98,7 +98,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
   const shopItems: ShopGridItem[] = (shops ?? []).map((s) => ({
     id: s.id,
     name: s.name,
-    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはsite_idで分かれる)
+    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
     address: s.address,
     genre: s.category,
     coverImageUrl: s.cover_url ?? s.icon_url,

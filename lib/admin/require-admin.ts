@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 export type AdminScope = {
   id: string;
   email: string | null;
-  /** nullならroot admin(全site閲覧・操作可)。配列ならそのsite_idのみに限定されるsite admin。 */
-  siteIds: number[] | null;
+  /** nullならroot admin(全site閲覧・操作可)。配列ならそのportal_idのみに限定されるsite admin。 */
+  portalIds: number[] | null;
 };
 
 export async function requireAdmin(): Promise<AdminScope> {
@@ -20,30 +20,30 @@ export async function requireAdmin(): Promise<AdminScope> {
   }
 
   const [{ data: rootAdmin }, { data: siteAdminRows }] = await Promise.all([
-    supabase.from("locapass_root_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
-    supabase.from("locapass_site_admins").select("site_id").eq("user_id", user.id),
+    supabase.from("locapass_super_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
+    supabase.from("locapass_portal_admins").select("portal_id").eq("user_id", user.id),
   ]);
 
-  const siteIds = (siteAdminRows ?? []).map((r) => r.site_id);
+  const portalIds = (siteAdminRows ?? []).map((r) => r.portal_id);
 
-  if (!rootAdmin && siteIds.length === 0) {
+  if (!rootAdmin && portalIds.length === 0) {
     redirect("/admin/login");
   }
 
   return {
     id: user.id,
     email: user.email ?? null,
-    siteIds: rootAdmin ? null : siteIds,
+    portalIds: rootAdmin ? null : portalIds,
   };
 }
 
 /**
  * 広告投稿・コメント管理・お知らせ配信・アカウント設定はサイト(エリア)を横断する
- * 全体機能のため、site_id限定のサイト管理者には触らせず、root管理者のみに限定する。
+ * 全体機能のため、portal_id限定のサイト管理者には触らせず、root管理者のみに限定する。
  */
 export async function requireRootAdmin(): Promise<AdminScope> {
   const scope = await requireAdmin();
-  if (scope.siteIds !== null) {
+  if (scope.portalIds !== null) {
     redirect("/admin");
   }
   return scope;

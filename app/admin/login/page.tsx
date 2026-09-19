@@ -29,8 +29,8 @@ export default function AdminLoginPage() {
       data: { user },
     } = await supabase.auth.getUser();
     const [{ data: rootAdmin }, { data: siteAdminRows }] = await Promise.all([
-      supabase.from("locapass_root_admins").select("user_id").eq("user_id", user?.id ?? "").maybeSingle(),
-      supabase.from("locapass_site_admins").select("site_id").eq("user_id", user?.id ?? ""),
+      supabase.from("locapass_super_admins").select("user_id").eq("user_id", user?.id ?? "").maybeSingle(),
+      supabase.from("locapass_portal_admins").select("portal_id").eq("user_id", user?.id ?? ""),
     ]);
     if (!rootAdmin && (!siteAdminRows || siteAdminRows.length === 0)) {
       await supabase.auth.signOut();

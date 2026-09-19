@@ -11,14 +11,14 @@ import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
 // ルートセグメントを再利用している。Next.jsは同じ階層に別名の動的セグメントを共存
 // できない仕様のため、新たに[area]フォルダを追加せず既存の[prefecture]フォルダに
 // このpage.tsxを追加する形にした。ここでのparams.prefectureの実体は
-// locapass_sites.slug(例: "mito", "oarai")であり、都道府県ではない。
+// locapass_portals.slug(例: "mito", "oarai")であり、都道府県ではない。
 export const revalidate = 60;
 
 type PageParams = { prefecture: string };
 
 async function resolveSiteId(slug: string): Promise<number | null> {
   const supabase = await createClient();
-  const { data } = await supabase.from("locapass_sites").select("id").eq("slug", slug).maybeSingle();
+  const { data } = await supabase.from("locapass_portals").select("id").eq("slug", slug).maybeSingle();
   return data?.id ?? null;
 }
 

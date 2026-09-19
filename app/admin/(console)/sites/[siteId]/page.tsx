@@ -13,13 +13,13 @@ export default async function AdminSiteDashboardPage({
   const siteId = Number(siteIdRaw);
   const scope = await requireAdmin();
   if (!Number.isFinite(siteId)) notFound();
-  if (scope.siteIds !== null && !scope.siteIds.includes(siteId)) notFound();
+  if (scope.portalIds !== null && !scope.portalIds.includes(siteId)) notFound();
 
   const supabase = await createClient();
 
   const [{ data: site }, { data: reelStatRows }] = await Promise.all([
-    supabase.from("locapass_sites").select("id, name, slug, home_url, cover_image_url, tagline").eq("id", siteId).maybeSingle(),
-    supabase.from("locapass_reels").select("id, status").eq("site_id", siteId),
+    supabase.from("locapass_portals").select("id, name, slug, home_url, cover_image_url, tagline").eq("id", siteId).maybeSingle(),
+    supabase.from("locapass_reels").select("id, status").eq("portal_id", siteId),
   ]);
 
   if (!site) notFound();
@@ -27,7 +27,7 @@ export default async function AdminSiteDashboardPage({
   const { data: shops, error } = await supabase
     .from("locapass_shops")
     .select("id, name, category, status, created_at")
-    .eq("site_id", siteId)
+    .eq("portal_id", siteId)
     .order("created_at", { ascending: false });
 
   const totalCount = shops?.length ?? 0;
