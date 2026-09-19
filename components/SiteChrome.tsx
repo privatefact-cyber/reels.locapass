@@ -51,11 +51,12 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
     <>
       {/* 高級感のあるゴールド調ヘッダー(すりガラス+光暈の装飾背景) */}
       {!mapImmersive && (
-      <header className="sticky top-0 z-40 transform-gpu overflow-hidden border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30 will-change-transform" style={{ backgroundColor: "rgba(var(--portal-header-rgb, 0 0 0), var(--portal-header-opacity, .6))" }}>
+      <header className="sticky top-0 z-40 transform-gpu overflow-hidden border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30 will-change-transform" style={{ backgroundColor: "var(--portal-header-background, rgba(0, 0, 0, .6))" }}>
         {/* 背景の光暈(装飾、クリック不可) */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[140%] -translate-x-1/2 rounded-full bg-gradient-to-r from-fuchsia-500/20 via-purple-500/25 to-rose-400/20 blur-3xl"
+          className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[140%] -translate-x-1/2 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(ellipse at center, var(--portal-header-glow, rgba(168, 85, 247, .25)), transparent 68%)" }}
         />
 
         {/* お知らせバー */}
