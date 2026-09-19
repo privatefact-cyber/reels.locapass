@@ -1,13 +1,11 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { getLocapassShopForDashboard } from "@/lib/locapass-dashboard/current-shop";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sendShopMessage } from "../not-connected";
 
 /**
  * LUXELA本家のお客様へのメッセージ画面(app/dashboard/messages/page.tsx)と同じ画面。
- * 送信先のお気に入り登録者はlocapass_shop_favorites/locapass_membersから読む。
- * 送信(通知の保存先)はlocapassに受け皿が無いため「未接続」を返す。
+ * お気に入り登録者の一覧・送信はlocapass側に受け皿が無いため未接続(空表示・送信は「未接続」)。
  */
 export default async function LocapassShopMessagesPage({
   params,
@@ -19,24 +17,9 @@ export default async function LocapassShopMessagesPage({
   const shop = await getLocapassShopForDashboard(shopId, scope);
   if (!shop) notFound();
 
-  // お気に入り登録者はlocapass_shop_favorites(本人以外読めないRLS)なので、本家と同じくservice roleで読む。
-  const supabase = createAdminClient();
-  const { data: favorites } = await supabase
-    .from("locapass_shop_favorites")
-    .select("member_id, created_at")
-    .eq("shop_id", shop.id)
-    .order("created_at", { ascending: false });
-
-  const memberIds = (favorites ?? []).map((f) => f.member_id);
-  const { data: members } = memberIds.length
-    ? await supabase.from("locapass_members").select("id, nickname").in("id", memberIds)
-    : { data: [] as { id: string; nickname: string | null }[] };
-  const nicknameById = new Map((members ?? []).map((m) => [m.id, m.nickname]));
-
-  const favoriteUsers = (favorites ?? []).map((f) => ({
-    userId: f.member_id,
-    nickname: nicknameById.get(f.member_id) ?? "ゲスト",
-  }));
+  // お気に入り登録者: locapass_shop_favoritesは本人の行しか読めないRLSで、本家のような
+  // 集計の受け皿もlocapass側に無いため未接続(空)。
+  const favoriteUsers: { userId: string; nickname: string }[] = [];
 
   return (
     <div className="max-w-xl space-y-4">

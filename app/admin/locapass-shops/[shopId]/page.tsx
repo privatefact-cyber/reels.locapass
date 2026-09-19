@@ -1,7 +1,6 @@
 import QRCode from "qrcode";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { getLocapassShopForDashboard } from "@/lib/locapass-dashboard/current-shop";
 import { EventFormSection } from "@/components/locapass-dashboard/EventFormSection";
@@ -43,10 +42,8 @@ export default async function LocapassShopSettingsPage({
   if (!currentShop) notFound();
 
   const supabase = await createClient();
-  // お気に入りは本人以外読めないRLSなので、件数だけservice roleで数える(本家もRPCで同様に集計)。
-  const admin = createAdminClient();
   const today = toJstDateString(getJstNow());
-  const [{ data: shopRow }, { data: eventRows }, { count: favoriteCount }, { count: reelCount }, { data: categoryRows }] =
+  const [{ data: shopRow }, { data: eventRows }, { count: reelCount }, { data: categoryRows }] =
     await Promise.all([
       supabase
         .from("locapass_shops")
@@ -60,10 +57,6 @@ export default async function LocapassShopSettingsPage({
         .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_at")
         .eq("shop_id", currentShop.id)
         .order("created_at", { ascending: false }),
-      admin
-        .from("locapass_shop_favorites")
-        .select("member_id", { count: "exact", head: true })
-        .eq("shop_id", currentShop.id),
       // 掲載の充実度用。公開中のリールだけを数える(ストーリー・非表示は含めない)。
       supabase
         .from("locapass_reels")
@@ -110,6 +103,9 @@ export default async function LocapassShopSettingsPage({
     new Set([...(categoryRows ?? []).map((r) => r.category as string), ...(shop.genre ? [shop.genre] : [])]),
   ).sort((a, b) => a.localeCompare(b, "ja"));
 
+  // お気に入り数: locapass_shop_favoritesは本人の行しか読めないRLSで、本家のような集計RPCも
+  // locapass側に無いため未接続(0表示)。
+  const favoriteCount = 0;
   const priceItems: { id: string; name: string; duration_minutes: number | null; price: number }[] = [];
   const todayScheduleRows: TodayScheduleRow[] = [];
 
