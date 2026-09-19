@@ -80,6 +80,31 @@ export async function createPortal(_prev: CreatePortalState, formData: FormData)
   };
 }
 
+export type UpdatePortalNameState =
+  | { status: "idle" }
+  | { status: "error"; message: string }
+  | { status: "success"; name: string };
+
+export async function updatePortalName(
+  portalId: number,
+  _prev: UpdatePortalNameState,
+  formData: FormData,
+): Promise<UpdatePortalNameState> {
+  await requireRootAdmin();
+  const name = String(formData.get("portal_name") ?? "").trim();
+  if (!name) return { status: "error", message: "ポータル名は必須です" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("locapass_portals")
+    .update({ name })
+    .eq("id", portalId);
+  if (error) return { status: "error", message: error.message };
+
+  revalidatePortal(portalId);
+  return { status: "success", name };
+}
+
 export type IssuedLoginState =
   | { status: "idle" }
   | { status: "error"; message: string }

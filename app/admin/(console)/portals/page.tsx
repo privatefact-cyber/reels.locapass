@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { CreatePortalForm } from "@/components/admin/portal/CreatePortalForm";
+import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
 
 /**
  * ポータル一覧。super_admin は全ポータル+新規発行、portal_admin は担当ポータルのみ。
@@ -57,28 +58,30 @@ export default async function AdminPortalsPage() {
         {(portals ?? []).map((portal) => {
           const counts = shopCounts.get(portal.id) ?? { total: 0, active: 0 };
           return (
-            <Link
+            <div
               key={portal.id}
-              href={`/admin/portals/${portal.id}`}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
             >
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-sm font-bold text-slate-900">{portal.name || `(無題) #${portal.id}`}</h2>
-                {portal.status !== "active" && (
-                  <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
-                    停止中
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-xs text-slate-400">
-                {portal.slug || "-"}
-                {portal.home_url ? ` / ${portal.home_url}` : ""}
-              </p>
-              <p className="mt-3 text-sm text-slate-600">
-                店舗 {counts.total}件(公開中 {counts.active}件)
-              </p>
-              <p className="mt-1 text-xs text-slate-500">ポータル管理者 {adminCounts.get(portal.id) ?? 0}名</p>
-            </Link>
+              <Link href={`/admin/portals/${portal.id}`} className="block">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-sm font-bold text-slate-900">{portal.name || `(無題) #${portal.id}`}</h2>
+                  {portal.status !== "active" && (
+                    <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                      停止中
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  {portal.slug || "-"}
+                  {portal.home_url ? ` / ${portal.home_url}` : ""}
+                </p>
+                <p className="mt-3 text-sm text-slate-600">
+                  店舗 {counts.total}件(公開中 {counts.active}件)
+                </p>
+                <p className="mt-1 text-xs text-slate-500">ポータル管理者 {adminCounts.get(portal.id) ?? 0}名</p>
+              </Link>
+              {isSuper && <EditPortalNameForm portalId={portal.id} currentName={portal.name ?? ""} />}
+            </div>
           );
         })}
         {(portals ?? []).length === 0 && !error && (
