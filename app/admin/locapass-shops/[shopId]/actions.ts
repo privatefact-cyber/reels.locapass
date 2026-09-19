@@ -9,8 +9,7 @@ import type { Json } from "@/types/supabase";
 
 /**
  * LUXELA本家(app/dashboard/shop/actions.ts)の店舗情報画面をlocapass_shopsにつないだ版。
- * locapass_shopsに列が存在する項目だけを保存する。列が無い項目(エリア・SNS・LINE QR・
- * トップ画像/動画・利用説明)は画面には本家同様に出すが、まだDBに接続していないので保存しない。
+ * エリア・SNS・LINE QR・トップ画像/動画・利用説明は00082で追加した列に保存する(列名は本家と同じ)。
  */
 
 /** 管理コンソールにログイン中で、かつこの店舗のサイトを担当していることを確認する。 */
@@ -47,6 +46,14 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   const coverImageUrl = String(formData.get("cover_image_url") ?? "").trim();
   const websiteUrl = String(formData.get("website_url") ?? "").trim();
   const lineUrl = String(formData.get("line_url") ?? "").trim();
+  const area = String(formData.get("area") ?? "").trim();
+  const snsX = String(formData.get("sns_x") ?? "").trim();
+  const snsInstagram = String(formData.get("sns_instagram") ?? "").trim();
+  const snsLine = String(formData.get("sns_line") ?? "").trim();
+  const lineQrImageUrl = String(formData.get("line_qr_image_url") ?? "").trim();
+  const heroMediaUrl = String(formData.get("hero_media_url") ?? "").trim();
+  const heroMediaType = String(formData.get("hero_media_url_type") ?? "").trim() === "video" ? "video" : "image";
+  const usageNotes = String(formData.get("usage_notes") ?? "").trim();
 
   if (!name) throw new Error("店舗名は必須です");
 
@@ -98,6 +105,16 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
       cover_url: coverImageUrl || null,
       url: websiteUrl || null,
       line_url: lineUrl || null,
+      area: area || null,
+      sns_links: {
+        ...(snsX ? { x: snsX } : {}),
+        ...(snsInstagram ? { instagram: snsInstagram } : {}),
+        ...(snsLine ? { line: snsLine } : {}),
+      },
+      line_qr_image_url: lineQrImageUrl || null,
+      hero_media_url: heroMediaUrl || null,
+      ...(heroMediaUrl ? { hero_media_type: heroMediaType } : {}),
+      usage_notes: usageNotes || null,
       ...translationsPatch,
     })
     .eq("id", shopId)

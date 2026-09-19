@@ -1080,6 +1080,13 @@ export type Database = {
       }
       locapass_shops: {
         Row: {
+          area: string | null
+          hero_media_type: string
+          hero_media_url: string | null
+          line_qr_image_url: string | null
+          shop_code: string
+          sns_links: Json
+          usage_notes: string | null
           address: string | null
           address_en: string | null
           business_hours: string | null
@@ -1108,6 +1115,13 @@ export type Database = {
           wp_author_url: string | null
         }
         Insert: {
+          area?: string | null
+          hero_media_type?: string
+          hero_media_url?: string | null
+          line_qr_image_url?: string | null
+          shop_code?: string
+          sns_links?: Json
+          usage_notes?: string | null
           address?: string | null
           address_en?: string | null
           business_hours?: string | null
@@ -1136,6 +1150,13 @@ export type Database = {
           wp_author_url?: string | null
         }
         Update: {
+          area?: string | null
+          hero_media_type?: string
+          hero_media_url?: string | null
+          line_qr_image_url?: string | null
+          shop_code?: string
+          sns_links?: Json
+          usage_notes?: string | null
           address?: string | null
           address_en?: string | null
           business_hours?: string | null

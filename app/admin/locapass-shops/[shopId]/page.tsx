@@ -28,8 +28,7 @@ import {
 /**
  * LUXELA本家の店舗情報画面(app/dashboard/shop/page.tsx)と同じ画面。
  * データはlocapass側だけを参照し、LUXELAのテーブルは一切読まない。
- * locapassに受け皿が無い項目(料金表・本日の出勤・エリア・SNS・LINE QR・トップ画像/動画・
- * 利用説明・店舗コード)は、本家と同じUIを出したうえで空のまま表示する(保存もしない)。
+ * locapassに受け皿が無い項目(料金表・本日の出勤)は、本家と同じUIを出したうえで空のまま表示する。
  */
 export default async function LocapassShopSettingsPage({
   params,
@@ -48,7 +47,7 @@ export default async function LocapassShopSettingsPage({
       supabase
         .from("locapass_shops")
         .select(
-          "id, name, category, address, tel, business_hours, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls",
+          "id, name, category, address, tel, business_hours, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, shop_code",
         )
         .eq("id", currentShop.id)
         .single(),
@@ -71,10 +70,10 @@ export default async function LocapassShopSettingsPage({
     return <p className="text-sm text-red-600">店舗情報が見つかりません。</p>;
   }
 
-  // 本家shopsの列名に揃える。locapass_shopsに列が無い項目はnull(未接続)。
+  // 本家shopsの列名に揃える(category→genre, tel→phone, url→website_url, cover_url→cover_image_url)。
   const shop = {
     name: shopRow.name,
-    area: null as string | null,
+    area: shopRow.area,
     genre: shopRow.category,
     address: shopRow.address,
     phone: shopRow.tel,
@@ -82,14 +81,14 @@ export default async function LocapassShopSettingsPage({
     price_info: null as string | null,
     description: shopRow.description,
     cover_image_url: shopRow.cover_url,
-    hero_media_url: null as string | null,
-    hero_media_type: "image",
+    hero_media_url: shopRow.hero_media_url,
+    hero_media_type: shopRow.hero_media_type,
     website_url: shopRow.url,
-    usage_notes: null as string | null,
-    sns_links: {} as { x?: string; instagram?: string; line?: string },
-    shop_code: "",
+    usage_notes: shopRow.usage_notes,
+    sns_links: (shopRow.sns_links ?? {}) as { x?: string; instagram?: string; line?: string },
+    shop_code: shopRow.shop_code,
     line_url: shopRow.line_url,
-    line_qr_image_url: null as string | null,
+    line_qr_image_url: shopRow.line_qr_image_url,
     lat: shopRow.lat,
     lng: shopRow.lng,
     geocode_source: null as string | null,
