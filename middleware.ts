@@ -35,6 +35,9 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/gate") ||
     pathname.startsWith("/api") ||
+    // OAuth/PKCEのcode交換とLINEの認証完了処理は、
+    // セッションCookieを確立する前にゲートへ戻してはいけない。
+    pathname.startsWith("/auth") ||
     pathname.startsWith("/embed") ||
     pathname === "/favicon.ico" ||
     pathname === "/robots.txt" ||
