@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { addLocapassGalleryImage, deleteLocapassGalleryImage } from "@/app/admin/(console)/locapass-shops/[shopId]/actions";
+import { addGalleryImage, deleteGalleryImage } from "@/app/admin/locapass-shops/[shopId]/actions";
 
 const MAX_IMAGES = 10;
 
@@ -12,9 +12,6 @@ async function uploadFile(shopId: string, file: File): Promise<string> {
   const ext = file.name.split(".").pop() || "jpg";
   const path = `${shopId}/gallery-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-  // locapass-reelsバケットは既に「shop_id配下 + locapass_can_manage_shop」で
-  // アップロード権限を絞るポリシーがある(リール動画アップロード用に既存)。
-  // ギャラリー写真もshop_id配下に置くだけでこのポリシーに相乗りできる。
   const { error } = await supabase.storage.from("locapass-reels").upload(path, file, {
     contentType: file.type,
   });
@@ -25,17 +22,10 @@ async function uploadFile(shopId: string, file: File): Promise<string> {
 }
 
 /**
- * 店舗紹介ページ用の写真ギャラリー(最大10枚、locapass_shops版)。ドラッグ&ドロップで複数枚
- * まとめて追加でき、luxela.jp側(ShopGalleryUploader)と同じ「サムネイル+削除ボタン」の
- * グリッドで表示する。
+ * 店舗紹介ページ用の写真ギャラリー(最大10枚)。ドラッグ&ドロップで複数枚まとめて追加でき、
+ * 各写真はキャスト管理の写真一覧と同じ「サムネイル+削除ボタン」のグリッドで表示する。
  */
-export function LocapassShopGalleryUploader({
-  shopId,
-  initialUrls,
-}: {
-  shopId: string;
-  initialUrls: string[];
-}) {
+export function ShopGalleryUploader({ shopId, initialUrls }: { shopId: string; initialUrls: string[] }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [urls, setUrls] = useState<string[]>(initialUrls);
@@ -54,7 +44,7 @@ export function LocapassShopGalleryUploader({
     try {
       for (const file of list) {
         const url = await uploadFile(shopId, file);
-        await addLocapassGalleryImage(shopId, url);
+        await addGalleryImage(shopId, url);
         setUrls((prev) => [...prev, url]);
       }
       router.refresh();
@@ -69,7 +59,7 @@ export function LocapassShopGalleryUploader({
     setDeletingUrl(url);
     setError(null);
     try {
-      await deleteLocapassGalleryImage(shopId, url);
+      await deleteGalleryImage(shopId, url);
       setUrls((prev) => prev.filter((u) => u !== url));
       router.refresh();
     } catch (err) {
@@ -85,7 +75,7 @@ export function LocapassShopGalleryUploader({
         {urls.map((url) => (
           <div key={url} className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="" className="h-32 w-24 rounded-lg object-cover" />
+            <img src={url} alt="" className="h-32 w-24 rounded object-cover" />
             <button
               type="button"
               disabled={deletingUrl === url}
@@ -111,8 +101,8 @@ export function LocapassShopGalleryUploader({
             setDragOver(false);
             void handleFiles(e.dataTransfer.files);
           }}
-          className={`flex h-24 w-full max-w-xs cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed text-center text-xs transition ${
-            dragOver ? "border-indigo-400 bg-indigo-50" : "border-slate-300 bg-white"
+          className={`flex h-24 w-full max-w-xs cursor-pointer flex-col items-center justify-center rounded border-2 border-dashed text-center text-xs transition ${
+            dragOver ? "border-brand bg-brand/5" : "border-slate-300 bg-white"
           }`}
         >
           <span className="px-2 text-slate-400">

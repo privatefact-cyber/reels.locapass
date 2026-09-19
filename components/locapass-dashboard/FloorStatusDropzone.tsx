@@ -21,18 +21,10 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 /**
- * フロア写真をドロップ/選択した瞬間にAI混雑判定APIへ送信する(locapass_shops版)。
- * luxela.jp側(FloorStatusDropzone)と同じ仕組みだが、ログイン主体が店舗本人ではなく
- * 管理コンソールの運営者/サイト管理者なので、shopIdを明示的にリクエストへ含める。
+ * フロア写真をドロップ/選択した瞬間にAI混雑判定APIへ送信する。
  * 画像はブラウザからサーバーへ一往復するだけで、どこにも保存されない。
  */
-export function LocapassFloorStatusDropzone({
-  shopId,
-  initialStatusText,
-}: {
-  shopId: string;
-  initialStatusText?: string | null;
-}) {
+export function FloorStatusDropzone({ shopId, initialStatusText }: { shopId: string; initialStatusText?: string | null }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -66,8 +58,8 @@ export function LocapassFloorStatusDropzone({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700">フロア写真をアップロード</label>
-      <p className="mt-0.5 text-xs text-slate-400">
+      <label className="block text-xs font-semibold text-black/50">フロア写真をアップロード</label>
+      <p className="mt-0.5 text-[11px] text-black/40">
         写真は保存されず、AIが混雑状況を判定してすぐに破棄します。
       </p>
       <div
@@ -82,14 +74,19 @@ export function LocapassFloorStatusDropzone({
           setDragOver(false);
           void handleFiles(e.dataTransfer.files);
         }}
-        className={`mt-1 flex h-28 w-full max-w-xs cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed text-center text-xs transition ${
-          dragOver ? "border-indigo-400 bg-indigo-50" : "border-slate-300 bg-white"
+        className={`mt-1 flex h-28 w-full cursor-pointer flex-col items-center justify-center rounded border-2 border-dashed text-center text-xs transition ${
+          dragOver ? "border-brand bg-brand/5" : "border-black/20 bg-white"
         }`}
       >
-        <span className="px-2 text-slate-400">
+        <span className="px-2 text-black/40">
           {uploading ? "判定中..." : "写真をドラッグ&ドロップ、またはタップして選択"}
         </span>
       </div>
+      {/*
+        captureを付けるとカメラ起動固定になりギャラリーが選べなくなる端末があるため、
+        あえて付けない。accept="image/*"のみにすることでiOS/AndroidともOS標準の
+        「写真を撮る/ライブラリから選択」の選択メニューが出る。
+      */}
       <input
         ref={inputRef}
         type="file"
@@ -101,9 +98,9 @@ export function LocapassFloorStatusDropzone({
         }}
       />
       {toast && (
-        <p className={`mt-2 text-xs ${toast.ok ? "text-emerald-600" : "text-red-600"}`}>{toast.message}</p>
+        <p className={`mt-2 text-xs ${toast.ok ? "text-green-600" : "text-red-600"}`}>{toast.message}</p>
       )}
-      {!toast && initialStatusText && <p className="mt-2 text-xs text-slate-400">現在: {initialStatusText}</p>}
+      {!toast && initialStatusText && <p className="mt-2 text-xs text-black/40">現在: {initialStatusText}</p>}
     </div>
   );
 }
