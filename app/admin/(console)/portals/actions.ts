@@ -30,23 +30,33 @@ function revalidatePortal(portalId: number) {
 export type CreatePortalState =
   | { status: "idle" }
   | { status: "error"; message: string }
-  | { status: "success"; portalId: number; name: string };
+  | {
+      status: "success";
+      portalId: number;
+      name: string;
+      adminEmail: string;
+      initialPassword: string | null;
+      adminError: string | null;
+    };
 
 export async function createPortal(_prev: CreatePortalState, formData: FormData): Promise<CreatePortalState> {
   await requireRootAdmin();
-  const name = String(formData.get("name") ?? "").trim();
+  const name = String(formData.get("portal_name") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
-  const homeUrl = String(formData.get("home_url") ?? "").trim();
-  const tagline = String(formData.get("tagline") ?? "").trim();
+  const adminEmail = String(formData.get("admin_email") ?? "").trim().toLowerCase();
   if (!name) return { status: "error", message: "ポータル名は必須です" };
   if (!slug) return { status: "error", message: "スラッグは必須です" };
+  if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(slug)) {
+    return { status: "error", message: "スラッグは半角英小文字・数字・ハイフンで2〜41文字にしてください" };
+  }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adminEmail)) {
+    return { status: "error", message: "管理者メールアドレスの形式が正しくありません" };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("locapass_create_portal", {
     p_slug: slug,
     p_name: name,
-    p_home_url: homeUrl || undefined,
-    p_tagline: tagline || undefined,
   });
   if (error || data == null) {
     const message = error?.message.includes("locapass_portals_slug_key")
@@ -55,8 +65,19 @@ export async function createPortal(_prev: CreatePortalState, formData: FormData)
     return { status: "error", message };
   }
 
+  const { data: admin, error: adminError } = await supabase
+    .rpc("locapass_grant_portal_admin", { p_portal_id: data, p_email: adminEmail })
+    .single();
+
   revalidatePath("/admin/portals");
-  return { status: "success", portalId: data, name };
+  return {
+    status: "success",
+    portalId: data,
+    name,
+    adminEmail,
+    initialPassword: admin?.initial_password ?? null,
+    adminError: adminError?.message ?? null,
+  };
 }
 
 export type IssuedLoginState =

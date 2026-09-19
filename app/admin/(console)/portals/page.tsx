@@ -85,6 +85,49 @@ export default async function AdminPortalsPage() {
           <p className="text-sm text-slate-400">表示できるポータルがありません</p>
         )}
       </div>
+
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <h2 className="border-b border-slate-200 p-6 text-sm font-bold text-slate-900">発行済み子ポータル一覧</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs text-slate-500">
+                <th className="px-5 py-3 font-medium">ポータル名</th>
+                <th className="px-5 py-3 font-medium">スラッグ</th>
+                <th className="px-5 py-3 font-medium">作成日</th>
+                <th className="px-5 py-3 font-medium">ステータス</th>
+                <th className="px-5 py-3 font-medium">管理画面</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {(portals ?? []).map((portal) => (
+                <tr key={portal.id} className="text-slate-700">
+                  <td className="px-5 py-3 font-semibold text-slate-900">{portal.name || `(無題) #${portal.id}`}</td>
+                  <td className="px-5 py-3 font-mono text-xs">{portal.slug || "-"}</td>
+                  <td className="px-5 py-3 text-xs text-slate-500">
+                    {new Date(portal.created_at).toLocaleDateString("ja-JP")}
+                  </td>
+                  <td className="px-5 py-3">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${portal.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+                      {portal.status === "active" ? "有効" : portal.status || "不明"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <Link href={`/admin/portals/${portal.id}`} className="font-semibold text-indigo-600 hover:underline">
+                      開く →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {(portals ?? []).length === 0 && !error && (
+                <tr>
+                  <td colSpan={5} className="px-5 py-8 text-center text-sm text-slate-400">発行済みポータルはありません</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
