@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push/send";
 
-// notificationsテーブルへのINSERTをきっかけに、DBトリガー(dispatch_push_for_notification、
+// notificationsテーブルへのINSERTをきっかけに、DBトリガー(locapass_dispatch_push_for_notification、
 // pg_net経由)から呼ばれる。呼び出し元を特定の秘密鍵で認証する代わりに、
 // push_dispatched_atで冪等性を持たせている(UUIDは推測困難な上、二重に呼ばれても
 // 「まだなら送る→送った印を付ける」だけなので実害がない)。
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
   const supabase = createAdminClient();
   const { data: notification } = await supabase
-    .from("notifications")
+    .from("locapass_notifications")
     .select("id, user_id, type, title, body, url, push_dispatched_at")
     .eq("id", notificationId)
     .maybeSingle();
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const column = PREFERENCE_COLUMN[type];
     if (column) {
       const { data: prefs } = await supabase
-        .from("notification_preferences")
+        .from("locapass_notification_preferences")
         .select("new_cast, new_event, new_shop_reel, new_cast_reel, shop_message")
         .eq("user_id", notification.user_id)
         .maybeSingle();
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     });
   }
 
-  await supabase.from("notifications").update({ push_dispatched_at: new Date().toISOString() }).eq("id", notification.id);
+  await supabase.from("locapass_notifications").update({ push_dispatched_at: new Date().toISOString() }).eq("id", notification.id);
 
   return NextResponse.json({ ok: true, pushed: enabled });
 }

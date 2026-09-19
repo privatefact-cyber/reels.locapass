@@ -1,13 +1,13 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAd, deleteAd, setAdActive, updateAdFrequency } from "./actions";
 
 export default async function AdminAdsPage() {
   await requireRootAdmin();
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data: ads } = await supabase
-    .from("ads")
+    .from("locapass_ads")
     .select("id, title, media_type, media_url, poster_url, link_url, frequency, is_active, created_at")
     .order("created_at", { ascending: false });
 

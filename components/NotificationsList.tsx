@@ -38,7 +38,7 @@ export function NotificationsList() {
       if (!uid || cancelled) return;
 
       const { data: rows } = await supabase
-        .from("notifications")
+        .from("locapass_notifications")
         .select("id, type, title, body, url, read_at, created_at")
         .eq("user_id", uid)
         .order("created_at", { ascending: false })
@@ -48,7 +48,7 @@ export function NotificationsList() {
       setNotifications(rows ?? []);
 
       // 開いたら未読を既読にする(Instagramの通知欄と同じ挙動)。
-      await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("user_id", uid).is("read_at", null);
+      await supabase.from("locapass_notifications").update({ read_at: new Date().toISOString() }).eq("user_id", uid).is("read_at", null);
       // ヘッダーのベルバッジは初回マウント時に件数を取得したきり更新されないため、
       // 既読化したことをイベントで知らせて即座に消す。
       window.dispatchEvent(new Event("luxela:notifications-read"));

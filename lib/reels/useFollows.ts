@@ -23,7 +23,7 @@ export function useCastFollows() {
       const uid = data.user?.id ?? null;
       setUserId(uid);
       if (!uid) return;
-      const { data: rows } = await supabase.from("user_cast_follows").select("cast_id").eq("user_id", uid);
+      const { data: rows } = await supabase.from("locapass_cast_follows").select("cast_id").eq("user_id", uid);
       if (cancelled) return;
       setFollowedCastIds(new Set((rows ?? []).map((r) => r.cast_id)));
     });
@@ -46,9 +46,9 @@ export function useCastFollows() {
     setFollowedCastIds(next);
 
     if (isFollowing) {
-      await supabase.from("user_cast_follows").delete().eq("user_id", userId).eq("cast_id", castId);
+      await supabase.from("locapass_cast_follows").delete().eq("user_id", userId).eq("cast_id", castId);
     } else {
-      await supabase.from("user_cast_follows").insert({ user_id: userId, cast_id: castId });
+      await supabase.from("locapass_cast_follows").insert({ user_id: userId, cast_id: castId });
     }
   }
 
@@ -68,7 +68,7 @@ export function useShopFavorites() {
       const uid = data.user?.id ?? null;
       setUserId(uid);
       if (!uid) return;
-      const { data: rows } = await supabase.from("user_shop_favorites").select("shop_id").eq("user_id", uid);
+      const { data: rows } = await supabase.from("locapass_shop_favorites").select("shop_id").eq("member_id", uid);
       if (cancelled) return;
       setFavoritedShopIds(new Set((rows ?? []).map((r) => r.shop_id)));
     });
@@ -91,9 +91,9 @@ export function useShopFavorites() {
     setFavoritedShopIds(next);
 
     if (isFavorited) {
-      await supabase.from("user_shop_favorites").delete().eq("user_id", userId).eq("shop_id", shopId);
+      await supabase.from("locapass_shop_favorites").delete().eq("member_id", userId).eq("shop_id", shopId);
     } else {
-      await supabase.from("user_shop_favorites").insert({ user_id: userId, shop_id: shopId });
+      await supabase.from("locapass_shop_favorites").insert({ member_id: userId, shop_id: shopId });
     }
   }
 

@@ -10,13 +10,13 @@ export default async function EventsPage() {
 
   const [{ data: eventRows }, { data: shops }] = await Promise.all([
     supabase
-      .from("shop_events")
+      .from("locapass_shop_events")
       .select(
-        "id, title, body, starts_at, ends_at, image_url, gallery_image_urls, shop_id, shops ( name, area, genre, status )",
+        "id, title, body, starts_at, ends_at, image_url, gallery_image_urls, shop_id, shops:locapass_shops ( name, area, genre:category, status )",
       )
       .not("image_url", "is", null)
       .order("created_at", { ascending: false }),
-    supabase.from("shops").select("genre").eq("status", "active"),
+    supabase.from("locapass_shops").select("genre:category").eq("status", "active"),
   ]);
 
   const now = Date.now();

@@ -26,7 +26,8 @@ import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
 import { JsonLd } from "@/components/JsonLd";
-import type { Cast, PriceItem, ShopEvent, Store } from "@/lib/types/shop";
+import type { Cast, PriceItem, ShopEvent, SnsLinks, Store } from "@/lib/types/shop";
+import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
@@ -98,7 +99,7 @@ export default async function ShopDetailPage({
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes",
+      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url",
     )
     .eq("id", shopId)
     .single();
@@ -128,7 +129,7 @@ export default async function ShopDetailPage({
   const store: Store = {
     id: shopRow.id,
     name: shopRow.name,
-    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
+    area: shopRow.area,
     genre: shopRow.category,
     address: shopRow.address,
     phone: shopRow.tel,
@@ -138,14 +139,14 @@ export default async function ShopDetailPage({
     coverImageUrl: shopRow.cover_url ?? shopRow.icon_url,
     websiteUrl: shopRow.url,
     usageNotes: tr(shopRow.usage_notes, "usage_notes"),
-    snsLinks: {},
+    snsLinks: (shopRow.sns_links as SnsLinks) ?? {},
     hero: {
-      type: "image",
-      url: shopRow.cover_url ?? shopRow.icon_url,
+      type: shopRow.hero_media_url ? (shopRow.hero_media_type as "image" | "video") : "image",
+      url: shopRow.hero_media_url ?? shopRow.cover_url ?? shopRow.icon_url,
     },
     tagline: shopRow.tagline,
     lineContactUrl: shopRow.line_url,
-    lineQrImageUrl: null,
+    lineQrImageUrl: shopRow.line_qr_image_url,
     galleryImageUrls: shopRow.gallery_image_urls ?? [],
   };
   // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
@@ -153,17 +154,17 @@ export default async function ShopDetailPage({
 
   const [{ data: castMembers }, { data: priceItemRows }, { data: eventRows }] = await Promise.all([
     supabase
-      .from("cast_members")
-      .select("id, name, age, pr_text, avatar_url, created_at, media ( url, display_order )")
+      .from("locapass_public_casts")
+      .select("id, name, age, pr_text, avatar_url, created_at, media:locapass_media ( url, display_order )")
       .eq("shop_id", shopId)
       .order("created_at", { ascending: false }),
     supabase
-      .from("shop_price_items")
+      .from("locapass_shop_price_items")
       .select("id, name, duration_minutes, price, name_translations")
       .eq("shop_id", shopId)
       .order("display_order", { ascending: true }),
     supabase
-      .from("shop_events")
+      .from("locapass_shop_events")
       .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, translations")
       .eq("shop_id", shopId)
       .order("created_at", { ascending: false }),
@@ -172,14 +173,14 @@ export default async function ShopDetailPage({
   const castIds = castMembers?.map((c) => c.id) ?? [];
 
   const { data: activeStoryCastIds } = castIds.length
-    ? await supabase.rpc("cast_ids_with_active_story", { p_cast_ids: castIds })
+    ? await supabase.rpc("locapass_cast_ids_with_active_story", { p_cast_ids: castIds })
     : { data: [] as string[] };
   const activeStoryCastIdSet = new Set(activeStoryCastIds ?? []);
   const castsWithActiveStory = (castMembers ?? []).filter((c) => activeStoryCastIdSet.has(c.id));
 
   const { data: todaySchedules } = castIds.length
     ? await supabase
-        .from("schedules")
+        .from("locapass_schedules")
         .select("cast_id, start_time, end_time")
         .in("cast_id", castIds)
         .eq("date", toJstDateString(getJstNow()))
@@ -196,13 +197,13 @@ export default async function ShopDetailPage({
   // ヒーロー直下の横スワイプ帯: 各キャストの最新リール1本ずつだけ。
   const { data: castReelRows } = castIds.length
     ? await supabase
-        .from("reels")
-        .select("id, media, cast_id, cast_members ( name )")
+        .from("locapass_reels")
+        .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, cast_id, cast_members:locapass_public_casts ( name )`)
         .in("cast_id", castIds)
-        .eq("status", "published")
-        // ストーリーはRLS上フォロワーには読めるので、リール帯に混ざらないよう明示的に除外する。
-        .eq("post_type", "reel")
-        .order("created_at", { ascending: false })
+        .eq("status", "publish")
+        // ストーリー(24時間)はリール帯に混ざらないよう明示的に除外する。
+        .eq("reel_type", "permanent")
+        .order("published_at", { ascending: false })
     : { data: [] as never[] };
 
   type CastReelPreview = {
@@ -216,7 +217,7 @@ export default async function ShopDetailPage({
   const castReelPreviews: CastReelPreview[] = [];
   for (const row of castReelRows ?? []) {
     if (!row.cast_id || seenReelCastIds.has(row.cast_id)) continue;
-    const media = (row.media as { type: "image" | "video"; url: string; poster?: string }[])[0];
+    const media = toReelMedia(row)[0] as { type: "image" | "video"; url: string; poster?: string } | undefined;
     if (!media) continue;
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
     seenReelCastIds.add(row.cast_id);

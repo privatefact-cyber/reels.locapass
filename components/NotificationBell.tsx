@@ -18,7 +18,7 @@ export function NotificationBell({ size = 20 }: { size?: number }) {
       const uid = data.user?.id;
       if (!uid || cancelled) return;
       const { count } = await supabase
-        .from("notifications")
+        .from("locapass_notifications")
         .select("id", { count: "exact", head: true })
         .eq("user_id", uid)
         .is("read_at", null);

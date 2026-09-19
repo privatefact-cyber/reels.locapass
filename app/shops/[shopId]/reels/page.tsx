@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
 import type { ReelItem } from "@/lib/reels/types";
+import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 
 export const revalidate = 60;
 
@@ -18,13 +19,13 @@ export default async function ShopReelsPage({
   const supabase = await createClient();
 
   const { data: shop, error: shopError } = await supabase
-    .from("shops")
-    .select("id, name, area, address, genre")
+    .from("locapass_shops")
+    .select("id, name, area, address, genre:category")
     .eq("id", shopId)
     .single();
 
   if (shopError && shopError.code !== "PGRST116") {
-    throw new Error(`shops取得に失敗しました: ${shopError.message}`);
+    throw new Error(`locapass_shops取得に失敗しました: ${shopError.message}`);
   }
 
   if (!shop) {
@@ -33,15 +34,15 @@ export default async function ShopReelsPage({
 
   // 店舗の全リール(キャスト個人の投稿+スタッフ投稿の両方)をまとめて流す。
   const { data: reelRows } = await supabase
-    .from("reels")
+    .from("locapass_reels")
     .select(
-      "id, caption, media, likes_count, cast_id, shop_id, link_url, created_at, is_comments_enabled, posted_by_staff_id, cast_members ( name, avatar_url ), shop_staff_members ( name, avatar_url )",
+      `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled, posted_by_staff_id, author_name, author_icon_url, cast_members:locapass_public_casts ( name, avatar_url ), shop_staff_members:locapass_shop_staff_members ( name, avatar_url )`,
     )
     .eq("shop_id", shopId)
-    .eq("status", "published")
-    // ストーリーはRLS上フォロワーには読めるので、リール再生に混ざらないよう明示的に除外する。
-    .eq("post_type", "reel")
-    .order("created_at", { ascending: false });
+    .eq("status", "publish")
+    // ストーリー(24時間)はリール再生に混ざらないよう明示的に除外する。
+    .eq("reel_type", "permanent")
+    .order("published_at", { ascending: false });
 
   const reels: ReelItem[] = (reelRows ?? []).map((row) => {
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
@@ -51,18 +52,18 @@ export default async function ShopReelsPage({
     return {
       id: row.id,
       caption: row.caption,
-      media: (row.media as ReelItem["media"]) ?? [],
-      likesCount: row.likes_count,
+      media: toReelMedia(row),
+      likesCount: row.like_count,
       castId: row.cast_id,
-      castName: cast?.name ?? staff?.name ?? shop.name,
-      castAvatarUrl: cast?.avatar_url ?? staff?.avatar_url ?? null,
-      shopId: row.shop_id,
+      castName: cast?.name ?? staff?.name ?? row.author_name ?? shop.name,
+      castAvatarUrl: cast?.avatar_url ?? staff?.avatar_url ?? row.author_icon_url ?? null,
+      shopId: row.shop_id ?? shop.id,
       shopName: shop.name,
       area: shop.area,
       address: shop.address,
       genre: shop.genre,
-      linkUrl: row.link_url,
-      createdAt: row.created_at,
+      linkUrl: row.action_url,
+      createdAt: row.published_at ?? row.updated_at,
       isCommentsEnabled: row.is_comments_enabled,
     };
   });

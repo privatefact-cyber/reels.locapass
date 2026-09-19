@@ -3,20 +3,19 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { banUser, deleteCommentAsAdmin, unbanUser } from "./actions";
 
 export default async function AdminCommentsPage() {
-  // 全site横断のLUXELA機能のため、portal_id限定のサイト管理者には見せない。
+  // 全ポータル横断の機能のため、portal_admin には見せない(super_admin のみ)。
   await requireRootAdmin();
   const supabase = await createClient();
 
   const [{ data: comments }, { data: banned }] = await Promise.all([
     supabase
-      .from("reel_comments")
+      .from("locapass_reel_comments")
       .select(
-        // shopsとreelsの間には外部キーが2本(reels.shop_id / shops.map_preview_reel_id)あるので、使うキーを明示する。
-        "id, body, author_type, user_id, created_at, reels ( id, caption, cast_members ( name ), shops!reels_shop_id_fkey ( name ) )",
+        "id, body, author_type, user_id, created_at, reels:locapass_reels ( id, caption, cast_members:locapass_cast_members ( name ), shops:locapass_shops!locapass_reels_shop_id_fkey ( name ) )",
       )
       .order("created_at", { ascending: false })
       .limit(200),
-    supabase.from("banned_users").select("user_id, reason, created_at").order("created_at", { ascending: false }),
+    supabase.from("locapass_banned_users").select("user_id, reason, created_at").order("created_at", { ascending: false }),
   ]);
 
   const bannedIds = new Set((banned ?? []).map((b) => b.user_id));

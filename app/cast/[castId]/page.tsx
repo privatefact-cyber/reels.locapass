@@ -11,6 +11,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
+import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 
 // トップページと同じ60秒キャッシュ。長押しプレビュー(iframe埋め込み)で毎回フルSSRを
 // 待たされる体感の遅さを緩和する(初回以外はキャッシュから即座に返る)。
@@ -24,8 +25,8 @@ export async function generateMetadata({
   const { castId } = await params;
   const supabase = await createClient();
   const { data: cast } = await supabase
-    .from("cast_members")
-    .select("name, age, pr_text, avatar_url, shops ( name, area, genre )")
+    .from("locapass_public_casts")
+    .select("name, age, pr_text, avatar_url, shops:locapass_shops ( name, area, genre:category )")
     .eq("id", castId)
     .single();
 
@@ -72,46 +73,46 @@ export default async function CastDetailPage({
     { data: activeStoryCastIds },
   ] = await Promise.all([
     supabase
-      .from("cast_members")
+      .from("locapass_public_casts")
       .select(
-        "id, name, age, sizes, pr_text, avatar_url, shop_id, created_at, updated_at, shops ( id, name, area, genre )",
+        "id, name, age, sizes, pr_text, avatar_url, shop_id, created_at, updated_at, shops:locapass_shops ( id, name, area, genre:category )",
       )
       .eq("id", castId)
       .single(),
     supabase
-      .from("media")
+      .from("locapass_media")
       .select("id, url, display_order")
       .eq("cast_id", castId)
       .order("display_order", { ascending: true }),
     supabase
-      .from("schedules")
+      .from("locapass_schedules")
       .select("id, date, start_time, end_time, is_working_today")
       .eq("cast_id", castId)
       .gte("date", toJstDateString(getJstNow()))
       .order("date", { ascending: true })
       .limit(7),
     supabase
-      .from("cast_diary_entries")
+      .from("locapass_cast_diary_entries")
       .select("id, title, body, created_at")
       .eq("cast_id", castId)
       .order("created_at", { ascending: false })
       .limit(10),
     supabase
-      .from("reels")
-      .select("id, media, likes_count, pinned_at")
+      .from("locapass_reels")
+      .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, likes_count:like_count, pinned_at`)
       .eq("cast_id", castId)
-      .eq("status", "published")
-      // ストーリー(フォロワー限定・24時間)はRLS上フォロワー本人には読めてしまうので、明示的に除外する。
-      .eq("post_type", "reel")
+      .eq("status", "publish")
+      // ストーリー(24時間)は明示的に除外する。
+      .eq("reel_type", "permanent")
       .order("pinned_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false }),
-    supabase.rpc("cast_ids_with_active_story", { p_cast_ids: [castId] }),
+      .order("published_at", { ascending: false }),
+    supabase.rpc("locapass_cast_ids_with_active_story", { p_cast_ids: [castId] }),
   ]);
 
   const hasActiveStory = (activeStoryCastIds ?? []).length > 0;
 
   if (castError && castError.code !== "PGRST116") {
-    throw new Error(`cast_members取得に失敗しました: ${castError.message}`);
+    throw new Error(`locapass_public_casts取得に失敗しました: ${castError.message}`);
   }
 
   if (!cast) {
@@ -121,7 +122,7 @@ export default async function CastDetailPage({
   const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
 
   const sizes = cast.sizes as { t?: string; b?: string; w?: string; h?: string } | null;
-  const reelItems = reels ?? [];
+  const reelItems = (reels ?? []).map((r) => ({ ...r, media: toReelMedia(r) }));
   const postCount = reelItems.length;
   const totalLikes = reelItems.reduce((sum, r) => sum + r.likes_count, 0);
 

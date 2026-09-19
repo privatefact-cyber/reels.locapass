@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   const supabase = createStaticClient();
 
   const { data: shop, error: shopError } = await supabase
-    .from("shops")
+    .from("locapass_shops")
     .select("id, name")
     .eq("shop_code", shopCode)
     .eq("status", "active")
@@ -45,9 +45,9 @@ export async function GET(request: Request) {
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: rows, error: castError } = await supabase
-    .from("cast_members")
+    .from("locapass_public_casts")
     .select(
-      "id, name, age, avatar_url, pr_text, schedules!inner(start_time, end_time, date, is_working_today)",
+      "id, name, age, avatar_url, pr_text, schedules:locapass_schedules!inner(start_time, end_time, date, is_working_today)",
     )
     .eq("shop_id", shop.id)
     .eq("schedules.date", today)

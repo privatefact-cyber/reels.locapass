@@ -37,7 +37,7 @@ export function NotificationPreferencesForm() {
       setUserId(uid);
 
       const { data: row } = await supabase
-        .from("notification_preferences")
+        .from("locapass_notification_preferences")
         .select("new_cast, new_event, new_shop_reel, new_cast_reel, shop_message")
         .eq("user_id", uid)
         .maybeSingle();
@@ -57,7 +57,7 @@ export function NotificationPreferencesForm() {
     const partial: Partial<Preferences> = { [key]: next };
     const supabase = createClient();
     const { error } = await supabase
-      .from("notification_preferences")
+      .from("locapass_notification_preferences")
       .upsert(
         { user_id: userId, updated_at: new Date().toISOString(), ...partial },
         { onConflict: "user_id" },

@@ -8,7 +8,7 @@ export async function deleteCommentAsAdmin(commentId: string) {
   await requireRootAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("reel_comments")
+    .from("locapass_reel_comments")
     .update({ is_deleted: true })
     .eq("id", commentId)
     .select("id");
@@ -28,7 +28,7 @@ export async function banUser(userId: string, reason: string) {
   } = await supabase.auth.getUser();
 
   const { error } = await supabase
-    .from("banned_users")
+    .from("locapass_banned_users")
     .upsert({ user_id: userId, reason: reason || null, banned_by: user?.id ?? null });
 
   if (error) throw new Error(`BANに失敗しました: ${error.message}`);
@@ -38,7 +38,7 @@ export async function banUser(userId: string, reason: string) {
 export async function unbanUser(userId: string) {
   await requireRootAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from("banned_users").delete().eq("user_id", userId);
+  const { error } = await supabase.from("locapass_banned_users").delete().eq("user_id", userId);
   if (error) throw new Error(`BAN解除に失敗しました: ${error.message}`);
   revalidatePath("/admin/comments");
 }

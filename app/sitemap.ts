@@ -9,11 +9,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createStaticClient();
 
   const [{ data: shops }, { data: castRows }] = await Promise.all([
-    supabase.from("shops").select("id, area, genre, created_at").eq("status", "active"),
-    supabase
-      .from("cast_members")
-      .select("id, shops!inner ( status )")
-      .eq("shops.status", "active"),
+    supabase.from("locapass_shops").select("id, area, genre:category, created_at").eq("status", "active"),
+    // 公開用ビューは公開中店舗のキャストだけを返す(個人情報の列は含まない)。
+    supabase.from("locapass_public_casts").select("id"),
   ]);
 
   const staticEntries: MetadataRoute.Sitemap = [

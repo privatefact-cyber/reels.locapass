@@ -90,13 +90,13 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
 
   const { data: existingLink } = await admin
-    .from("line_identities")
+    .from("locapass_line_identities")
     .select("user_id")
     .eq("line_user_id", profile.sub)
     .maybeSingle();
 
   let userId = existingLink?.user_id ?? null;
-  // line_identitiesに紐付きが無い(=初回ログイン)場合だけ新規Supabaseユーザーを作る。
+  // locapass_line_identitiesに紐付きが無い(=初回ログイン)場合だけ新規Supabaseユーザーを作る。
   // メールアドレス許可を得ていないLINEチャネルではprofile.emailが来ないため、
   // その場合はダミーの一意メール(実在せず配信もしない、識別子としてのみ使用)を割り当てる。
   let userEmail: string | null = null;
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
     if (createError?.code === "email_exists") {
       // LINE側で許可されたメールが、Google/メール等で先に登録済みの既存アカウントと
       // 同じだったケース。新規作成はせず、その既存アカウントにLINEを紐付ける。
-      const { data: foundUserId, error: lookupError } = await admin.rpc("get_user_id_by_email", {
+      const { data: foundUserId, error: lookupError } = await admin.rpc("locapass_get_user_id_by_email", {
         p_email: userEmail,
       });
       if (lookupError || !foundUserId) {
@@ -126,7 +126,7 @@ export async function GET(request: Request) {
     }
 
     const { error: linkError } = await admin
-      .from("line_identities")
+      .from("locapass_line_identities")
       .insert({ line_user_id: profile.sub, user_id: userId });
     if (linkError) {
       return loginErrorRedirect(origin, redirectTo, "link_insert_failed", linkError);

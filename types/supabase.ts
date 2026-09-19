@@ -1167,6 +1167,24 @@ export type Database = {
           },
         ]
       }
+      locapass_line_identities: {
+        Row: {
+          created_at: string
+          line_user_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          line_user_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          line_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       locapass_media: {
         Row: {
           cast_id: string | null
@@ -1309,6 +1327,36 @@ export type Database = {
           id?: string
           last_login_at?: string
           nickname?: string
+        }
+        Relationships: []
+      }
+      locapass_notification_preferences: {
+        Row: {
+          new_cast: boolean
+          new_cast_reel: boolean
+          new_event: boolean
+          new_shop_reel: boolean
+          shop_message: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          new_cast?: boolean
+          new_cast_reel?: boolean
+          new_event?: boolean
+          new_shop_reel?: boolean
+          shop_message?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          new_cast?: boolean
+          new_cast_reel?: boolean
+          new_event?: boolean
+          new_shop_reel?: boolean
+          shop_message?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1528,6 +1576,35 @@ export type Database = {
             columns: ["staff_member_id"]
             isOneToOne: false
             referencedRelation: "locapass_shop_staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_reel_likes: {
+        Row: {
+          created_at: string
+          reel_id: string
+          user_id: string | null
+          viewer_id: string
+        }
+        Insert: {
+          created_at?: string
+          reel_id: string
+          user_id?: string | null
+          viewer_id: string
+        }
+        Update: {
+          created_at?: string
+          reel_id?: string
+          user_id?: string | null
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_reel_likes_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_reels"
             referencedColumns: ["id"]
           },
         ]
@@ -3421,14 +3498,14 @@ export type Database = {
         Row: {
           age: number | null
           avatar_url: string | null
-          cast_code: string | null
-          created_at: string | null
-          id: string | null
-          name: string | null
+          cast_code: string
+          created_at: string
+          id: string
+          name: string
           pr_text: string | null
-          shop_id: string | null
+          shop_id: string
           sizes: Json | null
-          updated_at: string | null
+          updated_at: string
         }
         Relationships: [
           {
@@ -3740,6 +3817,10 @@ export type Database = {
           shop_name: string
           status: string
         }[]
+      }
+      locapass_get_user_id_by_email: {
+        Args: { p_email: string }
+        Returns: string
       }
       locapass_grant_portal_admin: {
         Args: { p_email: string; p_portal_id: number }

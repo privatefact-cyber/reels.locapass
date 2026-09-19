@@ -32,7 +32,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   ensureVapidConfigured();
   const supabase = createAdminClient();
   const { data: subscriptions } = await supabase
-    .from("push_subscriptions")
+    .from("locapass_push_subscriptions")
     .select("id, endpoint, p256dh, auth_key")
     .eq("user_id", userId);
 
@@ -51,7 +51,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
       } catch (error) {
         const statusCode = (error as { statusCode?: number }).statusCode;
         if (statusCode === 404 || statusCode === 410) {
-          await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+          await supabase.from("locapass_push_subscriptions").delete().eq("id", sub.id);
         }
       }
     }),

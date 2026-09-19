@@ -50,7 +50,7 @@ export function ReelCommentSheet({
   const loadComments = useCallback(async () => {
     const supabase = createClient();
     const { data } = await supabase
-      .from("reel_comments")
+      .from("locapass_reel_comments")
       .select("id, body, author_type, user_id, cast_id, parent_comment_id, created_at")
       .eq("reel_id", reelId)
       .order("created_at", { ascending: true });
@@ -87,7 +87,7 @@ export function ReelCommentSheet({
         if (!cancelled) setRole("guest");
       } else {
         setMyUserId(user.id);
-        const { data: currentCastId } = await supabase.rpc("current_cast_id");
+        const { data: currentCastId } = await supabase.rpc("locapass_current_cast_id");
         if (!cancelled) {
           setRole(currentCastId && reelCastId && currentCastId === reelCastId ? "cast" : "customer");
         }
@@ -118,7 +118,7 @@ export function ReelCommentSheet({
     setError(null);
     const supabase = createClient();
     const { error: insertError } = await supabase
-      .from("reel_comments")
+      .from("locapass_reel_comments")
       .insert({ reel_id: reelId, author_type: "customer", body: trimmed });
     if (insertError) {
       setError(
@@ -141,7 +141,7 @@ export function ReelCommentSheet({
     setPosting(true);
     setError(null);
     const supabase = createClient();
-    const { error: insertError } = await supabase.from("reel_comments").insert({
+    const { error: insertError } = await supabase.from("locapass_reel_comments").insert({
       reel_id: reelId,
       author_type: "cast",
       cast_id: reelCastId,
@@ -165,7 +165,7 @@ export function ReelCommentSheet({
     setError(null);
     const supabase = createClient();
     const { error: updateError } = await supabase
-      .from("reel_comments")
+      .from("locapass_reel_comments")
       .update({ is_deleted: true })
       .eq("id", commentId);
     if (updateError) {
@@ -182,7 +182,7 @@ export function ReelCommentSheet({
     setError(null);
     const supabase = createClient();
     const { error: insertError } = await supabase
-      .from("cast_blocked_users")
+      .from("locapass_cast_blocked_users")
       .insert({ cast_id: reelCastId, blocked_user_id: blockedUserId });
     if (insertError) {
       setError(t.comment.blockFailed);

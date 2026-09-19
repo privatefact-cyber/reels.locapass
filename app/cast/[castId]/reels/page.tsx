@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
 import type { ReelItem } from "@/lib/reels/types";
+import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 
 export const revalidate = 60;
 
@@ -18,13 +19,13 @@ export default async function CastReelsPage({
   const supabase = await createClient();
 
   const { data: cast, error: castError } = await supabase
-    .from("cast_members")
-    .select("id, name, avatar_url, shop_id, shops ( id, name, area, address, genre )")
+    .from("locapass_public_casts")
+    .select("id, name, avatar_url, shop_id, shops:locapass_shops ( id, name, area, address, genre:category )")
     .eq("id", castId)
     .single();
 
   if (castError && castError.code !== "PGRST116") {
-    throw new Error(`cast_members取得に失敗しました: ${castError.message}`);
+    throw new Error(`locapass_public_casts取得に失敗しました: ${castError.message}`);
   }
 
   if (!cast) {
@@ -34,30 +35,32 @@ export default async function CastReelsPage({
   const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
 
   const { data: reelRows } = await supabase
-    .from("reels")
-    .select("id, caption, media, likes_count, cast_id, shop_id, link_url, created_at, is_comments_enabled")
+    .from("locapass_reels")
+    .select(
+      `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled`,
+    )
     .eq("cast_id", castId)
-    .eq("status", "published")
-    // ストーリーはRLS上フォロワーには読めるので、リール再生に混ざらないよう明示的に除外する。
-    .eq("post_type", "reel")
+    .eq("status", "publish")
+    // ストーリー(24時間)はリール再生に混ざらないよう明示的に除外する。
+    .eq("reel_type", "permanent")
     .order("pinned_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
+    .order("published_at", { ascending: false });
 
   const reels: ReelItem[] = (reelRows ?? []).map((row) => ({
     id: row.id,
     caption: row.caption,
-    media: (row.media as ReelItem["media"]) ?? [],
-    likesCount: row.likes_count,
+    media: toReelMedia(row),
+    likesCount: row.like_count,
     castId: row.cast_id,
     castName: cast.name,
     castAvatarUrl: cast.avatar_url,
-    shopId: row.shop_id,
+    shopId: row.shop_id ?? cast.shop_id,
     shopName: shop?.name ?? "",
     area: shop?.area ?? null,
     address: shop?.address ?? null,
     genre: shop?.genre ?? null,
-    linkUrl: row.link_url,
-    createdAt: row.created_at,
+    linkUrl: row.action_url,
+    createdAt: row.published_at ?? row.updated_at,
     isCommentsEnabled: row.is_comments_enabled,
   }));
 

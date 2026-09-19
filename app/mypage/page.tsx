@@ -1,6 +1,7 @@
 import { requireCurrentUser } from "@/lib/user/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { MypageClient, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
+import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 
 function buildMedia(videoUrl: string | null, posterUrl: string | null, images: unknown): SavedReel["media"] {
   if (videoUrl) return [{ type: "video", url: videoUrl, poster: posterUrl ?? undefined }];
@@ -13,13 +14,69 @@ export default async function MypagePage() {
   const user = await requireCurrentUser();
   const supabase = await createClient();
 
-  // locapassにはキャストフォロー・リールコメントの受け皿が無いため、常に空で返す。
-  // 店舗お気に入り(locapass_member_favorite_shops)はshop_id列が無く(portal_id+author_urlの
-  // 別設計)、店舗単位のお気に入り機能としてはまだ使えないため、こちらも当面は空で返す
-  // (マイページのタブUIは既存のまま、対応データが無い分だけ0件表示になる)。
-  const followedCasts: FollowedCast[] = [];
-  const myComments: MyComment[] = [];
-  const favoriteShops: FavoriteShop[] = [];
+  const today = toJstDateString(getJstNow());
+
+  // 本家マイページと同じく、フォロー中のキャスト・お気に入り店舗・自分のコメントを locapass から読む。
+  const [followsRes, favoritesRes, commentsRes] = await Promise.all([
+    supabase
+      .from("locapass_cast_follows")
+      .select(
+        "cast_id, cast:locapass_public_casts ( id, name, avatar_url, shop_id, shops:locapass_shops ( name ), schedules:locapass_schedules ( is_working_today, date ) )",
+      )
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("locapass_shop_favorites")
+      .select("shop_id, shop:locapass_shops ( id, name, area, status )")
+      .eq("member_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("locapass_reel_comments")
+      .select("id, body, created_at, reel_id, reel:locapass_reels ( id, caption, video_url, poster_url, images )")
+      .eq("user_id", user.id)
+      .eq("author_type", "customer")
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const followedCasts: FollowedCast[] = (followsRes.data ?? [])
+    .map((row) => {
+      const cast = Array.isArray(row.cast) ? row.cast[0] : row.cast;
+      if (!cast) return null;
+      const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
+      const schedules = Array.isArray(cast.schedules) ? cast.schedules : cast.schedules ? [cast.schedules] : [];
+      const isWorkingToday = schedules.some(
+        (sch: { date: string; is_working_today: boolean }) => sch.date === today && sch.is_working_today,
+      );
+      return {
+        id: cast.id,
+        name: cast.name,
+        avatarUrl: cast.avatar_url,
+        shopName: shop?.name ?? null,
+        isWorkingToday,
+      };
+    })
+    .filter((c): c is FollowedCast => c !== null);
+
+  const favoriteShops: FavoriteShop[] = (favoritesRes.data ?? [])
+    .map((row) => {
+      const shop = Array.isArray(row.shop) ? row.shop[0] : row.shop;
+      if (!shop) return null;
+      return { id: shop.id, name: shop.name, area: shop.area, status: shop.status };
+    })
+    .filter((s): s is FavoriteShop => s !== null);
+
+  const myComments: MyComment[] = (commentsRes.data ?? []).map((row) => {
+    const reel = Array.isArray(row.reel) ? row.reel[0] : row.reel;
+    const media = reel ? buildMedia(reel.video_url, reel.poster_url, reel.images)[0] : undefined;
+    return {
+      id: row.id,
+      body: row.body,
+      createdAt: row.created_at,
+      reelId: row.reel_id,
+      reelCaption: reel?.caption ?? null,
+      reelThumbnailUrl: media ? (media.poster ?? media.url) : null,
+    };
+  });
 
   const favoriteReelsRes = await supabase
     .from("locapass_member_favorite_reels")

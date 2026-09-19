@@ -14,10 +14,18 @@ export type ReelRow = {
   published_at: string | null;
   updated_at: string;
   locapass_shops: { name: string; address: string | null; category: string | null } | { name: string; address: string | null; category: string | null }[] | null;
+  cast_id: string | null;
+  is_comments_enabled: boolean;
+  locapass_cast_members: { name: string | null; avatar_url: string | null } | { name: string | null; avatar_url: string | null }[] | null;
+  locapass_shop_staff_members: { name: string; avatar_url: string | null } | { name: string; avatar_url: string | null }[] | null;
 };
 
 export function toReelItem(row: ReelRow): ReelItem | null {
   const shop = Array.isArray(row.locapass_shops) ? row.locapass_shops[0] : row.locapass_shops;
+  const cast = Array.isArray(row.locapass_cast_members) ? row.locapass_cast_members[0] : row.locapass_cast_members;
+  const staff = Array.isArray(row.locapass_shop_staff_members)
+    ? row.locapass_shop_staff_members[0]
+    : row.locapass_shop_staff_members;
   if (!shop || !row.shop_id) return null;
 
   // 動画が無いリールはimages配列を使うが、WordPress取込データはimagesが空でも
@@ -36,9 +44,9 @@ export function toReelItem(row: ReelRow): ReelItem | null {
     caption: null, // トップページのグリッド/リール一覧では未使用のため取得しない
     media,
     likesCount: row.like_count,
-    castId: null, // locapass_reelsはキャスト概念を持たないため常にnull
-    castName: row.author_name ?? shop.name,
-    castAvatarUrl: row.author_icon_url,
+    castId: row.cast_id,
+    castName: cast?.name ?? staff?.name ?? row.author_name ?? shop.name,
+    castAvatarUrl: cast?.avatar_url ?? staff?.avatar_url ?? row.author_icon_url,
     shopId: row.shop_id,
     shopName: shop.name,
     area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
@@ -46,12 +54,12 @@ export function toReelItem(row: ReelRow): ReelItem | null {
     genre: shop.category,
     linkUrl: row.action_url,
     createdAt: row.published_at ?? row.updated_at,
-    isCommentsEnabled: false, // locapass_reelsにはコメント機能の受け皿が無い
+    isCommentsEnabled: row.is_comments_enabled,
   };
 }
 
 export const REEL_SELECT =
-  "id, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category )";
+  "id, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category ), cast_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url ), locapass_shop_staff_members ( name, avatar_url )";
 
 export type PortalFeedData = {
   reels: ReelItem[];
@@ -88,7 +96,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     reelsQuery,
     // システム管理者が投稿するPR。指定頻度でリールフィードに紛れ込ませる(システム管理者のみ投稿可)。
     supabase
-      .from("ads")
+      .from("locapass_ads")
       .select("id, title, media_type, media_url, poster_url, link_url, frequency")
       .eq("is_active", true),
   ]);

@@ -32,7 +32,7 @@ export default function InquiryThreadPage() {
   const load = useCallback(async () => {
     const supabase = createClient();
     const { data, error } = await supabase
-      .rpc("get_inquiry_thread", { p_inquiry_id: params.id, p_viewer_id: getViewerId() })
+      .rpc("locapass_get_inquiry_thread", { p_inquiry_id: params.id, p_viewer_id: getViewerId() })
       .single();
 
     if (error || !data) {
@@ -61,7 +61,7 @@ export default function InquiryThreadPage() {
     setSending(true);
 
     const supabase = createClient();
-    const { error } = await supabase.rpc("add_inquiry_message", {
+    const { error } = await supabase.rpc("locapass_add_inquiry_message", {
       p_inquiry_id: params.id,
       p_viewer_id: getViewerId(),
       p_body: reply,

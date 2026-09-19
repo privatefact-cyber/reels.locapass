@@ -61,9 +61,9 @@ export function useReelLikes(reels: ReelItem[]) {
     }));
 
     if (isLiked) {
-      await supabase.from("reel_likes").delete().eq("reel_id", reelId).eq("viewer_id", viewerId);
+      await supabase.from("locapass_reel_likes").delete().eq("reel_id", reelId).eq("viewer_id", viewerId);
     } else {
-      await supabase.from("reel_likes").insert({ reel_id: reelId, viewer_id: viewerId });
+      await supabase.from("locapass_reel_likes").insert({ reel_id: reelId, viewer_id: viewerId });
     }
   }
 

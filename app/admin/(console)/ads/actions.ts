@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 
@@ -28,18 +28,18 @@ export async function createAd(formData: FormData) {
 
   const isVideo = file.type.startsWith("video/");
   const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-  const path = `ads/${Date.now()}.${ext}`;
+  const path = `${Date.now()}.${ext}`;
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
-  const { error: uploadError } = await supabase.storage.from("reels").upload(path, file, {
+  const { error: uploadError } = await supabase.storage.from("locapass-ads").upload(path, file, {
     contentType: file.type,
   });
   if (uploadError) throw new Error(`アップロードに失敗しました: ${uploadError.message}`);
 
-  const { data: publicUrlData } = supabase.storage.from("reels").getPublicUrl(path);
+  const { data: publicUrlData } = supabase.storage.from("locapass-ads").getPublicUrl(path);
 
-  const { error: insertError } = await supabase.from("ads").insert({
+  const { error: insertError } = await supabase.from("locapass_ads").insert({
     title,
     link_url: linkUrl,
     frequency: Math.round(frequency),
@@ -53,8 +53,8 @@ export async function createAd(formData: FormData) {
 
 export async function setAdActive(id: string, isActive: boolean) {
   await requireRootAdmin();
-  const supabase = createAdminClient();
-  const { error } = await supabase.from("ads").update({ is_active: isActive }).eq("id", id);
+  const supabase = await createClient();
+  const { error } = await supabase.from("locapass_ads").update({ is_active: isActive }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/ads");
 }
@@ -65,16 +65,16 @@ export async function updateAdFrequency(id: string, formData: FormData) {
   if (!Number.isFinite(frequency) || frequency < 2) {
     throw new Error("表示頻度は2以上の数値で指定してください");
   }
-  const supabase = createAdminClient();
-  const { error } = await supabase.from("ads").update({ frequency: Math.round(frequency) }).eq("id", id);
+  const supabase = await createClient();
+  const { error } = await supabase.from("locapass_ads").update({ frequency: Math.round(frequency) }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/ads");
 }
 
 export async function deleteAd(id: string) {
   await requireRootAdmin();
-  const supabase = createAdminClient();
-  const { error } = await supabase.from("ads").delete().eq("id", id);
+  const supabase = await createClient();
+  const { error } = await supabase.from("locapass_ads").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/ads");
 }

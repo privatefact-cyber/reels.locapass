@@ -105,8 +105,8 @@ export function MypageClient({
     setProfileError(null);
 
     const supabase = createClient();
-    const path = `${userId}/${Date.now()}.jpg`;
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, {
+    const path = `${userId}/avatar-${Date.now()}.jpg`;
+    const { error: uploadError } = await supabase.storage.from("locapass-ugc").upload(path, blob, {
       contentType: "image/jpeg",
     });
 
@@ -116,7 +116,7 @@ export function MypageClient({
       return;
     }
 
-    const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const { data: publicUrlData } = supabase.storage.from("locapass-ugc").getPublicUrl(path);
     const newAvatarUrl = publicUrlData.publicUrl;
 
     const { data, error: updateError } = await supabase
@@ -163,7 +163,7 @@ export function MypageClient({
   async function handleDeleteComment(commentId: string) {
     const supabase = createClient();
     const { data, error } = await supabase
-      .from("reel_comments")
+      .from("locapass_reel_comments")
       .update({ is_deleted: true })
       .eq("id", commentId)
       .select("id");
@@ -175,7 +175,7 @@ export function MypageClient({
   async function handleUnfollowCast(castId: string) {
     const supabase = createClient();
     const { error } = await supabase
-      .from("user_cast_follows")
+      .from("locapass_cast_follows")
       .delete()
       .eq("user_id", userId)
       .eq("cast_id", castId);
@@ -184,8 +184,13 @@ export function MypageClient({
   }
 
   async function handleUnfavoriteShop(shopId: string) {
-    // locapass_member_favorite_shopsにはshop_id列が無く(portal_id+author_urlの別設計で
-    // お気に入り店舗機能としては未整備)、favoriteShopsは現状常に空なのでこの関数は呼ばれない。
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("locapass_shop_favorites")
+      .delete()
+      .eq("member_id", userId)
+      .eq("shop_id", shopId);
+    if (error) return;
     setFavoriteShops((prev) => prev.filter((s) => s.id !== shopId));
   }
 

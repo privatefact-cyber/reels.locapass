@@ -12,7 +12,7 @@ export default async function ShopShortLinkPage({
   const supabase = await createClient();
 
   const { data: shop } = await supabase
-    .from("shops")
+    .from("locapass_shops")
     .select("id")
     .eq("shop_code", code.toUpperCase())
     .maybeSingle();

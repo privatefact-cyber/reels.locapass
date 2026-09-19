@@ -54,24 +54,24 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
 
   const supabase = await createClient();
   const { data: shopRows } = await supabase
-    .from("shops")
-    .select("id, name, tagline, cover_image_url")
+    .from("locapass_shops")
+    .select("id, name, tagline, cover_image_url:cover_url")
     .eq("status", "active")
     .eq("area", area)
-    .eq("genre", genre)
+    .eq("category", genre)
     .order("created_at", { ascending: false });
 
   const shops = shopRows ?? [];
   if (shops.length === 0) notFound();
 
   const shopIds = shops.map((s) => s.id);
-  const { data: castRows } = await supabase.from("cast_members").select("id, shop_id").in("shop_id", shopIds);
+  const { data: castRows } = await supabase.from("locapass_public_casts").select("id, shop_id").in("shop_id", shopIds);
   const shopIdByCastId = new Map((castRows ?? []).map((c) => [c.id, c.shop_id]));
   const castIds = (castRows ?? []).map((c) => c.id);
 
   const { data: todaySchedules } = castIds.length
     ? await supabase
-        .from("schedules")
+        .from("locapass_schedules")
         .select("cast_id")
         .in("cast_id", castIds)
         .eq("date", toJstDateString(getJstNow()))

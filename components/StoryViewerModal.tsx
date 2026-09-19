@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 type StoryMedia = { type: "video" | "image"; url: string };
@@ -39,20 +40,20 @@ export function StoryViewerModal({
     let cancelled = false;
     const supabase = createClient();
     supabase
-      .from("reels")
-      .select("id, media, caption, created_at")
+      .from("locapass_reels")
+      .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, caption, published_at, updated_at`)
       .eq("cast_id", castId)
-      .eq("post_type", "story")
+      .eq("reel_type", "story")
       .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: true })
+      .order("published_at", { ascending: true })
       .then(({ data }) => {
         if (cancelled) return;
         setStories(
           (data ?? []).map((r) => ({
             id: r.id,
-            media: r.media as StoryMedia[],
+            media: toReelMedia(r) as StoryMedia[],
             caption: r.caption,
-            createdAt: r.created_at,
+            createdAt: r.published_at ?? r.updated_at,
           })),
         );
       });

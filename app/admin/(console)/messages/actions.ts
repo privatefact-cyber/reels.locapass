@@ -1,10 +1,11 @@
 "use server";
 
 import { requireRootAdmin } from "@/lib/admin/require-admin";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
-// 運営から全ユーザーへの一斉お知らせ。件数が多くなる想定のため、notifications直挿入で
-// user_idを一括select+insertする(1ユーザー=1行)。カテゴリ別トグルの対象外(常時配信)。
+// 運営から全会員への一斉お知らせ(本家 sendAdminBroadcast と同じく1会員=1行の locapass_notifications)。
+// 本家は service role で直接挿入するが、locapass では super_admin の確認と挿入を
+// DB関数 locapass_send_admin_broadcast にまとめている。
 export async function sendAdminBroadcast(formData: FormData) {
   await requireRootAdmin();
 
@@ -13,21 +14,11 @@ export async function sendAdminBroadcast(formData: FormData) {
   const url = String(formData.get("url") ?? "").trim() || null;
   if (!title) throw new Error("タイトルを入力してください");
 
-  const supabase = createAdminClient();
-
-  const { data: users, error: usersError } = await supabase.from("locapass_members").select("id");
-  if (usersError) throw new Error(usersError.message);
-  if (!users || users.length === 0) return;
-
-  const { error } = await supabase.from("notifications").insert(
-    users.map((u) => ({
-      user_id: u.id,
-      type: "admin_message" as const,
-      title,
-      body: body || null,
-      url,
-    })),
-  );
-
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("locapass_send_admin_broadcast", {
+    p_title: title,
+    p_body: body || undefined,
+    p_url: url ?? undefined,
+  });
   if (error) throw new Error(error.message);
 }

@@ -38,7 +38,7 @@ export default async function AreaMapPage({ params }: { params: Promise<PagePara
   // 中心を出すための最小限のクエリ(座標2列だけ)。カードデータは引かない。
   const supabase = await createClient();
   const { data } = await supabase
-    .from("shops")
+    .from("locapass_shops")
     .select("lat, lng")
     .eq("status", "active")
     .eq("area", area)

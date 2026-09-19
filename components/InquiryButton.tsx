@@ -25,7 +25,7 @@ export function InquiryButton({ shopId, shopName }: { shopId: string; shopName: 
     setError(null);
 
     const supabase = createClient();
-    const { data, error } = await supabase.rpc("create_shop_inquiry", {
+    const { data, error } = await supabase.rpc("locapass_create_shop_inquiry", {
       p_shop_id: shopId,
       p_viewer_id: getViewerId(),
       p_customer_name: name,

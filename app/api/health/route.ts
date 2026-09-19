@@ -42,7 +42,7 @@ async function timed(name: string, fn: () => Promise<string | null>): Promise<Ch
 async function checkDatabase(): Promise<string | null> {
   const supabase = createStaticClient();
   const { error, count } = await supabase
-    .from("shops")
+    .from("locapass_shops")
     .select("id", { count: "exact", head: true })
     .eq("status", "active");
   if (error) return "query failed";

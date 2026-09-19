@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   // RLS(user_id = auth.uid())により、他ユーザーの購読を消せないことをDB側でも保証する。
   const { error } = await supabase
-    .from("push_subscriptions")
+    .from("locapass_push_subscriptions")
     .delete()
     .eq("user_id", user.id)
     .eq("endpoint", endpoint);

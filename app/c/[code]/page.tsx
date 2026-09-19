@@ -13,7 +13,7 @@ export default async function CastShortLinkPage({
   const supabase = await createClient();
 
   const { data: cast } = await supabase
-    .from("cast_members")
+    .from("locapass_public_casts")
     .select("id")
     .eq("cast_code", code.toUpperCase())
     .maybeSingle();
