@@ -1,10 +1,42 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send, RotateCcw, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarPeek } from "@/components/AvatarPeek";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+
+// app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_sites.slug
+// (例: "mito", "oarai")を受け取る動的ルートだが、Next.jsは静的ルートを優先するため、
+// これらのパスはエリアポータルとして扱わない(現在地ヒントの誤検出を避ける)。
+const RESERVED_TOP_SEGMENTS = new Set([
+  "admin",
+  "api",
+  "auth",
+  "c",
+  "cast",
+  "dashboard",
+  "events",
+  "gate",
+  "inquiries",
+  "login",
+  "map",
+  "mypage",
+  "notifications",
+  "s",
+  "shops",
+  "staff",
+]);
+
+// 現在のパスから、今見ているエリアポータル(locapass_sites.slug)らしき値を推測する。
+// 該当しなければnull(チャットバックエンドはこれを「エリア不明」として扱う)。
+function guessCurrentAreaSlug(pathname: string | null): string | null {
+  if (!pathname) return null;
+  const first = pathname.split("/").filter(Boolean)[0];
+  if (!first || RESERVED_TOP_SEGMENTS.has(first)) return null;
+  return first;
+}
 
 const CHAT_ENDPOINT =
   "https://ezhbjfkbfjgijdcvmzdi.supabase.co/functions/v1/wp-inquiry-chat";
@@ -71,6 +103,8 @@ function resetSessionId(): string {
 export function AiInquiryWidget({ placement = "floating" }: { placement?: "floating" | "map" }) {
   const isMap = placement === "map";
   const { t } = useLocale();
+  const pathname = usePathname();
+  const currentAreaSlug = guessCurrentAreaSlug(pathname);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const [greeted, setGreeted] = useState(false);
@@ -80,6 +114,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [escalated, setEscalated] = useState(false);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,6 +138,20 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
           text: t.ai.greeting,
         },
       ]);
+      // チャットを開いたタイミングで一度だけ位置情報の許可を試みる。取れなくても
+      // (拒否・非対応・タイムアウト)エラーは飲み込み、従来通りcurrentAreaSlugベース
+      // の案内にフォールバックする(ユーザー体験をブロックしない)。
+      if (typeof navigator !== "undefined" && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          },
+          () => {
+            // 拒否・取得失敗時は何もしない(coordsはnullのまま)
+          },
+          { enableHighAccuracy: false, timeout: 4000, maximumAge: 5 * 60 * 1000 },
+        );
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, greeted]);
@@ -143,6 +192,11 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
           secret_key: SITE_SECRET,
           session_id: getSessionId(),
           message: text,
+          // 実機の位置情報(GPS)が取れていればそれを最優先で送る。取れていなければ
+          // 従来通り閲覧中のエリアポータル(URL)を送る。どちらも無ければ何も送らず、
+          // バックエンド側で「行きたいエリアはありますか?」と聞く従来動作にフォールバック。
+          ...(coords ? { user_lat: coords.lat, user_lng: coords.lng } : {}),
+          ...(currentAreaSlug ? { current_area_slug: currentAreaSlug } : {}),
         }),
       });
       const data = await res.json();
