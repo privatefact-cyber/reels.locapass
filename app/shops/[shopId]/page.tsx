@@ -166,7 +166,7 @@ export default async function ShopDetailPage({
     shopRow.icon_url;
 
   const heroType: "image" | "video" =
-    shopRow.hero_media_type ??
+    (shopRow.hero_media_type as "image" | "video" | null) ??
     (latestReelMedia?.type === "video" ? "video" : "image");
 
   const store: Store = {
