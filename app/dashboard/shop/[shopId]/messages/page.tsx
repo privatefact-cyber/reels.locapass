@@ -37,11 +37,11 @@ export default async function LocapassShopMessagesPage({
           <select
             name="target_user_id"
             defaultValue=""
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
           >
-            <option value="">お気に入り登録者 全員({favoriteUsers.length}人)</option>
+            <option value="" className="text-slate-900">お気に入り登録者 全員({favoriteUsers.length}人)</option>
             {favoriteUsers.map((u) => (
-              <option key={u.userId} value={u.userId}>
+              <option key={u.userId} value={u.userId} className="text-slate-900">
                 {u.nickname}
               </option>
             ))}
@@ -56,7 +56,7 @@ export default async function LocapassShopMessagesPage({
             rows={4}
             maxLength={500}
             placeholder="今週末はイベント開催中です！ぜひ遊びに来てください。"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:outline-none"
           />
         </div>
 
