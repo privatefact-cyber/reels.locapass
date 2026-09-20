@@ -8,14 +8,37 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://reels.locapass.net"),
-  title: "LOCAPASS - ナイト＆キャスト特化リールメディア",
-  description: "エリア・ジャンルから探せるナイトワークポータル",
-  keywords: ["LOCAPASS", "ナイトワーク", "キャスト", "リール", "ポータル"],
+  title: {
+    default: "LOCAPASS【ロカパス】| 街と人が繋がるリールメディア",
+    template: "%s | LOCAPASS【ロカパス】",
+  },
+  description:
+    "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。最新のショート動画やリールから、エリアごとの人気スポットや話題の店舗、街のリアルな雰囲気をダイレクトに発見できます。",
+  keywords: [
+    "LOCAPASS",
+    "ロカパス",
+    "リール",
+    "ショート動画",
+    "店舗情報",
+    "スポット情報",
+    "地域情報",
+    "街歩き",
+    "ローカルメディア",
+  ],
   openGraph: {
-    title: "LOCAPASS - ナイト＆キャスト特化リールメディア",
-    description: "エリア・ジャンルから探せるナイトワークポータル",
+    title: "LOCAPASS【ロカパス】| 街と人が繋がるリールメディア",
+    description:
+      "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。最新のショート動画やリールから、エリアごとの人気スポットや話題の店舗の魅力をリアルにお届けします。",
     siteName: "LOCAPASS",
     url: "https://reels.locapass.net",
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LOCAPASS【ロカパス】| 街と人が繋がるリールメディア",
+    description:
+      "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。街や店舗のリアルな今をショート動画でお届け。",
   },
   alternates: {
     canonical: "https://reels.locapass.net",
