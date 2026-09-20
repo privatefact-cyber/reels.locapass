@@ -113,11 +113,15 @@ summary {
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y;
 }
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 /* マップページ(/tokyo/[city]/map)のmaplibre標準UIをダークテーマに合わせる。
    デフォルトの白いボタン・白い帰属表示バーはナイトモードの画面から浮くため、
    半透明の黒+白の縁取りに置き換える。アプリ内の他の地図に影響しないよう
@@ -153,4 +157,11 @@ summary {
 
 .luxela-venue-map .maplibregl-ctrl-attrib-button {
   filter: invert(1);
+}
+
+/* PCでマウスポインタがどこにあっても縦スクロールを最優先で通す */
+html,
+body {
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto !important;
 }
