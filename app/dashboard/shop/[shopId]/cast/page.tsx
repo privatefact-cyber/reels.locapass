@@ -27,7 +27,7 @@ export default async function LocapassShopCastPage({
     .eq("shop_id", shop.id)
     .order("created_at", { ascending: false });
 
-  // 各キャストの先頭写真とフォロワー数(本家と同じく1人ずつ取得)。
+  // 各パートナーの先頭写真とフォロワー数(本家と同じく1人ずつ取得)。
   const castMembersWithMedia = await Promise.all(
     (castMembers ?? []).map(async (cast) => {
       const [{ data: media }, { data: followerCount }] = await Promise.all([
@@ -51,20 +51,20 @@ export default async function LocapassShopCastPage({
     <div className="space-y-8">
       <section>
         <p className="text-xs text-slate-500">{shop.name}</p>
-        <h1 className="mt-1 text-3xl font-bold text-slate-900">キャスト管理</h1>
+        <h1 className="mt-1 text-3xl font-bold text-slate-900">パートナー管理</h1>
         <p className="mt-2 text-sm text-slate-600">
           プロフィール・写真・出勤スケジュール・日記をここから管理できます。
         </p>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">新規キャスト登録</h2>
+        <h2 className="mb-4 text-sm font-semibold text-slate-900">新規パートナー登録</h2>
         <form action={addCast.bind(null, shop.id)} className="space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <input
               name="name"
               required
-              placeholder="氏名（源氏名）"
+              placeholder="氏名（活動名）"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <input
@@ -93,7 +93,7 @@ export default async function LocapassShopCastPage({
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">在籍キャスト一覧</h2>
+          <h2 className="text-sm font-semibold text-slate-900">在籍パートナー一覧</h2>
           <Link
             href={`/dashboard/shop/${shop.id}/cast/roster`}
             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
@@ -105,7 +105,7 @@ export default async function LocapassShopCastPage({
           <CastListMasterDetail castMembers={castMembersWithMedia} detailBasePath={`/dashboard/shop/${shop.id}/cast`} />
         ) : (
           <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-            <p className="text-sm text-slate-500">キャストの登録はまだありません。</p>
+            <p className="text-sm text-slate-500">パートナーの登録はまだありません。</p>
           </div>
         )}
       </section>
