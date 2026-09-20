@@ -51,7 +51,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
     <>
       {/* 高級感のあるゴールド調ヘッダー(すりガラス+光暈の装飾背景) */}
       {!mapImmersive && (
-      <header className="sticky top-0 z-50 transform-gpu overflow-hidden border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30 will-change-transform" style={{ backgroundColor: "var(--portal-header-background, rgba(0, 0, 0, .6))" }}>
+      <header className="sticky top-0 z-50 overflow-hidden border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30" style={{ backgroundColor: "var(--portal-header-background, rgba(0, 0, 0, .6))" }}>
         {/* 背景の光暈(装飾、クリック不可) */}
         <div
           aria-hidden
@@ -112,7 +112,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
       )}
 
       {/* 固定ボトムナビゲーション(モバイルのみ。セーフエリア対応) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 transform-gpu border-t border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/20 pb-[env(safe-area-inset-bottom)] pt-2 px-3 flex items-center justify-between max-w-md mx-auto sm:max-w-none sm:px-6 md:hidden will-change-transform">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 transform-gpu border-t border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/20 pb-[env(safe-area-inset-bottom)] pt-2 px-3 flex items-center justify-between max-w-md mx-auto sm:max-w-none sm:px-6 md:hidden">
         <Link href="/" className="flex flex-col items-center gap-0.5 p-2 text-white" aria-label={t.nav.home}>
           <Home size={22} />
           <span className="text-[10px] leading-none">{t.nav.home}</span>
