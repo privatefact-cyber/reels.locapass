@@ -666,7 +666,7 @@ export function ReelFeed({
         </div>
       )}
 
-      <div className="flex items-center gap-2 px-1">
+      <div className="sticky top-[49px] z-30 flex items-center gap-2 px-1 py-2 bg-neutral-950/90 backdrop-blur-md border-b border-white/5">
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
