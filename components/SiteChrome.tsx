@@ -22,7 +22,7 @@ type Props = {
 // AIコンシェルジュはマップでも使えるようにし、カードと重ならない位置(placement="map")に置く。
 // 言語切替はヘッダーの代わりにマップ上部のバー(VenueMapExplorer)に置いている。
 // components/AppShell.tsxの full-bleed 判定と同じパターン。
-const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
+const FULL_BLEED_PATTERN = /^\/map$\vert{}^\/[^/]+\/[^/]+\/map$/;
 
 // 公開ローンチ前の合言葉ゲート(/gate)では、ヘッダー・ボトムナビ・AI問い合わせウィジェットを
 // 一切表示しない(合言葉を通していない訪問者にサイトの中身・機能を一切見せないため)。
@@ -61,7 +61,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
 
         {/* お知らせバー */}
         <div className="relative border-b border-white/5 px-4 py-1.5 text-center text-[11px] text-neutral-300">
-          &ldquo;いま&rdquo;が伝わる リールメディア LOCAPASS
+          繋がる広がるリールメディアLOCAPASS【ロカパス】
         </div>
 
         {/* メインヘッダー行(PC幅ではワイドに広がる) */}
