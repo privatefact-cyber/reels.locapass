@@ -37,7 +37,7 @@ import { pickTranslation } from "@/lib/i18n/contentTranslation";
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
 // 同じ60秒キャッシュに揃える。
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
