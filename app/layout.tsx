@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SiteChrome } from "@/components/SiteChrome";
 import { AppShell } from "@/components/AppShell";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
@@ -20,6 +20,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://reels.locapass.net",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
