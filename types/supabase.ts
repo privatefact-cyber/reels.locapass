@@ -1445,6 +1445,8 @@ export type Database = {
           hero_link_url: string | null
           header_color: string
           header_opacity: number
+          outer_background_color: string
+          font_color: string
           home_url: string | null
           id: number
           name: string
@@ -1466,6 +1468,8 @@ export type Database = {
           hero_link_url?: string | null
           header_color?: string
           header_opacity?: number
+          outer_background_color?: string
+          font_color?: string
           home_url?: string | null
           id?: number
           name: string
@@ -1487,6 +1491,8 @@ export type Database = {
           hero_link_url?: string | null
           header_color?: string
           header_opacity?: number
+          outer_background_color?: string
+          font_color?: string
           home_url?: string | null
           id?: number
           name?: string

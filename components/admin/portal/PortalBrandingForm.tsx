@@ -18,6 +18,8 @@ type Props = {
     hero_link_url: string | null;
     header_color: string;
     header_opacity: number;
+    outer_background_color: string;
+    font_color: string;
   };
 };
 
@@ -37,6 +39,8 @@ export function PortalBrandingForm({ portal }: Props) {
   const [heroLinkUrl, setHeroLinkUrl] = useState(portal.hero_link_url ?? "");
   const [headerColor, setHeaderColor] = useState(portal.header_color);
   const [headerOpacity, setHeaderOpacity] = useState(Math.round(portal.header_opacity * 100));
+  const [outerBackgroundColor, setOuterBackgroundColor] = useState(portal.outer_background_color);
+  const [fontColor, setFontColor] = useState(portal.font_color);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -73,7 +77,7 @@ export function PortalBrandingForm({ portal }: Props) {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updatePortalBranding(portal.id, { name, tagline, description, accentColor, backgroundColor, heroMediaType: heroType, heroMediaUrl: heroUrl, heroLinkUrl, headerColor, headerOpacity: headerOpacity / 100 });
+        await updatePortalBranding(portal.id, { name, tagline, description, accentColor, backgroundColor, heroMediaType: heroType, heroMediaUrl: heroUrl, heroLinkUrl, headerColor, headerOpacity: headerOpacity / 100, outerBackgroundColor, fontColor });
         setMessage("保存しました。公開ポータルに反映されています。");
         router.refresh();
       } catch (e) {
@@ -110,10 +114,11 @@ export function PortalBrandingForm({ portal }: Props) {
           <label className="block text-xs font-semibold text-slate-600">サブコピー・説明文<textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /></label>
           <label className="block text-xs font-semibold text-slate-600">EXPLORE NOW のリンク先（任意）<input value={heroLinkUrl} onChange={(e) => setHeroLinkUrl(e.target.value)} placeholder="未入力ならページ内フィード / 例: /events" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /><span className="mt-1 block text-[11px] font-normal text-slate-400">/motors/map、/events、https://example.com、#portal-feed など</span></label>
           <div className="grid grid-cols-2 gap-3"><label className="block text-xs font-semibold text-slate-600">アクセント<input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label><label className="block text-xs font-semibold text-slate-600">背景<input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label></div>
+          <div className="grid grid-cols-2 gap-3"><label className="block text-xs font-semibold text-slate-600">外側背景色<input type="color" value={outerBackgroundColor} onChange={(e) => setOuterBackgroundColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label><label className="block text-xs font-semibold text-slate-600">フォントカラー<input type="color" value={fontColor} onChange={(e) => setFontColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label></div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="mb-2 text-xs font-bold text-slate-700">ヘッダー（すりガラス）</div><div className="grid grid-cols-[72px_1fr] items-center gap-3"><label className="text-xs font-semibold text-slate-600">色<input type="color" value={headerColor} onChange={(e) => setHeaderColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label><label className="text-xs font-semibold text-slate-600">透過率 <span className="font-normal text-slate-400">{headerOpacity}%</span><input type="range" min="0" max="100" value={headerOpacity} onChange={(e) => setHeaderOpacity(Number(e.target.value))} className="mt-3 w-full accent-indigo-600" /></label></div><p className="mt-2 text-[11px] font-normal text-slate-400">ぼかし効果は現在のサイト設定を維持します。</p></div>
         </div>
       </div>
-      <div className="mt-5 flex flex-wrap items-center gap-3"><button type="button" onClick={save} disabled={pending || uploading} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">{pending ? "保存中..." : "設定を保存"}</button>{message && <span className="text-xs text-emerald-700">{message}</span>}{error && <span className="text-xs text-red-600">{error}</span>}</div>
+      <div className="mt-5 flex flex-wrap items-center gap-3"><button type="button" onClick={() => { setAccentColor("#F59E0B"); setBackgroundColor("#050505"); setHeaderColor("#25102F"); setHeaderOpacity(60); setOuterBackgroundColor("#000000"); setFontColor("#FFFFFF"); setMessage("デフォルト値に戻しました。保存すると反映されます。"); setError(null); }} disabled={pending || uploading} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">デザインをデフォルトに戻す</button><button type="button" onClick={save} disabled={pending || uploading} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">{pending ? "保存中..." : "設定を保存"}</button>{message && <span className="text-xs text-emerald-700">{message}</span>}{error && <span className="text-xs text-red-600">{error}</span>}</div>
     </section>
   );
 }

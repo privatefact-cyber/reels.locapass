@@ -22,7 +22,7 @@ async function resolvePortal(slug: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("locapass_portals")
-    .select("id, name, tagline, description, accent_color, background_color, hero_media_type, hero_media_url, hero_link_url, header_color, header_opacity")
+    .select("id, name, tagline, description, accent_color, background_color, hero_media_type, hero_media_url, hero_link_url, header_color, header_opacity, outer_background_color, font_color")
     .eq("slug", slug)
     .maybeSingle();
   return data;
@@ -39,8 +39,8 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
   const nowReels: ReelItem[] = [];
 
   return (
-    <div id="portal-feed" className="space-y-4" style={{ backgroundColor: portal.background_color }}>
-      <PortalHeaderTheme color={portal.header_color} opacity={portal.header_opacity} />
+    <div id="portal-feed" className="space-y-4" style={{ backgroundColor: portal.outer_background_color, color: portal.font_color }}>
+      <PortalHeaderTheme color={portal.header_color} opacity={portal.header_opacity} outerBackgroundColor={portal.outer_background_color} fontColor={portal.font_color} />
       <PortalHero
         name={portal.name}
         tagline={portal.tagline}

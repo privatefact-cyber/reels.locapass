@@ -12,14 +12,18 @@ function rgba(hex: string, opacity: number) {
   return `rgba(${hexToRgb(hex).replaceAll(" ", ",")}, ${opacity})`;
 }
 
-export function PortalHeaderTheme({ color, opacity }: { color: string; opacity: number }) {
+export function PortalHeaderTheme({ color, opacity, outerBackgroundColor, fontColor }: { color: string; opacity: number; outerBackgroundColor: string; fontColor: string }) {
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty("--portal-header-background", rgba(color, opacity));
     root.style.setProperty("--portal-header-glow", rgba(color, Math.min(0.35, opacity * 0.55)));
+    document.body.style.backgroundColor = outerBackgroundColor;
+    document.body.style.color = fontColor;
     return () => {
       root.style.removeProperty("--portal-header-background");
       root.style.removeProperty("--portal-header-glow");
+      document.body.style.removeProperty("background-color");
+      document.body.style.removeProperty("color");
     };
   }, [color, opacity]);
 
