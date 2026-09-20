@@ -6,15 +6,16 @@
 
 html,
 body {
+  /* スマホの縦バウンスブレを抑止 */
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
 }
 
+/* stickyを破壊せずにスマホの横ブレ・横揺れを完全に防ぐ */
 html,
 body,
-#__next,
 main {
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   max-width: 100vw;
 }
@@ -27,14 +28,7 @@ body {
   touch-action: manipulation;
 }
 
-/* タップ反応(押した瞬間わずかに縮む+暗くなる)。
-   スマホ実機で「タップしたのに反応が無い」と感じる原因は、このサイトの
-   クリック演出がほぼ全て hover:/group-hover: だったこと(タッチ端末には
-   hoverが存在しないため、タップしても見た目が一切変化しなかった)。
-   button/a/[role="button"]全般に、指を離すまでの間だけ効く :active を
-   一律で足すことで、押した瞬間の反応を全画面共通で保証する。
-   (hover: none)で判定し、hoverが効くマウス環境では従来通りhover側に任せる
-   (hover環境で:activeも重ねると二重に沈んで見えるため)。 */
+/* タップ反応 */
 button,
 a,
 [role="button"],
@@ -54,7 +48,7 @@ summary {
   }
 }
 
-/* じわっと表示させるアニメーション */
+/* アニメーション */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -70,7 +64,6 @@ summary {
   animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* トップページのFEATURED(提携店舗)ヒーロー用。黒×ゴールドの誌面風演出でだけ使う。 */
 @keyframes luxelaFadeUp {
   from {
     opacity: 0;
@@ -91,7 +84,6 @@ summary {
   }
 }
 
-/* 動態管理ダッシュボードのSOSマーカー用点滅アニメーション */
 @keyframes sosPulse {
   0% {
     box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
@@ -108,24 +100,18 @@ summary {
   animation: sosPulse 1.2s infinite;
 }
 
-/* 横スクロールのタグ列・縦スナップリールなど、スクロール自体は必要だが
-   スクロールバーの見た目だけ消したい箇所で使う */
+/* スクロールバー非表示 */
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
-  overscroll-behavior-x: contain;
-  overscroll-behavior-y: auto;
-  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-/* マップページ(/tokyo/[city]/map)のmaplibre標準UIをダークテーマに合わせる。
-   デフォルトの白いボタン・白い帰属表示バーはナイトモードの画面から浮くため、
-   半透明の黒+白の縁取りに置き換える。アプリ内の他の地図に影響しないよう
-   .luxela-venue-map(components/map/VenueMapExplorer.tsx)配下に限定する。 */
+/* マップ用UI */
 .luxela-venue-map .maplibregl-ctrl-group {
   background: rgba(0, 0, 0, 0.72) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
@@ -136,11 +122,10 @@ summary {
   border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
-.luxela-venue-map .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+.luxela-venue-map .maplibregl-ctrl-icon {
   filter: invert(1) brightness(1.6);
 }
 
-/* 検索バーとジャンルピルの下に来るようにコントロール群を下げる */
 .luxela-venue-map .maplibregl-ctrl-top-right {
   margin-top: 104px;
 }
@@ -157,11 +142,4 @@ summary {
 
 .luxela-venue-map .maplibregl-ctrl-attrib-button {
   filter: invert(1);
-}
-
-/* PCでマウスポインタがどこにあっても縦スクロールを最優先で通す */
-html,
-body {
-  overflow-y: auto !important;
-  overscroll-behavior-y: auto !important;
 }
