@@ -38,7 +38,7 @@ const PEEK_IFRAME_HEIGHT_SCALED = Math.round(PEEK_IFRAME_HEIGHT * PEEK_SCALE);
 const PEEK_FOOTER_HEIGHT = 52;
 const PEEK_TOTAL_HEIGHT = PEEK_IFRAME_HEIGHT_SCALED + PEEK_FOOTER_HEIGHT;
 
-// 最初の「REEL/SHOP」ゲート、およびREEL選択後の「SHOP REEL/CAST REEL」ゲートで
+// 最初の「REEL/SHOP」ゲート、およびREEL選択後の「SHOP REEL/ICON REEL」ゲートで
 // 共用する、すりガラスの2択カード。見た目は完全に共通なので1つにまとめている。
 function GateOverlay({
   closing,
@@ -96,7 +96,7 @@ function tileKey(tile: Tile) {
   return `ad:${tile.adKey}`;
 }
 
-/** CAST(投稿リール)とSHOP(店舗ディレクトリ)のタイルを交互に混ぜて1つのグリッドにする。 */
+/** ICON(投稿リール)とSHOP(店舗ディレクトリ)のタイルを交互に混ぜて1つのグリッドにする。 */
 function buildTiles(castReels: ReelItem[], shopItems: ShopGridItem[]): Tile[] {
   const merged: Tile[] = [];
   const max = Math.max(castReels.length, shopItems.length);
@@ -109,7 +109,7 @@ function buildTiles(castReels: ReelItem[], shopItems: ShopGridItem[]): Tile[] {
 
 /**
  * システム管理者が投稿したPR(広告)を、各adが指定する頻度でタイル列に挟み込む。
- * 例: frequency=8のPRは、コンテンツタイル(CAST/SHOP)を8件表示するごとに1回挟まる。
+ * 例: frequency=8のPRは、コンテンツタイル(ICON/SHOP)を8件表示するごとに1回挟まる。
  * 複数のPRが同じ位置で重なった場合は両方とも挟む(単純化のため優先度は付けない)。
  */
 function injectAds(tiles: Tile[], ads: AdItem[]): Tile[] {
@@ -207,7 +207,7 @@ const GridTile = memo(function GridTile({
               : "bg-white/20 text-white"
         }`}
       >
-        {tile.kind === "cast" ? "CAST" : tile.kind === "ad" ? "PR" : "SHOP"}
+        {tile.kind === "cast" ? "ICON" : tile.kind === "ad" ? "PR" : "SHOP"}
       </span>
 
       <span className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-4">
@@ -230,7 +230,7 @@ export function ReelFeed({
   ads = [],
 }: {
   reels: ReelItem[];
-  /** 今まさに稼働中(出勤前後1時間バッファ込み)のキャストの、最新リール1本ずつ。 */
+  /** 今まさに稼働中(出勤前後1時間バッファ込み)のICONの、最新リール1本ずつ。 */
   nowReels: ReelItem[];
   shops: ShopGridItem[];
   genreChoices: string[];
@@ -248,12 +248,12 @@ export function ReelFeed({
   // gateClosing/gateEnteringはどちらも「縮小+透明」の見た目で、開閉どちらもブワっと同じアニメーションになる。
   const [gateClosing, setGateClosing] = useState(false);
   const [gateEntering, setGateEntering] = useState(false);
-  // REELを選んだ後に出す2段目のゲート(SHOP REEL/CAST REEL の分岐)。見た目・開閉アニメーションは
+  // REELを選んだ後に出す2段目のゲート(SHOP REEL/ICON REEL の分岐)。見た目・開閉アニメーションは
   // 1段目と同じ(GateOverlayを共用)。
   const [reelGateOpen, setReelGateOpen] = useState(false);
   const [reelGateClosing, setReelGateClosing] = useState(false);
   const [reelGateEntering, setReelGateEntering] = useState(false);
-  // リールの投稿者種別での絞り込み(ショップアカウント投稿 vs キャスト本人投稿)。
+  // リールの投稿者種別での絞り込み(ショップアカウント投稿 vs ICON本人投稿)。
   // 2段目のゲートで選んだ結果を保持する(null=絞り込みなし)。
   const [reelAuthorFilter, setReelAuthorFilter] = useState<"cast" | "shop" | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -355,7 +355,7 @@ export function ReelFeed({
     if (!gateOpen || gateClosing || gateEntering) return;
     const timer = window.setTimeout(closeGate, GATE_IDLE_MS);
     return () => window.clearTimeout(timer);
-  }, [gateOpen, gateClosing, gateEntering]);
+  }, [gateOpen, gateEntering, gateClosing]);
 
   useEffect(() => {
     if (!reelGateOpen || !reelGateEntering) return;
@@ -371,10 +371,10 @@ export function ReelFeed({
     if (!reelGateOpen || reelGateClosing || reelGateEntering) return;
     const timer = window.setTimeout(closeReelGate, GATE_IDLE_MS);
     return () => window.clearTimeout(timer);
-  }, [reelGateOpen, reelGateClosing, reelGateEntering]);
+  }, [reelGateOpen, reelGateEntering, reelGateClosing]);
 
   // 1段目: SHOPは店舗ディレクトリへ直行(店舗ページのみ、リールは混ぜない)。
-  // REELは2段目のゲート(SHOP REEL/CAST REEL)へ進む。
+  // REELは2段目のゲート(SHOP REEL/ICON REEL)へ進む。
   function selectFeedFromGate(type: ContentType) {
     if (type === "shop") {
       setActiveTypes(["shop"]);
@@ -386,7 +386,7 @@ export function ReelFeed({
     openReelGate();
   }
 
-  // 2段目: リールの投稿者種別(ショップアカウント or キャスト本人)を選ぶ。
+  // 2段目: リールの投稿者種別(ショップアカウント or ICON本人)を選ぶ。
   function selectReelAuthorFromGate(author: "cast" | "shop") {
     setActiveTypes(["cast"]);
     setReelAuthorFilter(author);
@@ -407,7 +407,7 @@ export function ReelFeed({
     return map;
   }, [reels, shops]);
 
-  // CAST/SHOPタグはどちらも選ばれていなければ「絞り込みなし」＝両方表示(ジャンルタグと同じ思想)。
+  // ICON/SHOPタグはどちらも選ばれていなければ「絞り込みなし」＝両方表示(ジャンルタグと同じ思想)。
   const showCast = activeTypes.length === 0 || activeTypes.includes("cast");
   const showShop = activeTypes.length === 0 || activeTypes.includes("shop");
 
@@ -454,7 +454,7 @@ export function ReelFeed({
   );
 
   // NOW絞り込み中は、キーワード・ジャンルの絞り込みはそのまま今まで通り効かせる
-  // (CAST/SHOPタブの状態には左右されない。NOWは常に「稼働中のキャスト」だけが対象のため)。
+  // (ICON/SHOPタグの状態には左右されない。NOWは常に「稼働中のICON」だけが対象のため)。
   const filteredNowReels = useMemo(
     () =>
       nowReels.filter((r) => {
@@ -616,7 +616,7 @@ export function ReelFeed({
           closing={reelGateClosing}
           entering={reelGateEntering}
           optionA={{ label: "SHOP REEL", onClick: () => selectReelAuthorFromGate("shop") }}
-          optionB={{ label: "CAST REEL", onClick: () => selectReelAuthorFromGate("cast") }}
+          optionB={{ label: "ICON REEL", onClick: () => selectReelAuthorFromGate("cast") }}
         />
       )}
 
@@ -682,7 +682,7 @@ export function ReelFeed({
           {!nowOnly && (
             <>
               <button type="button" onClick={() => toggleType("cast")} className={pillClass(activeTypes.includes("cast"))}>
-                CAST
+                ICON
               </button>
               <button type="button" onClick={() => toggleType("shop")} className={pillClass(activeTypes.includes("shop"))}>
                 SHOP
@@ -707,11 +707,11 @@ export function ReelFeed({
           {nowOnly ? t.feed.noNowPosts : t.feed.noResults}
         </p>
       ) : openIndex === null ? (
-        // 完全スクエアのモザイクグリッド。CAST(投稿リール)とSHOP(店舗)を混在させ、
+        // 完全スクエアのモザイクグリッド。ICON(投稿リール)とSHOP(店舗)を混在させ、
         // タップすると同じタイル列を対象に、下の縦スワイプリール一覧へ切り替わる
         // (ヘッダー・ボトムナビは常に表示されたまま、画面を覆う黒モーダルにはしない)。
-        // CAST/SHOPが交互に並ぶ関係上、列数は必ず偶数にすること。奇数(5列等)にすると
-        // 行ごとにCAST/SHOPの開始位置がずれて、列が縦に揃わずバラバラに見えてしまう。
+        // ICON/SHOPが交互に並ぶ関係上、列数は必ず偶数にすること。奇数(5列等)にすると
+        // 行ごとにICON/SHOPの開始位置がずれて、列が縦に揃わずバラバラに見えてしまう。
         // 縦向きタブレット(iPad mini 744pxなど、sm=640px以上)はgrid-cols-4のままだと
         // 1枚が小さい割に余白が目立つため、横向き(landscape)とは別に列数を増やす。
         // 判定はmdではなくsm(640px)を起点にする(iPad miniの縦幅744pxはmd=768px未満のため)。
