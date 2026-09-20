@@ -15,6 +15,7 @@ import {
   Users,
   Star,
   Navigation,
+  ChevronLeft,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
@@ -126,33 +127,7 @@ export default async function ShopDetailPage({
     return picked.text;
   };
 
-  const store: Store = {
-    id: shopRow.id,
-    name: shopRow.name,
-    area: shopRow.area,
-    genre: shopRow.category,
-    address: shopRow.address,
-    phone: shopRow.tel,
-    businessHours: tr(shopRow.business_hours, "business_hours"),
-    priceInfo: tr(shopRow.price_info, "price_info"),
-    description: tr(shopRow.description, "description"),
-    coverImageUrl: shopRow.cover_url ?? shopRow.icon_url,
-    websiteUrl: shopRow.url,
-    usageNotes: tr(shopRow.usage_notes, "usage_notes"),
-    snsLinks: (shopRow.sns_links as SnsLinks) ?? {},
-    hero: {
-      type: shopRow.hero_media_url ? (shopRow.hero_media_type as "image" | "video") : "image",
-      url: shopRow.hero_media_url ?? shopRow.cover_url ?? shopRow.icon_url,
-    },
-    tagline: shopRow.tagline,
-    lineContactUrl: shopRow.line_url,
-    lineQrImageUrl: shopRow.line_qr_image_url,
-    galleryImageUrls: shopRow.gallery_image_urls ?? [],
-  };
-  // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
-  const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
-
-  const [{ data: castMembers }, { data: priceItemRows }, { data: eventRows }] = await Promise.all([
+  const [{ data: castMembers }, { data: priceItemRows }, { data: eventRows }, { data: allReelRows }] = await Promise.all([
     supabase
       .from("locapass_public_casts")
       .select("id, name, age, pr_text, avatar_url, created_at, media:locapass_media ( url, display_order )")
@@ -168,9 +143,57 @@ export default async function ShopDetailPage({
       .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, translations")
       .eq("shop_id", shopId)
       .order("created_at", { ascending: false }),
+    // 店舗公式リール(shop_id一致)および所属ICONリールを取得
+    supabase
+      .from("locapass_reels")
+      .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, cast_id, shop_id, cast_members:locapass_public_casts ( name )`)
+      .eq("shop_id", shopId)
+      .eq("status", "publish")
+      .eq("reel_type", "permanent")
+      .order("published_at", { ascending: false }),
   ]);
 
   const castIds = castMembers?.map((c) => c.id) ?? [];
+
+  // 最新リールがある場合、その先頭メディアをヒーロー表示用に採用
+  const latestReel = allReelRows?.[0];
+  const latestReelMedia = latestReel ? (toReelMedia(latestReel)[0] as { type: "image" | "video"; url: string; poster?: string } | undefined) : undefined;
+
+  const heroUrl =
+    shopRow.hero_media_url ??
+    (latestReelMedia ? latestReelMedia.url : null) ??
+    shopRow.cover_url ??
+    shopRow.icon_url;
+
+  const heroType: "image" | "video" =
+    shopRow.hero_media_type ??
+    (latestReelMedia?.type === "video" ? "video" : "image");
+
+  const store: Store = {
+    id: shopRow.id,
+    name: shopRow.name,
+    area: shopRow.area,
+    genre: shopRow.category,
+    address: shopRow.address,
+    phone: shopRow.tel,
+    businessHours: tr(shopRow.business_hours, "business_hours"),
+    priceInfo: tr(shopRow.price_info, "price_info"),
+    description: tr(shopRow.description, "description"),
+    coverImageUrl: shopRow.cover_url ?? shopRow.icon_url,
+    websiteUrl: shopRow.url,
+    usageNotes: tr(shopRow.usage_notes, "usage_notes"),
+    snsLinks: (shopRow.sns_links as SnsLinks) ?? {},
+    hero: {
+      type: heroType,
+      url: heroUrl,
+    },
+    tagline: shopRow.tagline,
+    lineContactUrl: shopRow.line_url,
+    lineQrImageUrl: shopRow.line_qr_image_url,
+    galleryImageUrls: shopRow.gallery_image_urls ?? [],
+  };
+  // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
+  const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
 
   const { data: activeStoryCastIds } = castIds.length
     ? await supabase.rpc("locapass_cast_ids_with_active_story", { p_cast_ids: castIds })
@@ -194,37 +217,26 @@ export default async function ShopDetailPage({
     ]),
   );
 
-  // ヒーロー直下の横スワイプ帯: 各キャストの最新リール1本ずつだけ。
-  const { data: castReelRows } = castIds.length
-    ? await supabase
-        .from("locapass_reels")
-        .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, cast_id, cast_members:locapass_public_casts ( name )`)
-        .in("cast_id", castIds)
-        .eq("status", "publish")
-        // ストーリー(24時間)はリール帯に混ざらないよう明示的に除外する。
-        .eq("reel_type", "permanent")
-        .order("published_at", { ascending: false })
-    : { data: [] as never[] };
-
   type CastReelPreview = {
     id: string;
-    castId: string;
+    castId: string | null;
     castName: string;
     thumbUrl: string | null;
     videoUrl: string | null;
   };
-  const seenReelCastIds = new Set<string>();
+  const seenReelAuthors = new Set<string>();
   const castReelPreviews: CastReelPreview[] = [];
-  for (const row of castReelRows ?? []) {
-    if (!row.cast_id || seenReelCastIds.has(row.cast_id)) continue;
+  for (const row of allReelRows ?? []) {
+    const authorKey = row.cast_id ?? "shop";
+    if (seenReelAuthors.has(authorKey)) continue;
     const media = toReelMedia(row)[0] as { type: "image" | "video"; url: string; poster?: string } | undefined;
     if (!media) continue;
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
-    seenReelCastIds.add(row.cast_id);
+    seenReelAuthors.add(authorKey);
     castReelPreviews.push({
       id: row.id,
-      castId: row.cast_id,
-      castName: cast?.name ?? "",
+      castId: row.cast_id ?? null,
+      castName: cast?.name ?? store.name,
       thumbUrl: media.type === "video" ? (media.poster ?? null) : media.url,
       videoUrl: media.type === "video" ? media.url : null,
     });
@@ -315,16 +327,20 @@ export default async function ShopDetailPage({
           })),
         }}
       />
-      {/* モバイルは固定のフローティングアクションバー(ShopSectionNav)+ボトムナビが二重に
-          画面下に重なるため、最後のコンテンツがその下に隠れないよう大きめの余白を確保する。
-          PCはボトムナビが無く、ShopSectionNavもmd:bottom-6と控えめなので余白は少なくてよい。 */}
-      {site && (
-        <Link href={`/${site.slug}`} className="block px-4 pt-4 text-sm text-brand hover:underline sm:px-6">
-          {t.shop.backToSite(site.name)}
-        </Link>
-      )}
+
       {/* 1. トップヒーローセクション */}
       <section className="relative -mt-px h-[300px] w-full overflow-hidden sm:h-[380px]">
+        {/* 子ポータルへの戻る導線: ヒーロー左上にすりガラスピル型で浮かせる */}
+        {site && (
+          <Link
+            href={`/${site.slug}`}
+            className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-xs font-medium text-white/90 shadow-lg backdrop-blur-md transition hover:border-white/40 hover:bg-black/60 hover:text-white sm:left-6 sm:top-6"
+          >
+            <ChevronLeft size={14} />
+            <span>{site.name}</span>
+          </Link>
+        )}
+
         {store.hero.url ? (
           store.hero.type === "video" ? (
             <video
@@ -373,7 +389,7 @@ export default async function ShopDetailPage({
         </div>
       )}
 
-      {/* ヒーロー直下: 各キャストの最新リールを横スワイプで。タイトル等は出さずサムネイルのみ。 */}
+      {/* ヒーロー直下: 各リール（店舗公式・キャスト）を横スワイプで。タイトル等は出さずサムネイルのみ。 */}
       {castReelPreviews.length > 0 && (
         <div className="flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:px-6">
           {castReelPreviews.map((r) => (
@@ -404,9 +420,7 @@ export default async function ShopDetailPage({
       )}
 
       <div className="space-y-10 px-4 sm:px-6">
-        {/* 2. 在籍キャスト/本日の出勤ギャラリー(最優先配置)。
-            未入力のセクションは見出しごと出さない。見出しだけ残ると「更新をサボっている店」に見えるうえ、
-            キャストのいない業種(アフターの飲食店など)でも同じページを使えるようにするため。 */}
+        {/* 2. 在籍キャスト/本日の出勤ギャラリー(最優先配置)。 */}
         {todayCasts.length > 0 && (
         <section id="today" className="scroll-mt-24 space-y-6">
           <SectionHeading
@@ -444,10 +458,7 @@ export default async function ShopDetailPage({
         <section id="cast" className="scroll-mt-24 space-y-6">
           <SectionHeading eyebrow="ALL CAST" title={t.shop.allCast} icon={<Users size={14} />} />
             <>
-              {/* モバイル: 9人ずつ(3列×3行)を1ページとして横スワイプでページ送り。
-                  grid-auto-flow:column + パーセンテージ auto-cols はSafari(iOS)で
-                  幅の解決が不安定だったため、flexboxで「ページ(100%幅)を横に並べ、
-                  各ページの中は普通の3列グリッド」という単純な構造にしている。 */}
+              {/* モバイル: 9人ずつ(3列×3行)を1ページとして横スワイプでページ送り。 */}
               <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar md:hidden">
                 {chunk(casts, 9).map((page, pageIndex) => (
                   <div key={pageIndex} className="grid w-full flex-none grid-cols-3 gap-1.5 snap-start">
@@ -468,9 +479,7 @@ export default async function ShopDetailPage({
                 ))}
               </div>
 
-              {/* PC/iPad: 折り返しグリッドだと在籍数が多い店舗でページが際限なく縦に伸びる
-                  (在籍100人規模だと特に致命的)ため、モバイルと同じく1ページ分だけ描画して
-                  横スワイプでページ送りする構造に揃える。 */}
+              {/* PC/iPad */}
               <div className="hidden gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar md:flex">
                 {chunk(casts, 15).map((page, pageIndex) => (
                   <div key={pageIndex} className="grid w-full flex-none grid-cols-5 gap-2 snap-start">
@@ -530,11 +539,7 @@ export default async function ShopDetailPage({
             )}
           </div>
 
-          {/* 住所と連動した地図。未入力の店舗では非表示。
-              Google Maps Embed APIキーが無い環境でも動く従来のq=埋め込みを使い、
-              CSSフィルタでダーク×ゴールドの世界観に馴染むトーンに変換している。
-              iframeはpointer-events-noneにして、カード全体のタップでGoogleマップアプリ/
-              サイトへ直接遷移させる(ルート案内ボタンも別途下に用意)。 */}
+          {/* 住所と連動した地図 */}
           {store.address && (
             <div className="overflow-hidden rounded-2xl border border-amber-500/20 shadow-2xl">
               <a
@@ -551,7 +556,6 @@ export default async function ShopDetailPage({
                   tabIndex={-1}
                   className="pointer-events-none h-[calc(100%+80px)] w-full -translate-y-10 border-0 [filter:invert(92%)_hue-rotate(180deg)_brightness(0.9)_contrast(1.05)_saturate(0.8)]"
                 />
-                {/* Googleロゴ等の帯を上下に隠す */}
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-2 bg-zinc-900" />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2 bg-zinc-900" />
               </a>
