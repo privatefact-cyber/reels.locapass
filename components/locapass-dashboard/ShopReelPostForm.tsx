@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+import { validateReelFile } from "@/lib/reels/prepareReelFile";
+import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 
 export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalId: number }) {
@@ -39,7 +40,7 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
 
     if (f.type.startsWith("video/")) {
       setOptimizing(true);
-      const optimized = await optimizeReelVideo(f);
+      const optimized = await transcodeReelVideo(f);
       setOptimizing(false);
       setFile(optimized);
       setPreview((prev) => {

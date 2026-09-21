@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 import { createReelPreviewVideo } from "@/lib/reels/prepareReelFile";
+import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 
 /**
  * マップのカード用の軽量プレビューを作ってアップロードし、公開URLを返す(本家と同じ仕組み)。
@@ -21,9 +22,7 @@ export async function uploadReelPreview(
 
   const ext = preview.type.includes("mp4") ? "mp4" : "webm";
   const path = `${shopId}/${Date.now()}.preview.${ext}`;
-  const { error } = await supabase.storage.from("locapass-reels").upload(path, preview, {
-    contentType: preview.type,
-  });
+  const { error } = await uploadToSignedUrl(supabase, "locapass-reels", path, preview);
   if (error) return null;
 
   return supabase.storage.from("locapass-reels").getPublicUrl(path).data.publicUrl;

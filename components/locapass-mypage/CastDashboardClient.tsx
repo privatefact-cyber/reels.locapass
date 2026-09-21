@@ -9,7 +9,8 @@ import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPanel";
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { RevealableQr } from "@/components/RevealableQr";
-import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+import { validateReelFile } from "@/lib/reels/prepareReelFile";
+import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 
 export type MyReel = {
@@ -120,7 +121,7 @@ export function CastDashboardClient({
 
     if (f.type.startsWith("video/")) {
       setOptimizing(true);
-      const optimized = await optimizeReelVideo(f);
+      const optimized = await transcodeReelVideo(f);
       setOptimizing(false);
       setFile(optimized);
       setPreview((prev) => {

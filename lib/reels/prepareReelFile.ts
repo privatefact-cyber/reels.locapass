@@ -12,7 +12,10 @@
 
 export const MAX_FILE_SIZE_MB = 20;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-export const MAX_VIDEO_DURATION_SECONDS = 30;
+// 元動画はブラウザ内で変換するため、20MBを超えていても受け入れる。
+// iOS SafariでWASM heapと入力Blobを同時に保持してもタブが落ちにくい上限。
+export const MAX_SOURCE_VIDEO_SIZE_MB = 150;
+export const MAX_VIDEO_DURATION_SECONDS = 30.5;
 // スマホ最適化解像度(長辺)。フィードは9:16の縦画面でしか再生されないため、
 // これ以上の解像度で保持してもモバイル端末では画質差がほぼ体感できない一方、
 // デコード負荷とファイルサイズだけが増える。
@@ -49,8 +52,12 @@ function loadVideoMeta(file: File): Promise<VideoMeta> {
 
 /** サイズ・動画の長さをチェックし、問題があればエラーメッセージを返す(問題無ければnull)。 */
 export async function validateReelFile(file: File): Promise<string | null> {
-  if (file.size > MAX_FILE_SIZE_BYTES) {
-    return `ファイルサイズが大きすぎます(上限${MAX_FILE_SIZE_MB}MB)。動画を圧縮してから選び直してください`;
+  const maximumSize = file.type.startsWith("video/")
+    ? MAX_SOURCE_VIDEO_SIZE_MB * 1024 * 1024
+    : MAX_FILE_SIZE_BYTES;
+  if (file.size > maximumSize) {
+    const maximumSizeMb = file.type.startsWith("video/") ? MAX_SOURCE_VIDEO_SIZE_MB : MAX_FILE_SIZE_MB;
+    return `ファイルサイズが大きすぎます(上限${maximumSizeMb}MB)。動画を短くするか、解像度を下げてから選び直してください`;
   }
   if (file.type.startsWith("video/")) {
     const meta = await loadVideoMeta(file).catch(() => null);

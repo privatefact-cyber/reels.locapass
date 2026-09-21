@@ -8,7 +8,8 @@ import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { SingleImageDropzone, EventGalleryDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
 import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
-import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+import { validateReelFile } from "@/lib/reels/prepareReelFile";
+import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 
 export type MyReel = {
@@ -250,7 +251,7 @@ export function StaffDashboardClient({
 
     if (f.type.startsWith("video/")) {
       setOptimizing(true);
-      const optimized = await optimizeReelVideo(f);
+      const optimized = await transcodeReelVideo(f);
       setOptimizing(false);
       setFile(optimized);
       setPreview((prev) => {

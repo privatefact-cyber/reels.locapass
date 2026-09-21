@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { validateReelFile, optimizeReelVideo } from "@/lib/reels/prepareReelFile";
+import { validateReelFile } from "@/lib/reels/prepareReelFile";
+import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generateTextCard";
 
@@ -46,7 +47,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
 
     if (f.type.startsWith("video/")) {
       setOptimizing(true);
-      const optimized = await optimizeReelVideo(f);
+      const optimized = await transcodeReelVideo(f);
       setOptimizing(false);
       setFile(optimized);
       setPreview((prev) => {
