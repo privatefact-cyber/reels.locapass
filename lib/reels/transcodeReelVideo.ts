@@ -54,7 +54,10 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
     ], 300_000);
     if (result !== 0) throw new Error("動画の変換に失敗しました");
     const data = await ffmpeg.readFile(output);
-    const blob = new Blob([data as Uint8Array], { type: "video/mp4" });
+    // FFmpegの返り値はArrayBufferLikeを持つ型。コピーして通常のArrayBufferへ
+    // 正規化し、SafariとNext.jsの型検査の両方で安全にBlob化する。
+    const bytes = new Uint8Array(data as Uint8Array);
+    const blob = new Blob([bytes.buffer], { type: "video/mp4" });
     if (blob.size > MAX_REEL_OUTPUT_BYTES) {
       throw new Error("変換後の動画が15MBを超えました。短い動画にしてください");
     }
