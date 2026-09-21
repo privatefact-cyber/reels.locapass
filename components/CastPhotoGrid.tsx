@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 type Photo = { id: string; url: string };
 
@@ -23,7 +24,7 @@ export function CastPhotoGrid({ photos, castName }: { photos: Photo[]; castName:
             className="aspect-square w-full"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={m.url} alt={castName} loading="lazy" className="h-full w-full object-cover" />
+            <img src={sanitizeImageUrl(m.url)} alt={castName} loading="lazy" className="h-full w-full object-cover" />
           </button>
         ))}
       </div>
@@ -108,7 +109,7 @@ function PhotoViewer({
         {photos.map((m) => (
           <div key={m.id} className="flex h-full w-full snap-start snap-always items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={m.url} alt={castName} className="max-h-full max-w-full object-contain" />
+            <img src={sanitizeImageUrl(m.url)} alt={castName} className="max-h-full max-w-full object-contain" />
           </div>
         ))}
       </div>

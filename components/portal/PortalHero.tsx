@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 
 type Props = {

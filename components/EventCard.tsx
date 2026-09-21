@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { PortalEvent } from "@/lib/types/shop";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 export function EventCard({
   event,
@@ -17,7 +18,7 @@ export function EventCard({
       {active ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={event.imageUrl}
+          src={sanitizeImageUrl(event.imageUrl)}
           alt={event.title}
           decoding="async"
           className="absolute inset-0 h-full w-full object-cover"

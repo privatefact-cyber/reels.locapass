@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { PortalEvent } from "@/lib/types/shop";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 /** デスクトップ幅用のグリッドカード。フルスクリーン版と違い、ページの通常フローに乗る。 */
 export function EventGridCard({ event }: { event: PortalEvent }) {
@@ -11,7 +12,7 @@ export function EventGridCard({ event }: { event: PortalEvent }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={event.imageUrl}
+        src={sanitizeImageUrl(event.imageUrl)}
         alt={event.title}
         loading="lazy"
         className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"

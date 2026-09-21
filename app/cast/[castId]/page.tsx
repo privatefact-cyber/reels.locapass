@@ -12,6 +12,7 @@ import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 // トップページと同じ60秒キャッシュ。長押しプレビュー(iframe埋め込み)で毎回フルSSRを
 // 待たされる体感の遅さを緩和する(初回以外はキャッシュから即座に返る)。
@@ -40,7 +41,7 @@ export async function generateMetadata({
     cast.pr_text?.slice(0, 120) ||
     `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」在籍、${cast.name}のプロフィール・出勤情報・投稿リール。`;
   const url = `https://reels.locapass.net/cast/${castId}`;
-  const image = cast.avatar_url ?? undefined;
+  const image = sanitizeImageUrl(cast.avatar_url);
 
   return {
     title,
@@ -151,7 +152,7 @@ export default async function CastDetailPage({
             "@id": `${castUrl}#person`,
             identifier: cast.id,
             name: cast.name,
-            image: cast.avatar_url ?? undefined,
+            image: sanitizeImageUrl(cast.avatar_url),
             description:
               cast.pr_text?.slice(0, 200) ||
               `${shop?.name ?? "LOCAPASS"}所属のキャスト「${cast.name}」のプロフィール`,
@@ -199,7 +200,7 @@ export default async function CastDetailPage({
           ) : cast.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={cast.avatar_url}
+              src={sanitizeImageUrl(cast.avatar_url)}
               alt=""
               className="h-20 w-20 rounded-full border border-white/10 object-cover"
             />

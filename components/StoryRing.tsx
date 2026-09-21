@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCastFollows } from "@/lib/reels/useFollows";
 import { StoryViewerModal } from "@/components/StoryViewerModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 /**
  * ストーリーを持つキャストの丸型サムネイル(インスタのストーリーリングと同じ見た目)。
@@ -45,7 +46,7 @@ export function StoryRing({
           <div className="rounded-full bg-black p-[2px]">
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt={castName} className={`${dimension} rounded-full object-cover`} />
+              <img src={sanitizeImageUrl(avatarUrl)} alt={castName} className={`${dimension} rounded-full object-cover`} />
             ) : (
               <div
                 className={`${dimension} flex items-center justify-center rounded-full bg-neutral-800 text-lg font-semibold text-neutral-500`}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { UserRound } from "lucide-react";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 export function CastCard({
   id,
@@ -32,7 +33,7 @@ export function CastCard({
       {photoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={photoUrl}
+          src={sanitizeImageUrl(photoUrl)}
           alt={name}
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 export type ReelRow = {
   id: string;
@@ -32,11 +33,11 @@ export function toReelItem(row: ReelRow): ReelItem | null {
   // poster_urlだけに静止画が入っているケースが多いため、その場合はposter_urlを画像として使う。
   const images = (row.images as { url: string }[] | null) ?? [];
   const media: ReelItem["media"] = row.video_url
-    ? [{ type: "video", url: row.video_url, poster: row.poster_url ?? undefined }]
+    ? [{ type: "video", url: row.video_url, poster: sanitizeImageUrl(row.poster_url) }]
     : images.length > 0
-      ? images.map((img) => ({ type: "image", url: img.url }))
+      ? images.map((img) => ({ type: "image", url: sanitizeImageUrl(img.url) }))
       : row.poster_url
-        ? [{ type: "image", url: row.poster_url }]
+        ? [{ type: "image", url: sanitizeImageUrl(row.poster_url) }]
         : [];
 
   return {
@@ -46,7 +47,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
     likesCount: row.like_count,
     castId: row.cast_id,
     castName: cast?.name ?? staff?.name ?? row.author_name ?? shop.name,
-    castAvatarUrl: cast?.avatar_url ?? staff?.avatar_url ?? row.author_icon_url,
+    castAvatarUrl: sanitizeImageUrl(cast?.avatar_url ?? staff?.avatar_url ?? row.author_icon_url),
     shopId: row.shop_id,
     shopName: shop.name,
     area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
@@ -109,7 +110,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
     address: s.address,
     genre: s.category,
-    coverImageUrl: s.cover_url ?? s.icon_url,
+    coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url),
   }));
 
   const genreChoices = Array.from(
@@ -119,7 +120,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
   const ads: AdItem[] = (adRows ?? []).map((a) => ({
     id: a.id,
     title: a.title,
-    media: { type: a.media_type as "video" | "image", url: a.media_url, poster: a.poster_url },
+    media: { type: a.media_type as "video" | "image", url: sanitizeImageUrl(a.media_url), poster: sanitizeImageUrl(a.poster_url) },
     linkUrl: a.link_url,
     frequency: a.frequency,
   }));

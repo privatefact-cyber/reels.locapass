@@ -7,6 +7,7 @@ import { AvatarPeek } from "@/components/AvatarPeek";
 import { ReelCommentSheet } from "@/components/ReelCommentSheet";
 import { formatPostedAt } from "@/lib/reels/formatPostedAt";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 export type ReelCardProps = {
   /** コメント欄を開くのに必要なリールID。店舗タイルなど、コメント対象のリールが無いカードでは省略する(コメントアイコン自体を出さない)。 */
@@ -154,7 +155,7 @@ export function ReelCard({
         <video
           ref={videoRef}
           src={videoUrl}
-          poster={posterImageUrl}
+          poster={sanitizeImageUrl(posterImageUrl)}
           className="h-full w-full object-contain"
           autoPlay
           playsInline
@@ -169,7 +170,7 @@ export function ReelCard({
       ) : posterImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={posterImageUrl}
+          src={sanitizeImageUrl(posterImageUrl)}
           alt=""
           loading="lazy"
           className="h-full w-full object-contain"
@@ -198,7 +199,7 @@ export function ReelCard({
           {posterImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={posterImageUrl}
+              src={sanitizeImageUrl(posterImageUrl)}
               alt=""
               className="absolute inset-0 h-full w-full object-cover opacity-60"
             />
@@ -249,7 +250,7 @@ export function ReelCard({
             {accountAvatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={accountAvatarUrl}
+                src={sanitizeImageUrl(accountAvatarUrl)}
                 alt=""
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
