@@ -10,7 +10,7 @@ import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPane
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { RevealableQr } from "@/components/RevealableQr";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
-import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
+import { TRANSCODE_THRESHOLD_BYTES, transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 
 export type MyReel = {
@@ -104,30 +104,56 @@ export function CastDashboardClient({
     const f = e.target.files?.[0] ?? null;
     if (!f) {
       setFile(null);
-      setPreview(null);
+      setPreview((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
       return;
     }
+
+    // iOS Safariではメタデータ確認やWASM初期化の完了を待つと、選択が反映されない
+    // ように見える。先にローカルプレビューを表示してから非同期の検証を行う。
+    const selectedPreview = URL.createObjectURL(f);
+    setFile(f);
+    setPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return selectedPreview;
+    });
+    setError(null);
 
     const validationError = await validateReelFile(f);
     if (validationError) {
       setError(validationError);
+      setFile(null);
+      setPreview((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
-    setError(null);
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-
-    if (f.type.startsWith("video/")) {
+    // 35MB以下はここで終了するため、FFmpeg Worker/WASMは一切ロードされない。
+    if (f.type.startsWith("video/") && f.size > TRANSCODE_THRESHOLD_BYTES) {
       setOptimizing(true);
-      const optimized = await transcodeReelVideo(f);
-      setOptimizing(false);
-      setFile(optimized);
-      setPreview((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(optimized);
-      });
+      try {
+        const optimized = await transcodeReelVideo(f);
+        setFile(optimized);
+        setPreview((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return URL.createObjectURL(optimized);
+        });
+      } catch (cause) {
+        setFile(null);
+        setPreview((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return null;
+        });
+        setError(cause instanceof Error ? cause.message : "動画の最適化に失敗しました");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } finally {
+        setOptimizing(false);
+      }
     }
   }
 
