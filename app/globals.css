@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+img { pointer-events: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-user-drag: none; }
+[data-media-guard] { position: relative; }
+[data-media-guard]::after { content: ""; position: absolute; inset: 0; z-index: 1; background: transparent; }
+
 html,
 body {
   /* スマホの縦バウンスブレを抑止 */

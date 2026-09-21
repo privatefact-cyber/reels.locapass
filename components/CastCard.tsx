@@ -26,6 +26,8 @@ export function CastCard({
   return (
     <Link
       href={`/cast/${id}`}
+      data-media-guard
+      onContextMenu={(event) => event.preventDefault()}
       className={`group relative block aspect-[3/4] overflow-hidden border-amber-500/30 bg-gradient-to-br from-zinc-900 to-black transition hover:border-amber-400/60 hover:shadow-lg hover:shadow-amber-500/10 ${
         dense ? "border" : "rounded-2xl border"
       }`}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { SiteChrome } from "@/components/SiteChrome";
 import { AppShell } from "@/components/AppShell";
+import { ImageInteractionGuard } from "@/components/ImageInteractionGuard";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { createClient } from "@/lib/supabase/server";
@@ -79,6 +80,7 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body className="min-h-screen bg-black text-white pb-20 md:pb-0">
+        <ImageInteractionGuard />
         <LocaleProvider initialLocale={locale}>
           <SiteChrome myPageAvatarUrl={myPageAvatarUrl} myPageInitial={myPageInitial} />
 
