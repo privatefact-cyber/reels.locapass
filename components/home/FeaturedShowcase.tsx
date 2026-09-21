@@ -34,7 +34,7 @@ export function FeaturedShowcase({ shops }: { shops: FeaturedShop[] }) {
         {shops.map((shop, i) => (
           <Link
             key={shop.id}
-            href={`/shops/${shop.id}`}
+            href={`/images/no-image.jpg
             className="group w-[190px] shrink-0 snap-start sm:w-[220px]"
           >
             <div className="relative overflow-hidden">

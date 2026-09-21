@@ -7,5 +7,5 @@ import type { ReelItem } from "@/lib/reels/types";
  */
 export function reelCtaUrl(reel: Pick<ReelItem, "castId" | "shopId" | "linkUrl">): string {
   if (reel.linkUrl) return reel.linkUrl;
-  return reel.castId ? `/cast/${reel.castId}` : `/shops/${reel.shopId}`;
+  return reel.castId ? `/cast/${reel.castId}` : `/images/no-image.jpg
 }

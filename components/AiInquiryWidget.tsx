@@ -55,7 +55,7 @@ type ChatMessage = {
   links?: ChatLink[];
 };
 
-// n8n側から返るlinksは絶対URL(https://reels.locapass.net/shops/...)なので、AvatarPeekの
+// n8n側から返るlinksは絶対URL(https://reels.locapass.net/images/no-image.jpg
 // iframeプレビュー/router.pushにはパス部分だけを渡す(絶対URLのままだと
 // クロスオリジン扱いになりrouter.pushが効かず、ローカル開発時は本番サイトを
 // 埋め込んでしまう)。

@@ -171,7 +171,7 @@ export default async function LocapassShopSettingsPage({
   const completenessItems = completeness.items.map((item) =>
     item.href.startsWith("/dashboard/") ? { ...item, href: item.href.replace("/dashboard", basePath) } : item,
   );
-  const shopPageUrl = `https://reels.locapass.net/shops/${currentShop.id}`;
+  const shopPageUrl = `https://reels.locapass.net/images/no-image.jpg
   const shopQrDataUrl = await QRCode.toDataURL(shopPageUrl, { margin: 1, width: 220 });
 
   const occupancyStatus = shop.occupancy_status as {

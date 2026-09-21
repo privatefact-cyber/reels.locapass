@@ -76,7 +76,7 @@ export default async function ShopReelsPage({
 
   return (
     <div className="space-y-3">
-      <Link href={`/shops/${shop.id}`} className="inline-block px-1 text-sm text-brand hover:underline">
+      <Link href={`/images/no-image.jpg className="inline-block px-1 text-sm text-brand hover:underline">
         ← {shop.name} の店舗ページに戻る
       </Link>
       <ReelLoopFeed reels={orderedReels} />

@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const shopEntries: MetadataRoute.Sitemap = (shops ?? []).map((s) => ({
-    url: `${BASE_URL}/shops/${s.id}`,
+    url: `${BASE_URL}/images/no-image.jpg
     lastModified: s.created_at ? new Date(s.created_at) : undefined,
     changeFrequency: "daily",
     priority: 0.8,

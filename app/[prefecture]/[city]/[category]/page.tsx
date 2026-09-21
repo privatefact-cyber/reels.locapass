@@ -106,7 +106,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
           itemListElement: shops.map((s, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            url: `https://reels.locapass.net/shops/${s.id}`,
+            url: `https://reels.locapass.net/images/no-image.jpg
             name: s.name,
           })),
         }}
@@ -142,7 +142,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
             return (
               <Link
                 key={shop.id}
-                href={`/shops/${shop.id}`}
+                href={`/images/no-image.jpg
                 className="group flex gap-3 overflow-hidden rounded-2xl border border-amber-500/20 bg-zinc-900/60 p-3 shadow-lg transition hover:border-amber-400/50"
               >
                 <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-800">

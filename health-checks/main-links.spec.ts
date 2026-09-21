@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 const MAIN_PAGES = [
   "/",
   "/events",
-  "/shops/28139d9e-ffb8-4c30-b4f6-ce4ed8428e46",
+  "/images/no-image.jpg",
   "/login",
   "/mypage/login",
   "/cast/login",

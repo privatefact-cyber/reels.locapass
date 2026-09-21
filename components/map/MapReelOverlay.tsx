@@ -217,7 +217,7 @@ export function MapReelOverlay({
                 posterImageUrl={media?.type === "video" ? media.poster : media?.url}
                 accountName={reel.castName}
                 accountAvatarUrl={reel.castAvatarUrl ?? undefined}
-                profileUrl={reel.castId ? `/cast/${reel.castId}` : `/shops/${reel.shopId}`}
+                profileUrl={reel.castId ? `/cast/${reel.castId}` : `/images/no-image.jpg
                 shopName={reel.shopName}
                 createdAt={reel.createdAt}
                 ctaUrl={reelCtaUrl(reel)}

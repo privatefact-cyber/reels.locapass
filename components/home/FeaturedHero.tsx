@@ -141,7 +141,7 @@ export function FeaturedHero({ shops, onDismiss }: { shops: FeaturedShop[]; onDi
 
             <div className="mt-6 flex items-center gap-7">
               <Link
-                href={`/shops/${current.id}`}
+                href={`/images/no-image.jpg
                 className="border border-gold/80 px-8 py-3.5 font-display text-[11px] uppercase tracking-[0.4em] text-gold transition-colors duration-300 hover:bg-gold hover:text-black"
               >
                 {labels.viewShop}

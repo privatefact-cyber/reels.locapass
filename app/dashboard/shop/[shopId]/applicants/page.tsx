@@ -42,18 +42,18 @@ export default async function LocapassShopApplicantsPage({
             name="name"
             required
             placeholder="氏名"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 /images/no-image.jpg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <input
             name="phone"
             required
             placeholder="電話番号"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 /images/no-image.jpg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <input
             name="dob"
             type="date"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 /images/no-image.jpg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button
             type="submit"

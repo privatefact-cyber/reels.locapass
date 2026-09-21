@@ -339,7 +339,7 @@ export function MypageClient({
                 // (グリッド内のvideoはサムネイル表示専用で再生しない)。
                 <Link
                   key={r.id}
-                  href={`/shops/${r.shopId}/reels?start=${r.id}`}
+                  href={`/images/no-image.jpg
                   className="relative block aspect-[9/16] overflow-hidden rounded bg-neutral-900"
                 >
                   {r.media[0]?.type === "video" ? (
@@ -424,7 +424,7 @@ export function MypageClient({
               {favoriteShops.map((s) => (
                 <li key={s.id} className="flex items-center gap-2">
                   <Link
-                    href={`/shops/${s.id}`}
+                    href={`/images/no-image.jpg
                     className="block flex-1 rounded-lg border border-white/10 bg-white/[0.03] p-3"
                   >
                     <p className="text-sm font-medium">{s.name}</p>

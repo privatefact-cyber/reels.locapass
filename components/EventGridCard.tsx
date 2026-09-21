@@ -7,7 +7,7 @@ import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 export function EventGridCard({ event }: { event: PortalEvent }) {
   return (
     <Link
-      href={`/shops/${event.shopId}`}
+      href={`/images/no-image.jpg
       className="group relative block aspect-[9/16] overflow-hidden rounded-2xl border border-amber-500/20 bg-neutral-950 shadow-xl transition hover:border-amber-400/40 hover:shadow-amber-500/10"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

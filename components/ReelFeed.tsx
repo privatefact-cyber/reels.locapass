@@ -29,7 +29,7 @@ const GATE_IDLE_MS = 5000;
 // 下スワイプを永遠に続けられるようにする(ReelLoopFeedと同じ思想)。
 const MAX_CYCLES = 50;
 
-// SHOPホバー時プレビュー: 実際の店舗詳細ページ(/shops/[id])を縮小表示する(スマホ1画面分をまるごと縮小)。
+// SHOPホバー時プレビュー: 実際の店舗詳細ページ(/images/no-image.jpg
 const PEEK_IFRAME_WIDTH = 375;
 const PEEK_IFRAME_HEIGHT = 812;
 const PEEK_WIDTH = 224;
@@ -760,7 +760,7 @@ export function ReelFeed({
                       accountName={tile.reel.castName}
                       accountAvatarUrl={tile.reel.castAvatarUrl ?? undefined}
                       profileUrl={
-                        tile.reel.castId ? `/cast/${tile.reel.castId}` : `/shops/${tile.reel.shopId}`
+                        tile.reel.castId ? `/cast/${tile.reel.castId}` : `/images/no-image.jpg
                       }
                       shopName={tile.reel.shopName}
                       createdAt={tile.reel.createdAt}
@@ -786,9 +786,9 @@ export function ReelFeed({
                   isActive={index === overlayActiveIndex}
                   posterImageUrl={tile.shop.coverImageUrl ?? undefined}
                   accountName={tile.shop.name}
-                  profileUrl={`/shops/${tile.shop.id}`}
+                  profileUrl={`/images/no-image.jpg
                   shopName={tile.shop.area ?? ""}
-                  ctaUrl={`/shops/${tile.shop.id}`}
+                  ctaUrl={`/images/no-image.jpg
                   likesCount={0}
                   followed={favoritedShopIds.has(tile.shop.id)}
                   onToggleFollow={() => toggleShopFavorite(tile.shop.id)}
@@ -814,7 +814,7 @@ export function ReelFeed({
       )}
 
       {/* SHOPタイルのホバー時に出すプレビュー(ホバー可能なPCのみ)。
-          店舗詳細ページ(/shops/[id])を縮小表示することで、中身が一目でわかるようにする。
+          店舗詳細ページ(/images/no-image.jpg
           グリッドセルの中に描画するとレイアウトが崩れるため、独立したポップアップとして
           ホバーしたタイルの位置を基準に浮かせて表示する。 */}
       {peek && (
@@ -846,7 +846,7 @@ export function ReelFeed({
               />
             )}
             <iframe
-              src={`/shops/${peek.shop.id}`}
+              src={`/images/no-image.jpg
               title={`${peek.shop.name}のプレビュー`}
               tabIndex={-1}
               scrolling="no"
