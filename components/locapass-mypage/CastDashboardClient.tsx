@@ -582,7 +582,7 @@ export function CastDashboardClient({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*,video/*"
+              accept="video/*"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -594,9 +594,15 @@ export function CastDashboardClient({
                 <img src={preview} alt="" className="mx-auto max-h-64 w-full rounded-lg object-cover" />
               )
             ) : (
-              <span className="text-sm font-medium text-neutral-300">写真・動画を選択</span>
+              <span className="text-sm font-medium text-neutral-300">動画を選択</span>
             )}
           </label>
+          {!preview && (
+            <label className="block cursor-pointer rounded-lg border border-white/15 px-4 py-3 text-center text-sm text-neutral-300">
+              <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              写真を選択
+            </label>
+          )}
           <p className="text-xs text-neutral-500">
             ※カメラロールから選ぶか、その場で撮影できます。写真1枚または動画1本を投稿できます。
           </p>
