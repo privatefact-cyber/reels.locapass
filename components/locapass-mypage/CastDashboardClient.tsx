@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Pencil, Pin, PinOff, X } from "lucide-react";
@@ -94,11 +94,20 @@ export function CastDashboardClient({
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
+  const [optimizationSeconds, setOptimizationSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const postCount = reels.length;
   const totalLikes = reels.reduce((sum, r) => sum + r.likesCount, 0);
+
+  useEffect(() => {
+    if (!optimizing) return;
+    const startedAt = Date.now();
+    setOptimizationSeconds(0);
+    const timer = window.setInterval(() => setOptimizationSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    return () => window.clearInterval(timer);
+  }, [optimizing]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
@@ -121,6 +130,9 @@ export function CastDashboardClient({
     });
     setError(null);
 
+    // iOSでファイル選択画面が閉じた直後に、必ず投稿画面とプレビューを一度描画する。
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
     const validationError = await validateReelFile(f);
     if (validationError) {
       setError(validationError);
@@ -137,6 +149,8 @@ export function CastDashboardClient({
     if (f.type.startsWith("video/") && f.size > TRANSCODE_THRESHOLD_BYTES) {
       setOptimizing(true);
       try {
+        // プレビューとタイマーを表示してから重いWorkerを起動する。
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 100));
         const optimized = await transcodeReelVideo(f);
         setFile(optimized);
         setPreview((current) => {
@@ -144,13 +158,8 @@ export function CastDashboardClient({
           return URL.createObjectURL(optimized);
         });
       } catch (cause) {
-        setFile(null);
-        setPreview((current) => {
-          if (current) URL.revokeObjectURL(current);
-          return null;
-        });
-        setError(cause instanceof Error ? cause.message : "動画の最適化に失敗しました");
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        // 元動画のプレビューは残し、何が起きたか分かる状態にする。
+        setError(cause instanceof Error ? `動画の最適化に失敗しました: ${cause.message}` : "動画の最適化に失敗しました");
       } finally {
         setOptimizing(false);
       }
@@ -638,9 +647,7 @@ export function CastDashboardClient({
               </label>
             </>
           )}
-          {optimizing && (
-            <p className="text-xs text-neutral-400">動画をスマホ向けに最適化しています…</p>
-          )}
+          {optimizing && <p className="text-xs text-neutral-300">動画を最適化中… {optimizationSeconds}秒</p>}
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex gap-2">
             <button
