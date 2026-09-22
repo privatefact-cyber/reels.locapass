@@ -143,6 +143,7 @@ export function ReelCard({
     if (!video || !videoUrl || !isActive || !videoUrl.includes(".m3u8")) return;
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = videoUrl;
+      void video.play().catch(() => undefined);
       return;
     }
     let hls: { destroy: () => void; loadSource: (src: string) => void; attachMedia: (media: HTMLMediaElement) => void } | undefined;
@@ -151,6 +152,7 @@ export function ReelCard({
       hls = new Hls({ maxBufferLength: 8, backBufferLength: 0 });
       hls.loadSource(videoUrl);
       hls.attachMedia(video);
+      void video.play().catch(() => undefined);
     }).catch((cause) => console.error("[stream-playback] hls initialization failed", cause));
     return () => hls?.destroy();
   }, [isActive, videoUrl]);
