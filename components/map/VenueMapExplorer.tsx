@@ -14,6 +14,7 @@ import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { geocode } from "@/lib/map/geocode";
 import { estimateTimeFromDistance } from "@/lib/map/estimateTime";
 import type { NightlifeGenre, VenueCardData, VenuePin } from "@/types/venue";
+import { StreamVideo } from "@/components/video/StreamVideo";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const SOURCE_ID = "venues";
@@ -900,12 +901,13 @@ export function VenueMapExplorer({
                         中央のカード以外はpreload="none"にして、並んでいるだけの動画を読み込ませない
                         (30枚ぶんの先読みがそのまま転送量＝課金になるため)。 */}
                     {venue.previewVideoUrl ? (
-                      <video
+                      <StreamVideo
                         ref={(el) => {
                           if (el) videoRefs.current.set(venue.id, el);
                           else videoRefs.current.delete(venue.id);
                         }}
                         src={venue.previewVideoUrl}
+                        active={isActive}
                         poster={venue.imageUrl ?? undefined}
                         muted
                         loop

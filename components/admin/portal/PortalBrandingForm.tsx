@@ -4,6 +4,9 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { updatePortalBranding } from "@/app/admin/(console)/portals/actions";
+import { uploadToStream } from "@/lib/stream/uploadToStream";
+import { streamPlaybackUrl } from "@/lib/stream/playback";
+import { StreamVideo } from "@/components/video/StreamVideo";
 
 type Props = {
   portal: {
@@ -53,17 +56,27 @@ export function PortalBrandingForm({ portal }: Props) {
     if (file.size > MAX_BYTES) return setError("ファイルサイズは50MB以下にしてください");
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || (file.type.startsWith("video/") ? "mp4" : "jpg");
-      const path = `${portal.id}/hero-${Date.now()}.${ext}`;
-      const supabase = createClient();
-      const { error: uploadError } = await supabase.storage.from("locapass-portal-media").upload(path, file, {
-        contentType: file.type,
-        upsert: true,
-      });
-      if (uploadError) throw new Error(uploadError.message);
-      const { data } = supabase.storage.from("locapass-portal-media").getPublicUrl(path);
-      setHeroUrl(data.publicUrl);
-      setHeroType(file.type.startsWith("video/") ? "video" : "image");
+      const isVideo = file.type.startsWith("video/");
+      if (isVideo) {
+        // 動画本体はブラウザからCloudflare StreamへTUS直送する。Supabase Storageは通さない。
+        const uid = await uploadToStream(file);
+        const playbackUrl = streamPlaybackUrl(uid);
+        if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
+        setHeroUrl(playbackUrl);
+        setHeroType("video");
+      } else {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${portal.id}/hero-${Date.now()}.${ext}`;
+        const supabase = createClient();
+        const { error: uploadError } = await supabase.storage.from("locapass-portal-media").upload(path, file, {
+          contentType: file.type,
+          upsert: true,
+        });
+        if (uploadError) throw new Error(uploadError.message);
+        const { data } = supabase.storage.from("locapass-portal-media").getPublicUrl(path);
+        setHeroUrl(data.publicUrl);
+        setHeroType("image");
+      }
       setMessage("素材をアップロードしました。保存ボタンで公開側に反映します。");
     } catch (e) {
       setError(e instanceof Error ? e.message : "アップロードに失敗しました");
@@ -99,7 +112,7 @@ export function PortalBrandingForm({ portal }: Props) {
             onDrop={(e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) void upload(file); }}
             className={`relative flex min-h-56 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition ${dragOver ? "border-indigo-500 bg-indigo-50" : "border-slate-300 bg-slate-50"}`}
           >
-            {heroUrl ? (heroType === "video" ? <video src={heroUrl} controls muted className="absolute inset-0 h-full w-full object-cover" /> : <img src={heroUrl} alt="ヒーロープレビュー" className="absolute inset-0 h-full w-full object-cover" />) : null}
+            {heroUrl ? (heroType === "video" ? <StreamVideo src={heroUrl} controls muted className="absolute inset-0 h-full w-full object-cover" /> : <img src={heroUrl} alt="ヒーロープレビュー" className="absolute inset-0 h-full w-full object-cover" />) : null}
             <div className={`relative z-10 rounded-lg px-4 py-3 text-center text-xs ${heroUrl ? "bg-black/65 text-white" : "text-slate-500"}`}>
               <strong className="block text-sm">{uploading ? "アップロード中..." : "画像・動画をドロップ"}</strong>
               <span className="mt-1 block">またはクリックして選択（最大50MB）</span>

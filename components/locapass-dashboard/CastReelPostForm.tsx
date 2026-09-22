@@ -7,6 +7,8 @@ import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generateTextCard";
+import { uploadToStream } from "@/lib/stream/uploadToStream";
+import { streamPlaybackUrl } from "@/lib/stream/playback";
 
 /**
  * 店舗スタッフが特定キャストの代わりに投稿する「キャストリール」フォーム。
@@ -71,16 +73,46 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
 
     const supabase = createClient();
     let isVideo = false;
-    let uploadBlob: Blob = file ?? new Blob();
-    let ext = "png";
-    let contentType = "image/png";
+    let videoUrl: string | null = null;
+    let imageUrl: string | null = null;
+    let previewUrl: string | null = null;
 
     if (file) {
       isVideo = file.type.startsWith("video/");
-      ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-      contentType = file.type;
-      uploadBlob = file;
+      if (isVideo) {
+        // 動画本体はブラウザからCloudflare StreamへTUS直送する。Supabase Storageは通さない。
+        // マップのカード用の軽量プレビューは元ファイルから並行して作る(失敗しても投稿は続ける)。
+        try {
+          const [uid, preview] = await Promise.all([
+            uploadToStream(file),
+            uploadReelPreview(supabase, shopId, file),
+          ]);
+          const playbackUrl = streamPlaybackUrl(uid);
+          if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
+          videoUrl = playbackUrl;
+          previewUrl = preview;
+        } catch (cause) {
+          setUploading(false);
+          setError(`アップロードに失敗しました: ${cause instanceof Error ? cause.message : "通信を確認して再試行してください"}`);
+          return;
+        }
+      } else {
+        const ext = file.name.split(".").pop() || "jpg";
+        // locapass では店舗フォルダ配下(locapass-reels バケット)に置く。
+        const path = `${shopId}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("locapass-reels")
+          .upload(path, file, { contentType: file.type });
+        if (uploadError) {
+          setUploading(false);
+          setError(`アップロードに失敗しました: ${uploadError.message}`);
+          return;
+        }
+        const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
+        imageUrl = publicUrlData.publicUrl;
+      }
     } else {
+      let uploadBlob: Blob;
       try {
         uploadBlob = await generateTextCardImage(trimmedCaption);
       } catch (genError) {
@@ -88,32 +120,28 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
         setError(genError instanceof Error ? genError.message : "画像の生成に失敗しました");
         return;
       }
+      const path = `${shopId}/${Date.now()}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from("locapass-reels")
+        .upload(path, uploadBlob, { contentType: "image/png" });
+      if (uploadError) {
+        setUploading(false);
+        setError(`アップロードに失敗しました: ${uploadError.message}`);
+        return;
+      }
+      const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
+      imageUrl = publicUrlData.publicUrl;
     }
 
-    // locapass では店舗フォルダ配下(locapass-reels バケット)に置き、cast_id 付きで locapass_reels に登録する。
-    const path = `${shopId}/${Date.now()}.${ext}`;
-    // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
-    const [{ error: uploadError }, previewUrl] = await Promise.all([
-      supabase.storage.from("locapass-reels").upload(path, uploadBlob, { contentType: contentType }),
-      isVideo && file ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
-    ]);
-
-    if (uploadError) {
-      setUploading(false);
-      setError(`アップロードに失敗しました: ${uploadError.message}`);
-      return;
-    }
-
-    const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
-
+    // portal_idはDBトリガーが店舗から強制上書きするが、型上必須なので店舗のportal_idを渡す。
     const { error: insertError } = await supabase.from("locapass_reels").insert({
       cast_id: castId,
       shop_id: shopId,
       portal_id: portalId,
       caption: trimmedCaption || null,
       action_url: linkUrl.trim() || null,
-      video_url: isVideo ? publicUrlData.publicUrl : null,
-      images: isVideo ? [] : [{ url: publicUrlData.publicUrl }],
+      video_url: videoUrl,
+      images: imageUrl ? [{ url: imageUrl }] : [],
       reel_type: "permanent",
       status: "publish",
       preview_url: previewUrl,

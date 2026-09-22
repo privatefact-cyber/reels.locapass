@@ -8,6 +8,8 @@ import { ReelCommentSheet } from "@/components/ReelCommentSheet";
 import { formatPostedAt } from "@/lib/reels/formatPostedAt";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
+import { StreamVideo } from "@/components/video/StreamVideo";
+import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 
 export type ReelCardProps = {
   /** コメント欄を開くのに必要なリールID。店舗タイルなど、コメント対象のリールが無いカードでは省略する(コメントアイコン自体を出さない)。 */
@@ -124,46 +126,8 @@ export function ReelCard({
 
   // isActiveがfalseになった瞬間に<video>タグ自体をアンマウントするため(下のJSX参照)、
   // 非アクティブなカードはDOM上に<video>要素を一切持たない。
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoUrl || !isActive) return;
-
-    const playPromise = video.play();
-    if (playPromise) {
-      playPromise.catch(() => {
-        // 自動再生ブロック等は致命的ではないため無視する。
-      });
-    }
-  }, [isActive, videoUrl]);
-
-  // Stream のHLSはSafariではネイティブ再生、その他では hls.js を使う。
-  // 破棄時にはMediaSource/ネットワーク接続も必ず解放する。
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoUrl || !isActive || !videoUrl.includes(".m3u8")) return;
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = videoUrl;
-      void video.play().catch(() => undefined);
-      return;
-    }
-    let hls: { destroy: () => void; loadSource: (src: string) => void; attachMedia: (media: HTMLMediaElement) => void } | undefined;
-    void import("hls.js").then(({ default: Hls }) => {
-      if (!Hls.isSupported() || !videoRef.current) return;
-      hls = new Hls({ maxBufferLength: 8, backBufferLength: 0 });
-      hls.loadSource(videoUrl);
-      hls.attachMedia(video);
-      void video.play().catch(() => undefined);
-    }).catch((cause) => console.error("[stream-playback] hls initialization failed", cause));
-    return () => hls?.destroy();
-  }, [isActive, videoUrl]);
-
-  // iOSではmuted属性の再レンダーだけで再生状態が崩れることがあるため、同じ要素へ明示的に反映する。
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = muted;
-    if (isActive && video.paused) void video.play().catch(() => undefined);
-  }, [isActive, muted]);
+  // 再生開始・HLSアタッチ(Safariネイティブ/hls.js)・muted切り替え時のiOS再開は
+  // すべてStreamVideo側で行う。
 
   return (
     <div
@@ -181,9 +145,10 @@ export function ReelCard({
         }`}
       >
       {videoUrl && isActive ? (
-        <video
+        <StreamVideo
           ref={videoRef}
-          src={videoUrl.includes(".m3u8") ? undefined : videoUrl}
+          src={videoUrl}
+          active={isActive}
           poster={sanitizeImageUrl(posterImageUrl)}
           className="h-full w-full object-contain"
           autoPlay
@@ -205,17 +170,29 @@ export function ReelCard({
           className="h-full w-full object-contain"
         />
       ) : videoUrl ? (
-        // posterが無い動画リール: 再生はしないが<video>を静止表示し、
-        // ブラウザに先頭フレームを自動描画させることでサムネイル代わりにする。
-        // モバイルSafari等は#t=0.001を付けないと先頭フレームへシークせず
-        // 真っ黒のままになることがあるため明示的に付与する。
-        <video
-          src={`${videoUrl}#t=0.001`}
-          muted
-          playsInline
-          preload="metadata"
-          className="h-full w-full object-contain"
-        />
+        videoUrl.includes(".m3u8") ? (
+          // posterが無いStream動画リール: HLSはsrc直指定で先頭フレームを描画できないため、
+          // Streamのサムネイル画像エンドポイントを代わりに表示する(再生はしない)。
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={streamThumbnailFromManifestUrl(videoUrl)}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          // posterが無い動画リール: 再生はしないが<video>を静止表示し、
+          // ブラウザに先頭フレームを自動描画させることでサムネイル代わりにする。
+          // モバイルSafari等は#t=0.001を付けないと先頭フレームへシークせず
+          // 真っ黒のままになることがあるため明示的に付与する。
+          <video
+            src={`${videoUrl}#t=0.001`}
+            muted
+            playsInline
+            preload="metadata"
+            className="h-full w-full object-contain"
+          />
+        )
       ) : (
         <div className="flex h-full w-full items-center justify-center text-xs text-neutral-600">
           {t.common.noMedia}

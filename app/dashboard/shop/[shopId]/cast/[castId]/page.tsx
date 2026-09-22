@@ -10,6 +10,7 @@ import { CastIdDocumentUploader } from "@/components/locapass-dashboard/CastIdDo
 import { CastReelPostForm } from "@/components/locapass-dashboard/CastReelPostForm";
 import { CastReelCaptionCell } from "@/components/locapass-dashboard/CastReelCaptionCell";
 import { TimeSelect } from "@/components/locapass-dashboard/TimeSelect";
+import { StreamThumb } from "@/components/video/StreamThumb";
 import {
   addSchedule,
   deleteCastReel,
@@ -338,13 +339,7 @@ export default async function LocapassCastEditPage({
                   className="relative aspect-[9/16] overflow-hidden rounded-lg border border-slate-200 bg-slate-950"
                 >
                   {media?.type === "video" ? (
-                    <video
-                      src={`${media.url}#t=0.001`}
-                      className="h-full w-full object-cover"
-                      muted
-                      playsInline
-                      preload="metadata"
-                    />
+                    <StreamThumb url={media.url} className="h-full w-full object-cover" />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={media?.url} alt="" className="h-full w-full object-cover" />

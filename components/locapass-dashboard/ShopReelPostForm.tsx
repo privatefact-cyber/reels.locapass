@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
+import { uploadToStream } from "@/lib/stream/uploadToStream";
+import { streamPlaybackUrl } from "@/lib/stream/playback";
 
 export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalId: number }) {
   const router = useRouter();
@@ -61,23 +63,42 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
 
     const supabase = createClient();
     const isVideo = file.type.startsWith("video/");
-    const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-    const path = `${shopId}/${Date.now()}.${ext}`;
+    let videoUrl: string | null = null;
+    let imageUrl: string | null = null;
+    let previewUrl: string | null = null;
 
-    // locapassのリールはlocapass-reelsバケット(shop_id配下)に置き、locapass_reelsへ登録する。
-    // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
-    const [{ error: uploadError }, previewUrl] = await Promise.all([
-      supabase.storage.from("locapass-reels").upload(path, file, { contentType: file.type }),
-      isVideo ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
-    ]);
-
-    if (uploadError) {
-      setUploading(false);
-      setError(`アップロードに失敗しました: ${uploadError.message}`);
-      return;
+    if (isVideo) {
+      // 動画本体はブラウザからCloudflare StreamへTUS直送する。Supabase Storageは通さない。
+      // マップのカード用の軽量プレビューは元ファイルから並行して作る(失敗しても投稿は続ける)。
+      try {
+        const [uid, preview] = await Promise.all([
+          uploadToStream(file),
+          uploadReelPreview(supabase, shopId, file),
+        ]);
+        const playbackUrl = streamPlaybackUrl(uid);
+        if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
+        videoUrl = playbackUrl;
+        previewUrl = preview;
+      } catch (cause) {
+        setUploading(false);
+        setError(`アップロードに失敗しました: ${cause instanceof Error ? cause.message : "通信を確認して再試行してください"}`);
+        return;
+      }
+    } else {
+      const ext = file.name.split(".").pop() || "jpg";
+      // locapassのリールはlocapass-reelsバケット(shop_id配下)に置く。
+      const path = `${shopId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("locapass-reels")
+        .upload(path, file, { contentType: file.type });
+      if (uploadError) {
+        setUploading(false);
+        setError(`アップロードに失敗しました: ${uploadError.message}`);
+        return;
+      }
+      const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
+      imageUrl = publicUrlData.publicUrl;
     }
-
-    const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
 
     const { error: insertError } = await supabase.from("locapass_reels").insert({
       shop_id: shopId,
@@ -85,8 +106,8 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
       portal_id: portalId,
       caption: caption.trim() || null,
       action_url: linkUrl.trim() || null,
-      video_url: isVideo ? publicUrlData.publicUrl : null,
-      images: isVideo ? [] : [{ url: publicUrlData.publicUrl }],
+      video_url: videoUrl,
+      images: imageUrl ? [{ url: imageUrl }] : [],
       reel_type: "permanent",
       status: "publish",
       preview_url: previewUrl,

@@ -14,6 +14,7 @@ import { TRANSCODE_THRESHOLD_BYTES, transcodeReelVideo } from "@/lib/reels/trans
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 import { uploadToStream } from "@/lib/stream/uploadToStream";
 import { streamPlaybackUrl } from "@/lib/stream/playback";
+import { StreamThumb } from "@/components/video/StreamThumb";
 
 export type MyReel = {
   id: string;
@@ -452,7 +453,7 @@ export function CastDashboardClient({
                 <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px]">
                   <div className="rounded-full bg-black p-[2px]">
                     {thumb?.type === "video" ? (
-                      <video src={thumb.url} className="h-14 w-14 rounded-full object-cover" muted />
+                      <StreamThumb url={thumb.url} className="h-14 w-14 rounded-full object-cover" />
                     ) : thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={thumb.url} alt="" className="h-14 w-14 rounded-full object-cover" />
@@ -698,7 +699,7 @@ export function CastDashboardClient({
               className="relative block aspect-[9/16] overflow-hidden bg-neutral-900"
             >
               {r.media[0]?.type === "video" ? (
-                <video src={r.media[0].url} className="h-full w-full object-cover" muted />
+                <StreamThumb url={r.media[0].url} className="h-full w-full object-cover" />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={r.media[0]?.url} alt="" className="h-full w-full object-cover" />

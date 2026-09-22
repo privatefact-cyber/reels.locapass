@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAd, deleteAd, setAdActive, updateAdFrequency } from "./actions";
+import { StreamThumb } from "@/components/video/StreamThumb";
 
 export default async function AdminAdsPage() {
   await requireRootAdmin();
@@ -96,7 +97,7 @@ export default async function AdminAdsPage() {
               >
                 <div className="h-20 w-14 shrink-0 overflow-hidden rounded-md bg-slate-100">
                   {ad.media_type === "video" ? (
-                    <video src={ad.media_url} className="h-full w-full object-cover" muted />
+                    <StreamThumb url={ad.media_url} className="h-full w-full object-cover" />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={ad.media_url} alt="" className="h-full w-full object-cover" />

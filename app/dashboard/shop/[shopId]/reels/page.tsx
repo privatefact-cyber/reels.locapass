@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { ShopReelPostForm } from "@/components/locapass-dashboard/ShopReelPostForm";
 import { deleteReel, setMapPreviewReel } from "../actions";
+import { StreamThumb } from "@/components/video/StreamThumb";
 
 /**
  * LUXELA本家のリール投稿画面(app/dashboard/reels/page.tsx)と同じ画面。一覧・投稿・削除は
@@ -116,13 +117,7 @@ export default async function LocapassShopReelsPage({
                 }`}
               >
                 {media?.type === "video" ? (
-                  <video
-                    src={`${media.url}#t=0.001`}
-                    className="h-full w-full object-cover"
-                    muted
-                    playsInline
-                    preload="metadata"
-                  />
+                  <StreamThumb url={media.url} className="h-full w-full object-cover" />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={media?.url} alt="" className="h-full w-full object-cover" />

@@ -4,3 +4,8 @@ export function streamPlaybackUrl(uid: string) {
   if (!customerCode) return null;
   return `https://customer-${customerCode}.cloudflarestream.com/${uid}/manifest/video.m3u8`;
 }
+
+/** streamPlaybackUrlが返すマニフェストURLから、同じ動画のサムネイル画像URLを作る。 */
+export function streamThumbnailFromManifestUrl(manifestUrl: string) {
+  return manifestUrl.replace(/\/manifest\/video\.m3u8(?:[?#].*)?$/, "/thumbnails/thumbnail.jpg");
+}

@@ -2,8 +2,19 @@
 
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToStream } from "@/lib/stream/uploadToStream";
+import { streamPlaybackUrl } from "@/lib/stream/playback";
+import { StreamVideo } from "@/components/video/StreamVideo";
 
 async function uploadFile(shopId: string, file: File): Promise<string> {
+  if (file.type.startsWith("video/")) {
+    // 動画本体はブラウザからCloudflare StreamへTUS直送する。Supabase Storageは通さない。
+    const uid = await uploadToStream(file);
+    const playbackUrl = streamPlaybackUrl(uid);
+    if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
+    return playbackUrl;
+  }
+
   const supabase = createClient();
   const ext = file.name.split(".").pop() || "jpg";
   const path = `${shopId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -97,8 +108,7 @@ export function SingleImageDropzone({
       >
         {url ? (
           mediaType === "video" ? (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
-            <video src={url} muted playsInline autoPlay loop className="h-full w-full object-cover" />
+            <StreamVideo src={url} muted playsInline autoPlay loop className="h-full w-full object-cover" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="プレビュー" className="h-full w-full object-cover" />

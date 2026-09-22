@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { StreamVideo } from "@/components/video/StreamVideo";
+import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 
 export type SavedReel = {
   id: string;
@@ -344,9 +346,15 @@ export function MypageClient({
                 >
                   {r.media[0]?.type === "video" ? (
                     // eslint-disable-next-line jsx-a11y/media-has-caption
-                    <video
+                    <StreamVideo
                       src={r.media[0].url}
-                      poster={r.media[0].poster}
+                      active={false}
+                      poster={
+                        r.media[0].poster ??
+                        (r.media[0].url.includes(".m3u8")
+                          ? streamThumbnailFromManifestUrl(r.media[0].url)
+                          : undefined)
+                      }
                       preload="metadata"
                       className="h-full w-full object-cover"
                       muted

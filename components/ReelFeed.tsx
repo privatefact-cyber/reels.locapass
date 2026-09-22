@@ -7,6 +7,7 @@ import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
 import { reelCtaUrl } from "@/lib/reels/links";
 import { ReelCard } from "@/components/ReelCard";
+import { PreloadNextVideo } from "@/components/video/PreloadNextVideo";
 import type { AdItem, ReelItem, ShopGridItem } from "@/lib/reels/types";
 import { OPEN_FEED_GATE_EVENT, OPEN_SEARCH_EVENT, TOGGLE_NOW_EVENT } from "@/lib/reels/events";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -140,6 +141,13 @@ function tileFallbackVideoUrl(tile: Tile): string | undefined {
   if (tile.kind === "shop") return undefined;
   const media = tile.kind === "ad" ? tile.ad.media : tile.reel.media[0];
   return media?.type === "video" && !media.poster ? media.url : undefined;
+}
+
+/** リール一覧(縦スワイプ)のタイルが持つ動画URL(先読み対象の判定に使う)。 */
+function tileVideoUrl(tile: Tile | undefined): string | undefined {
+  if (!tile || tile.kind === "shop") return undefined;
+  const media = tile.kind === "ad" ? tile.ad.media : tile.reel.media[0];
+  return media?.type === "video" ? media.url : undefined;
 }
 
 // グリッドの1タイル。memo化して、SHOPホバー時のプレビュー表示切り替えなど
@@ -739,6 +747,10 @@ export function ReelFeed({
             <ChevronLeft size={18} />
             グリッドに戻る
           </button>
+
+          {/* 現在アクティブな1本の「次」の動画だけ、先頭2〜3秒ぶんを裏で先読みしておく
+              (実際にアクティブになったときの再生開始までの待ち時間を減らす)。 */}
+          <PreloadNextVideo src={tileVideoUrl(loopedTiles[overlayActiveIndex + 1]?.tile)} />
 
           {loopedTiles.map(({ tile, loopKey }, index) => (
             <div

@@ -11,6 +11,9 @@ import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
+import { uploadToStream } from "@/lib/stream/uploadToStream";
+import { streamPlaybackUrl } from "@/lib/stream/playback";
+import { StreamThumb } from "@/components/video/StreamThumb";
 
 export type MyReel = {
   id: string;
@@ -274,21 +277,41 @@ export function StaffDashboardClient({
     // 投稿者(created_by)はDBのトリガーで本人に固定される。
     const supabase = createClient();
     const isVideo = file.type.startsWith("video/");
-    const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-    const path = `${shopId}/${Date.now()}.${ext}`;
+    let videoUrl: string | null = null;
+    let imageUrl: string | null = null;
+    let previewUrl: string | null = null;
 
-    // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
-    const [{ error: uploadError }, previewUrl] = await Promise.all([
-      supabase.storage.from("locapass-reels").upload(path, file, { contentType: file.type }),
-      isVideo ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
-    ]);
-    if (uploadError) {
-      setUploading(false);
-      setError(`アップロードに失敗しました: ${uploadError.message}`);
-      return;
+    if (isVideo) {
+      // 動画本体はブラウザからCloudflare StreamへTUS直送する。Supabase Storageは通さない。
+      // マップのカード用の軽量プレビューは元ファイルから並行して作る(失敗しても投稿は続ける)。
+      try {
+        const [uid, preview] = await Promise.all([
+          uploadToStream(file),
+          uploadReelPreview(supabase, shopId, file),
+        ]);
+        const playbackUrl = streamPlaybackUrl(uid);
+        if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
+        videoUrl = playbackUrl;
+        previewUrl = preview;
+      } catch (cause) {
+        setUploading(false);
+        setError(`アップロードに失敗しました: ${cause instanceof Error ? cause.message : "通信を確認して再試行してください"}`);
+        return;
+      }
+    } else {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${shopId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("locapass-reels")
+        .upload(path, file, { contentType: file.type });
+      if (uploadError) {
+        setUploading(false);
+        setError(`アップロードに失敗しました: ${uploadError.message}`);
+        return;
+      }
+      const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
+      imageUrl = publicUrlData.publicUrl;
     }
-
-    const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
 
     const { data: inserted, error: insertError } = await supabase
       .from("locapass_reels")
@@ -298,8 +321,8 @@ export function StaffDashboardClient({
         portal_id: portalId,
         caption: caption.trim() || null,
         action_url: linkUrl.trim() || null,
-        video_url: isVideo ? publicUrlData.publicUrl : null,
-        images: isVideo ? [] : [{ url: publicUrlData.publicUrl }],
+        video_url: videoUrl,
+        images: imageUrl ? [{ url: imageUrl }] : [],
         author_name: name,
         author_icon_url: avatarUrl,
         reel_type: "permanent",
@@ -319,7 +342,7 @@ export function StaffDashboardClient({
       {
         id: inserted.id,
         caption: inserted.caption,
-        media: [{ type: isVideo ? "video" : "image", url: publicUrlData.publicUrl }],
+        media: [{ type: isVideo ? "video" : "image", url: (videoUrl ?? imageUrl)! }],
         likesCount: inserted.like_count,
         createdAt: inserted.published_at ?? inserted.updated_at,
       },
@@ -713,7 +736,7 @@ export function StaffDashboardClient({
               <div key={r.id} className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
                 <div className="relative aspect-[9/16] max-h-96 bg-black">
                   {r.media[0]?.type === "video" ? (
-                    <video src={r.media[0].url} className="h-full w-full object-cover" muted />
+                    <StreamThumb url={r.media[0].url} className="h-full w-full object-cover" />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={r.media[0]?.url} alt="" className="h-full w-full object-cover" />

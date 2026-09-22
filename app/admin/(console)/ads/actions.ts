@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createClient } from "@/lib/supabase/server";
+import { uploadFileToStream } from "@/lib/stream/uploadFileToStream";
+import { streamPlaybackUrl } from "@/lib/stream/playback";
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 
@@ -27,24 +29,32 @@ export async function createAd(formData: FormData) {
   }
 
   const isVideo = file.type.startsWith("video/");
-  const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-  const path = `${Date.now()}.${ext}`;
-
   const supabase = await createClient();
+  let mediaUrl: string;
 
-  const { error: uploadError } = await supabase.storage.from("locapass-ads").upload(path, file, {
-    contentType: file.type,
-  });
-  if (uploadError) throw new Error(`アップロードに失敗しました: ${uploadError.message}`);
-
-  const { data: publicUrlData } = supabase.storage.from("locapass-ads").getPublicUrl(path);
+  if (isVideo) {
+    // 動画本体はCloudflare Streamへアップロードする。Supabase Storageは通さない。
+    const uid = await uploadFileToStream(file);
+    const playbackUrl = streamPlaybackUrl(uid);
+    if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
+    mediaUrl = playbackUrl;
+  } else {
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from("locapass-ads").upload(path, file, {
+      contentType: file.type,
+    });
+    if (uploadError) throw new Error(`アップロードに失敗しました: ${uploadError.message}`);
+    const { data: publicUrlData } = supabase.storage.from("locapass-ads").getPublicUrl(path);
+    mediaUrl = publicUrlData.publicUrl;
+  }
 
   const { error: insertError } = await supabase.from("locapass_ads").insert({
     title,
     link_url: linkUrl,
     frequency: Math.round(frequency),
     media_type: isVideo ? "video" : "image",
-    media_url: publicUrlData.publicUrl,
+    media_url: mediaUrl,
   });
   if (insertError) throw new Error(insertError.message);
 

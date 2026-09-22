@@ -2,9 +2,16 @@
 
 import { useEffect, useRef } from "react";
 
-/** iPhone Safari向けに、属性設定だけでなく再生APIも明示的に呼ぶヒーロー動画。 */
+type HlsInstance = { destroy: () => void; loadSource: (src: string) => void; attachMedia: (media: HTMLMediaElement) => void };
+
+/**
+ * iPhone Safari向けに、属性設定だけでなく再生APIも明示的に呼ぶヒーロー動画。
+ * Cloudflare Streamの.m3u8を受け取った場合は、SafariはネイティブHLS、それ以外は
+ * hls.jsでアタッチする(通常のmp4等はブラウザのsrc直指定でそのまま再生する)。
+ */
 export function AutoplayVideo({ src }: { src: string }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const isHls = src.includes(".m3u8");
 
   useEffect(() => {
     const video = ref.current;
@@ -23,17 +30,33 @@ export function AutoplayVideo({ src }: { src: string }) {
 
     video.addEventListener("loadedmetadata", start);
     video.addEventListener("canplay", start);
-    start();
+
+    let hls: HlsInstance | undefined;
+    if (isHls && !video.canPlayType("application/vnd.apple.mpegurl")) {
+      void import("hls.js")
+        .then(({ default: Hls }) => {
+          if (!Hls.isSupported() || !ref.current) return;
+          hls = new Hls({ maxBufferLength: 8, backBufferLength: 0 });
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          start();
+        })
+        .catch((cause) => console.error("[stream-playback] hls initialization failed", cause));
+    } else {
+      video.src = src;
+      start();
+    }
+
     return () => {
       video.removeEventListener("loadedmetadata", start);
       video.removeEventListener("canplay", start);
+      hls?.destroy();
     };
-  }, [src]);
+  }, [src, isHls]);
 
   return (
     <video
       ref={ref}
-      src={src}
       autoPlay
       muted
       playsInline

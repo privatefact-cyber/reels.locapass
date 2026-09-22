@@ -8,6 +8,7 @@ import { CastFollowBadge } from "@/components/CastFollowBadge";
 import { CastPhotoGrid } from "@/components/CastPhotoGrid";
 import { StoryRing } from "@/components/StoryRing";
 import { JsonLd } from "@/components/JsonLd";
+import { StreamThumb } from "@/components/video/StreamThumb";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
@@ -272,7 +273,7 @@ export default async function CastDetailPage({
                 className="relative block aspect-[9/16] overflow-hidden bg-neutral-900"
               >
                 {item?.type === "video" ? (
-                  <video src={item.url} className="h-full w-full object-cover" muted />
+                  <StreamThumb url={item.url} className="h-full w-full object-cover" />
                 ) : item ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

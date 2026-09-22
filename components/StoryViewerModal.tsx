@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { StreamVideo } from "@/components/video/StreamVideo";
 
 type StoryMedia = { type: "video" | "image"; url: string };
 
@@ -113,7 +114,7 @@ export function StoryViewerModal({
       ) : current ? (
         <div className="flex h-full w-full max-w-md flex-col items-center justify-center">
           {current.media[0]?.type === "video" ? (
-            <video
+            <StreamVideo
               src={current.media[0].url}
               className="max-h-full w-full object-contain"
               autoPlay

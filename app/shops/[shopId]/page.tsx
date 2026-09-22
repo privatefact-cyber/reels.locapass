@@ -27,6 +27,8 @@ import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
 import { JsonLd } from "@/components/JsonLd";
+import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
+import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 import type { Cast, PriceItem, ShopEvent, SnsLinks, Store } from "@/lib/types/shop";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
@@ -343,14 +345,7 @@ export default async function ShopDetailPage({
 
         {store.hero.url ? (
           store.hero.type === "video" ? (
-            <video
-              src={store.hero.url}
-              className="absolute inset-0 h-full w-full object-cover"
-              playsInline
-              autoPlay
-              loop
-              muted
-            />
+            <AutoplayVideo src={store.hero.url} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -402,13 +397,22 @@ export default async function ShopDetailPage({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={r.thumbUrl} alt={r.castName} className="h-full w-full object-cover" />
               ) : r.videoUrl ? (
-                <video
-                  src={`${r.videoUrl}#t=0.001`}
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="h-full w-full object-cover"
-                />
+                r.videoUrl.includes(".m3u8") ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={streamThumbnailFromManifestUrl(r.videoUrl)}
+                    alt={r.castName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <video
+                    src={`${r.videoUrl}#t=0.001`}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full object-cover"
+                  />
+                )
               ) : null}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
               <span className="absolute bottom-1 left-1 right-1 truncate text-[10px] text-white drop-shadow">
