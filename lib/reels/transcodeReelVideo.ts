@@ -20,6 +20,8 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
   // CapCut等で既に圧縮済みの動画は、Worker/WASMを一切ロードせずそのまま直送する。
   if (file.size <= TRANSCODE_THRESHOLD_BYTES) return file;
 
+  let stage = "dynamic-import";
+  try {
   const [{ FFmpeg }, { fetchFile }] = await Promise.all([
     import("@ffmpeg/ffmpeg"),
     import("@ffmpeg/util"),
@@ -40,11 +42,15 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
     onProgress?.(1);
     const baseUrl = window.location.origin;
     // @ffmpeg/core は pthread を含まない単一スレッド版。COOP/COEP は不要。
+    stage = "core-load";
     await ffmpeg.load({
       coreURL: `${baseUrl}/ffmpeg/ffmpeg-core.js`,
       wasmURL: `${baseUrl}/ffmpeg/ffmpeg-core.wasm`,
     });
-    await ffmpeg.writeFile(input, await fetchFile(file));
+    stage = "input-buffer";
+    const inputBytes = await fetchFile(file);
+    await ffmpeg.writeFile(input, inputBytes);
+    stage = "encode";
     const result = await ffmpeg.exec([
       "-i", input, "-t", "30.5", "-vf", filter, "-r", "24",
       "-c:v", "libx264", "-profile:v", "main", "-pix_fmt", "yuv420p",
@@ -53,6 +59,7 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
       "-movflags", "+faststart", output,
     ], 300_000);
     if (result !== 0) throw new Error("動画の変換に失敗しました");
+    stage = "output-read";
     const data = await ffmpeg.readFile(output);
     // FFmpegの返り値はArrayBufferLikeを持つ型。コピーして通常のArrayBufferへ
     // 正規化し、SafariとNext.jsの型検査の両方で安全にBlob化する。
@@ -66,6 +73,16 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
   } finally {
     ffmpeg.off("progress", progress);
     ffmpeg.terminate();
+  }
+  } catch (cause) {
+    console.error("[reel-transcode] failed", {
+      stage,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      error: cause,
+    });
+    throw cause;
   }
 }
 

@@ -12,6 +12,7 @@ import { RevealableQr } from "@/components/RevealableQr";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { TRANSCODE_THRESHOLD_BYTES, transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
+import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 
 export type MyReel = {
   id: string;
@@ -159,7 +160,8 @@ export function CastDashboardClient({
         });
       } catch (cause) {
         // 元動画のプレビューは残し、何が起きたか分かる状態にする。
-        setError(cause instanceof Error ? `動画の最適化に失敗しました: ${cause.message}` : "動画の最適化に失敗しました");
+        console.error("[reel-upload] optimization skipped; using original file", cause);
+        setError("最適化をスキップしました。元動画のまま投稿できます。");
       } finally {
         setOptimizing(false);
       }
@@ -184,7 +186,7 @@ export function CastDashboardClient({
 
     // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
     const [{ error: uploadError }, previewUrl] = await Promise.all([
-      supabase.storage.from("locapass-reels").upload(path, file, { contentType: file.type }),
+      uploadToSignedUrl(supabase, "locapass-reels", path, file),
       isVideo && postType !== "story" ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
     ]);
 
