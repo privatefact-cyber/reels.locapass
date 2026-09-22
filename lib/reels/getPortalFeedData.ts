@@ -31,13 +31,18 @@ export function toReelItem(row: ReelRow): ReelItem | null {
 
   // 動画が無いリールはimages配列を使うが、WordPress取込データはimagesが空でも
   // poster_urlだけに静止画が入っているケースが多いため、その場合はposter_urlを画像として使う。
-  const images = (row.images as { url: string }[] | null) ?? [];
+  // sanitizeImageUrlがundefinedを返した(=画像なし/壊れたURL)ものは、代替画像を
+  // 差し込まずそのまま除外する(mediaが空ならLOCAPASSロゴのCSSプレースホルダーになる)。
+  const posterUrl = sanitizeImageUrl(row.poster_url);
+  const sanitizedImages = (row.images as { url: string }[] | null ?? [])
+    .map((img) => sanitizeImageUrl(img.url))
+    .filter((url): url is string => Boolean(url));
   const media: ReelItem["media"] = row.video_url
-    ? [{ type: "video", url: row.video_url, poster: sanitizeImageUrl(row.poster_url) }]
-    : images.length > 0
-      ? images.map((img) => ({ type: "image", url: sanitizeImageUrl(img.url) }))
-      : row.poster_url
-        ? [{ type: "image", url: sanitizeImageUrl(row.poster_url) }]
+    ? [{ type: "video", url: row.video_url, poster: posterUrl }]
+    : sanitizedImages.length > 0
+      ? sanitizedImages.map((url) => ({ type: "image", url }))
+      : posterUrl
+        ? [{ type: "image", url: posterUrl }]
         : [];
 
   return {
@@ -47,7 +52,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
     likesCount: row.like_count,
     castId: row.cast_id,
     castName: cast?.name ?? staff?.name ?? row.author_name ?? shop.name,
-    castAvatarUrl: sanitizeImageUrl(cast?.avatar_url ?? staff?.avatar_url ?? row.author_icon_url),
+    castAvatarUrl: sanitizeImageUrl(cast?.avatar_url ?? staff?.avatar_url ?? row.author_icon_url) ?? null,
     shopId: row.shop_id,
     shopName: shop.name,
     area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
@@ -110,7 +115,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
     address: s.address,
     genre: s.category,
-    coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url),
+    coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url) ?? null,
   }));
 
   const genreChoices = Array.from(
@@ -120,7 +125,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
   const ads: AdItem[] = (adRows ?? []).map((a) => ({
     id: a.id,
     title: a.title,
-    media: { type: a.media_type as "video" | "image", url: sanitizeImageUrl(a.media_url), poster: sanitizeImageUrl(a.poster_url) },
+    media: { type: a.media_type as "video" | "image", url: a.media_url, poster: sanitizeImageUrl(a.poster_url) },
     linkUrl: a.link_url,
     frequency: a.frequency,
   }));

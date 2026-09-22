@@ -7,8 +7,12 @@
  * - dev.locapass.net
  * - 不正なURL形式
  */
-export function sanitizeImageUrl(url: string | null | undefined): string {
-  if (!url) return "/images/no-image.jpg";
+// 画像が無い/壊れている場合はundefinedを返す。呼び出し側はその値をそのまま
+// (画像なし)として扱い、各コンポーネントが元々持っているLOCAPASSロゴの
+// CSSプレースホルダー(値がnull/undefinedの時だけ表示される分岐)に委ねる。
+// ここで固定の代替画像パスを返してしまうと、その分岐が二度と表示されなくなる。
+export function sanitizeImageUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
 
   const urlStr = String(url).trim();
 
@@ -17,7 +21,7 @@ export function sanitizeImageUrl(url: string | null | undefined): string {
     new URL(urlStr);
   } catch {
     // URLパースエラー: 無効なURLは除外
-    return "/images/no-image.jpg";
+    return undefined;
   }
 
   // 古いWP関連URLパターンを検出
@@ -30,7 +34,7 @@ export function sanitizeImageUrl(url: string | null | undefined): string {
     urlStr.includes("403") ||
     urlStr.includes("404")
   ) {
-    return "/images/no-image.jpg";
+    return undefined;
   }
 
   // 相対URLや、明らかに動作しているURLは通す
