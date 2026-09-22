@@ -56,7 +56,7 @@ export function EventCard({
         </div>
 
         <Link
-          href={`/images/no-image.jpg
+          href={`/shops/${event.shopId}`}
           className="flex w-fit items-center gap-1 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-white backdrop-blur-md"
         >
           ▲ SWIPE UP FOR DETAILS

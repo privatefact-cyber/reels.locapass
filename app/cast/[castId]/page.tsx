@@ -129,11 +129,11 @@ export default async function CastDetailPage({
 
   const breadcrumbItems = [
     { name: "ホーム", item: "https://reels.locapass.net" },
-    ...(shop ? [{ name: shop.name, item: `https://reels.locapass.net/images/no-image.jpg }] : []),
+    ...(shop ? [{ name: shop.name, item: `https://reels.locapass.net/shops/${shop.id}` }] : []),
     { name: cast.name, item: `https://reels.locapass.net/cast/${castId}` },
   ];
 
-  // 店舗ページ(app/images/no-image.jpg
+  // 店舗ページ(app/shops/[shopId]/page.tsx)と同じ判定基準(コンカフェのみ業態を分ける)。
   const worksForSchemaType = shop?.genre === "コンカフェ" ? "CafeOrCoffeeShop" : "NightClub";
   const castUrl = `https://reels.locapass.net/cast/${castId}`;
   // sizes.t は「身長(cm)」の自由入力欄のため、数値として読み取れる場合だけ構造化データに含める。
@@ -162,7 +162,7 @@ export default async function CastDetailPage({
               ? {
                   "@type": worksForSchemaType,
                   name: shop.name,
-                  url: `https://reels.locapass.net/images/no-image.jpg
+                  url: `https://reels.locapass.net/shops/${shop.id}`,
                   address: shop.area
                     ? { "@type": "PostalAddress", addressLocality: shop.area, addressCountry: "JP" }
                     : undefined,
@@ -187,7 +187,7 @@ export default async function CastDetailPage({
         }}
       />
       {shop && (
-        <Link href={`/images/no-image.jpg className="text-sm text-brand hover:underline">
+        <Link href={`/shops/${shop.id}`} className="text-sm text-brand hover:underline">
           {t.cast.backToShop(shop.name)}
         </Link>
       )}
@@ -249,7 +249,7 @@ export default async function CastDetailPage({
 
         {shop && (
           <Link
-            href={`/images/no-image.jpg
+            href={`/shops/${shop.id}`}
             className="mt-4 inline-block rounded-lg bg-brand px-6 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
           >
             {t.common.seeShopPage}

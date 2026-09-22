@@ -13,7 +13,7 @@ export function ShopCard({
 }) {
   return (
     <Link
-      href={`/images/no-image.jpg
+      href={`/shops/${id}`}
       className="block rounded-lg border border-black/10 bg-white p-4 transition hover:border-brand hover:shadow-md"
     >
       <p className="text-xs text-black/50">

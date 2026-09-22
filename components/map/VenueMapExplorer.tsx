@@ -721,7 +721,7 @@ export function VenueMapExplorer({
       if (venue.reelCount > 0) {
         setReelOverlayVenueId(venue.id);
       } else {
-        router.push(`/images/no-image.jpg
+        router.push(`/shops/${venue.id}`);
       }
     },
     [activeId, focusVenue, router],
@@ -1020,7 +1020,7 @@ export function VenueMapExplorer({
                         {t.map.visitNow} →
                       </a>
                       <Link
-                        href={`/images/no-image.jpg
+                        href={`/shops/${venue.id}`}
                         onClick={(e) => e.stopPropagation()}
                         className="rounded-full border border-white/15 px-3 py-2 text-xs text-neutral-300 transition hover:border-amber-400/50 hover:text-amber-300"
                       >

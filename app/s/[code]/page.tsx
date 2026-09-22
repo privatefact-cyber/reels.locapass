@@ -21,5 +21,5 @@ export default async function ShopShortLinkPage({
     notFound();
   }
 
-  redirect(`/images/no-image.jpg
+  redirect(`/shops/${shop.id}`);
 }

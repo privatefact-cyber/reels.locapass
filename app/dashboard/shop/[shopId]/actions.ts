@@ -29,7 +29,7 @@ async function requireShopAccess(shopId: string) {
 
 function revalidateShop(shopId: string) {
   revalidatePath(`/dashboard/shop/${shopId}`);
-  revalidatePath(`/images/no-image.jpg
+  revalidatePath(`/shops/${shopId}`);
   revalidatePath("/admin");
 }
 

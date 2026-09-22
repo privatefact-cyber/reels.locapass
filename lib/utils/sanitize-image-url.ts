@@ -1,14 +1,14 @@
 /**
  * 古いWordPress関連のURLをローカル画像に置き換える。
  * - wp-content
- * - /images/no-image.jpg
- * - /images/no-image.jpg
- * - /images/no-image.jpg (旧URL形式)
+ * - placeholder-
+ * - bakumatsu-
+ * - /shops/ (旧URL形式)
  * - dev.locapass.net
  * - 不正なURL形式
  */
-export function sanitizeImageUrl(url: string | null | undefined): string | undefined {
-  if (!url) return undefined;
+export function sanitizeImageUrl(url: string | null | undefined): string {
+  if (!url) return "/images/no-image.jpg";
 
   const urlStr = String(url).trim();
 
@@ -23,9 +23,9 @@ export function sanitizeImageUrl(url: string | null | undefined): string | undef
   // 古いWP関連URLパターンを検出
   if (
     urlStr.includes("wp-content") ||
-    urlStr.includes("/images/no-image.jpg") ||
-    urlStr.includes("/images/no-image.jpg") ||
-    urlStr.includes("/images/no-image.jpg") ||
+    urlStr.includes("placeholder-") ||
+    urlStr.includes("bakumatsu-") ||
+    urlStr.includes("/shops/") ||
     urlStr.includes("dev.locapass.net") ||
     urlStr.includes("403") ||
     urlStr.includes("404")

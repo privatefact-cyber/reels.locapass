@@ -144,7 +144,7 @@ export async function applyImportAction(shopId: string, input: ApplyImportInput)
   }
 
   revalidatePath(`/dashboard/shop/${shopId}`);
-  revalidatePath(`/images/no-image.jpg
+  revalidatePath(`/shops/${shopId}`);
   revalidatePath("/");
   return { ok: true, applied };
 }
