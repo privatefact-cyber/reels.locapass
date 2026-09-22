@@ -22,7 +22,7 @@ type Props = {
 // AIコンシェルジュはマップでも使えるようにし、カードと重ならない位置(placement="map")に置く。
 // 言語切替はヘッダーの代わりにマップ上部のバー(VenueMapExplorer)に置いている。
 // components/AppShell.tsxの full-bleed 判定と同じパターン。
-const FULL_BLEED_PATTERN = /^\/map$\vert{}^\/[^/]+\/[^/]+\/map$/;
+const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
 
 // 公開ローンチ前の合言葉ゲート(/gate)では、ヘッダー・ボトムナビ・AI問い合わせウィジェットを
 // 一切表示しない(合言葉を通していない訪問者にサイトの中身・機能を一切見せないため)。
