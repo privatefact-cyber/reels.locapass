@@ -11,8 +11,9 @@ import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { RevealableQr } from "@/components/RevealableQr";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { TRANSCODE_THRESHOLD_BYTES, transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
-import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
+import { uploadToStream } from "@/lib/stream/uploadToStream";
+import { streamPlaybackUrl } from "@/lib/stream/playback";
 
 export type MyReel = {
   id: string;
@@ -181,26 +182,32 @@ export function CastDashboardClient({
     // 投稿者(created_by)はDBのトリガーで本人に固定される。
     const supabase = createClient();
     const isVideo = file.type.startsWith("video/");
-    const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-    const path = `${shopId}/${Date.now()}.${ext}`;
-
-    // 動画ならマップのカード用の軽量プレビューも並行して作る(失敗しても投稿は続ける)。
-    const [{ error: uploadError }, previewUrl] = await Promise.all([
-      uploadToSignedUrl(supabase, "locapass-reels", path, file),
-      isVideo && postType !== "story" ? uploadReelPreview(supabase, shopId, file) : Promise.resolve(null),
-    ]);
-
-    if (uploadError) {
+    let media: MyReel["media"];
+    let previewUrl: string | null = null;
+    try {
+      if (isVideo) {
+        // 動画本体はブラウザからCloudflare StreamへTUS直送する。Next/Supabase Storageを通さない。
+        const uid = await uploadToStream(file);
+        const playbackUrl = streamPlaybackUrl(uid);
+        if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
+        media = [{ type: "video", url: playbackUrl }];
+      } else {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${shopId}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await uploadToSignedUrl(supabase, "locapass-reels", path, file);
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from("locapass-reels").getPublicUrl(path);
+        media = [{ type: "image", url: data.publicUrl }];
+      }
+    } catch (cause) {
+      console.error("[stream-upload] upload failed", cause);
       setUploading(false);
-      setError(`アップロードに失敗しました: ${uploadError.message}`);
+      setError(`アップロードに失敗しました: ${cause instanceof Error ? cause.message : "通信を確認して再試行してください"}`);
       return;
     }
-
-    const { data: publicUrlData } = supabase.storage.from("locapass-reels").getPublicUrl(path);
-    const media: MyReel["media"] = [{ type: isVideo ? "video" : "image", url: publicUrlData.publicUrl }];
     const mediaColumns = {
-      video_url: isVideo ? publicUrlData.publicUrl : null,
-      images: isVideo ? [] : [{ url: publicUrlData.publicUrl }],
+      video_url: isVideo ? media[0].url : null,
+      images: isVideo ? [] : [{ url: media[0].url }],
     };
 
     if (postType === "story") {

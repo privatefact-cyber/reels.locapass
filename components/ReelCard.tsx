@@ -136,6 +136,33 @@ export function ReelCard({
     }
   }, [isActive, videoUrl]);
 
+  // Stream のHLSはSafariではネイティブ再生、その他では hls.js を使う。
+  // 破棄時にはMediaSource/ネットワーク接続も必ず解放する。
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoUrl || !isActive || !videoUrl.includes(".m3u8")) return;
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = videoUrl;
+      return;
+    }
+    let hls: { destroy: () => void; loadSource: (src: string) => void; attachMedia: (media: HTMLMediaElement) => void } | undefined;
+    void import("hls.js").then(({ default: Hls }) => {
+      if (!Hls.isSupported() || !videoRef.current) return;
+      hls = new Hls({ maxBufferLength: 8, backBufferLength: 0 });
+      hls.loadSource(videoUrl);
+      hls.attachMedia(video);
+    }).catch((cause) => console.error("[stream-playback] hls initialization failed", cause));
+    return () => hls?.destroy();
+  }, [isActive, videoUrl]);
+
+  // iOSではmuted属性の再レンダーだけで再生状態が崩れることがあるため、同じ要素へ明示的に反映する。
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = muted;
+    if (isActive && video.paused) void video.play().catch(() => undefined);
+  }, [isActive, muted]);
+
   return (
     <div
       ref={containerRef}
@@ -154,7 +181,7 @@ export function ReelCard({
       {videoUrl && isActive ? (
         <video
           ref={videoRef}
-          src={videoUrl}
+          src={videoUrl.includes(".m3u8") ? undefined : videoUrl}
           poster={sanitizeImageUrl(posterImageUrl)}
           className="h-full w-full object-contain"
           autoPlay
