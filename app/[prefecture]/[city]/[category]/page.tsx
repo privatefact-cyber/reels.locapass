@@ -157,6 +157,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
                   )}
                   {isPlacePhotoUrl(shop.cover_image_url) && (
                     <PlacePhotoCredit
+                      linked={false}
                       attribution={shop.cover_image_attribution as { name?: string; uri?: string | null } | null}
                       className="absolute inset-x-0 bottom-0 block truncate rounded-none text-center text-[8px]"
                     />

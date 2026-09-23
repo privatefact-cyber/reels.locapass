@@ -961,7 +961,7 @@ export function VenueMapExplorer({
                     )}
                     {!venue.previewVideoUrl && venue.imageUrl && venue.imageAttribution && (
                       <div className="absolute bottom-2 left-2 z-10">
-                        <PlacePhotoCredit attribution={venue.imageAttribution} />
+                        <PlacePhotoCredit linked={false} attribution={venue.imageAttribution} />
                       </div>
                     )}
                     <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2">
