@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, ChevronLeft } from "lucide-react";
+import { Search, ChevronLeft, X } from "lucide-react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
@@ -696,6 +696,16 @@ export function ReelFeed({
                 SHOP
               </button>
             </>
+          )}
+          {keyword && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className={`${pillClass(true)} inline-flex items-center gap-1`}
+            >
+              {keyword}
+              <X size={12} strokeWidth={3} />
+            </button>
           )}
           {genreChoices.map((g) => (
             <button

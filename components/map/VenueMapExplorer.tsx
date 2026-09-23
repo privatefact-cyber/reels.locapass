@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as maplibregl from "maplibre-gl";
 import { MapReelOverlay, type CardRect } from "@/components/map/MapReelOverlay";
-import { CheckCircle2, Globe2, Navigation, Play, Search } from "lucide-react";
+import { CheckCircle2, Globe2, Navigation, Play, Search, X } from "lucide-react";
 import { AFTER_GENRE } from "@/lib/shop/genres";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -805,6 +805,19 @@ export function VenueMapExplorer({
               // iOSで16px未満のinputにフォーカスすると画面が自動ズームするため16px以上にする
               className="min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-neutral-500 focus:outline-none"
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setSearchState("idle");
+                }}
+                aria-label={t.common.close}
+                className="shrink-0 text-neutral-400 hover:text-white"
+              >
+                <X size={15} />
+              </button>
+            )}
             <button
               type="button"
               onClick={goToMyLocation}
