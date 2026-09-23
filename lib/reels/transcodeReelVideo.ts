@@ -10,6 +10,24 @@ export const TRANSCODE_THRESHOLD_BYTES = 35 * 1024 * 1024;
 
 type Progress = (percent: number) => void;
 
+/** ffmpeg.load()等が(ネットワーク不調やWorker初期化失敗で)応答を返さないまま
+ *  固まるケースへの保険。指定時間内に完了しなければreject する。 */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (cause) => {
+        window.clearTimeout(timer);
+        reject(cause);
+      },
+    );
+  });
+}
+
 function inputExtension(file: File): string {
   const extension = file.name.split(".").pop()?.toLowerCase();
   return extension && /^[a-z0-9]{1,8}$/.test(extension) ? extension : "bin";
@@ -67,10 +85,14 @@ export async function transcodeReelVideo(
     // @ffmpeg/core は pthread を含まない単一スレッド版。COOP/COEP は不要。
     const baseUrl = window.location.origin;
     stage = "core-load";
-    await ffmpeg.load({
-      coreURL: `${baseUrl}/ffmpeg/ffmpeg-core.js`,
-      wasmURL: `${baseUrl}/ffmpeg/ffmpeg-core.wasm`,
-    });
+    await withTimeout(
+      ffmpeg.load({
+        coreURL: `${baseUrl}/ffmpeg/ffmpeg-core.js`,
+        wasmURL: `${baseUrl}/ffmpeg/ffmpeg-core.wasm`,
+      }),
+      20_000,
+      "ffmpeg core load",
+    );
     stage = "input-buffer";
     const inputBytes = await fetchFile(file);
     await ffmpeg.writeFile(input, inputBytes);
@@ -136,10 +158,14 @@ async function remuxForFaststart(file: File): Promise<File> {
   const output = "reel.mp4";
   try {
     const baseUrl = window.location.origin;
-    await ffmpeg.load({
-      coreURL: `${baseUrl}/ffmpeg/ffmpeg-core.js`,
-      wasmURL: `${baseUrl}/ffmpeg/ffmpeg-core.wasm`,
-    });
+    await withTimeout(
+      ffmpeg.load({
+        coreURL: `${baseUrl}/ffmpeg/ffmpeg-core.js`,
+        wasmURL: `${baseUrl}/ffmpeg/ffmpeg-core.wasm`,
+      }),
+      20_000,
+      "ffmpeg core load",
+    );
     const inputBytes = await fetchFile(file);
     await ffmpeg.writeFile(input, inputBytes);
     const result = await ffmpeg.exec(["-i", input, "-c", "copy", "-movflags", "+faststart", output], 60_000);

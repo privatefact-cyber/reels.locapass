@@ -27,6 +27,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
   const [optimizing, setOptimizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
@@ -47,15 +48,27 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
     setFile(f);
     setPreview(URL.createObjectURL(f));
 
+    // iOSでファイル選択画面が閉じきる前に処理が始まって見えないよう、一度描画を挟んでから
+    // フォームへ視点を戻す(ネイティブの選択シートが閉じた直後は今どこにいるか分かりづらいため)。
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    formRef.current?.scrollIntoView({ block: "center" });
+
     if (f.type.startsWith("video/")) {
       setOptimizing(true);
-      const optimized = await transcodeReelVideo(f);
-      setOptimizing(false);
-      setFile(optimized);
-      setPreview((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(optimized);
-      });
+      try {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
+        const optimized = await transcodeReelVideo(f);
+        setFile(optimized);
+        setPreview((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return URL.createObjectURL(optimized);
+        });
+      } catch (cause) {
+        // 最適化に失敗/タイムアウトしても、選択した元動画のまま投稿は続けられるようにする。
+        console.error("[reel-upload] optimization skipped; using original file", cause);
+      } finally {
+        setOptimizing(false);
+      }
     }
   }
 
@@ -177,6 +190,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="max-w-sm space-y-3 rounded-xl border border-slate-200 bg-white p-4"
     >
@@ -223,7 +237,17 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
         />
         <p className="mt-1 text-[11px] text-slate-500">空欄ならキャストのプロフィールページへのリンクになります。</p>
       </div>
-      {optimizing && <p className="text-xs text-slate-500">動画をスマホ向けに最適化しています…</p>}
+      {optimizing && (
+        <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2">
+          <div className="h-4 w-4 flex-none animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+          <p className="text-xs font-medium text-slate-700">
+            動画をスマホ向けに最適化しています…
+            <span className="block text-[11px] font-normal text-slate-500">
+              このまま待ってください。完了すると自動でボタンが押せるようになります。
+            </span>
+          </p>
+        </div>
+      )}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <button
