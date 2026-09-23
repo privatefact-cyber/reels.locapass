@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createStaticClient } from "@/lib/supabase/static";
 import { fetchPhotoUri, fetchPlacePhotos } from "@/lib/places/googlePlaces";
 
 // Googleの写真は自前保存せず、表示のたびにGoogleの一時URLへリダイレクトする(規約対応)。
 // cover_url にこのエンドポイントのURLを入れておくと、既存の画像表示がそのまま使える。
 export async function GET(_req: Request, { params }: { params: Promise<{ shopId: string }> }) {
   const { shopId } = await params;
-  const admin = createAdminClient();
+  // 公開店舗の情報だけを読むので匿名クライアントで足りる(非公開店舗はRLSで返らない)。
+  const admin = createStaticClient();
   const { data: shop } = await admin
     .from("locapass_shops")
     .select("google_place_id, google_photo_name, status")
