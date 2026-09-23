@@ -15,12 +15,25 @@ function inputExtension(file: File): string {
   return extension && /^[a-z0-9]{1,8}$/.test(extension) ? extension : "bin";
 }
 
-export async function transcodeReelVideo(file: File, onProgress?: Progress): Promise<File> {
+type TranscodeOptions = {
+  /**
+   * 35MB以下でも再エンコード無しの高速remuxでfaststartを保証する(オプトイン)。
+   * キャスト本人のスマホ投稿(cast mypage)のみで使う想定。店舗管理画面側の
+   * 投稿フォームは元々ほぼ瞬時に終わる体験だったため、デフォルトでは掛けない
+   * (掛けるとFFmpeg WASMの読み込みが常に走り、体感が明確に遅くなるため)。
+   */
+  forceFaststartRemux?: boolean;
+};
+
+export async function transcodeReelVideo(
+  file: File,
+  onProgress?: Progress,
+  options?: TranscodeOptions,
+): Promise<File> {
   if (!file.type.startsWith("video/")) return file;
-  // CapCut等で既に圧縮済みの動画は解像度・ビットレートの再エンコードはしないが、
-  // moov atomの位置(faststart)だけは保証したいので、再エンコード無しの高速remuxを挟む。
-  // 失敗しても投稿自体は止めず、元ファイルのままフォールバックする。
   if (file.size <= TRANSCODE_THRESHOLD_BYTES) {
+    if (!options?.forceFaststartRemux) return file;
+    // 失敗しても投稿自体は止めず、元ファイルのままフォールバックする。
     return remuxForFaststart(file).catch((cause) => {
       console.error("[reel-remux] faststart remux skipped; using original file", cause);
       return file;

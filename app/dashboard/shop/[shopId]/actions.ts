@@ -336,6 +336,59 @@ export async function deleteEvent(shopId: string, eventId: string) {
   revalidateShop(shopId);
 }
 
+export async function updateEvent(shopId: string, eventId: string, formData: FormData) {
+  const supabase = await requireShopAccess(shopId);
+
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  const startDate = String(formData.get("start_date") ?? "").trim();
+  const startTime = parseTimeOfDay(String(formData.get("start_time") ?? ""));
+  const endDate = String(formData.get("end_date") ?? "").trim();
+  const endTime = parseTimeOfDay(String(formData.get("end_time") ?? ""));
+  const imageUrl = String(formData.get("image_url") ?? "").trim();
+  const galleryUrlsRaw = String(formData.get("gallery_image_urls") ?? "").trim();
+
+  if (!title) throw new Error("タイトルは必須です");
+  if (!imageUrl) throw new Error("イベントリール用のサムネイル画像は必須です");
+  if (endDate && !startDate) throw new Error("終了日を設定する場合は開始日も設定してください");
+
+  const startsAt = toJstIso(startDate, startTime, "00:00");
+  const endsAt = toJstIso(endDate, endTime, "23:45");
+  if (startsAt && endsAt && endsAt < startsAt) {
+    throw new Error("終了日時は開始日時より後に設定してください");
+  }
+
+  let galleryImageUrls: string[] = [];
+  if (galleryUrlsRaw) {
+    try {
+      const parsed = JSON.parse(galleryUrlsRaw);
+      if (Array.isArray(parsed)) galleryImageUrls = parsed.filter((u) => typeof u === "string");
+    } catch {
+      throw new Error("詳細ページ用画像の形式が不正です");
+    }
+  }
+
+  const translations = await translateEventText(title, body || null);
+  const { data, error } = await supabase
+    .from("locapass_shop_events")
+    .update({
+      title,
+      body: body || null,
+      starts_at: startsAt,
+      ends_at: endsAt,
+      image_url: imageUrl,
+      gallery_image_urls: galleryImageUrls,
+      translations,
+    })
+    .eq("id", eventId)
+    .eq("shop_id", shopId)
+    .select("id");
+  if (error) throw new Error(`イベントの更新に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) throw new Error("イベントの更新に失敗しました(対象が見つからないか、権限がありません)");
+  revalidateShop(shopId);
+  revalidatePath("/events");
+}
+
 // ---------- 本日の出勤(本家 upsertTodaySchedule) ----------
 export async function upsertTodaySchedule(
   shopId: string,

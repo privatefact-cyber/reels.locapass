@@ -20,6 +20,7 @@ import {
   addPriceItem,
   deleteEvent,
   deletePriceItem,
+  updateEvent,
   updateShopProfile,
   upsertTodaySchedule,
 } from "./actions";
@@ -517,6 +518,7 @@ export default async function LocapassShopSettingsPage({
         shopId={currentShop.id}
         events={events}
         addEvent={addEvent.bind(null, currentShop.id)}
+        updateEvent={updateEvent.bind(null, currentShop.id)}
         deleteEvent={deleteEvent.bind(null, currentShop.id)}
       />
     </div>

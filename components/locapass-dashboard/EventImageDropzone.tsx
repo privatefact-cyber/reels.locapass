@@ -151,12 +151,14 @@ export function SingleImageDropzone({
 export function EventGalleryDropzone({
   shopId,
   name,
+  initialUrls,
 }: {
   shopId: string;
   name: string;
+  initialUrls?: string[];
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [urls, setUrls] = useState<string[]>([]);
+  const [urls, setUrls] = useState<string[]>(initialUrls ?? []);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);

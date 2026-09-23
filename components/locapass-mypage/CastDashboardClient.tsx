@@ -153,7 +153,7 @@ export function CastDashboardClient({
       try {
         // iOSのネイティブ選択シートが閉じきってから重いWorkerを起動する。
         await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
-        const optimized = await transcodeReelVideo(f);
+        const optimized = await transcodeReelVideo(f, undefined, { forceFaststartRemux: true });
         setFile(optimized);
         setPreview((current) => {
           if (current) URL.revokeObjectURL(current);

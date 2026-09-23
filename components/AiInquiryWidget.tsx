@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send, RotateCcw, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { AvatarPeek } from "@/components/AvatarPeek";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_portals.slug
@@ -287,12 +287,14 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                 {m.links && m.links.length > 0 && (
                   <div className="flex max-w-[85%] flex-col gap-1.5">
                     {m.links.map((link) => (
-                      <AvatarPeek key={link.url} href={toPath(link.url)} label={link.title} className="block w-full">
-                        <span className="flex w-full items-center justify-between gap-2 rounded-xl border border-gold/30 bg-white/5 px-3 py-2 text-left text-xs font-semibold text-gold hover:bg-white/10">
-                          {link.title}
-                          <ExternalLink size={12} className="shrink-0" />
-                        </span>
-                      </AvatarPeek>
+                      <Link
+                        key={link.url}
+                        href={toPath(link.url)}
+                        className="flex w-full items-center justify-between gap-2 rounded-xl border border-gold/30 bg-white/5 px-3 py-2 text-left text-xs font-semibold text-gold hover:bg-white/10"
+                      >
+                        {link.title}
+                        <ExternalLink size={12} className="shrink-0" />
+                      </Link>
                     ))}
                   </div>
                 )}

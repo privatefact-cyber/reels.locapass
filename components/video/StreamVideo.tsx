@@ -84,7 +84,6 @@ export const StreamVideo = forwardRef<HTMLVideoElement, StreamVideoProps>(functi
       src={isHls ? undefined : src}
       muted={muted}
       playsInline
-      // @ts-expect-error WebKit specific attribute
       webkit-playsinline="true"
       {...rest}
     />
