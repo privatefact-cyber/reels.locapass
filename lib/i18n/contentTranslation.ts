@@ -11,7 +11,7 @@ import type { Locale } from "@/lib/i18n/locale";
  * - 住所の英語化(lib/map/translateAddress.ts)と同じGEMINI_API_KEYで動き、追加の契約が要らない
  */
 
-export const TRANSLATION_TARGETS = ["en", "zh"] as const;
+export const TRANSLATION_TARGETS = ["en", "zh", "ar"] as const;
 export type TranslationTarget = (typeof TRANSLATION_TARGETS)[number];
 
 /** DBに保存する翻訳。source_hash は翻訳元(日本語)のハッシュで、変わっていなければ翻訳し直さない。 */
@@ -19,6 +19,7 @@ export type StoredTranslations = {
   source_hash?: string;
   en?: Record<string, string>;
   zh?: Record<string, string>;
+  ar?: Record<string, string>;
 };
 
 export type SourceFields = Record<string, string | null | undefined>;
@@ -44,7 +45,17 @@ export function asStoredTranslations(value: unknown): StoredTranslations {
 
 /** 今の日本語に対して、保存済みの翻訳が古い(または無い)か。 */
 export function needsTranslation(fields: SourceFields, stored: unknown): boolean {
-  return asStoredTranslations(stored).source_hash !== translationSourceHash(fields);
+  const st = asStoredTranslations(stored);
+  if (st.source_hash !== translationSourceHash(fields)) return true;
+  // 翻訳対象の言語が後から増えた(例: アラビア語)場合、日本語が変わっていなくても足りない言語を作る。
+  // 訳す文章が1つも無い店舗は、言語が足りなくても対象にしない(毎回引っかかるのを防ぐ)。
+  return Object.keys(nonEmptyFields(fields)).length > 0 && TRANSLATION_TARGETS.some((t) => !st[t]);
+}
+
+/** 保存済みの翻訳のうち、まだ無い言語だけを返す(その言語だけ作り足すバックフィル用)。 */
+export function missingTargets(stored: unknown): TranslationTarget[] {
+  const st = asStoredTranslations(stored);
+  return TRANSLATION_TARGETS.filter((t) => !st[t]);
 }
 
 /**
@@ -58,27 +69,38 @@ export function pickTranslation(
   key: string,
 ): { text: string | null; translated: boolean } {
   if (locale === "ja" || !original) return { text: original, translated: false };
-  // アラビア語の保存翻訳はまだ作っていないので、英語の翻訳があればそれで代替し、無ければ原文を出す。
+  // アラビア語は、まだ翻訳が無い項目だけ英語の翻訳で代替する(英語も無ければ原文)。
   const stored2 = asStoredTranslations(stored);
-  const translated = locale === "ar" ? stored2.en?.[key] : stored2[locale]?.[key];
+  const translated = locale === "ar" ? (stored2.ar?.[key] ?? stored2.en?.[key]) : stored2[locale]?.[key];
   return translated ? { text: translated, translated: true } : { text: original, translated: false };
 }
 
-const PROMPT_RULES = [
-  "You translate Japanese text written by nightlife venues and restaurants in Japan for their listing pages.",
-  "Translate every field of every item into natural English (key \"en\") and Simplified Chinese (key \"zh\").",
-  "Rules:",
-  "- Do not translate proper nouns: shop names, building names, brand names and people's names.",
-  "  In English write them in romaji (or keep the Latin spelling if they already use it); in Chinese keep them as written.",
-  "- Keep every number, time and price exactly. Write 翌5:00 as \"until 5:00 AM (next day)\" / \"至次日5:00\".",
-  "- 円 becomes \"yen\" in English and \"日元\" in Chinese. 年中無休 means open every day.",
-  "- Do not add, remove or soften information. Keep line breaks.",
-  "- Short, friendly, listing-page tone. No marketing exaggeration that is not in the original.",
-  "Return ONLY JSON: an array with one object per input item, in the same order,",
-  "each shaped as {\"en\": {<same keys>}, \"zh\": {<same keys>}}.",
-].join("\n");
+const TARGET_LABEL: Record<TranslationTarget, string> = {
+  en: "natural English (key \"en\")",
+  zh: "Simplified Chinese (key \"zh\")",
+  ar: "Modern Standard Arabic (key \"ar\")",
+};
 
-async function callGemini(items: Record<string, string>[]): Promise<unknown> {
+function buildPromptRules(targets: readonly TranslationTarget[]): string {
+  const langList = targets.map((t) => TARGET_LABEL[t]).join(", ");
+  const shape = targets.map((t) => `"${t}": {<same keys>}`).join(", ");
+  return [
+    "You translate Japanese text written by nightlife venues and restaurants in Japan for their listing pages.",
+    `Translate every field of every item into ${langList}.`,
+    "Rules:",
+    "- Do not translate proper nouns: shop names, building names, brand names and people's names.",
+    "  In English write them in romaji (or keep the Latin spelling if they already use it); in Chinese and Arabic keep them as written.",
+    "- Keep every number, time and price exactly (use Western digits 0-9 in Arabic too).",
+    "  Write 翌5:00 as \"until 5:00 AM (next day)\" / \"至次日5:00\" / \"حتى الساعة 5:00 صباحًا (اليوم التالي)\".",
+    "- 円 becomes \"yen\" in English, \"日元\" in Chinese and \"ين\" in Arabic. 年中無休 means open every day.",
+    "- Do not add, remove or soften information. Keep line breaks.",
+    "- Short, friendly, listing-page tone. No marketing exaggeration that is not in the original.",
+    "Return ONLY JSON: an array with one object per input item, in the same order,",
+    `each shaped as {${shape}}.`,
+  ].join("\n");
+}
+
+async function callGemini(items: Record<string, string>[], targets: readonly TranslationTarget[]): Promise<unknown> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY が設定されていません");
 
@@ -86,7 +108,7 @@ async function callGemini(items: Record<string, string>[]): Promise<unknown> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: `${PROMPT_RULES}\n\n${JSON.stringify(items)}` }] }],
+      contents: [{ parts: [{ text: `${buildPromptRules(targets)}\n\n${JSON.stringify(items)}` }] }],
       generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
     }),
   });
@@ -102,7 +124,10 @@ async function callGemini(items: Record<string, string>[]): Promise<unknown> {
  * 空の項目しか無いセットはAPIに送らず、source_hashだけ持たせる。
  * 応答の件数・キーが入力と食い違ったセットは null(呼び出し側は日本語表示のままにする)。
  */
-export async function translateFieldsBatch(items: SourceFields[]): Promise<(StoredTranslations | null)[]> {
+export async function translateFieldsBatch(
+  items: SourceFields[],
+  targets: readonly TranslationTarget[] = TRANSLATION_TARGETS,
+): Promise<(StoredTranslations | null)[]> {
   const cleaned = items.map(nonEmptyFields);
   const toSendIndexes = cleaned.map((c, i) => (Object.keys(c).length ? i : -1)).filter((i) => i >= 0);
 
@@ -111,7 +136,7 @@ export async function translateFieldsBatch(items: SourceFields[]): Promise<(Stor
   }));
   if (toSendIndexes.length === 0) return results;
 
-  const parsed = await callGemini(toSendIndexes.map((i) => cleaned[i]));
+  const parsed = await callGemini(toSendIndexes.map((i) => cleaned[i]), targets);
   if (!Array.isArray(parsed) || parsed.length !== toSendIndexes.length) {
     for (const i of toSendIndexes) results[i] = null;
     return results;
@@ -121,7 +146,7 @@ export async function translateFieldsBatch(items: SourceFields[]): Promise<(Stor
     const keys = Object.keys(cleaned[itemIndex]);
     const response = parsed[responseIndex] as Partial<Record<TranslationTarget, Record<string, unknown>>> | null;
     const stored: StoredTranslations = { source_hash: translationSourceHash(items[itemIndex]) };
-    for (const target of TRANSLATION_TARGETS) {
+    for (const target of targets) {
       const values = response?.[target];
       const picked: Record<string, string> = {};
       for (const key of keys) {
