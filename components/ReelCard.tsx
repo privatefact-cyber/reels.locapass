@@ -87,6 +87,7 @@ export function ReelCard({
   const { t } = useLocale();
   const resolvedCtaText = ctaText ?? t.common.learnMore;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
   const [muted, setMuted] = useState(true);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     videoUrl ? "loading" : "ready",
@@ -128,6 +129,23 @@ export function ReelCard({
   // 非アクティブなカードはDOM上に<video>要素を一切持たない。
   // 再生開始・HLSアタッチ(Safariネイティブ/hls.js)・muted切り替え時のiOS再開は
   // すべてStreamVideo側で行う。
+
+  // フィードのスワイプ中に、動画全面を覆うリンク/ミュートボタンが指の移動を
+  // 無視して「タップ」と誤判定し、意図せずページ遷移/ミュート切替してしまう対策。
+  const TAP_MOVE_THRESHOLD_PX = 12;
+  function handlePointerDown(e: React.PointerEvent) {
+    pointerDownPos.current = { x: e.clientX, y: e.clientY };
+  }
+  function guardTapClick(e: React.MouseEvent) {
+    const start = pointerDownPos.current;
+    if (!start) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    if (Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD_PX) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
 
   return (
     <div
@@ -223,13 +241,24 @@ export function ReelCard({
       {/* 再生中は画像中央部タップで指定リンク先へ(投稿の任意URL、無ければ既定のリンク先)。
           この後に続くボタン類はDOM順で上に来るため、それぞれのタップは奪わない。 */}
       {videoUrl && isActive && (
-        <Link href={ctaUrl} aria-label={resolvedCtaText} className="absolute inset-0" />
+        <Link
+          href={ctaUrl}
+          aria-label={resolvedCtaText}
+          className="absolute inset-0"
+          onPointerDown={handlePointerDown}
+          onClick={guardTapClick}
+        />
       )}
 
       {videoUrl && (
         <button
           type="button"
-          onClick={() => setMuted((v) => !v)}
+          onPointerDown={handlePointerDown}
+          onClick={(e) => {
+            guardTapClick(e);
+            if (e.defaultPrevented) return;
+            setMuted((v) => !v);
+          }}
           aria-label={muted ? t.common.unmute : t.common.mute}
           className="pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm"
         >

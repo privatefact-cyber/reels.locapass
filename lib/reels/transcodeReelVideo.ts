@@ -17,9 +17,17 @@ function inputExtension(file: File): string {
 
 export async function transcodeReelVideo(file: File, onProgress?: Progress): Promise<File> {
   if (!file.type.startsWith("video/")) return file;
-  // CapCut等で既に圧縮済みの動画は、Worker/WASMを一切ロードせずそのまま直送する。
-  if (file.size <= TRANSCODE_THRESHOLD_BYTES) return file;
+  // CapCut等で既に圧縮済みの動画は解像度・ビットレートの再エンコードはしないが、
+  // moov atomの位置(faststart)だけは保証したいので、再エンコード無しの高速remuxを挟む。
+  // 失敗しても投稿自体は止めず、元ファイルのままフォールバックする。
+  if (file.size <= TRANSCODE_THRESHOLD_BYTES) {
+    return remuxForFaststart(file).catch((cause) => {
+      console.error("[reel-remux] faststart remux skipped; using original file", cause);
+      return file;
+    });
+  }
 
+  // 動的 import により、投稿画面を開かない閲覧者は FFmpeg を取得しない。
   let stage = "dynamic-import";
   try {
   const [{ FFmpeg }, { fetchFile }] = await Promise.all([
@@ -30,18 +38,21 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
   const input = `input.${inputExtension(file)}`;
   const output = "reel.mp4";
   const isPortrait = await isPortraitVideo(file);
+  const target = isPortrait ? "1080:1920" : "1920:1080";
   const filter = isPortrait
     ? "fps=24,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920"
     : "fps=24,scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080";
+
   const progress = ({ progress }: { progress: number }) => {
+    // FFmpeg は mux 中に 1 を報告することがあるため、完了までは 99% に留める。
     onProgress?.(Math.max(1, Math.min(99, Math.round(progress * 100))));
   };
 
   ffmpeg.on("progress", progress);
   try {
     onProgress?.(1);
-    const baseUrl = window.location.origin;
     // @ffmpeg/core は pthread を含まない単一スレッド版。COOP/COEP は不要。
+    const baseUrl = window.location.origin;
     stage = "core-load";
     await ffmpeg.load({
       coreURL: `${baseUrl}/ffmpeg/ffmpeg-core.js`,
@@ -52,11 +63,23 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
     await ffmpeg.writeFile(input, inputBytes);
     stage = "encode";
     const result = await ffmpeg.exec([
-      "-i", input, "-t", "30.5", "-vf", filter, "-r", "24",
-      "-c:v", "libx264", "-profile:v", "main", "-pix_fmt", "yuv420p",
-      "-b:v", "3200k", "-maxrate", "3500k", "-bufsize", "7000k", "-preset", "veryfast",
-      "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-ar", "48000",
-      "-movflags", "+faststart", output,
+      "-i", input,
+      "-t", "30.5",
+      "-vf", filter,
+      "-r", "24",
+      "-c:v", "libx264",
+      "-profile:v", "main",
+      "-pix_fmt", "yuv420p",
+      "-b:v", "3200k",
+      "-maxrate", "3500k",
+      "-bufsize", "7000k",
+      "-preset", "veryfast",
+      "-c:a", "aac",
+      "-b:a", "128k",
+      "-ac", "2",
+      "-ar", "48000",
+      "-movflags", "+faststart",
+      output,
     ], 300_000);
     if (result !== 0) throw new Error("動画の変換に失敗しました");
     stage = "output-read";
@@ -69,8 +92,11 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
       throw new Error("変換後の動画が15MBを超えました。短い動画にしてください");
     }
     onProgress?.(100);
-    return new File([blob], `${file.name.replace(/\.[^.]+$/, "") || "reel"}.mp4`, { type: "video/mp4" });
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, "") || "reel"}.mp4`, {
+      type: "video/mp4",
+    });
   } finally {
+    // Worker終了がWASM heapとMEMFSをまとめて解放する。例外・キャンセル時も必ず実行。
     ffmpeg.off("progress", progress);
     ffmpeg.terminate();
   }
@@ -83,6 +109,34 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
       error: cause,
     });
     throw cause;
+  }
+}
+
+/** 再エンコード無しでコンテナだけmp4に統一し、moov atomを先頭に移動する(高速)。 */
+async function remuxForFaststart(file: File): Promise<File> {
+  const [{ FFmpeg }, { fetchFile }] = await Promise.all([
+    import("@ffmpeg/ffmpeg"),
+    import("@ffmpeg/util"),
+  ]);
+  const ffmpeg = new FFmpeg();
+  const input = `input.${inputExtension(file)}`;
+  const output = "reel.mp4";
+  try {
+    const baseUrl = window.location.origin;
+    await ffmpeg.load({
+      coreURL: `${baseUrl}/ffmpeg/ffmpeg-core.js`,
+      wasmURL: `${baseUrl}/ffmpeg/ffmpeg-core.wasm`,
+    });
+    const inputBytes = await fetchFile(file);
+    await ffmpeg.writeFile(input, inputBytes);
+    const result = await ffmpeg.exec(["-i", input, "-c", "copy", "-movflags", "+faststart", output], 60_000);
+    if (result !== 0) throw new Error("remux failed");
+    const data = await ffmpeg.readFile(output);
+    const bytes = new Uint8Array(data as Uint8Array);
+    const blob = new Blob([bytes.buffer], { type: "video/mp4" });
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, "") || "reel"}.mp4`, { type: "video/mp4" });
+  } finally {
+    ffmpeg.terminate();
   }
 }
 

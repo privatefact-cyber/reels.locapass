@@ -30,12 +30,26 @@ export const StreamVideo = forwardRef<HTMLVideoElement, StreamVideoProps>(functi
 
   useEffect(() => {
     const video = localRef.current;
-    if (!video || !src || !active || !isHls) return;
+    if (!video || !src || !active) return;
+
+    // 非アクティブ化・アンマウント時にiOS Safari(WebKit)がバックグラウンドで
+    // Rangeリクエストのプリロードを続けるのを確実に止める。DOMからの除去
+    // (Reactのアンマウント)だけでは止まらないことがあるための明示的な後始末。
+    const stopLoading = () => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    if (!isHls) {
+      void video.play().catch(() => undefined);
+      return stopLoading;
+    }
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
       void video.play().catch(() => undefined);
-      return;
+      return stopLoading;
     }
 
     let hls: HlsInstance | undefined;
@@ -48,7 +62,10 @@ export const StreamVideo = forwardRef<HTMLVideoElement, StreamVideoProps>(functi
         void video.play().catch(() => undefined);
       })
       .catch((cause) => console.error("[stream-playback] hls initialization failed", cause));
-    return () => hls?.destroy();
+    return () => {
+      hls?.destroy();
+      stopLoading();
+    };
   }, [src, active, isHls]);
 
   useEffect(() => {

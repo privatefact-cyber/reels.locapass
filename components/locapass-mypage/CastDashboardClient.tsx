@@ -10,10 +10,10 @@ import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPane
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { RevealableQr } from "@/components/RevealableQr";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
-import { TRANSCODE_THRESHOLD_BYTES, transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
+import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
+import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
-import { uploadToStream } from "@/lib/stream/uploadToStream";
-import { streamPlaybackUrl } from "@/lib/stream/playback";
+import { uploadPosterToR2, uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
 
 export type MyReel = {
@@ -148,12 +148,11 @@ export function CastDashboardClient({
       return;
     }
 
-    // 35MB以下はここで終了するため、FFmpeg Worker/WASMは一切ロードされない。
-    if (f.type.startsWith("video/") && f.size > TRANSCODE_THRESHOLD_BYTES) {
+    if (f.type.startsWith("video/")) {
       setOptimizing(true);
       try {
-        // プレビューとタイマーを表示してから重いWorkerを起動する。
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 100));
+        // iOSのネイティブ選択シートが閉じきってから重いWorkerを起動する。
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
         const optimized = await transcodeReelVideo(f);
         setFile(optimized);
         setPreview((current) => {
@@ -185,13 +184,17 @@ export function CastDashboardClient({
     const isVideo = file.type.startsWith("video/");
     let media: MyReel["media"];
     let previewUrl: string | null = null;
+    let posterUrl: string | null = null;
     try {
       if (isVideo) {
-        // 動画本体はブラウザからCloudflare StreamへTUS直送する。Next/Supabase Storageを通さない。
-        const uid = await uploadToStream(file);
-        const playbackUrl = streamPlaybackUrl(uid);
-        if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
-        media = [{ type: "video", url: playbackUrl }];
+        // 動画本体はブラウザからCloudflare R2へ直接PUTする(転送費がかからずCDN配信できるため)。
+        const [publicUrl, posterBlob] = await Promise.all([
+          uploadVideoToR2(file),
+          capturePosterFrame(file),
+        ]);
+        // サムネイル生成に失敗しても投稿自体は止めない。
+        posterUrl = posterBlob ? await uploadPosterToR2(posterBlob).catch(() => null) : null;
+        media = [{ type: "video", url: publicUrl }];
       } else {
         const ext = file.name.split(".").pop() || "jpg";
         const path = `${shopId}/${Date.now()}.${ext}`;
@@ -209,6 +212,7 @@ export function CastDashboardClient({
     const mediaColumns = {
       video_url: isVideo ? media[0].url : null,
       images: isVideo ? [] : [{ url: media[0].url }],
+      poster_url: isVideo ? posterUrl : null,
     };
 
     if (postType === "story") {
