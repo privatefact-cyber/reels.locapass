@@ -679,6 +679,7 @@ export default async function ShopDetailPage({
       </div>
 
       <ShopSectionNav
+        shopId={shopRow.id}
         phone={store.phone}
         lineContactUrl={store.lineContactUrl}
         lineQrImageUrl={store.lineQrImageUrl}

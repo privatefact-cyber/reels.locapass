@@ -3811,6 +3811,14 @@ export type Database = {
         Args: { p_shop_id: string }
         Returns: number
       }
+      locapass_record_contact_tap: {
+        Args: { p_shop_id: string; p_kind: string }
+        Returns: undefined
+      }
+      locapass_contact_tap_stats: {
+        Args: { p_shop_id: string }
+        Returns: { kind: string; taps_7d: number; taps_30d: number }[]
+      }
       locapass_create_cast_invite: {
         Args: { p_cast_id: string }
         Returns: {

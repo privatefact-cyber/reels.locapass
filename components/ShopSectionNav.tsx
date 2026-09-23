@@ -16,11 +16,13 @@ function getScrollItems(t: Dictionary) {
 }
 
 export function ShopSectionNav({
+  shopId,
   phone,
   lineContactUrl,
   lineQrImageUrl,
   sections,
 }: {
+  shopId: string;
   phone: string | null;
   lineContactUrl: string | null;
   lineQrImageUrl: string | null;
@@ -98,6 +100,7 @@ export function ShopSectionNav({
       </nav>
 
       <ShopContactModal
+        shopId={shopId}
         open={contactOpen}
         onClose={() => setContactOpen(false)}
         phone={phone}

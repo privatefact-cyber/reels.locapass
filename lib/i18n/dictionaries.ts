@@ -133,6 +133,9 @@ export type Dictionary = {
     callHint: string;
     lineButton: string;
     noContact: string;
+    mentionHint: string;
+    mentionPhrase: string;
+    copied2: string;
   };
   comment: {
     title: string;
@@ -357,6 +360,9 @@ const ja: Dictionary = {
     callHint: "PCでは自動発信されないことがあります。番号タップでコピーできます",
     lineButton: "LINEで問い合わせ",
     noContact: "この店舗の連絡先情報は現在登録されていません。",
+    mentionHint: "連絡の際は「LOCAPASSを見た」とお伝えいただくとスムーズです",
+    mentionPhrase: "LOCAPASSを見て連絡しました",
+    copied2: "コピーしました",
   },
   comment: {
     title: "コメント",
@@ -581,6 +587,9 @@ const en: Dictionary = {
     callHint: "Calls may not start automatically on PC. Tap the number to copy it.",
     lineButton: "Contact via LINE",
     noContact: "No contact information is registered for this shop yet.",
+    mentionHint: "Please mention that you found the shop on LOCAPASS when you get in touch.",
+    mentionPhrase: "I saw this shop on LOCAPASS",
+    copied2: "Copied",
   },
   comment: {
     title: "Comments",
@@ -805,6 +814,9 @@ const zh: Dictionary = {
     callHint: "在电脑上可能无法自动拨号。点击号码即可复制。",
     lineButton: "通过LINE咨询",
     noContact: "该店铺暂未登记联系方式。",
+    mentionHint: "联系时请告知您是通过LOCAPASS看到的，会更顺畅。",
+    mentionPhrase: "我在LOCAPASS上看到了这家店",
+    copied2: "已复制",
   },
   comment: {
     title: "评论",

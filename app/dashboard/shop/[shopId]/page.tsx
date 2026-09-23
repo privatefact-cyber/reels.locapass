@@ -11,6 +11,7 @@ import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { RevealableQr } from "@/components/RevealableQr";
 import { TodayScheduleBoard, type TodayScheduleRow } from "@/components/locapass-dashboard/TodayScheduleBoard";
 import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel";
+import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapStatsCard";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import type { ShopEvent } from "@/lib/types/shop";
@@ -190,6 +191,8 @@ export default async function LocapassShopSettingsPage({
       ).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })})`
     : null;
 
+  const { data: contactTapStats } = await supabase.rpc("locapass_contact_tap_stats", { p_shop_id: currentShop.id });
+
   return (
     <div className="space-y-8">
       <section className="flex flex-wrap items-start justify-between gap-4">
@@ -204,6 +207,8 @@ export default async function LocapassShopSettingsPage({
           <p className="text-xs text-slate-500">現在のお気に入り数</p>
         </div>
       </section>
+
+      <ContactTapStatsCard stats={contactTapStats ?? []} />
 
       <ShopCompletenessCard percent={completeness.percent} items={completenessItems} />
 

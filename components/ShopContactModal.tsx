@@ -3,15 +3,18 @@
 import { useState, useRef } from "react";
 import { Phone, MessageCircle, X, Copy, Check } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { createClient } from "@/lib/supabase/client";
 
 /** 店舗詳細のフローティングメニューから開く「電話・店舗LINE連絡」ボトムシート。 */
 export function ShopContactModal({
+  shopId,
   open,
   onClose,
   phone,
   lineContactUrl,
   lineQrImageUrl,
 }: {
+  shopId: string;
   open: boolean;
   onClose: () => void;
   phone: string | null;
@@ -22,10 +25,38 @@ export function ShopContactModal({
   const [dragY, setDragY] = useState(0);
   const [qrZoomed, setQrZoomed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mentionCopied, setMentionCopied] = useState(false);
   const dragging = useRef(false);
   const startY = useRef(0);
 
   if (!open) return null;
+
+  /**
+   * 「このポータル経由で連絡が来た」ことを店舗側に見せるためのタップ計測(匿名・回数のみ)。
+   * 同じ端末・同じ店舗・同じ種類は1セッションに1回だけ数える。失敗しても連絡操作は妨げない。
+   */
+  function trackTap(kind: "phone" | "line" | "line_qr") {
+    try {
+      const key = `contact_tap:${shopId}:${kind}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // sessionStorageが使えない環境では重複判定なしで送る
+    }
+    void createClient()
+      .rpc("locapass_record_contact_tap", { p_shop_id: shopId, p_kind: kind })
+      .then(() => undefined, () => undefined);
+  }
+
+  async function handleCopyMention() {
+    try {
+      await navigator.clipboard.writeText(t.contact.mentionPhrase);
+      setMentionCopied(true);
+      setTimeout(() => setMentionCopied(false), 1500);
+    } catch {
+      // クリップボードAPIが使えない環境では何もしない(文言は目視で読める)
+    }
+  }
 
   async function handleCopyPhone() {
     if (!phone) return;
@@ -89,6 +120,7 @@ export function ShopContactModal({
             <div>
               <a
                 href={`tel:${phone}`}
+                onClick={() => trackTap("phone")}
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-3 text-sm font-semibold text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.25)]"
               >
                 <Phone size={16} />
@@ -112,6 +144,7 @@ export function ShopContactModal({
             <div>
               <a
                 href={lineContactUrl}
+                onClick={() => trackTap("line")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex w-full items-center justify-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-300 backdrop-blur-xl transition hover:bg-amber-500/20"
@@ -123,7 +156,10 @@ export function ShopContactModal({
               {lineQrImageUrl && (
                 <button
                   type="button"
-                  onClick={() => setQrZoomed(true)}
+                  onClick={() => {
+                    trackTap("line_qr");
+                    setQrZoomed(true);
+                  }}
                   className="mx-auto mt-3 flex flex-col items-center gap-1.5"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -135,6 +171,21 @@ export function ShopContactModal({
                   <span className="text-[11px] text-neutral-500">{t.contact.lineQrHint}</span>
                 </button>
               )}
+            </div>
+          )}
+
+          {(phone || lineContactUrl) && (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center">
+              <p className="text-[11px] text-neutral-400">{t.contact.mentionHint}</p>
+              <button
+                type="button"
+                onClick={handleCopyMention}
+                className="mx-auto mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-300 transition hover:text-amber-200"
+              >
+                <span>{t.contact.mentionPhrase}</span>
+                {mentionCopied ? <Check size={13} className="text-amber-400" /> : <Copy size={13} />}
+              </button>
+              {mentionCopied && <p className="mt-1 text-[11px] text-neutral-500">{t.contact.copied2}</p>}
             </div>
           )}
 
