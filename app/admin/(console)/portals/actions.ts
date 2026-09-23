@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { requireAdmin, requireRootAdmin } from "@/lib/admin/require-admin";
 
 /**
@@ -218,7 +219,7 @@ export async function createPortalShop(_prev: CreateShopState, formData: FormDat
   const { data: shopId, error } = await supabase.rpc("locapass_create_shop", {
     p_portal_id: portalId,
     p_name: name,
-    p_category: String(formData.get("category") ?? "").trim() || undefined,
+    p_category: normalizeCategory(String(formData.get("category") ?? "")) ?? undefined,
     p_address: String(formData.get("address") ?? "").trim() || undefined,
     p_tel: String(formData.get("tel") ?? "").trim() || undefined,
   });

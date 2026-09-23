@@ -13,7 +13,7 @@ const DATA_URL = "http://linkdata.org/api/1/rdf1s7928i/OpenworksSCS/datapackage.
 const SITE_ID = 399;
 
 const normalize = (value: unknown) => String(value ?? "").trim().replace(/\s+/g, " ");
-const categoryFor = (note: string) => /カフェ|cafe/i.test(note) ? "コミュニティカフェ" : "コミュニティスペース";
+const categoryFor = (note: string) => /カフェ|cafe/i.test(note) ? "カフェ・スイーツ" : "コミュニティ";
 const slugFor = (sourceId: string, name: string) => {
   let hash = 5381;
   for (const byte of new TextEncoder().encode(`${sourceId}:${name}`)) hash = ((hash * 33) ^ byte) >>> 0;

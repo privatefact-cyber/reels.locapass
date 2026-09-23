@@ -14,6 +14,7 @@ import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel
 import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapStatsCard";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
+import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
 import type { ShopEvent } from "@/lib/types/shop";
 import { toJstDateString, getJstNow } from "@/lib/reels/nowWorking";
 import {
@@ -47,7 +48,6 @@ export default async function LocapassShopSettingsPage({
     { data: shopRow },
     { data: eventRows },
     { count: reelCount },
-    { data: categoryRows },
     { data: priceItemRows },
     { data: castRows },
     { data: favoriteCountRaw },
@@ -71,7 +71,6 @@ export default async function LocapassShopSettingsPage({
         .eq("shop_id", currentShop.id)
         .eq("status", "publish")
         .eq("reel_type", "permanent"),
-      supabase.from("locapass_shops").select("category").not("category", "is", null),
       supabase
         .from("locapass_shop_price_items")
         .select("id, name, duration_minutes, price, display_order")
@@ -116,11 +115,10 @@ export default async function LocapassShopSettingsPage({
     gallery_image_urls: shopRow.gallery_image_urls,
   };
 
-  // 本家のジャンルは固定のナイト系カテゴリだが、locapassの業種は店舗ごとの自由入力なので、
-  // 既存の業種一覧を選択肢にする(現在値が一覧から消えて保存時に空になるのを防ぐ)。
-  const genreChoices = Array.from(
-    new Set([...(categoryRows ?? []).map((r) => r.category as string), ...(shop.genre ? [shop.genre] : [])]),
-  ).sort((a, b) => a.localeCompare(b, "ja"));
+  // 業種は固定10種類のプルダウン。現在値が一覧に無い場合(運営の「公式」や整理前の古い値)は、
+  // 保存時に空になったり勝手に書き換わったりしないよう、その値も選択肢に足す。
+  const genreChoices: string[] = [...LOCAPASS_CATEGORIES];
+  if (shop.genre && !genreChoices.includes(shop.genre)) genreChoices.push(shop.genre);
 
   const favoriteCount = favoriteCountRaw ?? 0;
   const priceItems = priceItemRows ?? [];

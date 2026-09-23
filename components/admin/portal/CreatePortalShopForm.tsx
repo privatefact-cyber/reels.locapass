@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createPortalShop, type CreateShopState } from "@/app/admin/(console)/portals/actions";
 import { IssuedLoginNotice } from "./IssuedLoginNotice";
+import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
 
 const INPUT =
   "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20";
@@ -15,12 +16,9 @@ const INPUT =
 export function CreatePortalShopForm({
   portals,
   defaultPortalId,
-  categorySuggestions = [],
 }: {
   portals: { id: number; name: string }[];
   defaultPortalId?: number;
-  /** 業種の入力候補(既存の業種を使用数順に)。自由入力は可能だが、候補から選ぶとタグが増えにくい。 */
-  categorySuggestions?: string[];
 }) {
   const [state, formAction, pending] = useActionState<CreateShopState, FormData>(createPortalShop, {
     status: "idle",
@@ -73,20 +71,16 @@ export function CreatePortalShopForm({
         </label>
         <label className="block">
           <span className="text-sm font-medium text-slate-700">業種</span>
-          <input
-            name="category"
-            list="category-suggestions"
-            autoComplete="off"
-            placeholder="例: カフェ"
-            className={INPUT}
-          />
-          <datalist id="category-suggestions">
-            {categorySuggestions.map((c) => (
-              <option key={c} value={c} />
+          <select name="category" defaultValue="" className={INPUT}>
+            <option value="">選択してください</option>
+            {LOCAPASS_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
-          </datalist>
+          </select>
           <p className="mt-1 text-[11px] text-slate-400">
-            入力すると既存の業種が候補に出ます。新しい業種名はそのままタグになるため、近い業種があればそちらを選んでください。
+            当てはまるものが無い場合は「その他」を選んでください。
           </p>
         </label>
         <label className="block">

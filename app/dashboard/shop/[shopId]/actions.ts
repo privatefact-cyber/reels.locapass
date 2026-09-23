@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { translateAddressToEnglish } from "@/lib/map/translateAddress";
 import { needsTranslation, translateFields } from "@/lib/i18n/contentTranslation";
 import type { Json } from "@/types/supabase";
+import { normalizeCategory } from "@/lib/shop/locapassCategories";
+import { OFFICIAL_CATEGORY } from "@/lib/shop/genres";
 import { translateEventText, translatePriceItemNames } from "@/lib/shop/shopTranslations";
 
 /**
@@ -61,7 +63,7 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   // 翻訳が落ちても店舗情報の保存自体は通す。
   const { data: currentShop } = await supabase
     .from("locapass_shops")
-    .select("address, address_en, tagline, translations")
+    .select("address, address_en, tagline, translations, category")
     .eq("id", shopId)
     .maybeSingle();
 
@@ -100,7 +102,7 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
     .from("locapass_shops")
     .update({
       name,
-      category: genre || null,
+      category: normalizeCategory(genre, { allowOfficial: currentShop?.category === OFFICIAL_CATEGORY }),
       address: address || null,
       ...addressEnPatch,
       tel: phone || null,

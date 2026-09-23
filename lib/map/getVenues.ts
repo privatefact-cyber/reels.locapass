@@ -55,7 +55,7 @@ function mapClient() {
 
 /**
  * ジャンル(業種)フィルターのピル用に、掲載中店舗の実カテゴリを重複無しで返す。
- * locapass_shops.categoryはサイトごとに自由入力なので、LUXELA側のような固定リストは無い。
+ * locapass_shops.category は lib/shop/locapassCategories.ts の固定リスト(+運営の「公式」)。
  */
 export async function getVenueGenres(): Promise<string[]> {
   const supabase = mapClient();
