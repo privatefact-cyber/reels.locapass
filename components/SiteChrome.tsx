@@ -16,7 +16,7 @@ type Props = {
   myPageInitial: string | null;
 };
 
-const FULL_BLEED_PATTERN = /^\/map$\vert{}^\/[^/]+\/[^/]+\/map$/;
+const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
 const EXCLUDED_PREFIXES = ["/gate", "/admin", "/dashboard", "/cast/login", "/staff/login"];
 const CHROME_INCLUDED_PREFIXES = ["/dashboard/staff", "/dashboard/cast"];
 

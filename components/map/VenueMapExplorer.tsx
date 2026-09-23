@@ -13,6 +13,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { geocode } from "@/lib/map/geocode";
 import { estimateTimeFromDistance } from "@/lib/map/estimateTime";
+import { OPEN_SEARCH_EVENT } from "@/lib/reels/events";
 import type { NightlifeGenre, VenueCardData, VenuePin } from "@/types/venue";
 import { StreamVideo } from "@/components/video/StreamVideo";
 
@@ -85,6 +86,7 @@ export function VenueMapExplorer({
     [genres],
   );
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -763,6 +765,17 @@ export function VenueMapExplorer({
     };
   }, [activeId, venueById, revealOnMap]);
 
+  // ボトムナビの検索ボタンから開いたときは、このマップ本来の住所検索欄にフォーカスするだけにする
+  // (ホームのグリッド絞り込みモーダルには繋がない。マップはピン移動が本来の検索体験のため)。
+  useEffect(() => {
+    function handleOpenSearch() {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    }
+    window.addEventListener(OPEN_SEARCH_EVENT, handleOpenSearch);
+    return () => window.removeEventListener(OPEN_SEARCH_EVENT, handleOpenSearch);
+  }, []);
+
   return (
     <div className="flex h-[100dvh] flex-col bg-black">
       <div className="relative flex-1">
@@ -798,6 +811,7 @@ export function VenueMapExplorer({
               <Search size={15} />
             </button>
             <input
+              ref={searchInputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.map.searchPlaceholder}

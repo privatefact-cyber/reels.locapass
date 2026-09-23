@@ -5,9 +5,13 @@ import { Search } from "lucide-react";
 import { OPEN_SEARCH_EVENT } from "@/lib/reels/events";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
+// マップは/mapと/[prefecture]/[city]/mapの2パターンあるので末尾一致で判定する。
+// マップにはモーダルが無く、常時表示の住所検索欄にフォーカスするだけ(グリッド絞り込みには繋がない)。
+const MAP_PATH_PATTERN = /(^|\/)map$/;
+
 /**
  * ボトムナビの検索ボタン。フィード上部の検索アイコンと同じ検索モーダルを開く。
- * トップページではその場でイベントを飛ばして開き、他ページからはトップへ遷移した上で開く
+ * トップページ・マップではその場でイベントを飛ばして開き、他ページからはトップへ遷移した上で開く
  * (?search=1をReelFeed側で拾う、MenuButtonと同じ思想)。
  */
 export function SearchButton() {
@@ -16,7 +20,7 @@ export function SearchButton() {
   const { t } = useLocale();
 
   function handleClick() {
-    if (pathname === "/") {
+    if (pathname === "/" || (pathname && MAP_PATH_PATTERN.test(pathname))) {
       window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
     } else {
       router.push("/?search=1");
