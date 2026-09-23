@@ -7,10 +7,18 @@
  * 先頭に置く(faststart)処理は必須(末尾のままだと全体ダウンロードが終わるまで
  * 再生が始まらず、フィードが致命的に遅くなる)。
  *
- * 再エンコード(pixelの再計算)は画質劣化・スマホCPU負荷の両面で行わない。
- * 常に -c copy(ストリームコピー、画質劣化無し)でコンテナをmp4に統一し
- * faststartだけ付与する。
+ * -c copy(ストリームコピー)のみだとfaststartは効くが、スマホの生ビットレート
+ * (実測で最大20Mbps近く)がそのまま乗るため、50MB級のファイルになり回線次第で
+ * 再生開始まで長く待たされる(luxela.jp側で2026-09-23に実際の投稿で8秒以上の
+ * バッファリングを確認、同じパイプラインのためlocapass.net側にも適用)。
+ * 短辺720px・24fpsへ縮小した上でx264 ultrafastプリセットで再エンコードし、
+ * ファイルサイズ・再生開始までの待ち時間を大きく縮める。CRFで画質を保ちつつ、
+ * maxrate/bufsizeは「暴れた時の上限」としてのみ効かせる(固定の低ビットレート
+ * キャップのような常時圧縮ではないため、暗所・ネオン等でのブロックノイズは出にくい)。
  */
+
+const SCALE_SHORT_EDGE = 720;
+const TARGET_FPS = 24;
 
 type Progress = (percent: number) => void;
 
@@ -38,7 +46,7 @@ function inputExtension(file: File): string {
 }
 
 /**
- * 動画をmp4コンテナに統一しfaststart化する(ストリームコピー、画質劣化無し、数秒で完了)。
+ * 動画をmp4コンテナに統一し、短辺720px・24fpsへ縮小しつつfaststart化する。
  * 失敗した場合は例外を投げる。呼び出し側で元ファイルへのフォールバックを行うこと。
  */
 export async function transcodeReelVideo(file: File, onProgress?: Progress): Promise<File> {
@@ -66,9 +74,26 @@ export async function transcodeReelVideo(file: File, onProgress?: Progress): Pro
     await ffmpeg.writeFile(input, inputBytes);
     onProgress?.(50);
     const result = await withTimeout(
-      ffmpeg.exec(["-i", input, "-c", "copy", "-movflags", "+faststart", output]),
-      30_000,
-      "faststart remux",
+      ffmpeg.exec([
+        "-i", input,
+        // 縦横どちらでも短辺をSCALE_SHORT_EDGEへ揃える(9:16の縦動画なら幅が短辺)。
+        // -2はもう一方の辺を偶数値に自動計算(x264はodd値を受け付けないため)。
+        "-vf", `scale='if(gt(iw,ih),-2,${SCALE_SHORT_EDGE})':'if(gt(iw,ih),${SCALE_SHORT_EDGE},-2)',fps=${TARGET_FPS}`,
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-crf", "23",
+        // maxrate/bufsizeは常時の圧縮目標ではなく「暗所・激しい動きで暴れた時」の上限のみ。
+        // CRFベースなので、固定低ビットレートキャップのようなブロックノイズは出にくい。
+        "-maxrate", "6000k",
+        "-bufsize", "12000k",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        "-movflags", "+faststart",
+        output,
+      ]),
+      45_000,
+      "video encode",
     );
     if (result !== 0) throw new Error("動画の変換に失敗しました");
     const data = await ffmpeg.readFile(output);
