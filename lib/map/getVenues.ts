@@ -1,4 +1,5 @@
 import { createStaticClient } from "@/lib/supabase/static";
+import { OFFICIAL_CATEGORY } from "@/lib/shop/genres";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { CastSummary, VenueCardData, VenuePin } from "@/types/venue";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
@@ -63,6 +64,7 @@ export async function getVenueGenres(): Promise<string[]> {
     .select("category")
     .eq("status", "active")
     .not("category", "is", null)
+    .neq("category", OFFICIAL_CATEGORY)
     .not("lat", "is", null)
     .not("lng", "is", null);
 

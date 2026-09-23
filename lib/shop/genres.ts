@@ -24,6 +24,19 @@ export const AFTER_GENRE: ShopGenre = "アフター";
  */
 export const HIDDEN_BY_DEFAULT_GENRES: readonly string[] = [AFTER_GENRE];
 
+/**
+ * ポータル運営の公式店舗(運営者がリールを投稿するための店舗)。categoryに「公式」と入れた店舗が対象。
+ * 店舗一覧・検索・地図・サイトマップ・イベントには出さないが、投稿したリールは通常のフィードに出す。
+ */
+export const OFFICIAL_CATEGORY = "公式";
+
+export function isOfficialCategory(category: string | null | undefined): boolean {
+  return category === OFFICIAL_CATEGORY;
+}
+
+/** PostgREST用: 公式店舗を除く(categoryが未設定の店舗は含める)。 */
+export const EXCLUDE_OFFICIAL_FILTER = `category.is.null,category.neq.${OFFICIAL_CATEGORY}`;
+
 export function isHiddenByDefaultGenre(genre: string | null | undefined): boolean {
   return !!genre && HIDDEN_BY_DEFAULT_GENRES.includes(genre);
 }

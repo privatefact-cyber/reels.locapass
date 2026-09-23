@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { EXCLUDE_OFFICIAL_FILTER } from "@/lib/shop/genres";
 import { EventReel } from "@/components/EventReel";
 import type { PortalEvent } from "@/lib/types/shop";
 import { isHiddenByDefaultGenre } from "@/lib/shop/genres";
@@ -16,7 +17,7 @@ export default async function EventsPage() {
       )
       .not("image_url", "is", null)
       .order("created_at", { ascending: false }),
-    supabase.from("locapass_shops").select("genre:category").eq("status", "active"),
+    supabase.from("locapass_shops").select("genre:category").eq("status", "active").or(EXCLUDE_OFFICIAL_FILTER),
   ]);
 
   const now = Date.now();

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { EXCLUDE_OFFICIAL_FILTER } from "@/lib/shop/genres";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
@@ -86,6 +87,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     .from("locapass_shops")
     .select("id, name, address, category, icon_url, cover_url, cover_image_attribution")
     .eq("status", "active")
+    .or(EXCLUDE_OFFICIAL_FILTER)
     .order("created_at", { ascending: false });
   if (siteId !== null) shopsQuery = shopsQuery.eq("portal_id", siteId);
 
