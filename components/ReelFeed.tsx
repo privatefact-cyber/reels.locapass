@@ -807,6 +807,7 @@ export function ReelFeed({
                 <ReelCard
                   isActive={index === overlayActiveIndex}
                   posterImageUrl={tile.shop.coverImageUrl ?? undefined}
+                  posterCredit={tile.shop.coverAttribution}
                   accountName={tile.shop.name}
                   profileUrl={`/shops/${tile.shop.id}`}
                   shopName={tile.shop.area ?? ""}

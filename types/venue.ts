@@ -40,6 +40,8 @@ export interface VenueCardData {
   previewVideoUrl: string | null;
   /** カードの画像(動画のポスターも兼ねる)。トップヒーロー画像 → メイン画像。無ければnull(LOCAPASSの黒背景)。 */
   imageUrl: string | null;
+  /** imageUrl がGoogle Places写真のときだけ入る撮影者クレジット(表示必須)。 */
+  imageAttribution?: { name?: string; uri?: string | null } | null;
   /** 公開リール数(ストーリーは含まない)。0件の店舗はカードをタップしても全画面リールを開かず店舗ページへ。 */
   reelCount: number;
   isSponsored: boolean;

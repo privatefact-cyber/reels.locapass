@@ -1,4 +1,5 @@
 import { createStaticClient } from "@/lib/supabase/static";
+import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { CastSummary, VenueCardData, VenuePin } from "@/types/venue";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 
@@ -115,7 +116,7 @@ export async function getVenueCards(
   const { data: shopRows } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, area, category, lat, lng, address_en, icon_url, cover_url, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id",
+      "id, name, area, category, lat, lng, address_en, icon_url, cover_url, cover_image_attribution, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id",
     )
     .eq("status", "active")
     .not("lat", "is", null)
@@ -235,6 +236,10 @@ export async function getVenueCards(
       distanceMeter: Math.round(s.distance),
       previewVideoUrl: videoUrl,
       imageUrl: heroImage ?? s.cover_url ?? s.icon_url ?? null,
+      imageAttribution:
+        !heroImage && isPlacePhotoUrl(s.cover_url)
+          ? (s.cover_image_attribution as { name?: string; uri?: string | null } | null)
+          : null,
       reelCount: reelCountByShopId.get(s.id) ?? 0,
       isSponsored: false,
       sponsoredRank: undefined,

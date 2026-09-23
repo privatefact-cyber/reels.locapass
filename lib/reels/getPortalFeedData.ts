@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
@@ -83,7 +84,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
 
   let shopsQuery = supabase
     .from("locapass_shops")
-    .select("id, name, address, category, icon_url, cover_url")
+    .select("id, name, address, category, icon_url, cover_url, cover_image_attribution")
     .eq("status", "active")
     .order("created_at", { ascending: false });
   if (siteId !== null) shopsQuery = shopsQuery.eq("portal_id", siteId);
@@ -116,6 +117,9 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     address: s.address,
     genre: s.category,
     coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url) ?? null,
+    coverAttribution: isPlacePhotoUrl(s.cover_url)
+      ? (s.cover_image_attribution as { name?: string; uri?: string | null } | null)
+      : null,
   }));
 
   const genreChoices = Array.from(

@@ -1,5 +1,6 @@
 "use client";
 
+import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { ReelCard } from "@/components/ReelCard";
@@ -197,6 +198,11 @@ export function MapReelOverlay({
       {items.length === 0 && currentVenue?.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={currentVenue.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+      )}
+      {items.length === 0 && currentVenue?.imageUrl && currentVenue.imageAttribution && (
+        <div className="absolute bottom-3 left-3 z-10">
+          <PlacePhotoCredit attribution={currentVenue.imageAttribution} />
+        </div>
       )}
 
       <div

@@ -37,4 +37,6 @@ export type ShopGridItem = {
   address: string | null;
   genre: string | null;
   coverImageUrl: string | null;
+  /** cover がGoogle Places写真のときだけ入る撮影者クレジット(表示必須)。 */
+  coverAttribution?: { name?: string; uri?: string | null } | null;
 };

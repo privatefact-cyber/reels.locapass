@@ -16,6 +16,7 @@ import { estimateTimeFromDistance } from "@/lib/map/estimateTime";
 import { OPEN_SEARCH_EVENT } from "@/lib/reels/events";
 import type { NightlifeGenre, VenueCardData, VenuePin } from "@/types/venue";
 import { StreamVideo } from "@/components/video/StreamVideo";
+import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const SOURCE_ID = "venues";
@@ -956,6 +957,11 @@ export function VenueMapExplorer({
                         <span className="font-display text-sm uppercase tracking-[0.3em] text-gold/40">
                           LOCAPASS
                         </span>
+                      </div>
+                    )}
+                    {!venue.previewVideoUrl && venue.imageUrl && venue.imageAttribution && (
+                      <div className="absolute bottom-2 left-2 z-10">
+                        <PlacePhotoCredit attribution={venue.imageAttribution} />
                       </div>
                     )}
                     <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2">

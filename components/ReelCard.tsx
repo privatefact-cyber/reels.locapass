@@ -10,6 +10,7 @@ import { useReelMutedPreference } from "@/lib/reels/useReelMutedPreference";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { StreamVideo } from "@/components/video/StreamVideo";
+import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 
 export type ReelCardProps = {
@@ -23,6 +24,8 @@ export type ReelCardProps = {
   videoUrl?: string;
   /** 動画が無い場合の代替静止画、またはvideoのposter・ロード中/エラー時のフォールバック。 */
   posterImageUrl?: string;
+  /** posterImageUrl がGoogle Places写真のときの撮影者クレジット(表示必須)。 */
+  posterCredit?: { name?: string; uri?: string | null } | null;
   /** キャスト名など、投稿者アカウント表示(例: "@rena")。 */
   accountName: string;
   /** アイコン画像。無ければ頭文字のプレースホルダーを表示する。 */
@@ -67,6 +70,7 @@ export function ReelCard({
   commentsEnabled = true,
   videoUrl,
   posterImageUrl,
+  posterCredit,
   accountName,
   accountAvatarUrl,
   profileUrl,
@@ -163,6 +167,11 @@ export function ReelCard({
           fullBleed ? "rounded-none" : "rounded-2xl"
         }`}
       >
+      {!videoUrl && posterImageUrl && posterCredit && (
+        <div className="absolute left-2 top-2 z-10">
+          <PlacePhotoCredit attribution={posterCredit} />
+        </div>
+      )}
       {videoUrl && isActive ? (
         <StreamVideo
           ref={videoRef}
