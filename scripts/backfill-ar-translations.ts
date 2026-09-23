@@ -3,8 +3,10 @@
  * 既存の英語・中国語の翻訳には触らず、`translations = translations || {"ar": ...}` でarだけ足す。
  * 日本語が変わっていて翻訳自体が古い行は対象外(次に保存されたときに全言語が作り直される)。
  *
+ * --full を付けると、翻訳が無い・日本語と食い違って古い行も対象にして、全言語(en/zh/ar)を作り直す。
+ *
  * 使い方:
- *   npx tsx scripts/backfill-ar-translations.ts --out /tmp/ar-backfill.sql
+ *   npx tsx scripts/backfill-ar-translations.ts --out /tmp/ar-backfill.sql [--full]
  *   npx supabase db query --linked -f /tmp/ar-backfill.sql
  *
  * 公開中の店舗を読むだけなので anon キーで動く。翻訳には GEMINI_API_KEY を使う。
@@ -15,6 +17,7 @@ import { config } from "dotenv";
 import { join } from "node:path";
 import {
   asStoredTranslations,
+  needsTranslation,
   translateFieldsBatch,
   translationSourceHash,
   type SourceFields,
@@ -28,7 +31,7 @@ const BATCH_SIZE = 8;
 function parseArgs() {
   const args = process.argv.slice(2);
   const i = args.indexOf("--out");
-  return { out: i >= 0 ? args[i + 1] : undefined };
+  return { out: i >= 0 ? args[i + 1] : undefined, full: args.includes("--full") };
 }
 
 /** SQLの文字列リテラルにする(シングルクォートを二重化)。 */
@@ -37,6 +40,7 @@ function sqlString(v: string): string {
 }
 
 async function buildStatements<T extends { id: string }>(
+  full: boolean,
   label: string,
   table: string,
   column: string,
@@ -44,29 +48,37 @@ async function buildStatements<T extends { id: string }>(
   toFields: (row: T) => SourceFields,
   getStored: (row: T) => unknown,
 ): Promise<string[]> {
-  // 翻訳が今の日本語と一致していて(hashが同じ)、arだけ無い行が対象。
   const targets = rows.filter((row) => {
     const st = asStoredTranslations(getStored(row));
     const fields = toFields(row);
     const hasText = Object.values(fields).some((v) => v && v.trim());
-    return hasText && !st.ar && st.source_hash === translationSourceHash(fields);
+    if (!hasText) return false;
+    // 通常: 翻訳が今の日本語と一致していて(hashが同じ)、arだけ無い行。
+    // --full: 翻訳が無い・古い・言語が足りない行すべて(全言語を作り直す)。
+    return full ? needsTranslation(fields, st) : !st.ar && st.source_hash === translationSourceHash(fields);
   });
   console.log(`${label}: 対象 ${targets.length}件`);
 
   const statements: string[] = [];
   for (let i = 0; i < targets.length; i += BATCH_SIZE) {
     const batch = targets.slice(i, i + BATCH_SIZE);
-    const translated = await translateFieldsBatch(batch.map(toFields), ["ar"]);
+    const translated = await translateFieldsBatch(batch.map(toFields), full ? undefined : ["ar"]);
     batch.forEach((row, j) => {
-      const ar = translated[j]?.ar;
-      if (!ar) {
+      const result = translated[j];
+      if (!result || (!full && !result.ar) || (full && !(result.en && result.zh && result.ar))) {
         console.log(`  ✗ ${row.id} (翻訳失敗)`);
         return;
       }
-      // 翻訳した時点の日本語(hash)が変わっていないことも条件にして、書き込みの間に編集された行を上書きしない。
+      const oldHash = asStoredTranslations(getStored(row)).source_hash;
+      // 翻訳した時点の日本語(hash)から変わっていない行だけ書き込み、間に編集された行を上書きしない。
+      const guard = oldHash
+        ? `${column}->>'source_hash' = ${sqlString(oldHash)}`
+        : `(${column}->>'source_hash') is null`;
       statements.push(
-        `update public.${table} set ${column} = ${column} || ${sqlString(JSON.stringify({ ar }))}::jsonb ` +
-          `where id = ${sqlString(row.id)} and ${column}->>'source_hash' = ${sqlString(translationSourceHash(toFields(row)))} and not (${column} ? 'ar');`,
+        full
+          ? `update public.${table} set ${column} = ${sqlString(JSON.stringify(result))}::jsonb where id = ${sqlString(row.id)} and ${guard};`
+          : `update public.${table} set ${column} = ${column} || ${sqlString(JSON.stringify({ ar: result.ar }))}::jsonb ` +
+              `where id = ${sqlString(row.id)} and ${guard} and not (${column} ? 'ar');`,
       );
     });
     console.log(`${label}: ${Math.min(i + BATCH_SIZE, targets.length)}/${targets.length}`);
@@ -75,7 +87,7 @@ async function buildStatements<T extends { id: string }>(
 }
 
 async function main() {
-  const { out } = parseArgs();
+  const { out, full } = parseArgs();
   if (!out) {
     console.error("--out に出力先のSQLパスを指定してください");
     process.exit(1);
@@ -96,6 +108,7 @@ async function main() {
 
   const statements = [
     ...(await buildStatements(
+      full,
       "shops",
       "locapass_shops",
       "translations",
@@ -110,6 +123,7 @@ async function main() {
       (s) => s.translations,
     )),
     ...(await buildStatements(
+      full,
       "price_items",
       "locapass_shop_price_items",
       "name_translations",
@@ -118,6 +132,7 @@ async function main() {
       (p) => p.name_translations,
     )),
     ...(await buildStatements(
+      full,
       "events",
       "locapass_shop_events",
       "translations",

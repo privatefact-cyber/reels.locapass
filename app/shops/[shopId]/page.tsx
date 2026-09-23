@@ -371,11 +371,11 @@ export default async function ShopDetailPage({
           <p className="text-[11px] tracking-[0.2em] text-amber-300/80">
             {store.area ?? t.shop.areaNotSet} / {store.genre ? genreLabel(locale, store.genre) : t.shop.genreNotSet}
           </p>
-          <h1 className="font-display mt-1 text-3xl font-semibold tracking-wide text-white drop-shadow-lg sm:text-4xl">
-            {store.name}
+          <h1 className="font-display mt-1 break-keep text-3xl font-semibold tracking-wide text-white drop-shadow-lg [overflow-wrap:anywhere] sm:text-4xl">
+            <bdi>{store.name}</bdi>
           </h1>
           {store.tagline && (
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-amber-100/80">{store.tagline}</p>
+            <p dir="auto" className="mt-2 max-w-md text-sm leading-relaxed text-amber-100/80">{store.tagline}</p>
           )}
           <ShopFollowButton shopId={store.id} />
         </div>
@@ -517,7 +517,7 @@ export default async function ShopDetailPage({
         {/* 3. 店舗基本情報 */}
         <section id="access" className="scroll-mt-24 space-y-4">
           {store.description && (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+            <p dir="auto" className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
               {store.description}
             </p>
           )}
@@ -541,7 +541,7 @@ export default async function ShopDetailPage({
             {store.address && (
               <InfoRow icon={<MapPin size={16} />} label={t.shop.address} value={addressDisplay ?? store.address} />
             )}
-            {store.phone && <InfoRow icon={<Phone size={16} />} label={t.shop.phone} value={store.phone} />}
+            {store.phone && <InfoRow icon={<Phone size={16} />} label={t.shop.phone} value={store.phone} ltr />}
             {store.businessHours && (
               <InfoRow icon={<Clock size={16} />} label={t.shop.businessHours} value={store.businessHours} />
             )}
@@ -606,7 +606,7 @@ export default async function ShopDetailPage({
           {store.usageNotes && (
             <div className="rounded-2xl border border-amber-500/20 bg-zinc-900/60 p-5 shadow-2xl backdrop-blur-xl">
               <p className="text-xs font-semibold text-amber-300/70">{t.shop.usageNotes}</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-300">{store.usageNotes}</p>
+              <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm text-neutral-300">{store.usageNotes}</p>
             </div>
           )}
         </section>
@@ -711,13 +711,13 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
-function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function InfoRow({ icon, label, value, ltr }: { icon: React.ReactNode; label: string; value: string; ltr?: boolean }) {
   return (
     <div className="flex items-start gap-3 text-sm">
       <span className="mt-0.5 text-amber-400/80">{icon}</span>
       <div>
         <p className="text-[11px] text-amber-200/50">{label}</p>
-        <p className="text-neutral-200">{value}</p>
+        <p dir={ltr ? "ltr" : "auto"} className={`text-neutral-200 ${ltr ? "text-start" : ""}`}>{value}</p>
       </div>
     </div>
   );

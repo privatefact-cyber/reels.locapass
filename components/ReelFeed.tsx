@@ -220,11 +220,11 @@ const GridTile = memo(function GridTile({
       </span>
 
       <span className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-4">
-        <span className="block truncate text-[11px] font-semibold text-white drop-shadow">
+        <span dir="auto" className="block truncate text-[11px] font-semibold text-white drop-shadow">
           {label}
         </span>
         {sublabel && (
-          <span className="block truncate text-[10px] text-white/70">{sublabel}</span>
+          <span dir="auto" className="block truncate text-[10px] text-white/70">{sublabel}</span>
         )}
       </span>
     </button>
