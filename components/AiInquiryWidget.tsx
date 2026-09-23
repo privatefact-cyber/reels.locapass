@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send, RotateCcw, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAiSelectedContext } from "@/lib/aiContext";
+import { LOCALES, LOCALE_SHORT_LABEL } from "@/lib/i18n/locale";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_portals.slug
@@ -251,8 +252,14 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
           }`}
         >
           <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
+            <span className="flex items-center gap-2">
             <span className="text-xs font-semibold tracking-wide text-gold">
               {t.ai.assistantName}
+            </span>
+            {/* 対応言語が一目で分かるよう文字で示す(国旗は国際問題になり得るため使わない) */}
+            <span className="text-[10px] font-semibold leading-none text-white/50" title="日本語 / English / 中文 / العربية" aria-label="対応言語">
+              {LOCALES.map((l) => LOCALE_SHORT_LABEL[l]).join(" · ")}
+            </span>
             </span>
             <div className="flex items-center gap-3">
               <button

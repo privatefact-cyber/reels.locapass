@@ -58,7 +58,9 @@ export function pickTranslation(
   key: string,
 ): { text: string | null; translated: boolean } {
   if (locale === "ja" || !original) return { text: original, translated: false };
-  const translated = asStoredTranslations(stored)[locale]?.[key];
+  // アラビア語の保存翻訳はまだ作っていないので、英語の翻訳があればそれで代替し、無ければ原文を出す。
+  const stored2 = asStoredTranslations(stored);
+  const translated = locale === "ar" ? stored2.en?.[key] : stored2[locale]?.[key];
   return translated ? { text: translated, translated: true } : { text: original, translated: false };
 }
 

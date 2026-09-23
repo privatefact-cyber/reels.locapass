@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { ImageInteractionGuard } from "@/components/ImageInteractionGuard";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { localeDir } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
@@ -78,7 +79,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale}>
+    <html lang={locale} dir={localeDir(locale)}>
       <body className="min-h-screen bg-black text-white pb-20 md:pb-0">
         <ImageInteractionGuard />
         <LocaleProvider initialLocale={locale}>

@@ -1,11 +1,11 @@
 "use client";
 
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { LOCALES, LOCALE_SHORT_LABEL } from "@/lib/i18n/locale";
+import { LOCALES, LOCALE_LABEL, LOCALE_SHORT_LABEL } from "@/lib/i18n/locale";
 
 /**
  * ドロップダウンだと選択を見落とされやすかった(タップしたつもりが開いただけ、等)ため、
- * 常時見えている3つのボタン(日/EN/中)を直接タップする方式にした。誤操作の余地がない。
+ * 常時見えている4つのボタン(日/EN/中/عربي。国旗は国際問題になり得るため使わない)を直接タップする方式にした。誤操作の余地がない。
  */
 export function LanguageSwitcher() {
   const { locale, setLocale } = useLocale();
@@ -18,6 +18,8 @@ export function LanguageSwitcher() {
           type="button"
           onClick={() => setLocale(l)}
           aria-pressed={l === locale}
+          aria-label={LOCALE_LABEL[l]}
+          title={LOCALE_LABEL[l]}
           className={`rounded-full px-2 py-1 transition ${
             l === locale ? "bg-gold text-black" : "text-white/70 hover:text-white"
           }`}

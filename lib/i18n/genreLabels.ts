@@ -3,7 +3,7 @@ import type { Locale } from "./locale";
 // SHOP_GENRES(lib/shop/genres.ts)の値はDBのCHECK制約と一致させる必要があるため
 // 日本語の正規値のまま(フィルタリングのマッチングにも使われる)。表示用のラベルだけ
 // ここで言語別に用意し、フィルターピル等の見た目だけを差し替える。
-const GENRE_LABELS: Record<Locale, Record<string, string>> = {
+const GENRE_LABELS: Record<Exclude<Locale, "ar">, Record<string, string>> = {
   ja: {
     ガールズバー: "ガールズバー",
     キャバクラ: "キャバクラ",
@@ -114,6 +114,22 @@ const GENRE_LABELS: Record<Locale, Record<string, string>> = {
   },
 };
 
+// アラビア語の業種名(lib/shop/locapassCategories.ts の固定10種類+運営の「公式」)。
+const AR_GENRE_LABELS: Record<string, string> = {
+  "カフェ・スイーツ": "مقاهٍ وحلويات",
+  "レストラン・食事": "مطاعم",
+  "居酒屋・バー": "إيزاكايا وبارات",
+  "ショッピング": "تسوق",
+  "観光・体験": "سياحة وتجارب",
+  "宿泊": "إقامة",
+  "ペット": "الحيوانات الأليفة",
+  "美容・暮らし": "جمال وحياة",
+  "コミュニティ": "مجتمع",
+  "その他": "أخرى",
+  "公式": "رسمي",
+};
+
 export function genreLabel(locale: Locale, genre: string): string {
-  return GENRE_LABELS[locale]?.[genre] ?? genre;
+  const table = locale === "ar" ? AR_GENRE_LABELS : GENRE_LABELS[locale];
+  return table?.[genre] ?? genre;
 }
