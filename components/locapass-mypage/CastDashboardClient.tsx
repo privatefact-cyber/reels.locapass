@@ -156,7 +156,7 @@ export function CastDashboardClient({
     if (isVideo) {
       setOptimizing(true);
       try {
-        uploadFile = await transcodeReelVideo(file, undefined, { forceFaststartRemux: true });
+        uploadFile = await transcodeReelVideo(file);
       } catch (cause) {
         console.error("[reel-upload] optimization skipped; using original file", cause);
       } finally {
