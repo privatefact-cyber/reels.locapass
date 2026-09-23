@@ -7,7 +7,8 @@ import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generateTextCard";
-import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
+import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
+import { uploadVideoToR2, uploadPosterToR2 } from "@/lib/storage/uploadToR2";
 
 /**
  * 店舗スタッフが特定キャストの代わりに投稿する「キャストリール」フォーム。
@@ -81,18 +82,24 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
     let videoUrl: string | null = null;
     let imageUrl: string | null = null;
     let previewUrl: string | null = null;
+    let posterUrl: string | null = null;
 
     if (uploadFile) {
       if (isVideo) {
         // 動画本体はブラウザからCloudflare R2へ直接PUTする(転送費がかからずCDN配信できるため)。
-        // マップのカード用の軽量プレビューは元ファイルから並行して作る(失敗しても投稿は続ける)。
+        // マップのカード用の軽量プレビューと、一覧の冒頭黒画面対策のサムネイルも元ファイルから並行して作る
+        // (どちらも失敗しても投稿は続ける)。
         try {
-          const [publicUrl, preview] = await Promise.all([
+          const [publicUrl, preview, posterBlob] = await Promise.all([
             uploadVideoToR2(uploadFile, { context: "shop_on_behalf_of_cast", castId }),
             uploadReelPreview(supabase, shopId, uploadFile),
+            capturePosterFrame(uploadFile),
           ]);
           videoUrl = publicUrl;
           previewUrl = preview;
+          posterUrl = posterBlob
+            ? await uploadPosterToR2(posterBlob, { context: "shop_on_behalf_of_cast", castId }).catch(() => null)
+            : null;
         } catch (cause) {
           setUploading(false);
           setError(`アップロードに失敗しました: ${cause instanceof Error ? cause.message : "通信を確認して再試行してください"}`);
@@ -147,6 +154,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
       reel_type: "permanent",
       status: "publish",
       preview_url: previewUrl,
+      poster_url: posterUrl,
     });
 
     setUploading(false);

@@ -8,11 +8,13 @@ export type LocapassReelMediaColumns = {
   poster_url: string | null;
 };
 
-export type ReelMediaItem = { type: "video" | "image"; url: string };
+export type ReelMediaItem = { type: "video" | "image"; url: string; poster?: string };
 
 export function toReelMedia(row: LocapassReelMediaColumns): ReelMediaItem[] {
   const images = (row.images as { url: string }[] | null) ?? [];
-  if (row.video_url) return [{ type: "video", url: row.video_url }];
+  if (row.video_url) {
+    return [{ type: "video", url: row.video_url, ...(row.poster_url ? { poster: row.poster_url } : {}) }];
+  }
   if (images.length > 0) return images.map((img) => ({ type: "image" as const, url: img.url }));
   return row.poster_url ? [{ type: "image", url: row.poster_url }] : [];
 }

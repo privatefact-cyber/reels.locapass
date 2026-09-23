@@ -6,6 +6,7 @@ import { Heart, Loader2, MessageCircle, Plus, Share2, Volume2, VolumeX } from "l
 import { AvatarPeek } from "@/components/AvatarPeek";
 import { ReelCommentSheet } from "@/components/ReelCommentSheet";
 import { formatPostedAt } from "@/lib/reels/formatPostedAt";
+import { useReelMutedPreference } from "@/lib/reels/useReelMutedPreference";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { StreamVideo } from "@/components/video/StreamVideo";
@@ -88,7 +89,7 @@ export function ReelCard({
   const resolvedCtaText = ctaText ?? t.common.learnMore;
   const videoRef = useRef<HTMLVideoElement>(null);
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useReelMutedPreference();
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     videoUrl ? "loading" : "ready",
   );
@@ -257,7 +258,7 @@ export function ReelCard({
           onClick={(e) => {
             guardTapClick(e);
             if (e.defaultPrevented) return;
-            setMuted((v) => !v);
+            setMuted(!muted);
           }}
           aria-label={muted ? t.common.unmute : t.common.mute}
           className="pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm"
