@@ -16,6 +16,9 @@ export function sanitizeImageUrl(url: string | null | undefined): string | undef
 
   const urlStr = String(url).trim();
 
+  // Google Places写真の中継URL。UUIDに"403"等が偶然含まれても弾かないよう先に通す。
+  if (urlStr.startsWith("https://locapass.net/api/place-photo/")) return urlStr;
+
   // URLが有効か検証
   try {
     new URL(urlStr);

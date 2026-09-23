@@ -35,6 +35,7 @@ import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
@@ -102,7 +103,7 @@ export default async function ShopDetailPage({
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url",
+      "id, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url, cover_image_attribution",
     )
     .eq("id", shopId)
     .single();
@@ -359,6 +360,12 @@ export default async function ShopDetailPage({
         )}
 
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
+
+        {isPlacePhotoUrl(store.hero.url) && (
+          <div className="absolute right-3 top-3 z-20 sm:right-6 sm:top-6">
+            <PlacePhotoCredit attribution={shopRow.cover_image_attribution as { name?: string; uri?: string | null } | null} />
+          </div>
+        )}
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-6">
           <p className="text-[11px] tracking-[0.2em] text-amber-300/80">

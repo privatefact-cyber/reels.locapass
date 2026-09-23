@@ -10,7 +10,11 @@ export async function GET(request: Request) {
 
   const channelId = process.env.LINE_LOGIN_CHANNEL_ID;
   if (!channelId) {
-    return NextResponse.json({ error: "LINEログインは未設定です" }, { status: 501 });
+    console.error("[line-login] missing_env: LINE_LOGIN_CHANNEL_ID");
+    const url = new URL("/mypage/login", origin);
+    url.searchParams.set("redirect", redirect);
+    url.searchParams.set("line_error", "1");
+    return NextResponse.redirect(url);
   }
 
   const state = crypto.randomUUID();

@@ -2102,6 +2102,9 @@ export type Database = {
       locapass_shops: {
         Row: {
           address: string | null
+          cover_image_attribution: Json | null
+          google_photo_name: string | null
+          google_place_id: string | null
           address_en: string | null
           area: string | null
           business_hours: string | null
@@ -2140,6 +2143,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          cover_image_attribution?: Json | null
+          google_photo_name?: string | null
+          google_place_id?: string | null
           address_en?: string | null
           area?: string | null
           business_hours?: string | null
@@ -2178,6 +2184,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          cover_image_attribution?: Json | null
+          google_photo_name?: string | null
+          google_place_id?: string | null
           address_en?: string | null
           area?: string | null
           business_hours?: string | null

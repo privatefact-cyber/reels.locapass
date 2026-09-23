@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { JsonLd } from "@/components/JsonLd";
 import { PREFECTURE_SLUG, PREFECTURE_LABEL, areaToSlug, slugToArea } from "@/lib/seo/area";
 import { genreToSlug, slugToGenre } from "@/lib/shop/genres";
+import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 
 // この動的ルートは generateStaticParams を持たない(=ビルド時の事前レンダリング対象に
@@ -55,7 +56,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
   const supabase = await createClient();
   const { data: shopRows } = await supabase
     .from("locapass_shops")
-    .select("id, name, tagline, cover_image_url:cover_url")
+    .select("id, name, tagline, cover_image_url:cover_url, cover_image_attribution")
     .eq("status", "active")
     .eq("area", area)
     .eq("category", genre)
@@ -145,13 +146,19 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
                 href={`/shops/${shop.id}`}
                 className="group flex gap-3 overflow-hidden rounded-2xl border border-amber-500/20 bg-zinc-900/60 p-3 shadow-lg transition hover:border-amber-400/50"
               >
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-800">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-800">
                   {shop.cover_image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={shop.cover_image_url}
                       alt={shop.name}
                       className="h-full w-full object-cover transition group-hover:scale-105"
+                    />
+                  )}
+                  {isPlacePhotoUrl(shop.cover_image_url) && (
+                    <PlacePhotoCredit
+                      attribution={shop.cover_image_attribution as { name?: string; uri?: string | null } | null}
+                      className="absolute inset-x-0 bottom-0 block truncate rounded-none text-center text-[8px]"
                     />
                   )}
                 </div>
