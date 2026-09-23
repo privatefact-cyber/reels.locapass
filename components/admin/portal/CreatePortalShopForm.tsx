@@ -15,9 +15,12 @@ const INPUT =
 export function CreatePortalShopForm({
   portals,
   defaultPortalId,
+  categorySuggestions = [],
 }: {
   portals: { id: number; name: string }[];
   defaultPortalId?: number;
+  /** 業種の入力候補(既存の業種を使用数順に)。自由入力は可能だが、候補から選ぶとタグが増えにくい。 */
+  categorySuggestions?: string[];
 }) {
   const [state, formAction, pending] = useActionState<CreateShopState, FormData>(createPortalShop, {
     status: "idle",
@@ -70,7 +73,21 @@ export function CreatePortalShopForm({
         </label>
         <label className="block">
           <span className="text-sm font-medium text-slate-700">業種</span>
-          <input name="category" placeholder="例: カフェ" className={INPUT} />
+          <input
+            name="category"
+            list="category-suggestions"
+            autoComplete="off"
+            placeholder="例: カフェ"
+            className={INPUT}
+          />
+          <datalist id="category-suggestions">
+            {categorySuggestions.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+          <p className="mt-1 text-[11px] text-slate-400">
+            入力すると既存の業種が候補に出ます。新しい業種名はそのままタグになるため、近い業種があればそちらを選んでください。
+          </p>
         </label>
         <label className="block">
           <span className="text-sm font-medium text-slate-700">住所</span>

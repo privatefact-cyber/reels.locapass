@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { getCategorySuggestions } from "@/lib/shop/categorySuggestions";
 import { CreatePortalForm } from "@/components/admin/portal/CreatePortalForm";
 import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
 import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
@@ -18,6 +19,7 @@ export default async function AdminShopsPage({
   const { q = "", status = "" } = await searchParams;
   const scope = await requireAdmin();
   const supabase = await createClient();
+  const categorySuggestions = await getCategorySuggestions();
 
   // portal_admin は担当ポータルの店舗のみ、super_admin(portalIds===null)は全ポータル。
   let query = supabase
@@ -121,7 +123,7 @@ export default async function AdminShopsPage({
         </div>
       </section>
 
-      <CreatePortalShopForm portals={portals ?? []} />
+      <CreatePortalShopForm portals={portals ?? []} categorySuggestions={categorySuggestions} />
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <form className="flex flex-wrap items-center gap-2 border-b border-slate-200 p-4">

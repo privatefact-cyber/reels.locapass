@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCategorySuggestions } from "@/lib/shop/categorySuggestions";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
 import { MapVideoOptionToggle } from "@/components/admin/MapVideoOptionToggle";
@@ -35,6 +36,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
   const isSuper = scope.portalIds === null;
 
   const supabase = await createClient();
+  const categorySuggestions = await getCategorySuggestions();
   const [{ data: portal }, { data: shops, error: shopsError }, { data: reelRows }, { data: portalAdmins }, { data: shopAdmins }] =
     await Promise.all([
       supabase
@@ -120,7 +122,10 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
         )}
       </section>
 
-      <CreatePortalShopForm portals={[{ id: portal.id, name: portal.name }]} />
+      <CreatePortalShopForm
+        portals={[{ id: portal.id, name: portal.name }]}
+        categorySuggestions={categorySuggestions}
+      />
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <h2 className="border-b border-slate-200 p-6 text-sm font-bold text-slate-900">
