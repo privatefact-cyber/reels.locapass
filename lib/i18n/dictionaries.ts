@@ -217,6 +217,10 @@ export type Dictionary = {
   };
   notifications: {
     empty: string;
+    delete: string;
+    deleteAll: string;
+    deleteAllConfirm: string;
+    deleteFailed: string;
   };
   language: {
     switch: string;
@@ -437,6 +441,10 @@ const ja: Dictionary = {
   },
   notifications: {
     empty: "まだお知らせはありません。",
+    delete: "削除",
+    deleteAll: "すべて削除",
+    deleteAllConfirm: "すべての通知を削除します。よろしいですか?",
+    deleteFailed: "削除できませんでした。もう一度お試しください。",
   },
   language: {
     switch: "言語",
@@ -657,6 +665,10 @@ const en: Dictionary = {
   },
   notifications: {
     empty: "No notifications yet.",
+    delete: "Delete",
+    deleteAll: "Delete all",
+    deleteAllConfirm: "Delete all notifications?",
+    deleteFailed: "Could not delete. Please try again.",
   },
   language: {
     switch: "Language",
@@ -877,6 +889,10 @@ const zh: Dictionary = {
   },
   notifications: {
     empty: "暂无通知。",
+    delete: "删除",
+    deleteAll: "全部删除",
+    deleteAllConfirm: "确定删除所有通知吗?",
+    deleteFailed: "删除失败,请重试。",
   },
   language: {
     switch: "语言",
