@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
           aria-pressed={l === locale}
           aria-label={LOCALE_LABEL[l]}
           title={LOCALE_LABEL[l]}
-          className={`rounded-full px-2 py-1 transition ${
+          className={`rounded-full px-1.5 py-1 transition sm:px-2 ${
             l === locale ? "bg-gold text-black" : "text-white/70 hover:text-white"
           }`}
         >

@@ -72,11 +72,11 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
             <div className="w-8 md:hidden" />
             <Link
               href="/"
-              className="font-display text-2xl font-semibold uppercase tracking-[0.2em] text-gold"
+              className="font-display text-2xl font-semibold uppercase tracking-[0.12em] text-gold sm:tracking-[0.2em]"
             >
               LOCAPASS
             </Link>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSwitcher />
               <NotificationBell />
               <Link
