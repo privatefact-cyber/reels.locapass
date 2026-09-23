@@ -12,6 +12,7 @@ import type { AdItem, ReelItem, ShopGridItem } from "@/lib/reels/types";
 import { OPEN_FEED_GATE_EVENT, OPEN_SEARCH_EVENT, TOGGLE_NOW_EVENT } from "@/lib/reels/events";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { genreLabel } from "@/lib/i18n/genreLabels";
+import { setAiSelectedContext } from "@/lib/aiContext";
 import { isHiddenByDefaultGenre } from "@/lib/shop/genres";
 
 export type { ReelItem } from "@/lib/reels/types";
@@ -250,6 +251,11 @@ export function ReelFeed({
   const [keyword, setKeyword] = useState("");
   const [activeGenres, setActiveGenres] = useState<string[]>([]);
   const [activeTypes, setActiveTypes] = useState<ContentType[]>([]);
+  // 選択中のキーワード/ジャンルをコンシェルジュAIに渡す(聞き返さず、その条件でおすすめを出せるように)。
+  useEffect(() => {
+    setAiSelectedContext({ keyword: keyword.trim(), genres: activeGenres });
+    return () => setAiSelectedContext({ keyword: "", genres: [] });
+  }, [keyword, activeGenres]);
   const [nowOnly, setNowOnly] = useState(false);
   const nowOnlyRef = useRef(false);
   const [gateOpen, setGateOpen] = useState(false);

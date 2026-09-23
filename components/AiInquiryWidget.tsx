@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send, RotateCcw, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getAiSelectedContext } from "@/lib/aiContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_portals.slug
@@ -180,6 +181,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     setInput("");
     setLoading(true);
 
+    const selected = getAiSelectedContext();
     try {
       const res = await fetch(CHAT_ENDPOINT, {
         method: "POST",
@@ -192,6 +194,8 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
           secret_key: SITE_SECRET,
           session_id: getSessionId(),
           message: text,
+          ...(selected.keyword ? { selected_keyword: selected.keyword } : {}),
+          ...(selected.genres.length > 0 ? { selected_genres: selected.genres } : {}),
           // 実機の位置情報(GPS)が取れていればそれを最優先で送る。取れていなければ
           // 従来通り閲覧中のエリアポータル(URL)を送る。どちらも無ければ何も送らず、
           // バックエンド側で「行きたいエリアはありますか?」と聞く従来動作にフォールバック。

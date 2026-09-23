@@ -9,6 +9,7 @@ import { MapReelOverlay, type CardRect } from "@/components/map/MapReelOverlay";
 import { CheckCircle2, Globe2, Navigation, Play, Search, X } from "lucide-react";
 import { AFTER_GENRE } from "@/lib/shop/genres";
 import { genreLabel } from "@/lib/i18n/genreLabels";
+import { setAiSelectedContext } from "@/lib/aiContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { geocode } from "@/lib/map/geocode";
@@ -116,6 +117,11 @@ export function VenueMapExplorer({
   // 全画面リールを開いている店舗(開いた起点)。nullなら閉じている。
   const [reelOverlayVenueId, setReelOverlayVenueId] = useState<string | null>(null);
   const [genre, setGenre] = useState<NightlifeGenre>("all");
+  // 選択中のジャンルをコンシェルジュAIに渡す。
+  useEffect(() => {
+    setAiSelectedContext({ keyword: "", genres: genre === "all" ? [] : [genre] });
+    return () => setAiSelectedContext({ keyword: "", genres: [] });
+  }, [genre]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [query, setQuery] = useState("");
