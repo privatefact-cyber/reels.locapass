@@ -286,6 +286,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
             {messages.map((m, i) => (
               <div key={i} className={m.role === "user" ? "flex justify-end" : "space-y-1.5"}>
                 <div
+                  dir="auto"
                   className={
                     "max-w-[85%] whitespace-pre-wrap rounded-xl border px-3 py-2 text-xs leading-relaxed " +
                     (m.role === "user"
@@ -346,9 +347,11 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              // 入力内容の最初の文字で向きを決める(アラビア語ページで日本語を打つと逆順に見える問題の対策)
+              dir="auto"
               placeholder={t.ai.placeholder}
               disabled={loading}
-              className="flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none"
+              className="flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none sm:text-xs"
             />
             <button
               type="submit"
