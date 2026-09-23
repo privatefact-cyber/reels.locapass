@@ -123,50 +123,24 @@ export function CastDashboardClient({
       return;
     }
 
-    // iOS Safariではメタデータ確認やWASM初期化の完了を待つと、選択が反映されない
-    // ように見える。先にローカルプレビューを表示してから非同期の検証を行う。
-    const selectedPreview = URL.createObjectURL(f);
-    setFile(f);
-    setPreview((current) => {
-      if (current) URL.revokeObjectURL(current);
-      return selectedPreview;
-    });
-    setError(null);
-
-    // iOSでファイル選択画面が閉じた直後に、必ず投稿画面とプレビューを一度描画する。
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
     const validationError = await validateReelFile(f);
     if (validationError) {
       setError(validationError);
-      setFile(null);
-      setPreview((current) => {
-        if (current) URL.revokeObjectURL(current);
-        return null;
-      });
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
-    if (f.type.startsWith("video/")) {
-      setOptimizing(true);
-      try {
-        // iOSのネイティブ選択シートが閉じきってから重いWorkerを起動する。
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
-        const optimized = await transcodeReelVideo(f, undefined, { forceFaststartRemux: true });
-        setFile(optimized);
-        setPreview((current) => {
-          if (current) URL.revokeObjectURL(current);
-          return URL.createObjectURL(optimized);
-        });
-      } catch (cause) {
-        // 元動画のプレビューは残し、何が起きたか分かる状態にする。
-        console.error("[reel-upload] optimization skipped; using original file", cause);
-        setError("最適化をスキップしました。元動画のまま投稿できます。");
-      } finally {
-        setOptimizing(false);
-      }
-    }
+    // ここでは最適化(ffmpeg)には一切触れない。ネイティブの写真選択シートを
+    // 閉じている最中にffmpegを起動すると、シートの上に処理中の表示が重なって
+    // 見える(「まだギャラリーにいるのか投稿画面に戻ったのか分からない」)ため、
+    // 選択直後はプレビュー表示だけに留め、最適化は投稿ボタンを押した時点
+    // (=確実に管理画面上にいる状態)まで遅延させる。
+    setFile(f);
+    setPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return URL.createObjectURL(f);
+    });
+    setError(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -175,13 +149,26 @@ export function CastDashboardClient({
       setError("写真か動画を選んでください");
       return;
     }
-    setUploading(true);
     setError(null);
+
+    const isVideo = file.type.startsWith("video/");
+    let uploadFile = file;
+    if (isVideo) {
+      setOptimizing(true);
+      try {
+        uploadFile = await transcodeReelVideo(file, undefined, { forceFaststartRemux: true });
+      } catch (cause) {
+        console.error("[reel-upload] optimization skipped; using original file", cause);
+      } finally {
+        setOptimizing(false);
+      }
+    }
+
+    setUploading(true);
 
     // 自店舗フォルダ配下(locapass-reelsバケット)に置き、locapass_reels に登録する。
     // 投稿者(created_by)はDBのトリガーで本人に固定される。
     const supabase = createClient();
-    const isVideo = file.type.startsWith("video/");
     let media: MyReel["media"];
     let previewUrl: string | null = null;
     let posterUrl: string | null = null;
@@ -189,16 +176,16 @@ export function CastDashboardClient({
       if (isVideo) {
         // 動画本体はブラウザからCloudflare R2へ直接PUTする(転送費がかからずCDN配信できるため)。
         const [publicUrl, posterBlob] = await Promise.all([
-          uploadVideoToR2(file),
-          capturePosterFrame(file),
+          uploadVideoToR2(uploadFile),
+          capturePosterFrame(uploadFile),
         ]);
         // サムネイル生成に失敗しても投稿自体は止めない。
         posterUrl = posterBlob ? await uploadPosterToR2(posterBlob).catch(() => null) : null;
         media = [{ type: "video", url: publicUrl }];
       } else {
-        const ext = file.name.split(".").pop() || "jpg";
+        const ext = uploadFile.name.split(".").pop() || "jpg";
         const path = `${shopId}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await uploadToSignedUrl(supabase, "locapass-reels", path, file);
+        const { error: uploadError } = await uploadToSignedUrl(supabase, "locapass-reels", path, uploadFile);
         if (uploadError) throw uploadError;
         const { data } = supabase.storage.from("locapass-reels").getPublicUrl(path);
         media = [{ type: "image", url: data.publicUrl }];

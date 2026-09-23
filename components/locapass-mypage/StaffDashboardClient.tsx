@@ -251,17 +251,6 @@ export function StaffDashboardClient({
     setError(null);
     setFile(f);
     setPreview(URL.createObjectURL(f));
-
-    if (f.type.startsWith("video/")) {
-      setOptimizing(true);
-      const optimized = await transcodeReelVideo(f);
-      setOptimizing(false);
-      setFile(optimized);
-      setPreview((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(optimized);
-      });
-    }
   }
 
   async function handleSubmitReel(e: React.FormEvent) {
@@ -270,13 +259,26 @@ export function StaffDashboardClient({
       setError("写真か動画を選んでください");
       return;
     }
-    setUploading(true);
     setError(null);
+
+    const isVideo = file.type.startsWith("video/");
+    let uploadFile = file;
+    if (isVideo) {
+      setOptimizing(true);
+      try {
+        uploadFile = await transcodeReelVideo(file);
+      } catch (cause) {
+        console.error("[reel-upload] optimization skipped; using original file", cause);
+      } finally {
+        setOptimizing(false);
+      }
+    }
+
+    setUploading(true);
 
     // 店舗フォルダ配下(locapass-reelsバケット)に置き、locapass_reels に店舗のリールとして登録する。
     // 投稿者(created_by)はDBのトリガーで本人に固定される。
     const supabase = createClient();
-    const isVideo = file.type.startsWith("video/");
     let videoUrl: string | null = null;
     let imageUrl: string | null = null;
     let previewUrl: string | null = null;
@@ -286,8 +288,8 @@ export function StaffDashboardClient({
       // マップのカード用の軽量プレビューは元ファイルから並行して作る(失敗しても投稿は続ける)。
       try {
         const [uid, preview] = await Promise.all([
-          uploadToStream(file),
-          uploadReelPreview(supabase, shopId, file),
+          uploadToStream(uploadFile),
+          uploadReelPreview(supabase, shopId, uploadFile),
         ]);
         const playbackUrl = streamPlaybackUrl(uid);
         if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
@@ -299,11 +301,11 @@ export function StaffDashboardClient({
         return;
       }
     } else {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = uploadFile.name.split(".").pop() || "jpg";
       const path = `${shopId}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("locapass-reels")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, uploadFile, { contentType: uploadFile.type });
       if (uploadError) {
         setUploading(false);
         setError(`アップロードに失敗しました: ${uploadError.message}`);

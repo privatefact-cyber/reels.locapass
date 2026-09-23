@@ -40,29 +40,6 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
     setError(null);
     setFile(f);
     setPreview(URL.createObjectURL(f));
-
-    // iOSでファイル選択画面が閉じきる前に処理が始まって見えないよう、一度描画を挟んでから
-    // フォームへ視点を戻す(ネイティブの選択シートが閉じた直後は今どこにいるか分かりづらいため)。
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    formRef.current?.scrollIntoView({ block: "center" });
-
-    if (f.type.startsWith("video/")) {
-      setOptimizing(true);
-      try {
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
-        const optimized = await transcodeReelVideo(f);
-        setFile(optimized);
-        setPreview((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return URL.createObjectURL(optimized);
-        });
-      } catch (cause) {
-        // 最適化に失敗/タイムアウトしても、選択した元動画のまま投稿は続けられるようにする。
-        console.error("[reel-upload] optimization skipped; using original file", cause);
-      } finally {
-        setOptimizing(false);
-      }
-    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -71,11 +48,24 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
       setError("写真か動画を選んでください");
       return;
     }
-    setUploading(true);
     setError(null);
 
-    const supabase = createClient();
     const isVideo = file.type.startsWith("video/");
+    let uploadFile = file;
+    if (isVideo) {
+      setOptimizing(true);
+      try {
+        uploadFile = await transcodeReelVideo(file);
+      } catch (cause) {
+        console.error("[reel-upload] optimization skipped; using original file", cause);
+      } finally {
+        setOptimizing(false);
+      }
+    }
+
+    setUploading(true);
+
+    const supabase = createClient();
     let videoUrl: string | null = null;
     let imageUrl: string | null = null;
     let previewUrl: string | null = null;
@@ -85,8 +75,8 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
       // マップのカード用の軽量プレビューは元ファイルから並行して作る(失敗しても投稿は続ける)。
       try {
         const [uid, preview] = await Promise.all([
-          uploadToStream(file),
-          uploadReelPreview(supabase, shopId, file),
+          uploadToStream(uploadFile),
+          uploadReelPreview(supabase, shopId, uploadFile),
         ]);
         const playbackUrl = streamPlaybackUrl(uid);
         if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
@@ -98,12 +88,12 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
         return;
       }
     } else {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = uploadFile.name.split(".").pop() || "jpg";
       // locapassのリールはlocapass-reelsバケット(shop_id配下)に置く。
       const path = `${shopId}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("locapass-reels")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, uploadFile, { contentType: uploadFile.type });
       if (uploadError) {
         setUploading(false);
         setError(`アップロードに失敗しました: ${uploadError.message}`);
