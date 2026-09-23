@@ -1,12 +1,20 @@
 "use client";
 
-/** 任意のファイル(Blob/File)をCloudflare R2へ直接PUTし、公開URL(media.luxela.jp経由)を返す。 */
-async function uploadToR2(params: { data: Blob; ext: string; contentType: string }): Promise<string> {
-  const { data, ext, contentType } = params;
+type UploadContext =
+  | { context?: "cast_self" }
+  | { context: "staff_self" }
+  | { context: "shop_on_behalf_of_cast"; castId: string }
+  | { context: "shop_self"; shopId: string };
+
+/** 任意のファイル(Blob/File)をCloudflare R2へ直接PUTし、公開URL(media.locapass.net経由)を返す。 */
+async function uploadToR2(
+  params: { data: Blob; ext: string; contentType: string } & UploadContext,
+): Promise<string> {
+  const { data, ext, contentType, ...context } = params;
   const created = await fetch("/api/r2/presigned-upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ext, contentType }),
+    body: JSON.stringify({ ext, contentType, ...context }),
   });
   if (!created.ok) {
     const body = await created.json().catch(() => ({}));
@@ -26,11 +34,11 @@ async function uploadToR2(params: { data: Blob; ext: string; contentType: string
   return publicUrl;
 }
 
-export async function uploadVideoToR2(file: File): Promise<string> {
+export async function uploadVideoToR2(file: File, context: UploadContext = {}): Promise<string> {
   const ext = file.name.split(".").pop() || "mp4";
-  return uploadToR2({ data: file, ext, contentType: file.type || "video/mp4" });
+  return uploadToR2({ data: file, ext, contentType: file.type || "video/mp4", ...context });
 }
 
-export async function uploadPosterToR2(blob: Blob): Promise<string> {
-  return uploadToR2({ data: blob, ext: "jpg", contentType: "image/jpeg" });
+export async function uploadPosterToR2(blob: Blob, context: UploadContext = {}): Promise<string> {
+  return uploadToR2({ data: blob, ext: "jpg", contentType: "image/jpeg", ...context });
 }

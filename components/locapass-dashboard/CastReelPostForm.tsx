@@ -7,8 +7,7 @@ import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generateTextCard";
-import { uploadToStream } from "@/lib/stream/uploadToStream";
-import { streamPlaybackUrl } from "@/lib/stream/playback";
+import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 
 /**
  * 店舗スタッフが特定キャストの代わりに投稿する「キャストリール」フォーム。
@@ -85,16 +84,14 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
 
     if (uploadFile) {
       if (isVideo) {
-        // 動画本体はブラウザからCloudflare StreamへTUS直送する。Supabase Storageは通さない。
+        // 動画本体はブラウザからCloudflare R2へ直接PUTする(転送費がかからずCDN配信できるため)。
         // マップのカード用の軽量プレビューは元ファイルから並行して作る(失敗しても投稿は続ける)。
         try {
-          const [uid, preview] = await Promise.all([
-            uploadToStream(uploadFile),
+          const [publicUrl, preview] = await Promise.all([
+            uploadVideoToR2(uploadFile, { context: "shop_on_behalf_of_cast", castId }),
             uploadReelPreview(supabase, shopId, uploadFile),
           ]);
-          const playbackUrl = streamPlaybackUrl(uid);
-          if (!playbackUrl) throw new Error("Cloudflare Stream の公開設定が不足しています");
-          videoUrl = playbackUrl;
+          videoUrl = publicUrl;
           previewUrl = preview;
         } catch (cause) {
           setUploading(false);
