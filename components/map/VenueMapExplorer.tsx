@@ -788,7 +788,7 @@ export function VenueMapExplorer({
         */}
         <div ref={mapContainerRef} className="luxela-venue-map" style={{ position: "absolute", inset: 0 }} />
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-3 p-3">
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)]">
           <div className="flex items-center gap-2">
             {/*
               PCではヘッダーもボトムナビも出ない(ボトムナビはmd:hidden)ので、

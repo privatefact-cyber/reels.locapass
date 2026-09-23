@@ -37,7 +37,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
       {/* 高級感のあるゴールド調ヘッダー */}
       {!mapImmersive && (
         <header
-          className="sticky top-0 z-50 overflow-hidden border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
+          className="sticky top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
           style={{ backgroundColor: "var(--portal-header-background, rgba(0, 0, 0, .6))" }}
         >
           {/* 背景の光暈 */}

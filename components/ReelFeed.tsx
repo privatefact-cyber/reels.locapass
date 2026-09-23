@@ -674,7 +674,7 @@ export function ReelFeed({
         </div>
       )}
 
-      <div className="sticky top-[81px] z-30 flex items-center gap-2 px-1 py-2 bg-neutral-950/90 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-[calc(81px+env(safe-area-inset-top))] z-30 flex items-center gap-2 px-1 py-2 bg-neutral-950/90 backdrop-blur-md border-b border-white/5">
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
