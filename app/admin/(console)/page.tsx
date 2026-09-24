@@ -5,6 +5,7 @@ import { CreatePortalForm } from "@/components/admin/portal/CreatePortalForm";
 import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
 import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
+import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "無料",
@@ -47,7 +48,7 @@ export default async function AdminShopsPage({
   if (scope.portalIds !== null) portalsQuery = portalsQuery.in("id", scope.portalIds);
 
   const portalIds = scope.portalIds;
-  const [{ data: shops, error }, { data: allShops }, { data: portals }, { data: portalShopRows }, { data: portalAdminRows }] = await Promise.all([
+  const [{ data: shops, error }, { data: allShops }, { data: portals }, { data: portalShopRows }, { data: portalAdminRows }, { data: settings }] = await Promise.all([
     query,
     countsQuery,
     portalsQuery,
@@ -61,7 +62,9 @@ export default async function AdminShopsPage({
       : portalIds.length
         ? supabase.from("locapass_portal_admins").select("portal_id").in("portal_id", portalIds)
         : Promise.resolve({ data: [] as { portal_id: number }[] }),
+    supabase.from("platform_settings").select("locapass_machi_no_koe_beta_enabled").eq("id", true).maybeSingle(),
   ]);
+  const machiNoKoeEnabled = settings?.locapass_machi_no_koe_beta_enabled ?? false;
 
   const totalCount = allShops?.length ?? 0;
   const activeCount = allShops?.filter((s) => s.status === "active").length ?? 0;
@@ -94,6 +97,30 @@ export default async function AdminShopsPage({
         <StatCard label="公開中" value={activeCount} accent="text-emerald-600" />
         <StatCard label="非公開" value={inactiveCount} accent="text-red-600" />
       </div>
+
+      {scope.portalIds === null && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900">AI「街の声」ベータ版</h2>
+              <span
+                className={
+                  machiNoKoeEnabled
+                    ? "rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700"
+                    : "rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-500"
+                }
+              >
+                {machiNoKoeEnabled ? "表示中" : "非表示"}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              コンシェルジュのチャットに「街の声 β」タブを出し、自動収集した街の噂(npm run sync-whispers)を織り込んで店舗を提案する。
+              LUXELAとは別に切り替わる。非表示にしても収集した噂は消えない。
+            </p>
+          </div>
+          <MachiNoKoeBetaToggle enabled={machiNoKoeEnabled} />
+        </div>
+      )}
 
       {scope.portalIds === null && <CreatePortalForm />}
 

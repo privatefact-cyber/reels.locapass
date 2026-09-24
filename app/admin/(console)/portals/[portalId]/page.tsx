@@ -44,7 +44,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
         .maybeSingle(),
       supabase
         .from("locapass_shops")
-        .select("id, name, category, status, shop_code, created_at, map_video_enabled")
+        .select("id, name, category, status, shop_code, created_at, map_video_enabled, sns_whisper, is_temporarily_closed")
         .eq("portal_id", portalId)
         .order("created_at", { ascending: false }),
       supabase.from("locapass_reels").select("id, status").eq("portal_id", portalId),
@@ -154,6 +154,24 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
                       <p className="mt-0.5 text-xs text-slate-400">
                         {shop.category || "業種未設定"} / 店舗コード {shop.shop_code}
                       </p>
+                      {/* 街の声の自動収集結果(npm run sync-whispers)。噂ネタの中身はマウスを乗せると見える。 */}
+                      {(shop.sns_whisper || shop.is_temporarily_closed) && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {shop.sns_whisper && (
+                            <span
+                              title={shop.sns_whisper}
+                              className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700"
+                            >
+                              街の噂あり
+                            </span>
+                          )}
+                          {shop.is_temporarily_closed && (
+                            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                              営業停止・閉店の疑い(自動判定・要確認)
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-5 py-3">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>

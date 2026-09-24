@@ -171,6 +171,15 @@ export type Dictionary = {
     loginOrSignup: string;
     sendError: string;
     genericError: string;
+    // 街の声ベータ版(2体目のAI)。管理画面のベータスイッチがオンのときだけタブが出る。
+    conciergeTab: string;
+    machiTab: string;
+    machiName: string;
+    machiGreeting: string;
+    whisperTitle: string;
+    whisperNote: string;
+    micStart: string;
+    micStop: string;
   };
   mypage: {
     inquiryHistory: string;
@@ -398,6 +407,14 @@ const ja: Dictionary = {
     loginOrSignup: "ログイン / 新規登録",
     sendError: "通信エラーが発生しました。時間をおいて再度お試しください。",
     genericError: "申し訳ございません、うまく処理できませんでした。",
+    conciergeTab: "コンシェルジュ",
+    machiTab: "街の声",
+    machiName: "街の声",
+    machiGreeting: "こんばんは〜！今夜はどのへんで遊ぶ予定？エリアでも気分でも教えてくれたら、街のうわさ話もこっそり混ぜて案内するね♪",
+    whisperTitle: "ストリートのタレコミ",
+    whisperNote: "※ネットの噂レベルです",
+    micStart: "音声で入力",
+    micStop: "音声入力を止める",
   },
   mypage: {
     inquiryHistory: "問い合わせ履歴",
@@ -625,6 +642,14 @@ const en: Dictionary = {
     loginOrSignup: "Log in / Sign up",
     sendError: "A connection error occurred. Please try again shortly.",
     genericError: "Sorry, something went wrong.",
+    conciergeTab: "Concierge",
+    machiTab: "Street Voice",
+    machiName: "Street Voice",
+    machiGreeting: "Hi there! Where are you heading tonight? Tell me an area or your mood, and I'll sneak in a little street gossip too ♪",
+    whisperTitle: "Word on the Street",
+    whisperNote: "Unverified online rumor",
+    micStart: "Voice input",
+    micStop: "Stop voice input",
   },
   mypage: {
     inquiryHistory: "Inquiry History",
@@ -852,6 +877,14 @@ const zh: Dictionary = {
     loginOrSignup: "登录 / 注册",
     sendError: "发生通信错误，请稍后再试。",
     genericError: "抱歉，处理时出现问题。",
+    conciergeTab: "礼宾",
+    machiTab: "街头之声",
+    machiName: "街头之声",
+    machiGreeting: "晚上好～！今晚打算去哪儿玩呀？告诉我区域或心情，我会悄悄加点街头小道消息给你哦♪",
+    whisperTitle: "街头传闻",
+    whisperNote: "※仅为网络传闻",
+    micStart: "语音输入",
+    micStop: "停止语音输入",
   },
   mypage: {
     inquiryHistory: "咨询记录",
@@ -1079,7 +1112,15 @@ const ar: Dictionary = {
     "loginPrompt": "سجّل الدخول لنتمكن من تذكر طلباتك في المرة القادمة.",
     "loginOrSignup": "تسجيل الدخول / إنشاء حساب",
     "sendError": "حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى بعد قليل.",
-    "genericError": "عذرًا، حدث خطأ ما."
+    "genericError": "عذرًا، حدث خطأ ما.",
+    conciergeTab: "الكونسيرج",
+    machiTab: "صوت الشارع",
+    machiName: "صوت الشارع",
+    machiGreeting: "مساء الخير! وين ناوي تسهر الليلة؟ قلّي المنطقة أو مزاجك، وبهمس لك بشوية أخبار من الشارع ♪",
+    whisperTitle: "همسات الشارع",
+    whisperNote: "مجرد شائعة على الإنترنت",
+    micStart: "الإدخال الصوتي",
+    micStop: "إيقاف الإدخال الصوتي"
   },
   "mypage": {
     "inquiryHistory": "سجل الاستفسارات",

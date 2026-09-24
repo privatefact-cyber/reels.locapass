@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, X, Send, RotateCcw, ExternalLink } from "lucide-react";
+import { MessageCircle, X, Send, RotateCcw, ExternalLink, Mic } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAiSelectedContext } from "@/lib/aiContext";
-import { LOCALES, LOCALE_SHORT_LABEL } from "@/lib/i18n/locale";
+import { LOCALES, LOCALE_SHORT_LABEL, type Locale } from "@/lib/i18n/locale";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_portals.slug
@@ -47,7 +47,13 @@ const SITE_DOMAIN = "locapass.net";
 // 秘匿すべき認証情報ではなく、サーバー側でこのサイトのナレッジベース範囲を
 // 特定するためだけに使う。
 const SITE_SECRET = "x4m1GU0B5kSoBW3JkKAFReBwLp3pTFpDz5NEHNWy";
-const SESSION_STORAGE_KEY = "locapass_ai_inquiry_session_id";
+// 「街の声ベータ版」は通常のコンシェルジュと会話を混ぜないよう、別のセッションIDを使う。
+const SESSION_STORAGE_KEYS = {
+  concierge: "locapass_ai_inquiry_session_id",
+  machi: "locapass_ai_machi_no_koe_session_id",
+} as const;
+
+type Mode = keyof typeof SESSION_STORAGE_KEYS;
 
 type ChatLink = { title: string; url: string };
 
@@ -55,7 +61,33 @@ type ChatMessage = {
   role: "user" | "ai";
   text: string;
   links?: ChatLink[];
+  // 街の声: 回答の中で噂ネタ(shops.sns_whisper)を織り込んだ店舗名。あれば「ネットの噂レベル」の注記を出す。
+  whisperShops?: string[];
 };
+
+// 音声入力(Web Speech API)の認識言語。サイトの表示言語に合わせる。
+const SPEECH_LANG: Record<Locale, string> = { ja: "ja-JP", en: "en-US", zh: "zh-CN", ar: "ar-SA" };
+
+// Web Speech API は標準の型定義が無い(Chrome/Safariは webkit 接頭辞)ので、使う分だけ定義する。
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as {
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
 
 // n8n側から返るlinksは絶対URL(https://reels.locapass.net/shops/...)なので、AvatarPeekの
 // iframeプレビュー/router.pushにはパス部分だけを渡す(絶対URLのままだと
@@ -69,27 +101,28 @@ function toPath(url: string): string {
   }
 }
 
-function newSessionId(): string {
-  return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+function newSessionId(mode: Mode): string {
+  const prefix = mode === "machi" ? "machi" : "sess";
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function getSessionId(): string {
+function getSessionId(mode: Mode): string {
   try {
-    let id = localStorage.getItem(SESSION_STORAGE_KEY);
+    let id = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
     if (!id) {
-      id = newSessionId();
-      localStorage.setItem(SESSION_STORAGE_KEY, id);
+      id = newSessionId(mode);
+      localStorage.setItem(SESSION_STORAGE_KEYS[mode], id);
     }
     return id;
   } catch {
-    return newSessionId();
+    return newSessionId(mode);
   }
 }
 
-function resetSessionId(): string {
-  const id = newSessionId();
+function resetSessionId(mode: Mode): string {
+  const id = newSessionId(mode);
   try {
-    localStorage.setItem(SESSION_STORAGE_KEY, id);
+    localStorage.setItem(SESSION_STORAGE_KEYS[mode], id);
   } catch {
     // localStorageが使えない環境ではメモリ上のIDだけで継続(次回リロードで再度新規化される)
   }
@@ -104,20 +137,40 @@ function resetSessionId(): string {
  */
 export function AiInquiryWidget({ placement = "floating" }: { placement?: "floating" | "map" }) {
   const isMap = placement === "map";
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const pathname = usePathname();
   const currentAreaSlug = guessCurrentAreaSlug(pathname);
   const [open, setOpen] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const [greeted, setGreeted] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [mode, setMode] = useState<Mode>("concierge");
+  // 管理画面の「街の声ベータ版」スイッチ(platform_settings.locapass_machi_no_koe_beta_enabled)。オフならタブごと出さない。
+  const [machiEnabled, setMachiEnabled] = useState(false);
+  const [threads, setThreads] = useState<Record<Mode, ChatMessage[]>>({ concierge: [], machi: [] });
+  const [escalatedByMode, setEscalatedByMode] = useState<Record<Mode, boolean>>({
+    concierge: false,
+    machi: false,
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [escalated, setEscalated] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const askedLocationRef = useRef(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const messages = threads[mode];
+  const escalated = escalatedByMode[mode];
+  const isMachi = mode === "machi";
+
+  function greetingFor(m: Mode): ChatMessage {
+    return { role: "ai", text: m === "machi" ? t.ai.machiGreeting : t.ai.greeting };
+  }
+
+  function appendMessage(m: Mode, msg: ChatMessage) {
+    setThreads((prev) => ({ ...prev, [m]: [...prev[m], msg] }));
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -131,15 +184,60 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  // SSRとの不一致を避けるため、対応可否はマウント後に判定する(非対応ブラウザではマイクを出さない)。
   useEffect(() => {
-    if (open && !greeted) {
-      setGreeted(true);
-      setMessages([
-        {
-          role: "ai",
-          text: t.ai.greeting,
-        },
-      ]);
+    setSpeechSupported(getSpeechRecognition() !== null);
+    return () => recognitionRef.current?.stop();
+  }, []);
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const Recognition = getSpeechRecognition();
+    if (!Recognition) return;
+    const recognition = new Recognition();
+    recognition.lang = SPEECH_LANG[locale];
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    // 話し始める前に入力済みの文があれば、その後ろに続ける。
+    const base = input.trim() ? `${input.trim()} ` : "";
+    recognition.onresult = (e) => {
+      const transcript = Array.from(e.results)
+        .map((r) => r[0]?.transcript ?? "")
+        .join("");
+      setInput(base + transcript);
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognitionRef.current = recognition;
+    setListening(true);
+    recognition.start();
+  }
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("platform_settings")
+      .select("locapass_machi_no_koe_beta_enabled")
+      .eq("id", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        // locapass用のスイッチ(LUXELAの machi_no_koe_beta_enabled とは別に切り替える)。
+        const enabled = Boolean(data?.locapass_machi_no_koe_beta_enabled);
+        setMachiEnabled(enabled);
+        if (!enabled) setMode("concierge");
+      });
+  }, []);
+
+  // 開いているタブの会話がまだ空なら挨拶を入れる(タブごとに1回)。
+  useEffect(() => {
+    if (open && threads[mode].length === 0) {
+      setThreads((prev) => ({ ...prev, [mode]: [greetingFor(mode)] }));
+    }
+    if (open && !askedLocationRef.current) {
+      askedLocationRef.current = true;
       // チャットを開いたタイミングで一度だけ位置情報の許可を試みる。取れなくても
       // (拒否・非対応・タイムアウト)エラーは飲み込み、従来通りcurrentAreaSlugベース
       // の案内にフォールバックする(ユーザー体験をブロックしない)。
@@ -156,7 +254,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, greeted]);
+  }, [open, mode]);
 
   useEffect(() => {
     if (!open) return;
@@ -178,7 +276,9 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     const text = input.trim();
     if (!text || loading) return;
 
-    setMessages((prev) => [...prev, { role: "user", text }]);
+    recognitionRef.current?.stop();
+    const sendMode = mode;
+    appendMessage(sendMode, { role: "user", text });
     setInput("");
     setLoading(true);
 
@@ -193,8 +293,9 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
         body: JSON.stringify({
           domain: SITE_DOMAIN,
           secret_key: SITE_SECRET,
-          session_id: getSessionId(),
+          session_id: getSessionId(sendMode),
           message: text,
+          ...(sendMode === "machi" ? { mode: "machi_no_koe" } : {}),
           ...(selected.keyword ? { selected_keyword: selected.keyword } : {}),
           ...(selected.genres.length > 0 ? { selected_genres: selected.genres } : {}),
           // 実機の位置情報(GPS)が取れていればそれを最優先で送る。取れていなければ
@@ -205,34 +306,25 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
         }),
       });
       const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          text: data?.reply ?? t.ai.genericError,
-          links: Array.isArray(data?.links) ? data.links : undefined,
-        },
-      ]);
-      setEscalated(Boolean(data?.escalated));
+      appendMessage(sendMode, {
+        role: "ai",
+        text: data?.reply ?? t.ai.genericError,
+        links: Array.isArray(data?.links) ? data.links : undefined,
+        whisperShops:
+          Array.isArray(data?.whisper_shops) && data.whisper_shops.length > 0 ? data.whisper_shops : undefined,
+      });
+      setEscalatedByMode((prev) => ({ ...prev, [sendMode]: Boolean(data?.escalated) }));
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", text: t.ai.sendError },
-      ]);
+      appendMessage(sendMode, { role: "ai", text: t.ai.sendError });
     } finally {
       setLoading(false);
     }
   }
 
   function handleReset() {
-    resetSessionId();
-    setMessages([
-      {
-        role: "ai",
-        text: t.ai.greeting,
-      },
-    ]);
-    setEscalated(false);
+    resetSessionId(mode);
+    setThreads((prev) => ({ ...prev, [mode]: [greetingFor(mode)] }));
+    setEscalatedByMode((prev) => ({ ...prev, [mode]: false }));
     setInput("");
   }
 
@@ -253,13 +345,14 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
         >
           <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
             <span className="flex items-center gap-2">
-            <span className="text-xs font-semibold tracking-wide text-gold">
-              {t.ai.assistantName}
-            </span>
-            {/* 対応言語が一目で分かるよう文字で示す(国旗は国際問題になり得るため使わない) */}
-            <span className="text-[10px] font-semibold leading-none text-white/50" title="日本語 / English / 中文 / العربية" aria-label="対応言語">
-              {LOCALES.map((l) => LOCALE_SHORT_LABEL[l]).join(" · ")}
-            </span>
+              <span className="text-xs font-semibold tracking-wide text-gold">
+                {isMachi ? t.ai.machiName : t.ai.assistantName}
+              </span>
+              {isMachi && <BetaBadge />}
+              {/* 対応言語が一目で分かるよう表示する(国旗は国際問題になり得るため文字で示す) */}
+              <span className="text-[10px] font-semibold leading-none text-white/50" title="日本語 / English / 中文 / العربية" aria-label="対応言語">
+                {LOCALES.map((l) => LOCALE_SHORT_LABEL[l]).join(" · ")}
+              </span>
             </span>
             <div className="flex items-center gap-3">
               <button
@@ -282,6 +375,28 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
             </div>
           </div>
 
+          {machiEnabled && (
+            <div className="flex gap-1 border-b border-white/10 bg-black/20 p-1" role="tablist">
+              {(["concierge", "machi"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  disabled={loading}
+                  onClick={() => setMode(m)}
+                  className={
+                    "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-semibold transition disabled:opacity-50 " +
+                    (mode === m ? "bg-white/10 text-gold" : "text-white/50 hover:text-white/80")
+                  }
+                >
+                  {m === "machi" ? t.ai.machiTab : t.ai.conciergeTab}
+                  {m === "machi" && <BetaBadge />}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto p-4">
             {messages.map((m, i) => (
               <div key={i} className={m.role === "user" ? "flex justify-end" : "space-y-1.5"}>
@@ -291,11 +406,18 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                     "max-w-[85%] whitespace-pre-wrap rounded-xl border px-3 py-2 text-xs leading-relaxed " +
                     (m.role === "user"
                       ? "border-white/20 bg-white/15 text-white"
-                      : "border-white/10 bg-white/5 text-neutral-200")
+                      : m.whisperShops
+                        ? // 噂ネタ入りの回答は、ダークなすりガラス+ゴールドの差し色でトーンを変える。
+                          "relative overflow-hidden border-gold/25 bg-black/50 text-neutral-200 shadow-inner shadow-black/60"
+                        : "border-white/10 bg-white/5 text-neutral-200")
                   }
                 >
+                  {m.whisperShops && (
+                    <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-gradient-to-b from-gold-light via-gold to-gold-dark" />
+                  )}
                   {m.text}
                 </div>
+                {m.whisperShops && <WhisperNote shops={m.whisperShops} />}
                 {m.links && m.links.length > 0 && (
                   <div className="flex max-w-[85%] flex-col gap-1.5">
                     {m.links.map((link) => (
@@ -351,8 +473,27 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
               dir="auto"
               placeholder={t.ai.placeholder}
               disabled={loading}
-              className="flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none sm:text-xs"
+              className="min-w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none sm:text-xs"
             />
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={toggleListening}
+                disabled={loading}
+                aria-label={listening ? t.ai.micStop : t.ai.micStart}
+                title={listening ? t.ai.micStop : t.ai.micStart}
+                aria-pressed={listening}
+                className={
+                  "relative flex items-center justify-center rounded-lg border px-3 py-2 transition disabled:opacity-50 " +
+                  (listening
+                    ? "border-red-400/60 bg-red-500/20 text-red-300"
+                    : "border-white/15 bg-white/5 text-white/70 hover:text-white")
+                }
+              >
+                {listening && <span className="absolute inset-0 animate-ping rounded-lg border border-red-400/40" />}
+                <Mic size={14} />
+              </button>
+            )}
             <button
               type="submit"
               disabled={loading}
@@ -376,5 +517,26 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
         <MessageCircle size={isMap ? 18 : 22} />
       </button>
     </div>
+  );
+}
+
+function BetaBadge() {
+  return (
+    <span className="rounded border border-gold/40 px-1 py-px text-[9px] font-bold leading-none tracking-wider text-gold/80">
+      β
+    </span>
+  );
+}
+
+/** 街の声で噂ネタを織り込んだ回答の下に出す注記(噂であることを必ず明示する)。 */
+function WhisperNote({ shops }: { shops: string[] }) {
+  const { t } = useLocale();
+  return (
+    <p className="flex max-w-[85%] flex-wrap items-baseline gap-x-1.5 px-1 text-[10px] text-white/40">
+      <span aria-hidden>🕶️</span>
+      <span className="font-bold text-gold/80">{t.ai.whisperTitle}</span>
+      <bdi>{shops.join(" / ")}</bdi>
+      <span>({t.ai.whisperNote})</span>
+    </p>
   );
 }

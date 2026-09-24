@@ -2099,6 +2099,48 @@ export type Database = {
           },
         ]
       }
+      locapass_shop_street_investigations: {
+        Row: {
+          created_at: string
+          id: string
+          is_closed: boolean | null
+          llm_result: Json | null
+          model: string | null
+          raw_text: string | null
+          search_queries: string[]
+          shop_id: string
+          sources: Json
+          summary_reason: string | null
+          whisper_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_closed?: boolean | null
+          llm_result?: Json | null
+          model?: string | null
+          raw_text?: string | null
+          search_queries?: string[]
+          shop_id: string
+          sources?: Json
+          summary_reason?: string | null
+          whisper_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_closed?: boolean | null
+          llm_result?: Json | null
+          model?: string | null
+          raw_text?: string | null
+          search_queries?: string[]
+          shop_id?: string
+          sources?: Json
+          summary_reason?: string | null
+          whisper_text?: string | null
+        }
+        Relationships: []
+      }
       locapass_shops: {
         Row: {
           address: string | null
@@ -2125,6 +2167,12 @@ export type Database = {
           map_video_enabled: boolean
           name: string
           occupancy_status: Json | null
+          is_temporarily_closed: boolean
+          sns_whisper: string | null
+          sns_whisper_checked_at: string | null
+          sns_whisper_source: string | null
+          sns_whisper_sources: Json | null
+          sns_whisper_updated_at: string | null
           plan: string
           portal_id: number
           price_info: string | null
@@ -2166,6 +2214,12 @@ export type Database = {
           map_video_enabled?: boolean
           name: string
           occupancy_status?: Json | null
+          is_temporarily_closed?: boolean
+          sns_whisper?: string | null
+          sns_whisper_checked_at?: string | null
+          sns_whisper_source?: string | null
+          sns_whisper_sources?: Json | null
+          sns_whisper_updated_at?: string | null
           plan?: string
           portal_id: number
           price_info?: string | null
@@ -2207,6 +2261,12 @@ export type Database = {
           map_video_enabled?: boolean
           name?: string
           occupancy_status?: Json | null
+          is_temporarily_closed?: boolean
+          sns_whisper?: string | null
+          sns_whisper_checked_at?: string | null
+          sns_whisper_source?: string | null
+          sns_whisper_sources?: Json | null
+          sns_whisper_updated_at?: string | null
           plan?: string
           portal_id?: number
           price_info?: string | null
@@ -2703,16 +2763,19 @@ export type Database = {
       platform_settings: {
         Row: {
           featured_section_enabled: boolean
+          locapass_machi_no_koe_beta_enabled: boolean
           id: boolean
           updated_at: string
         }
         Insert: {
           featured_section_enabled?: boolean
+          locapass_machi_no_koe_beta_enabled?: boolean
           id?: boolean
           updated_at?: string
         }
         Update: {
           featured_section_enabled?: boolean
+          locapass_machi_no_koe_beta_enabled?: boolean
           id?: boolean
           updated_at?: string
         }
@@ -3583,6 +3646,10 @@ export type Database = {
       }
     }
     Functions: {
+      locapass_set_machi_no_koe_beta: {
+        Args: { p_enabled: boolean }
+        Returns: undefined
+      }
       add_inquiry_message: {
         Args: { p_body: string; p_inquiry_id: string; p_viewer_id: string }
         Returns: undefined

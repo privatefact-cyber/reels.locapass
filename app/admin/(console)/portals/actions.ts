@@ -326,3 +326,15 @@ export async function setShopMapVideo(portalId: number, shopId: string, enabled:
   revalidatePortal(portalId);
   revalidatePath("/map");
 }
+
+/**
+ * コンシェルジュの「街の声 β」タブ(locapass用)の表示可否。スーパー管理者のみ。
+ * platform_settings はLUXELAと共通のテーブルなので、locapass用の列だけをRPC経由で切り替える(00099)。
+ */
+export async function setMachiNoKoeBetaEnabled(enabled: boolean) {
+  await requireRootAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("locapass_set_machi_no_koe_beta", { p_enabled: enabled });
+  if (error) throw new Error(`街の声ベータ版の設定変更に失敗しました: ${error.message}`);
+  revalidatePath("/admin");
+}

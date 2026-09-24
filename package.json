@@ -8,7 +8,8 @@
     "start": "next start",
     "register-cast": "tsx scripts/register-cast.ts",
     "geocode-shops": "tsx scripts/geocode-shops.ts",
-    "translate-addresses": "tsx scripts/translate-addresses.ts"
+    "translate-addresses": "tsx scripts/translate-addresses.ts",
+    "sync-whispers": "tsx scripts/sync-street-whispers.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",
