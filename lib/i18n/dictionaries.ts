@@ -180,6 +180,7 @@ export type Dictionary = {
     whisperNote: string;
     micStart: string;
     micStop: string;
+    disclaimer: string;
   };
   mypage: {
     inquiryHistory: string;
@@ -415,6 +416,7 @@ const ja: Dictionary = {
     whisperNote: "※ネットの噂レベルです",
     micStart: "音声で入力",
     micStop: "音声入力を止める",
+    disclaimer: "AIによる回答です。噂話を含み、不正確な情報を表示することがあります。",
   },
   mypage: {
     inquiryHistory: "問い合わせ履歴",
@@ -650,6 +652,7 @@ const en: Dictionary = {
     whisperNote: "Unverified online rumor",
     micStart: "Voice input",
     micStop: "Stop voice input",
+    disclaimer: "Answers are AI-generated and may include rumors or inaccurate information.",
   },
   mypage: {
     inquiryHistory: "Inquiry History",
@@ -885,6 +888,7 @@ const zh: Dictionary = {
     whisperNote: "※仅为网络传闻",
     micStart: "语音输入",
     micStop: "停止语音输入",
+    disclaimer: "回答由AI生成，可能包含传闻或不准确的信息。",
   },
   mypage: {
     inquiryHistory: "咨询记录",
@@ -1120,7 +1124,8 @@ const ar: Dictionary = {
     whisperTitle: "همسات الشارع",
     whisperNote: "مجرد شائعة على الإنترنت",
     micStart: "الإدخال الصوتي",
-    micStop: "إيقاف الإدخال الصوتي"
+    micStop: "إيقاف الإدخال الصوتي",
+    disclaimer: "الإجابات من إنتاج الذكاء الاصطناعي وقد تتضمن شائعات أو معلومات غير دقيقة."
   },
   "mypage": {
     "inquiryHistory": "سجل الاستفسارات",
