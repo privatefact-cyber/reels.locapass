@@ -267,8 +267,18 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [open]);
 
+  // 新しい発言が来たらスクロールする。AIの返事は「本文の頭」が見える位置で止める
+  // (一番下まで送ると、長い返事の本文が上に隠れて店舗ボタンしか見えず「返事が来ない」ように見えるため)。
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+    const list = listRef.current;
+    if (!list) return;
+    const last = messages[messages.length - 1];
+    const lastEl = list.querySelector<HTMLElement>("[data-last-message]");
+    if (last?.role === "ai" && lastEl && messages.length > 1) {
+      list.scrollTo({ top: Math.max(0, lastEl.offsetTop - list.offsetTop - 8), behavior: "smooth" });
+    } else {
+      list.scrollTo({ top: list.scrollHeight });
+    }
   }, [messages]);
 
   async function handleSend(e: React.FormEvent) {
@@ -399,7 +409,11 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
 
           <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto p-4">
             {messages.map((m, i) => (
-              <div key={i} className={m.role === "user" ? "flex justify-end" : "space-y-1.5"}>
+              <div
+                key={i}
+                data-last-message={i === messages.length - 1 ? "" : undefined}
+                className={m.role === "user" ? "flex justify-end" : "space-y-1.5"}
+              >
                 <div
                   dir="auto"
                   className={
