@@ -36,6 +36,7 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
+import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
@@ -300,6 +301,7 @@ export default async function ShopDetailPage({
 
   return (
     <div className="space-y-10 pb-44 md:pb-24">
+      <WhisperRefreshPing shopId={shopId} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
