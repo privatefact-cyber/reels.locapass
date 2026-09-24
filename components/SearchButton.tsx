@@ -7,6 +7,8 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // マップは/mapと/[prefecture]/[city]/mapの2パターンあるので末尾一致で判定する。
 // マップにはモーダルが無く、常時表示の住所検索欄にフォーカスするだけ(グリッド絞り込みには繋がない)。
+// その場で検索モーダルを開けるページ(ページ自身がOPEN_SEARCH_EVENTを購読している)。
+const IN_PLACE_SEARCH_PATHS = ["/", "/events"];
 const MAP_PATH_PATTERN = /(^|\/)map$/;
 
 /**
@@ -20,7 +22,7 @@ export function SearchButton() {
   const { t } = useLocale();
 
   function handleClick() {
-    if (pathname === "/" || (pathname && MAP_PATH_PATTERN.test(pathname))) {
+    if (pathname && (IN_PLACE_SEARCH_PATHS.includes(pathname) || MAP_PATH_PATTERN.test(pathname))) {
       window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
     } else {
       router.push("/?search=1");
