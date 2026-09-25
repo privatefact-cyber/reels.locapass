@@ -68,7 +68,7 @@ export function TodayScheduleBoard({
 
       {visibleRows.length === 0 ? (
         <p className="text-sm text-slate-500">
-          {rows.length === 0 ? "在籍中のパートナーがいません。" : "該当するパートナーがいません。"}
+          {rows.length === 0 ? "パートナーがいません。" : "該当するパートナーがいません。"}
         </p>
       ) : (
         <ul className="max-h-[32rem] divide-y divide-black/10 overflow-y-auto pr-1">

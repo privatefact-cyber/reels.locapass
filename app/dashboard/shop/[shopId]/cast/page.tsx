@@ -93,7 +93,7 @@ export default async function LocapassShopCastPage({
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">在籍パートナー一覧</h2>
+          <h2 className="text-sm font-semibold text-slate-900">パートナー一覧</h2>
           <Link
             href={`/dashboard/shop/${shop.id}/cast/roster`}
             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"

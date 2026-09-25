@@ -40,7 +40,7 @@ export async function generateMetadata({
   const title = `${cast.name}${cast.age ? `(${cast.age})` : ""}｜${shop?.name ?? "LOCAPASS"}のパートナー`;
   const description =
     cast.pr_text?.slice(0, 120) ||
-    `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」在籍、${cast.name}のプロフィール・出勤情報・投稿リール。`;
+    `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」のパートナー、${cast.name}のプロフィール・出勤情報・投稿リール。`;
   const url = `https://reels.locapass.net/cast/${castId}`;
   const image = sanitizeImageUrl(cast.avatar_url);
 
