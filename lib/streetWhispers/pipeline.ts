@@ -57,8 +57,14 @@ const SITES = {
  * 客向けテキストに1文字でも入っていたら不採用にする語。LLMの指示だけに頼らず、コード側で最終的に弾く。
  * (閉店・停止の判定は is_closed 側で扱うので、耳打ちには出さない)
  */
+/**
+ * 働く側(求人)目線の語。噂ネタは「遊びに行くお客様」向けなので、これが入った文も不採用にする
+ * (ネタ元に求人サイトが多く、「採用基準が高い」「キャスト同士の仲が良い」のような文が混ざるため)。
+ */
+const RECRUIT_WORDS = /採用|求人|面接|時給|日給|月給|体入|体験入店|入店祝|日払|バック|保証|送り|寮|未経験|応募|働きやす|働く|キャスト同士|育成|育てる/u;
+
 const NEGATIVE_WORDS =
-  /警察|逮捕|摘発|検挙|事件|反社|暴力団|トラブル|ぼったくり|ボッタクリ|営業停止|行政処分|休業|閉店|閉業|撤退|違法|詐欺|容疑|送検|風営法違反|被害|炎上|クレーム|悪評|最悪|危険|民度|ノルマ/u;
+  /警察|逮捕|摘発|検挙|事件|反社|暴力団|政治|議員|献金|トラブル|ぼったくり|ボッタクリ|営業停止|行政処分|休業|閉店|閉業|撤退|違法|詐欺|容疑|送検|風営法違反|被害|炎上|クレーム|悪評|最悪|危険|民度|ノルマ/u;
 
 // deno-lint-ignore no-explicit-any
 type AnyClient = SupabaseClient<any, any, any>;
@@ -219,7 +225,8 @@ ${shopIdentity(site, shop)}
 1. whisper_text(客向けネタ)のルール:
  - 警察、逮捕、摘発、事件、反社、トラブル、ぼったくり、閉店、営業停止、ノルマ、客層・民度への懸念、個人の誹謗中傷などのネガティブ要素は1文字たりとも含めない(ほのめかしも禁止)。
  - ${cfg.charms}など、客の来店意欲をそそるポジティブな魅力だけを抽出する。一番おいしいネタ1〜2個に絞る。
- - 求人情報(時給・日払い・体入など働く側の条件)は使わない。お客様目線の魅力だけにする。
+ - 働く側(求人)目線の情報は一切使わない。時給・日払い・体入・送り・寮などの条件はもちろん、「採用基準が高い」「面接」「キャスト同士の仲が良い」「働きやすい」「スターを育てる」「未経験歓迎」のような、働く人向けの話も入れない。
+ - 遊びに行くお客様が「行ってみたい」と思う話(店の雰囲気、内装、お酒や料理、イベント、話題の人、賑わい、客層の良さなど)だけにする。
  - 生データに書かれていることだけを使い、推測で足さない。同名の別店舗の情報は使わない。
  - 中立な事実の要約文で、「〜との声がある」「〜という話題が見られる」のような伝聞・観測の形。必ず60〜100文字に収める。
  - ポジティブな話題が皆無、またはノイズしかない場合は null。
@@ -273,6 +280,8 @@ function safeWhisper(verdict: Verdict, sourceCount: number): { text: string | nu
   if (sourceCount === 0) return { text: null, rejected: "検索の根拠が無いため不採用" };
   const hit = verdict.whisper_text.match(NEGATIVE_WORDS)?.[0];
   if (hit) return { text: null, rejected: `ネガティブ語「${hit}」を含むため不採用` };
+  const recruit = verdict.whisper_text.match(RECRUIT_WORDS)?.[0];
+  if (recruit) return { text: null, rejected: `働く側の話「${recruit}」を含むため不採用` };
   return { text: fitLength(verdict.whisper_text) };
 }
 
@@ -377,6 +386,69 @@ export async function syncSingleShopWhisper(
       raw,
       sources,
       queries,
+      dryRun,
+    };
+  } catch (err) {
+    return { status: "failed", error: err instanceof Error ? err.message : String(err), whisper: shop.sns_whisper };
+  }
+}
+
+/**
+ * 検索はやり直さず、最新の調査ログの生データから「蒸留 → 安全網」だけやり直して噂ネタを作り直す。
+ * 蒸留ルールを変えたときの一括作り直し用。Google検索を使わないので無料枠・1日上限には数えない(トークン代もごく小さい)。
+ * 手入力(manual)の噂は force が無ければ上書きしない。調査ログ自体は書き換えない。
+ * 営業停止・閉店の判定(is_temporarily_closed)は検索時の判定を正とし、ここでは変えない
+ * (軽いモデルで判定し直すと、閉店の疑いが外れてしまうことがあったため)。フラグが立っている店は噂を出さない。
+ */
+export async function redistillShopWhisper(
+  supabase: AnyClient,
+  site: WhisperSite,
+  shop: ShopRow,
+  opts: { force?: boolean; dryRun?: boolean } = {},
+): Promise<SyncResult> {
+  const { force = false, dryRun = false } = opts;
+  const cfg = SITES[site];
+  const { data: log, error } = await supabase
+    .from(cfg.logTable)
+    .select("raw_text, sources, search_queries")
+    .eq("shop_id", shop.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return { status: "failed", error: error.message, whisper: shop.sns_whisper };
+  if (!log?.raw_text) return { status: "not_found" };
+
+  try {
+    const raw = log.raw_text as string;
+    const sources = (Array.isArray(log.sources) ? log.sources : []) as Source[];
+    const distilled = await distill(site, shop, raw).catch(() => distill(site, shop, raw));
+    const verdict: Verdict = { ...distilled, is_closed: shop.is_temporarily_closed };
+    const { text: whisper, rejected } = safeWhisper(verdict, sources.length);
+    const keptManual = shop.sns_whisper_source === "manual" && !force;
+
+    if (!dryRun && !keptManual) {
+      const { data: updatedRows, error: updateError } = await supabase
+        .from(cfg.shopTable)
+        .update({
+          sns_whisper: whisper,
+          sns_whisper_source: whisper ? "auto" : null,
+          sns_whisper_sources: whisper ? sources.slice(0, 10) : null,
+        })
+        .eq("id", shop.id)
+        .select("id");
+      if (updateError || !updatedRows || updatedRows.length === 0) {
+        throw new Error(`店舗の更新に失敗: ${updateError?.message ?? "更新0件(権限をご確認ください)"}`);
+      }
+    }
+    return {
+      status: "updated",
+      whisper: keptManual ? shop.sns_whisper : whisper,
+      verdict,
+      rejected,
+      keptManual,
+      raw,
+      sources,
+      queries: (log.search_queries ?? []) as string[],
       dryRun,
     };
   } catch (err) {

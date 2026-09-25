@@ -16,6 +16,8 @@
  *   npm run sync-whispers -- --parallel=8                     # 同時処理数(既定5)
  *   npm run sync-whispers -- --quiet                          # 生データ・判定JSONのログを省略
  *   npm run sync-whispers -- --dry-run --out=/tmp/w.json      # 結果をJSONに書き出す
+ *   npm run sync-whispers -- --redistill                      # 検索し直さず、保存済みの生データから噂ネタだけ作り直す
+ *                                                             #  (蒸留ルールを変えたとき用。無料・1日上限の対象外。店舗の絞り込みと併用可)
  *
  * --force が無い場合は、最後に調べてから3日以内の店舗はスキップし、1日の上限(DAILY_WHISPER_UPDATE_LIMIT、
  * 両サイト合計・既定100件)に達したらそこで止まる。--dry-run は書き込まないので日数・上限を気にせず調べる。
@@ -48,6 +50,7 @@ function parseArgs() {
   const parallel = valueOf("--parallel");
   return {
     dryRun: args.includes("--dry-run"),
+    redistill: args.includes("--redistill"),
     force: args.includes("--force"),
     quiet: args.includes("--quiet"),
     limit: limit ? Number(limit) : undefined,
@@ -75,12 +78,12 @@ function connect(readOnly: boolean) {
 
 async function main() {
   // pipeline は DAILY_WHISPER_UPDATE_LIMIT などの環境変数を読み込み時に参照するので、dotenv の後で読み込む。
-  const { syncSingleShopWhisper, shopSelectColumns, countTodayRuns, DAILY_CAP, REFRESH_DAYS } = await import(
+  const { syncSingleShopWhisper, redistillShopWhisper, shopSelectColumns, countTodayRuns, DAILY_CAP, REFRESH_DAYS } = await import(
     "../lib/streetWhispers/pipeline"
   );
   type ShopRow = import("../lib/streetWhispers/pipeline").ShopRow;
 
-  const { dryRun, force, quiet, limit, parallel, shop: shopFilter, portal, id, out } = parseArgs();
+  const { dryRun, redistill, force, quiet, limit, parallel, shop: shopFilter, portal, id, out } = parseArgs();
   const supabase = connect(dryRun);
 
   let query = supabase
@@ -107,10 +110,15 @@ async function main() {
   }
 
   const targets = ((shops ?? []) as unknown as ShopRow[]).slice(0, limit);
-  const usedToday = dryRun ? 0 : await countTodayRuns(supabase);
+  const usedToday = dryRun || redistill ? 0 : await countTodayRuns(supabase);
   console.log(
     `対象: ${targets.length}件 (同時${parallel}店)` +
-      (dryRun ? " (dry-run: 書き込みません)" : ` / 今日の実行 ${usedToday}/${DAILY_CAP}件 / ${REFRESH_DAYS}日以内に調べた店はスキップ`) +
+      (redistill ? " (redistill: 検索せず保存済みの生データから作り直し)" : "") +
+      (dryRun
+        ? " (dry-run: 書き込みません)"
+        : redistill
+          ? ""
+          : ` / 今日の実行 ${usedToday}/${DAILY_CAP}件 / ${REFRESH_DAYS}日以内に調べた店はスキップ`) +
       (force ? " (force: 日数・上限・manualを無視)" : ""),
   );
 
@@ -123,7 +131,9 @@ async function main() {
     const lines: string[] = [`\n[${i + 1}/${targets.length}] ${shop.name}`];
     const log = (line: string) => lines.push(line);
     // dry-run は書き込まないので、3日ルール・上限に関係なく調べる。
-    const result = await syncSingleShopWhisper(supabase, SITE, shop, { force: force || dryRun, dryRun });
+    const result = redistill
+      ? await redistillShopWhisper(supabase, SITE, shop, { force, dryRun })
+      : await syncSingleShopWhisper(supabase, SITE, shop, { force: force || dryRun, dryRun });
 
     if (result.status === "fresh") {
       counts.fresh += 1;
@@ -133,7 +143,7 @@ async function main() {
       log(`  スキップ(今日の上限 ${DAILY_CAP}件に到達: ${result.usedToday}件)`);
     } else if (result.status === "failed" || result.status === "not_found") {
       counts.failed += 1;
-      log(`  ✗ ${result.status === "failed" ? result.error : "店舗が見つかりません"}`);
+      log(`  ✗ ${result.status === "failed" ? result.error : redistill ? "調査ログがありません(未収集)" : "店舗が見つかりません"}`);
     } else {
       const { verdict, whisper, rejected, keptManual, raw, sources, queries } = result;
       if (!quiet) {
