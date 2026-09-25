@@ -61,7 +61,8 @@ type ChatMessage = {
   role: "user" | "ai";
   text: string;
   links?: ChatLink[];
-  // 街の声: 回答の中で噂ネタ(shops.sns_whisper)を織り込んだ店舗名。あれば「ネットの噂レベル」の注記を出す。
+  // 街の声: 回答の中で噂ネタ(shops.sns_whisper)を織り込んだ店舗名。あれば吹き出しをゴールドの縁取りにする
+  // (噂である旨の注記は、チャット下部の「AIによる回答です…」に一本化した)。
   whisperShops?: string[];
 };
 
@@ -431,7 +432,6 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                   )}
                   {m.text}
                 </div>
-                {m.whisperShops && <WhisperNote shops={m.whisperShops} />}
                 {m.links && m.links.length > 0 && (
                   <div className="flex max-w-[85%] flex-col gap-1.5">
                     {m.links.map((link) => (
@@ -542,18 +542,5 @@ function BetaBadge() {
     <span className="rounded border border-gold/40 px-1 py-px text-[9px] font-bold leading-none tracking-wider text-gold/80">
       β
     </span>
-  );
-}
-
-/** 街の声で噂ネタを織り込んだ回答の下に出す注記(噂であることを必ず明示する)。 */
-function WhisperNote({ shops }: { shops: string[] }) {
-  const { t } = useLocale();
-  return (
-    <p className="flex max-w-[85%] flex-wrap items-baseline gap-x-1.5 px-1 text-[10px] text-white/40">
-      <span aria-hidden>🕶️</span>
-      <span className="font-bold text-gold/80">{t.ai.whisperTitle}</span>
-      <bdi>{shops.join(" / ")}</bdi>
-      <span>({t.ai.whisperNote})</span>
-    </p>
   );
 }

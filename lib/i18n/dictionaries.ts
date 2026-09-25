@@ -176,8 +176,6 @@ export type Dictionary = {
     machiTab: string;
     machiName: string;
     machiGreeting: string;
-    whisperTitle: string;
-    whisperNote: string;
     micStart: string;
     micStop: string;
     disclaimer: string;
@@ -412,8 +410,6 @@ const ja: Dictionary = {
     machiTab: "街の声",
     machiName: "街の声",
     machiGreeting: "こんばんは〜！今夜はどのへんで遊ぶ予定？エリアでも気分でも教えてくれたら、街のうわさ話もこっそり混ぜて案内するね♪",
-    whisperTitle: "ストリートのタレコミ",
-    whisperNote: "※ネットの噂レベルです",
     micStart: "音声で入力",
     micStop: "音声入力を止める",
     disclaimer: "AIによる回答です。不正確な情報を表示することがあります。",
@@ -648,8 +644,6 @@ const en: Dictionary = {
     machiTab: "Street Voice",
     machiName: "Street Voice",
     machiGreeting: "Hi there! Where are you heading tonight? Tell me an area or your mood, and I'll sneak in a little street gossip too ♪",
-    whisperTitle: "Word on the Street",
-    whisperNote: "Unverified online rumor",
     micStart: "Voice input",
     micStop: "Stop voice input",
     disclaimer: "AI-generated answers may be inaccurate.",
@@ -884,8 +878,6 @@ const zh: Dictionary = {
     machiTab: "街头之声",
     machiName: "街头之声",
     machiGreeting: "晚上好～！今晚打算去哪儿玩呀？告诉我区域或心情，我会悄悄加点街头小道消息给你哦♪",
-    whisperTitle: "街头传闻",
-    whisperNote: "※仅为网络传闻",
     micStart: "语音输入",
     micStop: "停止语音输入",
     disclaimer: "回答由AI生成，可能不准确。",
@@ -1121,8 +1113,6 @@ const ar: Dictionary = {
     machiTab: "صوت الشارع",
     machiName: "صوت الشارع",
     machiGreeting: "مساء الخير! وين ناوي تسهر الليلة؟ قلّي المنطقة أو مزاجك، وبهمس لك بشوية أخبار من الشارع ♪",
-    whisperTitle: "همسات الشارع",
-    whisperNote: "مجرد شائعة على الإنترنت",
     micStart: "الإدخال الصوتي",
     micStop: "إيقاف الإدخال الصوتي",
     disclaimer: "إجابات الذكاء الاصطناعي قد تكون غير دقيقة."
