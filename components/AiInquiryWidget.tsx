@@ -175,8 +175,32 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
   const [loading, setLoading] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const askedLocationRef = useRef(false);
+  // 位置情報(GPS)。近いお店から提案するために使う。iPhoneのSafariは「ボタンを押したその操作の中」で
+  // 頼まないと許可のアラートを出さないことがあるので、チャットボタンの onClick から直接呼ぶ(マップと同じ)。
+  // 取れなくても(拒否・非対応・タイムアウト)何もせず、位置情報なしの案内にフォールバックする。
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const locationRequestRef = useRef<Promise<void> | null>(null);
+
+  function requestLocation() {
+    if (locationRequestRef.current || typeof navigator === "undefined" || !navigator.geolocation) return;
+    locationRequestRef.current = new Promise<void>((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          coordsRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          resolve();
+        },
+        () => resolve(),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 },
+      );
+    });
+  }
+
+  /** 許可アラートへの返事や測位が送信に少しだけ遅れても、最初の質問に位置情報が乗るよう最大 ms 待つ。 */
+  async function waitForLocation(ms: number) {
+    const pending = locationRequestRef.current;
+    if (!pending || coordsRef.current) return;
+    await Promise.race([pending, new Promise((resolve) => setTimeout(resolve, ms))]);
+  }
   const listRef = useRef<HTMLDivElement>(null);
   const messages = threads[mode];
   const escalated = escalatedByMode[mode];
@@ -305,23 +329,6 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     if (open && threads[mode].length === 0) {
       setThreads((prev) => ({ ...prev, [mode]: [greetingFor(mode)] }));
     }
-    if (open && !askedLocationRef.current) {
-      askedLocationRef.current = true;
-      // チャットを開いたタイミングで一度だけ位置情報の許可を試みる。取れなくても
-      // (拒否・非対応・タイムアウト)エラーは飲み込み、従来通りcurrentAreaSlugベース
-      // の案内にフォールバックする(ユーザー体験をブロックしない)。
-      if (typeof navigator !== "undefined" && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          },
-          () => {
-            // 拒否・取得失敗時は何もしない(coordsはnullのまま)
-          },
-          { enableHighAccuracy: false, timeout: 4000, maximumAge: 5 * 60 * 1000 },
-        );
-      }
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode]);
 
@@ -363,6 +370,8 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     setLoading(true);
 
     const selected = getAiSelectedContext();
+    await waitForLocation(3000);
+    const coords = coordsRef.current;
     try {
       const res = await fetch(CHAT_ENDPOINT, {
         method: "POST",
@@ -615,7 +624,10 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
 
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (!open) requestLocation();
+          setOpen((v) => !v);
+        }}
         aria-label={t.ai.triggerLabel}
         className={`flex items-center justify-center rounded-full border border-white/20 bg-zinc-900/60 text-white shadow-lg shadow-black/40 backdrop-blur-xl backdrop-saturate-150 transition hover:bg-zinc-800/70 ${
           isMap ? "h-11 w-11" : "h-14 w-14"
