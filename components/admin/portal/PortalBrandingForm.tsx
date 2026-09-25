@@ -7,6 +7,16 @@ import { updatePortalBranding } from "@/app/admin/(console)/portals/actions";
 import { uploadToStream } from "@/lib/stream/uploadToStream";
 import { streamPlaybackUrl } from "@/lib/stream/playback";
 import { StreamVideo } from "@/components/video/StreamVideo";
+import { isSiteTheme, type SiteTheme } from "@/lib/theme";
+
+// 子ポータルの配色テーマ。「サイト全体に従う」なら管理画面トップの設定(自動なら12月はクリスマス)がそのまま効く。
+const THEME_OPTIONS: { value: SiteTheme | null; label: string; swatch: string }[] = [
+  { value: null, label: "サイト全体に従う", swatch: "linear-gradient(135deg, #d4af6a 50%, #64748b 50%)" },
+  { value: "default", label: "通常(ゴールド)", swatch: "linear-gradient(135deg, #000 50%, #d4af6a 50%)" },
+  { value: "christmas", label: "クリスマス", swatch: "linear-gradient(135deg, #881337 50%, #fde68a 50%)" },
+  { value: "beauty", label: "ビューティー", swatch: "linear-gradient(135deg, #faf7f5 50%, #e879a0 50%)" },
+  { value: "nature", label: "ネイチャー", swatch: "linear-gradient(135deg, #4a5d23 50%, #d4af6a 50%)" },
+];
 
 type Props = {
   portal: {
@@ -14,15 +24,10 @@ type Props = {
     name: string;
     tagline: string | null;
     description: string | null;
-    accent_color: string;
-    background_color: string;
     hero_media_type: string;
     hero_media_url: string | null;
     hero_link_url: string | null;
-    header_color: string;
-    header_opacity: number;
-    outer_background_color: string;
-    font_color: string;
+    theme: string | null;
   };
 };
 
@@ -35,15 +40,10 @@ export function PortalBrandingForm({ portal }: Props) {
   const [name, setName] = useState(portal.name);
   const [tagline, setTagline] = useState(portal.tagline ?? "");
   const [description, setDescription] = useState(portal.description ?? "");
-  const [accentColor, setAccentColor] = useState(portal.accent_color);
-  const [backgroundColor, setBackgroundColor] = useState(portal.background_color);
   const [heroUrl, setHeroUrl] = useState(portal.hero_media_url);
   const [heroType, setHeroType] = useState<"image" | "video">(portal.hero_media_type === "video" ? "video" : "image");
   const [heroLinkUrl, setHeroLinkUrl] = useState(portal.hero_link_url ?? "");
-  const [headerColor, setHeaderColor] = useState(portal.header_color);
-  const [headerOpacity, setHeaderOpacity] = useState(Math.round(portal.header_opacity * 100));
-  const [outerBackgroundColor, setOuterBackgroundColor] = useState(portal.outer_background_color);
-  const [fontColor, setFontColor] = useState(portal.font_color);
+  const [theme, setTheme] = useState<SiteTheme | null>(isSiteTheme(portal.theme) ? portal.theme : null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export function PortalBrandingForm({ portal }: Props) {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updatePortalBranding(portal.id, { name, tagline, description, accentColor, backgroundColor, heroMediaType: heroType, heroMediaUrl: heroUrl, heroLinkUrl, headerColor, headerOpacity: headerOpacity / 100, outerBackgroundColor, fontColor });
+        await updatePortalBranding(portal.id, { name, tagline, description, heroMediaType: heroType, heroMediaUrl: heroUrl, heroLinkUrl, theme });
         setMessage("保存しました。公開ポータルに反映されています。");
         router.refresh();
       } catch (e) {
@@ -126,12 +126,31 @@ export function PortalBrandingForm({ portal }: Props) {
           <label className="block text-xs font-semibold text-slate-600">キャッチコピー<textarea value={tagline} onChange={(e) => setTagline(e.target.value)} className="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /></label>
           <label className="block text-xs font-semibold text-slate-600">サブコピー・説明文<textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /></label>
           <label className="block text-xs font-semibold text-slate-600">EXPLORE NOW のリンク先（任意）<input value={heroLinkUrl} onChange={(e) => setHeroLinkUrl(e.target.value)} placeholder="未入力ならページ内フィード / 例: /events" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /><span className="mt-1 block text-[11px] font-normal text-slate-400">/motors/map、/events、https://example.com、#portal-feed など</span></label>
-          <div className="grid grid-cols-2 gap-3"><label className="block text-xs font-semibold text-slate-600">アクセント<input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label><label className="block text-xs font-semibold text-slate-600">背景<input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label></div>
-          <div className="grid grid-cols-2 gap-3"><label className="block text-xs font-semibold text-slate-600">外側背景色<input type="color" value={outerBackgroundColor} onChange={(e) => setOuterBackgroundColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label><label className="block text-xs font-semibold text-slate-600">フォントカラー<input type="color" value={fontColor} onChange={(e) => setFontColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label></div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="mb-2 text-xs font-bold text-slate-700">ヘッダー（すりガラス）</div><div className="grid grid-cols-[72px_1fr] items-center gap-3"><label className="text-xs font-semibold text-slate-600">色<input type="color" value={headerColor} onChange={(e) => setHeaderColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white p-1" /></label><label className="text-xs font-semibold text-slate-600">透過率 <span className="font-normal text-slate-400">{headerOpacity}%</span><input type="range" min="0" max="100" value={headerOpacity} onChange={(e) => setHeaderOpacity(Number(e.target.value))} className="mt-3 w-full accent-indigo-600" /></label></div><p className="mt-2 text-[11px] font-normal text-slate-400">ぼかし効果は現在のサイト設定を維持します。</p></div>
+          <div>
+            <div className="text-xs font-semibold text-slate-600">配色テーマ</div>
+            <p className="mt-0.5 text-[11px] font-normal text-slate-400">このポータルのトップと、所属店舗の店舗ページに適用されます。</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {THEME_OPTIONS.map((o) => (
+                <button
+                  key={o.label}
+                  type="button"
+                  onClick={() => setTheme(o.value)}
+                  aria-pressed={theme === o.value}
+                  className={
+                    theme === o.value
+                      ? "flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700"
+                      : "flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  }
+                >
+                  <span className="h-3.5 w-3.5 rounded-full border border-slate-300" style={{ background: o.swatch }} />
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-      <div className="mt-5 flex flex-wrap items-center gap-3"><button type="button" onClick={() => { setAccentColor("#F59E0B"); setBackgroundColor("#050505"); setHeaderColor("#25102F"); setHeaderOpacity(60); setOuterBackgroundColor("#000000"); setFontColor("#FFFFFF"); setMessage("デフォルト値に戻しました。保存すると反映されます。"); setError(null); }} disabled={pending || uploading} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">デザインをデフォルトに戻す</button><button type="button" onClick={save} disabled={pending || uploading} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">{pending ? "保存中..." : "設定を保存"}</button>{message && <span className="text-xs text-emerald-700">{message}</span>}{error && <span className="text-xs text-red-600">{error}</span>}</div>
+      <div className="mt-5 flex flex-wrap items-center gap-3"><button type="button" onClick={save} disabled={pending || uploading} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">{pending ? "保存中..." : "設定を保存"}</button>{message && <span className="text-xs text-emerald-700">{message}</span>}{error && <span className="text-xs text-red-600">{error}</span>}</div>
     </section>
   );
 }

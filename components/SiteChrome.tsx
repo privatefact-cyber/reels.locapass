@@ -34,23 +34,16 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
 
   return (
     <>
-      {/* 高級感のあるゴールド調ヘッダー(色は配色テーマ。ポータル側でヘッダー色を設定した場合はそちらを優先) */}
+      {/* 高級感のあるゴールド調ヘッダー(すりガラス+光暈の装飾背景。色は配色テーマ) */}
       {!mapImmersive && (
         <header
           data-surface="header"
-          className="sticky top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-main/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
-          style={{ backgroundColor: "var(--portal-header-background, rgb(var(--color-header) / .6))" }}
+          className="sticky top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-main/10 bg-header/60 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
         >
-          {/* 背景の光暈(LUXELAと同じ3色の帯。ポータル側でヘッダー色を設定した場合はその色の光に差し替える) */}
+          {/* 背景の光暈(装飾、クリック不可) */}
           <div
             aria-hidden
             className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[140%] -translate-x-1/2 rounded-full bg-gradient-to-r from-header-glow-1/20 via-header-glow-2/25 to-header-glow-3/20 blur-3xl"
-            style={{ opacity: "var(--portal-hide-theme-glow, 1)" }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[140%] -translate-x-1/2 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(ellipse at center, var(--portal-header-glow, transparent), transparent 68%)" }}
           />
 
           {/* お知らせバー */}

@@ -27,6 +27,8 @@ import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
 import { GalleryThumbs } from "@/components/shop/GalleryThumbs";
+import { PortalThemeScope } from "@/components/portal/PortalThemeScope";
+import { isSiteTheme } from "@/lib/theme";
 import { JsonLd } from "@/components/JsonLd";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
@@ -120,7 +122,7 @@ export default async function ShopDetailPage({
 
   // 子ポータル(サイト)トップへ戻る導線用。portal_idが無い店舗(旧データ等)では出さない。
   const { data: site } = shopRow.portal_id
-    ? await supabase.from("locapass_portals").select("slug, name").eq("id", shopRow.portal_id).maybeSingle()
+    ? await supabase.from("locapass_portals").select("slug, name, theme").eq("id", shopRow.portal_id).maybeSingle()
     : { data: null };
 
   // 店舗が日本語で入力した文章は、英語・中国語表示では保存時に自動翻訳しておいた文を出す
@@ -302,6 +304,8 @@ export default async function ShopDetailPage({
 
   return (
     <div className="space-y-10 pb-44 md:pb-24">
+      {/* 所属する子ポータルで選んだ配色テーマ(未設定ならサイト全体の配色) */}
+      <PortalThemeScope theme={isSiteTheme(site?.theme) ? site.theme : null} />
       <WhisperRefreshPing shopId={shopId} />
       <JsonLd
         data={{

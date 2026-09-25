@@ -1479,6 +1479,7 @@ export type Database = {
           name: string
           name_en: string | null
           slug: string
+          theme: string | null
           status: string
           tagline: string | null
           updated_at: string
@@ -1502,6 +1503,7 @@ export type Database = {
           name: string
           name_en?: string | null
           slug: string
+          theme?: string | null
           status?: string
           tagline?: string | null
           updated_at?: string
@@ -1525,6 +1527,7 @@ export type Database = {
           name?: string
           name_en?: string | null
           slug?: string
+          theme?: string | null
           status?: string
           tagline?: string | null
           updated_at?: string

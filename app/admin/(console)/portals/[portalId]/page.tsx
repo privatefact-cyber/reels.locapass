@@ -14,6 +14,7 @@ import {
   RevokeShopAdminButton,
 } from "@/components/admin/portal/ShopAdminControls";
 import { PortalBrandingForm } from "@/components/admin/portal/PortalBrandingForm";
+import { MoveShopPortalForm } from "@/components/admin/portal/MoveShopPortalForm";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   active: { label: "公開中", className: "bg-emerald-50 text-emerald-700" },
@@ -39,7 +40,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
     await Promise.all([
       supabase
         .from("locapass_portals")
-        .select("id, name, slug, home_url, tagline, description, status, accent_color, background_color, hero_media_type, hero_media_url, hero_link_url, header_color, header_opacity, outer_background_color, font_color")
+        .select("id, name, slug, home_url, tagline, description, status, hero_media_type, hero_media_url, hero_link_url, theme")
         .eq("id", portalId)
         .maybeSingle(),
       supabase
@@ -53,6 +54,11 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
     ]);
 
   if (!portal) notFound();
+
+  // 店舗の移動先候補(ルート管理者のみ)
+  const { data: allPortals } = isSuper
+    ? await supabase.from("locapass_portals").select("id, name").order("id")
+    : { data: null };
 
   const adminsByShop = new Map<string, { shop_admin_id: string; email: string }[]>();
   for (const a of shopAdmins ?? []) {
@@ -154,6 +160,15 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
                       <p className="mt-0.5 text-xs text-slate-400">
                         {shop.category || "業種未設定"} / 店舗コード {shop.shop_code}
                       </p>
+                      {isSuper && (
+                        <MoveShopPortalForm
+                          shopId={shop.id}
+                          shopName={shop.name}
+                          currentPortalId={portalId}
+                          currentCategory={shop.category}
+                          portals={allPortals ?? []}
+                        />
+                      )}
                       {/* 街の声の自動収集結果(npm run sync-whispers)。噂ネタの中身はマウスを乗せると見える。 */}
                       {(shop.sns_whisper || shop.is_temporarily_closed) && (
                         <div className="mt-1 flex flex-wrap gap-1">

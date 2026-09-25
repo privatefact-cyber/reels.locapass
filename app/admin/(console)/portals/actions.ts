@@ -35,52 +35,69 @@ export async function updatePortalBranding(
     name: string;
     tagline: string;
     description: string;
-    accentColor: string;
-    backgroundColor: string;
     heroMediaType: "image" | "video";
     heroMediaUrl: string | null;
     heroLinkUrl: string | null;
-    headerColor: string;
-    headerOpacity: number;
-    outerBackgroundColor: string;
-    fontColor: string;
+    /** このポータルの配色テーマ。null はサイト全体の設定に従う */
+    theme: SiteTheme | null;
   },
 ) {
   await requirePortalAccess(portalId);
-  if (!/^#[0-9a-f]{6}$/i.test(input.accentColor) || !/^#[0-9a-f]{6}$/i.test(input.backgroundColor)) {
-    throw new Error("カラーコードは6桁のHEX形式で入力してください");
-  }
-  if (!/^#[0-9a-f]{6}$/i.test(input.headerColor)) throw new Error("ヘッダー色は6桁のHEX形式で入力してください");
-  if (!/^#[0-9a-f]{6}$/i.test(input.outerBackgroundColor)) throw new Error("外側背景色は6桁のHEX形式で入力してください");
-  if (!/^#[0-9a-f]{6}$/i.test(input.fontColor)) throw new Error("フォントカラーは6桁のHEX形式で入力してください");
-  if (!Number.isFinite(input.headerOpacity) || input.headerOpacity < 0 || input.headerOpacity > 1) {
-    throw new Error("ヘッダー透過率が不正です");
-  }
+  if (input.theme !== null && !isSiteTheme(input.theme)) throw new Error("不明な配色テーマです");
   if (input.heroLinkUrl && !(/^(https?:\/\/|\/|#)/i.test(input.heroLinkUrl))) {
     throw new Error("リンク先は https://、/、# から始まるURLを入力してください");
   }
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("locapass_portals")
     .update({
       name: input.name.trim(),
       tagline: input.tagline.trim() || null,
       description: input.description.trim() || null,
-      accent_color: input.accentColor.toUpperCase(),
-      background_color: input.backgroundColor.toUpperCase(),
       hero_media_type: input.heroMediaType,
       hero_media_url: input.heroMediaUrl,
       hero_link_url: input.heroLinkUrl?.trim() || null,
-      header_color: input.headerColor.toUpperCase(),
-      header_opacity: input.headerOpacity,
-      outer_background_color: input.outerBackgroundColor.toUpperCase(),
-      font_color: input.fontColor.toUpperCase(),
+      theme: input.theme,
     })
-    .eq("id", portalId);
+    .eq("id", portalId)
+    .select("slug");
   if (error) throw new Error(`ポータル設定の保存に失敗しました: ${error.message}`);
+  if (!updated || updated.length === 0) throw new Error("ポータル設定の保存に失敗しました(権限をご確認ください)");
   revalidatePortal(portalId);
-  const { data: portal } = await supabase.from("locapass_portals").select("slug").eq("id", portalId).maybeSingle();
-  if (portal?.slug) revalidatePath(`/${portal.slug}`);
+  if (updated[0].slug) revalidatePath(`/${updated[0].slug}`);
+  // 所属店舗の店舗ページにも配色テーマが効くので、店舗ページもまとめて再生成する
+  revalidatePath("/shops/[shopId]", "page");
+}
+
+/**
+ * 店舗を別の子ポータルへ移動する(ルート管理者のみ)。店舗情報・写真・パートナー・店舗管理者はそのまま。
+ * 業種も同時に選び直せる(null なら変更しない)。その店舗のリールの所属ポータルも付け替える
+ * (locapass_reels のトリガーが更新時に店舗の portal_id を写す)。
+ */
+export async function moveShopToPortal(shopId: string, toPortalId: number, category: string | null) {
+  await requireRootAdmin();
+  const supabase = await createClient();
+  const { data: before } = await supabase.from("locapass_shops").select("portal_id").eq("id", shopId).maybeSingle();
+  if (!before) throw new Error("店舗が見つかりません");
+  const patch: { portal_id: number; category?: string | null } = { portal_id: toPortalId };
+  if (category !== null) patch.category = normalizeCategory(category);
+  const { data: moved, error } = await supabase.from("locapass_shops").update(patch).eq("id", shopId).select("id");
+  if (error) throw new Error(`店舗の移動に失敗しました: ${error.message}`);
+  if (!moved || moved.length === 0) throw new Error("店舗の移動に失敗しました(権限をご確認ください)");
+
+  const { error: reelError } = await supabase
+    .from("locapass_reels")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("shop_id", shopId);
+  if (reelError) throw new Error(`店舗は移動しましたが、リールの付け替えに失敗しました: ${reelError.message}`);
+
+  for (const id of [before.portal_id, toPortalId]) {
+    if (id !== null) revalidatePortal(id);
+  }
+  const { data: slugs } = await supabase.from("locapass_portals").select("slug").in("id", [before.portal_id, toPortalId].filter((v): v is number => v !== null));
+  for (const p of slugs ?? []) if (p.slug) revalidatePath(`/${p.slug}`);
+  revalidatePath(`/shops/${shopId}`);
+  revalidatePath("/admin");
 }
 
 export type CreatePortalState =
