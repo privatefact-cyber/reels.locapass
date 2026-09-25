@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      concierge_link_clicks: {
+        Row: {
+          created_at: string
+          id: number
+          mode: string
+          session_id: string | null
+          shop_path: string
+          site: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          mode: string
+          session_id?: string | null
+          shop_path: string
+          site: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          mode?: string
+          session_id?: string | null
+          shop_path?: string
+          site?: string
+        }
+        Relationships: []
+      }
       admin_impersonations: {
         Row: {
           admin_user_id: string
@@ -3646,6 +3673,18 @@ export type Database = {
       }
     }
     Functions: {
+      concierge_beta_metrics: {
+        Args: { p_site: string; p_days?: number }
+        Returns: {
+          avg_user_messages: number
+          clicks_per_conversation: number
+          conversations: number
+          link_clicks: number
+          mode: string
+          return_rate_pct: number
+          returning_conversations: number
+        }[]
+      }
       locapass_set_machi_no_koe_beta: {
         Args: { p_enabled: boolean }
         Returns: undefined

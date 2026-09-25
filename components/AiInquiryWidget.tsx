@@ -76,10 +76,23 @@ type SpeechRecognitionLike = {
   continuous: boolean;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
   onend: (() => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((e: { error?: string }) => void) | null;
   start: () => void;
   stop: () => void;
+  abort?: () => void;
 };
+
+/**
+ * iPhone/iPad(Safari)は Web Speech API の実装が不安定で、認識が止まらず画面ごと固まることがあった。
+ * iOSではブラウザの音声認識を使わず、キーボードの音声入力(マイク)に任せる。
+ */
+function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+/** 何も聞き取れないまま、この時間が経ったら自動でマイクを止める(止まらない事故の保険)。 */
+const MIC_SILENCE_TIMEOUT_MS = 8000;
 
 function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
   if (typeof window === "undefined") return null;
@@ -143,8 +156,12 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
   const currentAreaSlug = guessCurrentAreaSlug(pathname);
   const [open, setOpen] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [iosDictation, setIosDictation] = useState(false);
   const [listening, setListening] = useState(false);
+  const [micMessage, setMicMessage] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode>("concierge");
   // 管理画面の「街の声ベータ版」スイッチ(platform_settings.locapass_machi_no_koe_beta_enabled)。オフならタブごと出さない。
@@ -187,13 +204,54 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
 
   // SSRとの不一致を避けるため、対応可否はマウント後に判定する(非対応ブラウザではマイクを出さない)。
   useEffect(() => {
-    setSpeechSupported(getSpeechRecognition() !== null);
-    return () => recognitionRef.current?.stop();
+    const ios = isIOS();
+    setIosDictation(ios);
+    setSpeechSupported(ios || getSpeechRecognition() !== null);
+    return () => stopListening();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // マイクを必ず止める。ブラウザが終了を知らせてこない場合もあるので、画面の状態はここで即座に戻す。
+  function stopListening() {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = null;
+    const recognition = recognitionRef.current;
+    recognitionRef.current = null;
+    if (recognition) {
+      recognition.onresult = null;
+      recognition.onend = null;
+      recognition.onerror = null;
+      try {
+        if (recognition.abort) recognition.abort();
+        else recognition.stop();
+      } catch {
+        // 既に止まっている
+      }
+    }
+    setListening(false);
+  }
+
+  function armSilenceTimer() {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = setTimeout(stopListening, MIC_SILENCE_TIMEOUT_MS);
+  }
+
+  function micErrorMessage(error: string | undefined): string {
+    if (error === "not-allowed" || error === "service-not-allowed") return t.ai.micDenied;
+    if (error === "no-speech") return t.ai.micNoSpeech;
+    return t.ai.micUnavailable;
+  }
 
   function toggleListening() {
     if (listening) {
-      recognitionRef.current?.stop();
+      stopListening();
+      return;
+    }
+    setMicMessage(null);
+    if (iosDictation) {
+      // iOS: 入力欄にフォーカスしてキーボードを出し、キーボードのマイクで話してもらう。
+      inputRef.current?.focus();
+      setMicMessage(t.ai.micIosHint);
       return;
     }
     const Recognition = getSpeechRecognition();
@@ -209,12 +267,22 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
         .map((r) => r[0]?.transcript ?? "")
         .join("");
       setInput(base + transcript);
+      armSilenceTimer();
     };
-    recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
+    recognition.onend = () => stopListening();
+    recognition.onerror = (e) => {
+      setMicMessage(micErrorMessage(e?.error));
+      stopListening();
+    };
     recognitionRef.current = recognition;
     setListening(true);
-    recognition.start();
+    armSilenceTimer();
+    try {
+      recognition.start();
+    } catch {
+      setMicMessage(t.ai.micUnavailable);
+      stopListening();
+    }
   }
 
   useEffect(() => {
@@ -287,7 +355,8 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     const text = input.trim();
     if (!text || loading) return;
 
-    recognitionRef.current?.stop();
+    stopListening();
+    setMicMessage(null);
     const sendMode = mode;
     appendMessage(sendMode, { role: "user", text });
     setInput("");
@@ -330,6 +399,20 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     } finally {
       setLoading(false);
     }
+  }
+
+  // 計測: 返事に出た店舗ボタンの押下(街の声と通常コンシェルジュの比較用。失敗しても何もしない)。
+  function recordLinkClick(shopPath: string) {
+    const supabase = createClient();
+    void supabase
+      .from("concierge_link_clicks")
+      .insert({
+        site: "locapass",
+        mode: isMachi ? "machi" : "concierge",
+        session_id: getSessionId(mode),
+        shop_path: shopPath.slice(0, 300),
+      })
+      .then(() => undefined);
   }
 
   function handleReset() {
@@ -438,6 +521,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                       <Link
                         key={link.url}
                         href={toPath(link.url)}
+                        onClick={() => recordLinkClick(toPath(link.url))}
                         className="flex w-full items-center justify-between gap-2 rounded-xl border border-gold/30 bg-white/5 px-3 py-2 text-left text-xs font-semibold text-gold hover:bg-white/10"
                       >
                         {link.title}
@@ -480,6 +564,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
             className="flex gap-2 border-t border-white/10 bg-white/5 p-2"
           >
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -517,6 +602,11 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
               <Send size={14} />
             </button>
           </form>
+          {micMessage && (
+            <p role="status" className="bg-white/5 px-3 pb-1.5 text-[11px] leading-snug text-amber-200/80">
+              {micMessage}
+            </p>
+          )}
           <p className="border-t border-white/5 bg-black/20 px-3 py-1.5 text-center text-[10px] leading-snug text-white/40">
             {t.ai.disclaimer}
           </p>

@@ -178,6 +178,10 @@ export type Dictionary = {
     machiGreeting: string;
     micStart: string;
     micStop: string;
+    micIosHint: string;
+    micDenied: string;
+    micNoSpeech: string;
+    micUnavailable: string;
     disclaimer: string;
   };
   mypage: {
@@ -412,6 +416,10 @@ const ja: Dictionary = {
     machiGreeting: "こんばんは〜！今夜はどのへんで遊ぶ予定？エリアでも気分でも教えてくれたら、街のうわさ話もこっそり混ぜて案内するね♪",
     micStart: "音声で入力",
     micStop: "音声入力を止める",
+    micIosHint: "キーボードのマイクボタンで話してね。",
+    micDenied: "マイクが許可されていません。ブラウザの設定でマイクを許可してください。",
+    micNoSpeech: "声が聞き取れませんでした。もう一度マイクを押して話してください。",
+    micUnavailable: "このブラウザでは音声入力が使えませんでした。キーボードの音声入力をお使いください。",
     disclaimer: "AIによる回答です。不正確な情報を表示することがあります。",
   },
   mypage: {
@@ -646,6 +654,10 @@ const en: Dictionary = {
     machiGreeting: "Hi there! Where are you heading tonight? Tell me an area or your mood, and I'll sneak in a little street gossip too ♪",
     micStart: "Voice input",
     micStop: "Stop voice input",
+    micIosHint: "Tap the mic on your keyboard to speak.",
+    micDenied: "Microphone access is blocked. Please allow it in your browser settings.",
+    micNoSpeech: "We couldn't hear you. Tap the mic and try again.",
+    micUnavailable: "Voice input isn't available in this browser. Please use your keyboard's dictation.",
     disclaimer: "AI-generated answers may be inaccurate.",
   },
   mypage: {
@@ -880,6 +892,10 @@ const zh: Dictionary = {
     machiGreeting: "晚上好～！今晚打算去哪儿玩呀？告诉我区域或心情，我会悄悄加点街头小道消息给你哦♪",
     micStart: "语音输入",
     micStop: "停止语音输入",
+    micIosHint: "请点击键盘上的麦克风说话。",
+    micDenied: "麦克风未获授权，请在浏览器设置中允许。",
+    micNoSpeech: "没有听到声音，请再点一次麦克风说话。",
+    micUnavailable: "此浏览器无法使用语音输入，请使用键盘的语音输入。",
     disclaimer: "回答由AI生成，可能不准确。",
   },
   mypage: {
@@ -1115,6 +1131,10 @@ const ar: Dictionary = {
     machiGreeting: "مساء الخير! وين ناوي تسهر الليلة؟ قلّي المنطقة أو مزاجك، وبهمس لك بشوية أخبار من الشارع ♪",
     micStart: "الإدخال الصوتي",
     micStop: "إيقاف الإدخال الصوتي",
+    micIosHint: "اضغط على زر الميكروفون في لوحة المفاتيح وتحدث.",
+    micDenied: "الوصول إلى الميكروفون محظور. يرجى السماح به من إعدادات المتصفح.",
+    micNoSpeech: "لم نتمكن من سماعك. اضغط على الميكروفون وحاول مرة أخرى.",
+    micUnavailable: "الإدخال الصوتي غير متاح في هذا المتصفح. استخدم الإملاء في لوحة المفاتيح.",
     disclaimer: "إجابات الذكاء الاصطناعي قد تكون غير دقيقة."
   },
   "mypage": {

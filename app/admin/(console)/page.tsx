@@ -6,6 +6,7 @@ import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShop
 import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
 import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
+import { ConciergeBetaMetrics } from "@/components/admin/ConciergeBetaMetrics";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "無料",
@@ -119,6 +120,9 @@ export default async function AdminShopsPage({
             </p>
           </div>
           <MachiNoKoeBetaToggle enabled={machiNoKoeEnabled} />
+          <div className="w-full">
+            <ConciergeBetaMetrics />
+          </div>
         </div>
       )}
 
