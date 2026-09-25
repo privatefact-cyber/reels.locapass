@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
@@ -86,7 +87,9 @@ export function PhotoViewer({
     setActiveIndex(index);
   };
 
-  return (
+  // body直下に描画する。横スクロールのギャラリー等の中に置くと、iPhone Safariでは
+  // 全画面(fixed)がその枠の中に閉じ込められ、下の要素に隠れてしまうため。
+  return createPortal(
     <div data-surface="media" className="fixed inset-0 z-[100] bg-black">
       <button
         type="button"
@@ -113,6 +116,7 @@ export function PhotoViewer({
           </div>
         ))}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
