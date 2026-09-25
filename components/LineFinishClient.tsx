@@ -55,7 +55,7 @@ export function LineFinishClient() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-12 text-center">
-      <p className="text-sm text-neutral-400">ログイン中...</p>
+      <p className="text-sm text-muted">ログイン中...</p>
     </div>
   );
 }

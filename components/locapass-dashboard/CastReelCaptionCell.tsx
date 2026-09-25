@@ -10,13 +10,13 @@ export function CastReelCaptionCell({ caption }: { caption: string }) {
 
   return (
     <>
-      <p className="line-clamp-2 text-[11px] text-white">
+      <p className="line-clamp-2 text-[11px] text-main">
         {isLong ? `${caption.slice(0, BIG_TEXT_MAX_LENGTH)}…` : caption}
         {isLong && (
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="ml-1 underline decoration-white/50 text-white/80"
+            className="ml-1 underline decoration-main/50 text-main/80"
           >
             続きを読む
           </button>

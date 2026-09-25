@@ -4,6 +4,163 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * サイト全体の配色テーマ。<html data-theme="default|christmas|beauty"> を切り替えるだけで色が一括で変わる。
+ * - 値は "R G B"。Tailwind側で rgb(var(...) / 透明度) として使うので、/20 などの透過指定は各テーマ共通のまま効く。
+ * - default は従来の実際の色(黒/白/neutral/zinc/amber/gold)とまったく同じ値。見た目は1pxも変わらない。
+ * - tone = 旧 neutral、panel = 旧 zinc、hl = 旧 amber の段階ごとの置き換え先。
+ * - 管理画面・店舗ダッシュボード・スタッフ画面は常に default(lib/theme.ts)。
+ * - 写真・動画の上は data-surface="media"、ヘッダーは data-surface="header" で場所ごとに上書きする(下の beauty 参照)。
+ * - 暗幕・モーダルの黒の透過は全テーマ共通(意図的に変数化していない)。
+ */
+:root,
+[data-theme="default"] {
+  /* キーボタン(アクセス・予約・送信等)。cta=旧amberグラデ系、cta-gold=旧goldグラデ系 */
+  --cta-300: 252 211 77; --cta-400: 251 191 36; --cta-500: 245 158 11; --cta-600: 217 119 6;
+  --color-on-cta: 9 9 11;
+  --cta-gold: 212 175 106; --cta-gold-light: 232 207 154; --cta-gold-dark: 169 126 63;
+  --color-on-cta-gold: 0 0 0;
+  /* AIボタンの2色目の発光(default は透明=従来どおり1色) */
+  --color-glow-2: 212 175 106;
+  --color-glow-2-scale: 0;
+  --color-on-accent: 0 0 0;
+  --color-header: 0 0 0;
+  --color-header-glow-1: 217 70 239;
+  --color-header-glow-2: 168 85 247;
+  --color-header-glow-3: 251 113 133;
+  --color-bg-base: 0 0 0;
+  --color-bg-surface: 23 23 23;
+  --color-text-main: 255 255 255;
+  --color-text-muted: 163 163 163;
+  --color-accent: 212 175 106;
+  --color-accent-light: 232 207 154;
+  --color-accent-dark: 169 126 63;
+  --color-border: 245 158 11;
+  --color-border-scale: 1;
+  --color-glow: 212 175 106;
+  --color-glow-scale: 1;
+
+  --tone-50: 250 250 250; --tone-100: 245 245 245; --tone-200: 229 229 229; --tone-300: 212 212 212;
+  --tone-500: 115 115 115; --tone-600: 82 82 82; --tone-700: 64 64 64; --tone-800: 38 38 38; --tone-950: 10 10 10;
+  --panel-400: 161 161 170; --panel-500: 113 113 122; --panel-600: 82 82 91; --panel-700: 63 63 70;
+  --panel-800: 39 39 42; --panel-900: 24 24 27; --panel-950: 9 9 11;
+  --hl-50: 255 251 235; --hl-100: 254 243 199; --hl-200: 253 230 138; --hl-300: 252 211 77; --hl-400: 251 191 36;
+  --hl-500: 245 158 11; --hl-600: 217 119 6; --hl-700: 180 83 9; --hl-800: 146 64 14; --hl-900: 120 53 15; --hl-950: 69 26 3;
+}
+
+/* クリスマス(ルビー × シャンパン) */
+[data-theme="christmas"] {
+  --color-on-accent: 0 0 0;
+  --color-header: 136 19 55; /* 鮮やかなルビー(すりガラス60%) */
+  --color-header-glow-1: 244 63 94;
+  --color-header-glow-2: 225 29 72;
+  --color-header-glow-3: 253 230 138;
+  --color-bg-base: 20 5 9;
+  --color-bg-surface: 34 10 17;
+  --color-text-main: 255 241 242;
+  --color-text-muted: 253 164 175;
+  --color-accent: 253 230 138;
+  --color-accent-light: 254 243 199;
+  --color-accent-dark: 217 179 90;
+  --color-border: 225 29 72;
+  --color-border-scale: 2.25; /* 枠線 /20 → 0.45(鮮やかなルビー) */
+  --color-glow: 225 29 72;
+  --color-glow-scale: 1.285714; /* 発光のピーク 0.35 → 0.45 */
+
+  --tone-50: 255 245 246; --tone-100: 255 228 230; --tone-200: 254 205 211; --tone-300: 253 186 194;
+  --tone-500: 190 110 125; --tone-600: 150 80 95; --tone-700: 92 40 52; --tone-800: 48 18 26; --tone-950: 20 7 10;
+  --panel-400: 253 164 175; --panel-500: 190 110 125; --panel-600: 150 80 95; --panel-700: 92 40 52;
+  --panel-800: 48 18 26; --panel-900: 28 10 15; --panel-950: 20 7 10;
+  --hl-50: 255 251 240; --hl-100: 254 243 199; --hl-200: 253 230 138; --hl-300: 250 219 120; --hl-400: 240 200 100;
+  --hl-500: 225 180 85; --hl-600: 190 145 60; --hl-700: 150 110 45; --hl-800: 115 80 30; --hl-900: 85 58 22; --hl-950: 50 32 12;
+  --cta-300: 251 113 133; --cta-400: 244 63 94; --cta-500: 225 29 72; --cta-600: 190 18 60;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 225 29 72; --cta-gold-light: 251 113 133; --cta-gold-dark: 159 18 57;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 253 230 138; /* ルビー×シャンパンのイルミネーション */
+  --color-glow-2-scale: 1;
+}
+
+/* ネイチャー(ヘッダーだけモスグリーン。ボタン・文字・装飾は default と同じ) */
+[data-theme="nature"] {
+  --color-header: 74 93 35; /* モスグリーン(すりガラス60%) */
+  --color-header-glow-1: 132 169 90;
+  --color-header-glow-2: 96 125 59;
+  --color-header-glow-3: 212 175 106; /* ロゴのゴールドとなじませる */
+}
+
+/* ビューティー&ヘルス(白地サロン向け・横展開の準備) */
+[data-theme="beauty"] {
+  --cta-300: 244 114 182; --cta-400: 219 39 119; --cta-500: 236 72 153; --cta-600: 244 114 182;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 190 24 93; --cta-gold-light: 236 72 153; --cta-gold-dark: 157 23 77;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 253 186 140;
+  --color-glow-2-scale: 0.6;
+  --color-on-accent: 255 255 255;
+  --color-header: 232 121 160; /* ローズピンクのヘッダー(すりガラスの透過60%は共通) */
+  /* 白地ではすりガラスに透ける下地が白一色でベタ塗りに見えるので、濃いローズ×白の光×シャンパンで奥行きを出す */
+  --color-header-glow-1: 190 24 93;
+  --color-header-glow-2: 255 255 255;
+  --color-header-glow-3: 253 186 140;
+  --color-bg-base: 250 247 245;
+  --color-bg-surface: 255 255 255;
+  --color-text-main: 31 26 28;
+  --color-text-muted: 113 106 109;
+  --color-accent: 190 24 93;
+  --color-accent-light: 236 72 153;
+  --color-accent-dark: 157 23 77;
+  --color-border: 244 114 182;
+  --color-border-scale: 1.5; /* 枠線 /20 → 0.3 */
+  --color-glow: 244 114 182;
+  --color-glow-scale: 1;
+
+  --tone-50: 20 16 18; --tone-100: 31 26 28; --tone-200: 50 43 46; --tone-300: 80 72 75;
+  --tone-500: 140 132 135; --tone-600: 170 162 165; --tone-700: 214 207 209; --tone-800: 236 231 229; --tone-950: 245 241 239;
+  --panel-400: 113 106 109; --panel-500: 140 132 135; --panel-600: 170 162 165; --panel-700: 214 207 209;
+  --panel-800: 236 231 229; --panel-900: 255 255 255; --panel-950: 245 241 239;
+  --hl-50: 80 7 36; --hl-100: 131 24 67; --hl-200: 157 23 77; --hl-300: 190 24 93; --hl-400: 219 39 119;
+  --hl-500: 236 72 153; --hl-600: 244 114 182; --hl-700: 249 168 212; --hl-800: 251 207 232; --hl-900: 252 231 243; --hl-950: 253 242 248;
+}
+
+/*
+ * beauty の場所別の上書き。
+ * - data-surface="media": 写真・動画の上(カードのサムネ、リール、地図)。白地テーマでも文字は白、暗い配色のまま。
+ * - data-surface="header": ローズピンクのヘッダー上。ロゴ・リンクは濃いローズで読みやすく。
+ */
+[data-theme="beauty"] [data-surface="media"],
+[data-theme="beauty"][data-surface="media"] {
+  --color-bg-base: 0 0 0;
+  --color-bg-surface: 23 23 23;
+  --color-text-main: 255 255 255;
+  --color-text-muted: 163 163 163;
+  --color-accent: 249 168 212;
+  --color-accent-light: 252 231 243;
+  --color-accent-dark: 219 39 119;
+  --color-on-accent: 0 0 0;
+  --tone-50: 250 250 250; --tone-100: 245 245 245; --tone-200: 229 229 229; --tone-300: 212 212 212;
+  --tone-500: 115 115 115; --tone-600: 82 82 82; --tone-700: 64 64 64; --tone-800: 38 38 38; --tone-950: 10 10 10;
+  --panel-400: 161 161 170; --panel-500: 113 113 122; --panel-600: 82 82 91; --panel-700: 63 63 70;
+  --panel-800: 39 39 42; --panel-900: 24 24 27; --panel-950: 9 9 11;
+  --hl-50: 253 242 248; --hl-100: 252 231 243; --hl-200: 251 207 232; --hl-300: 249 168 212; --hl-400: 244 114 182;
+  --hl-500: 236 72 153; --hl-600: 219 39 119; --hl-700: 190 24 93; --hl-800: 157 23 77; --hl-900: 131 24 67; --hl-950: 80 7 36;
+}
+[data-theme="beauty"] [data-surface="header"] {
+  --color-accent: 131 24 67;
+  --color-accent-light: 190 24 93;
+  --color-accent-dark: 80 7 36;
+  --color-text-main: 31 26 28;
+  --tone-300: 60 30 42;
+}
+
+/* tone-400 / tone-900 は muted / surface と同じ色 */
+/* 上書きした場所でも追従させるため、変数を持つ要素ごとに解決し直す */
+:root, [data-theme], [data-surface] {
+  --tone-400: var(--color-text-muted);
+  --tone-900: var(--color-bg-surface);
+}
+
+
 img { pointer-events: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-user-drag: none; }
 [data-media-guard] { position: relative; }
 [data-media-guard]::after { content: ""; position: absolute; inset: 0; z-index: 1; background: transparent; }
@@ -25,7 +182,7 @@ main {
 }
 
 body {
-  background-color: #000000;
+  background-color: rgb(var(--color-bg-base));
   color: #f1f1f1;
   font-family: 'Open Sans', "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
   -webkit-font-smoothing: antialiased;

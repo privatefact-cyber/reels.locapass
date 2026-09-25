@@ -100,25 +100,25 @@ export function CastCommentsPanel({ castId }: { castId: string }) {
   if (loading) return null;
 
   return (
-    <div className="mt-8 border-t border-white/10 px-4 pt-6">
-      <h2 className="mb-3 text-sm font-semibold text-white">ついたコメント</h2>
+    <div className="mt-8 border-t border-main/10 px-4 pt-6">
+      <h2 className="mb-3 text-sm font-semibold text-main">ついたコメント</h2>
       {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
       {topLevels.length === 0 ? (
-        <p className="text-xs text-neutral-500">まだコメントはありません。</p>
+        <p className="text-xs text-tone-500">まだコメントはありません。</p>
       ) : (
         <ul className="space-y-3">
           {topLevels.map((c) => {
             const reply_ = repliesByParent.get(c.id);
             return (
-              <li key={c.id} className="rounded-lg border border-white/10 bg-white/5 p-3">
+              <li key={c.id} className="rounded-lg border border-main/10 bg-main/5 p-3">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm text-white">{c.body}</p>
+                  <p className="text-sm text-main">{c.body}</p>
                   <div className="flex flex-shrink-0 gap-2">
                     <button
                       type="button"
                       disabled={busyId === c.id}
                       onClick={() => remove(c.id)}
-                      className="text-[10px] text-neutral-400 underline disabled:opacity-40"
+                      className="text-[10px] text-muted underline disabled:opacity-40"
                     >
                       削除
                     </button>
@@ -126,7 +126,7 @@ export function CastCommentsPanel({ castId }: { castId: string }) {
                       type="button"
                       disabled={busyId === c.user_id}
                       onClick={() => block(c.user_id)}
-                      className="text-[10px] text-neutral-400 underline disabled:opacity-40"
+                      className="text-[10px] text-muted underline disabled:opacity-40"
                     >
                       ブロック
                     </button>
@@ -142,13 +142,13 @@ export function CastCommentsPanel({ castId }: { castId: string }) {
                       onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [c.id]: e.target.value.slice(0, MAX_LEN) }))}
                       maxLength={MAX_LEN}
                       placeholder="返信する(15文字以内)"
-                      className="flex-1 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-white placeholder:text-neutral-500"
+                      className="flex-1 rounded-full border border-main/20 bg-main/5 px-3 py-1 text-xs text-main placeholder:text-tone-500"
                     />
                     <button
                       type="button"
                       disabled={busyId === c.id || !(replyDrafts[c.id] ?? "").trim()}
                       onClick={() => reply(c.id, c.reel_id, replyDrafts[c.id] ?? "")}
-                      className="rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white disabled:opacity-40"
+                      className="rounded-full bg-brand px-3 py-1 text-xs font-semibold text-main disabled:opacity-40"
                     >
                       返信
                     </button>

@@ -17,7 +17,7 @@ export default async function AdminAdsPage() {
       <div>
         <h1 className="text-3xl font-bold text-slate-900">広告(PR)投稿</h1>
         <p className="mt-1 text-sm text-slate-600">
-          サイト管理者のみが投稿できるPRカードです。店舗・キャストのリールと同じフィードに、
+          サイト管理者のみが投稿できるPRカードです。店舗・パートナーのリールと同じフィードに、
           指定した頻度で紛れ込ませて表示します。マネタイズ方法は未定のため、現状は表示のON/OFFと
           頻度の調整のみ行えます。
         </p>

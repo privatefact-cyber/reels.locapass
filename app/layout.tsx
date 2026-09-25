@@ -6,6 +6,8 @@ import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { localeDir } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
+import { isSiteTheme, themeInitScript } from "@/lib/theme";
+import { ThemeSync } from "@/components/ThemeSync";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -62,9 +64,17 @@ export default async function RootLayout({
 }) {
   const supabase = await createClient();
   const locale = await getServerLocale();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [
+    {
+      data: { user },
+    },
+    { data: settings },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    // 管理画面で選んだ配色テーマ(null=自動)。LUXELAとは別の列。
+    supabase.from("platform_settings").select("locapass_site_theme").eq("id", true).maybeSingle(),
+  ]);
+  const manualTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
   let myPageAvatarUrl: string | null = null;
   let myPageInitial: string | null = null;
@@ -79,8 +89,13 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale} dir={localeDir(locale)}>
-      <body className="min-h-screen bg-black text-white pb-20 md:pb-0">
+    // data-theme は描画前にスクリプトで決める(時期・管理画面かどうかで変わるため、サーバーとの差分警告は抑止)。
+    <html lang={locale} dir={localeDir(locale)} data-theme="default" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript(manualTheme) }} />
+      </head>
+      <body className="min-h-screen bg-page text-main pb-20 md:pb-0">
+        <ThemeSync manual={manualTheme} />
         <ImageInteractionGuard />
         <LocaleProvider initialLocale={locale}>
           <SiteChrome myPageAvatarUrl={myPageAvatarUrl} myPageInitial={myPageInitial} />

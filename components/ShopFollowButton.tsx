@@ -15,8 +15,8 @@ export function ShopFollowButton({ shopId }: { shopId: string }) {
       onClick={() => toggleShopFavorite(shopId)}
       className={`mt-3 inline-flex items-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold backdrop-blur-md transition ${
         favorited
-          ? "border-white/30 bg-white/10 text-white"
-          : "border-amber-300/60 bg-amber-300/10 text-amber-200 hover:bg-amber-300/20"
+          ? "border-main/30 bg-main/10 text-main"
+          : "border-hl-300/60 bg-hl-300/10 text-hl-200 hover:bg-hl-300/20"
       }`}
     >
       {favorited ? (

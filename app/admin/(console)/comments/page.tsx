@@ -62,7 +62,7 @@ export default async function AdminCommentsPage() {
                 <li key={c.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <div className="min-w-0">
                     <p className="truncate text-slate-900">
-                      {c.author_type === "cast" ? "[キャスト返信] " : ""}
+                      {c.author_type === "cast" ? "[パートナー返信] " : ""}
                       {c.body}
                     </p>
                     <p className="truncate text-xs text-slate-400">

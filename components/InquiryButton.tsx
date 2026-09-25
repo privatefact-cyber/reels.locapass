@@ -53,7 +53,7 @@ export function InquiryButton({ shopId, shopName }: { shopId: string; shopName: 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-300 backdrop-blur-xl transition hover:bg-amber-500/20"
+        className="flex w-full items-center justify-center gap-2 rounded-full border border-line/40 bg-hl-500/10 px-4 py-3 text-sm font-semibold text-hl-300 backdrop-blur-xl transition hover:bg-hl-500/20"
       >
         <MessageCircle size={16} />
         {t.shop.inquiryButton}
@@ -61,25 +61,25 @@ export function InquiryButton({ shopId, shopName }: { shopId: string; shopName: 
 
       {open && (
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-sm rounded-t-2xl border border-amber-500/20 bg-zinc-950 p-5 sm:rounded-2xl">
-            <h2 className="text-sm font-bold text-neutral-100">
+          <div className="w-full max-w-sm rounded-t-2xl border border-line/20 bg-panel-950 p-5 sm:rounded-2xl">
+            <h2 className="text-sm font-bold text-tone-100">
               {t.shop.inquiryModalTitlePrefix}
               {shopName}
               {t.shop.inquiryModalTitleSuffix}
             </h2>
-            <p className="mt-1 text-xs text-neutral-500">{t.shop.inquiryModalHint}</p>
+            <p className="mt-1 text-xs text-tone-500">{t.shop.inquiryModalHint}</p>
             <form onSubmit={handleSubmit} className="mt-4 space-y-3">
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t.shop.inquiryNamePlaceholder}
-                className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
               />
               <input
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder={t.shop.inquiryContactPlaceholder}
-                className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
               />
               <textarea
                 value={body}
@@ -87,21 +87,21 @@ export function InquiryButton({ shopId, shopName }: { shopId: string; shopName: 
                 required
                 rows={4}
                 placeholder={t.shop.inquiryBodyPlaceholder}
-                className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
               />
               {error && <p className="text-xs text-red-400">{error}</p>}
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="flex-1 rounded-full border border-white/20 px-4 py-2 text-sm text-neutral-300"
+                  className="flex-1 rounded-full border border-main/20 px-4 py-2 text-sm text-tone-300"
                 >
                   {t.common.close}
                 </button>
                 <button
                   type="submit"
                   disabled={sending}
-                  className="flex-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-50"
+                  className="flex-1 rounded-full bg-gradient-to-r from-cta-light to-cta px-4 py-2 text-sm font-semibold text-on-cta disabled:opacity-50"
                 >
                   {sending ? t.shop.inquirySending : t.shop.inquirySubmit}
                 </button>

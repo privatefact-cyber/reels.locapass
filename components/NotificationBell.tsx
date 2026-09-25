@@ -38,10 +38,10 @@ export function NotificationBell({ size = 20 }: { size?: number }) {
   }, []);
 
   return (
-    <Link href="/notifications" aria-label={t.nav.notifications} className="relative text-white/90">
+    <Link href="/notifications" aria-label={t.nav.notifications} className="relative text-main/90">
       <Bell size={size} />
       {unreadCount > 0 && (
-        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-main">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}

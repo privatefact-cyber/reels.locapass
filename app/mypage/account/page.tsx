@@ -20,25 +20,25 @@ export default async function MypageAccountPage() {
   return (
     <div className="mx-auto max-w-sm px-4 py-6">
       <div className="flex items-center gap-2">
-        <Link href="/mypage" aria-label={t.mypage.back} className="text-white/80">
+        <Link href="/mypage" aria-label={t.mypage.back} className="text-main/80">
           <ChevronLeft size={20} />
         </Link>
-        <h1 className="font-display text-lg font-semibold uppercase tracking-[0.2em] text-gold">
+        <h1 className="font-display text-lg font-semibold uppercase tracking-[0.2em] text-accent">
           {t.mypage.accountSettings}
         </h1>
       </div>
 
-      <p className="mt-4 text-xs text-neutral-400">{user?.email}</p>
+      <p className="mt-4 text-xs text-muted">{user?.email}</p>
 
-      <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-        <h2 className="text-sm font-bold text-gold">{t.mypage.passwordTitle}</h2>
-        <p className="mt-1 text-xs text-neutral-400">{t.mypage.passwordDesc}</p>
+      <div className="mt-6 rounded-2xl border border-main/10 bg-main/5 p-4">
+        <h2 className="text-sm font-bold text-accent">{t.mypage.passwordTitle}</h2>
+        <p className="mt-1 text-xs text-muted">{t.mypage.passwordDesc}</p>
         <MypagePasswordForm />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-        <h2 className="text-sm font-bold text-gold">{t.mypage.pushTitle}</h2>
-        <p className="mt-1 text-xs text-neutral-400">{t.mypage.pushDesc}</p>
+      <div className="mt-4 rounded-2xl border border-main/10 bg-main/5 p-4">
+        <h2 className="text-sm font-bold text-accent">{t.mypage.pushTitle}</h2>
+        <p className="mt-1 text-xs text-muted">{t.mypage.pushDesc}</p>
         <PushNotificationToggle />
         <NotificationPreferencesForm />
       </div>

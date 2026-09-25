@@ -80,7 +80,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+          className="w-full rounded bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
         >
           {loading ? "ログイン中..." : "ログイン"}
         </button>

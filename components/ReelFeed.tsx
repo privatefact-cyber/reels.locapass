@@ -60,29 +60,29 @@ function GateOverlay({
       }`}
     >
       <div
-        className={`relative flex w-[86vw] max-w-sm aspect-square transform-gpu flex-col items-center justify-center gap-8 overflow-hidden rounded-[2.5rem] border border-white/25 bg-white/[0.04] p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-[250ms] ease-out will-change-transform ${
+        className={`relative flex w-[86vw] max-w-sm aspect-square transform-gpu flex-col items-center justify-center gap-8 overflow-hidden rounded-[2.5rem] border border-main/25 bg-main/[0.04] p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-[250ms] ease-out will-change-transform ${
           closing || entering ? "scale-90 opacity-0" : "scale-100 opacity-100"
         }`}
       >
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-main/10 via-transparent to-transparent"
         />
-        <span className="relative text-2xl font-thin tracking-[0.3em] text-white/25 uppercase">
+        <span className="relative text-2xl font-thin tracking-[0.3em] text-main/25 uppercase">
           LOCAPASS
         </span>
         <div className="relative grid w-full grid-cols-2 gap-4">
           <button
             type="button"
             onClick={optionA.onClick}
-            className="aspect-square rounded-2xl border border-white/25 bg-white/[0.03] text-sm tracking-wide text-white/90 backdrop-blur-md transition hover:bg-white/10"
+            className="aspect-square rounded-2xl border border-main/25 bg-main/[0.03] text-sm tracking-wide text-main/90 backdrop-blur-md transition hover:bg-main/10"
           >
             {optionA.label}
           </button>
           <button
             type="button"
             onClick={optionB.onClick}
-            className="aspect-square rounded-2xl border border-white/25 bg-white/[0.03] text-sm tracking-wide text-white/90 backdrop-blur-md transition hover:bg-white/10"
+            className="aspect-square rounded-2xl border border-main/25 bg-main/[0.03] text-sm tracking-wide text-main/90 backdrop-blur-md transition hover:bg-main/10"
           >
             {optionB.label}
           </button>
@@ -172,12 +172,12 @@ const GridTile = memo(function GridTile({
   const label = tile.kind === "cast" ? tile.reel.castName : tile.kind === "shop" ? tile.shop.name : tile.ad.title;
   const sublabel = tile.kind === "cast" ? tile.reel.shopName : tile.kind === "shop" ? tile.shop.area : undefined;
   return (
-    <button
+    <button data-surface="media"
       type="button"
       onClick={() => onOpen(index)}
       onMouseEnter={tile.kind === "shop" ? (e) => onShopPeekEnter(tile.shop, e) : undefined}
       onMouseLeave={tile.kind === "shop" ? onShopPeekLeave : undefined}
-      className="group relative block aspect-square w-full overflow-hidden rounded-none bg-zinc-900 text-left"
+      className="group relative block aspect-square w-full overflow-hidden rounded-none bg-panel-900 text-left"
     >
       {thumbUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -198,8 +198,8 @@ const GridTile = memo(function GridTile({
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-800 via-neutral-950 to-black">
-          <span className="font-display text-xs uppercase tracking-[0.2em] text-gold/50">
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-tone-800 via-tone-950 to-black">
+          <span className="font-display text-xs uppercase tracking-[0.2em] text-accent/50">
             LOCAPASS
           </span>
         </div>
@@ -210,21 +210,21 @@ const GridTile = memo(function GridTile({
       <span
         className={`pointer-events-none absolute left-1.5 top-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wide ${
           tile.kind === "cast"
-            ? "bg-gold/90 text-black"
+            ? "bg-accent/90 text-on-accent"
             : tile.kind === "ad"
-              ? "bg-amber-400/90 text-black"
-              : "bg-white/20 text-white"
+              ? "bg-hl-400/90 text-on-accent"
+              : "bg-main/20 text-main"
         }`}
       >
         {tile.kind === "cast" ? "ICON" : tile.kind === "ad" ? "PR" : "SHOP"}
       </span>
 
       <span className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-4">
-        <span dir="auto" className="block truncate text-[11px] font-semibold text-white drop-shadow">
+        <span dir="auto" className="block truncate text-[11px] font-semibold text-main drop-shadow">
           {label}
         </span>
         {sublabel && (
-          <span dir="auto" className="block truncate text-[10px] text-white/70">{sublabel}</span>
+          <span dir="auto" className="block truncate text-[10px] text-main/70">{sublabel}</span>
         )}
       </span>
     </button>
@@ -610,8 +610,8 @@ export function ReelFeed({
   const pillClass = (active: boolean) =>
     `shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap transition ${
       active
-        ? "border-gold bg-gold text-black font-semibold"
-        : "border-neutral-700 text-neutral-300"
+        ? "border-accent bg-accent text-on-accent font-semibold"
+        : "border-tone-700 text-tone-300"
     }`;
 
   return (
@@ -643,35 +643,35 @@ export function ReelFeed({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-neutral-900/95 p-4 shadow-2xl"
+            className="w-full max-w-sm rounded-2xl border border-main/10 bg-surface/95 p-4 shadow-2xl"
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white">{t.nav.search}</h2>
+              <h2 className="text-sm font-semibold text-main">{t.nav.search}</h2>
               <button
                 type="button"
                 onClick={() => setSearchOpen(false)}
                 aria-label={t.common.close}
-                className="text-neutral-400 hover:text-white"
+                className="text-muted hover:text-main"
               >
                 ✕
               </button>
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-neutral-700 bg-white/5 px-3 py-2">
-              <Search size={16} className="shrink-0 text-neutral-400" />
+            <div className="flex items-center gap-2 rounded-full border border-tone-700 bg-main/5 px-3 py-2">
+              <Search size={16} className="shrink-0 text-muted" />
               <input
                 autoFocus
                 type="search"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder={t.feed.searchPlaceholder}
-                className="w-full min-w-0 bg-transparent text-[16px] text-white placeholder:text-neutral-500 focus:outline-none"
+                className="w-full min-w-0 bg-transparent text-[16px] text-main placeholder:text-tone-500 focus:outline-none"
               />
             </div>
             {anyFilterActive && (
               <button
                 type="button"
                 onClick={resetFilters}
-                className="mx-auto mt-3 block text-xs text-gold underline"
+                className="mx-auto mt-3 block text-xs text-accent underline"
               >
                 {t.feed.resetFilters}
               </button>
@@ -680,12 +680,12 @@ export function ReelFeed({
         </div>
       )}
 
-      <div className="sticky top-[calc(81px+env(safe-area-inset-top))] z-30 flex items-center gap-2 px-1 py-2 bg-neutral-950/90 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-[calc(81px+env(safe-area-inset-top))] z-30 flex items-center gap-2 px-1 py-2 bg-tone-950/90 backdrop-blur-md border-b border-main/5">
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
           aria-label={t.nav.search}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-700 text-neutral-300 transition hover:border-gold hover:text-gold"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-tone-700 text-tone-300 transition hover:border-accent hover:text-accent"
         >
           <Search size={16} />
         </button>
@@ -727,7 +727,7 @@ export function ReelFeed({
       </div>
 
       {tiles.length === 0 ? (
-        <p className="px-2 py-10 text-center text-sm text-neutral-500">
+        <p className="px-2 py-10 text-center text-sm text-tone-500">
           {nowOnly ? t.feed.noNowPosts : t.feed.noResults}
         </p>
       ) : openIndex === null ? (
@@ -758,7 +758,7 @@ export function ReelFeed({
           <button
             type="button"
             onClick={() => setOpenIndex(null)}
-            className="flex items-center gap-1 px-1 text-sm text-neutral-300 hover:text-white"
+            className="flex items-center gap-1 px-1 text-sm text-tone-300 hover:text-main"
           >
             <ChevronLeft size={18} />
             グリッドに戻る
@@ -848,7 +848,7 @@ export function ReelFeed({
           ホバーしたタイルの位置を基準に浮かせて表示する。 */}
       {peek && (
         <div
-          className="pointer-events-none fixed z-40 overflow-hidden rounded-2xl border border-white/15 bg-neutral-900/95 shadow-2xl shadow-black/50 backdrop-blur-md"
+          className="pointer-events-none fixed z-40 overflow-hidden rounded-2xl border border-main/15 bg-surface/95 shadow-2xl shadow-black/50 backdrop-blur-md"
           style={{
             width: PEEK_WIDTH,
             left: Math.min(
@@ -862,7 +862,7 @@ export function ReelFeed({
           }}
         >
           <div
-            className="relative w-full overflow-hidden bg-neutral-950"
+            className="relative w-full overflow-hidden bg-tone-950"
             style={{ height: PEEK_IFRAME_HEIGHT_SCALED }}
           >
             {/* 実ページの読み込みが見えるまでのフォールバック(カバー画像) */}
@@ -887,9 +887,9 @@ export function ReelFeed({
               }}
             />
           </div>
-          <div className="space-y-1 border-t border-white/10 px-3 py-2">
-            <p className="truncate text-sm font-semibold text-white">{peek.shop.name}</p>
-            <p className="truncate text-xs text-white/70">
+          <div className="space-y-1 border-t border-main/10 px-3 py-2">
+            <p className="truncate text-sm font-semibold text-main">{peek.shop.name}</p>
+            <p className="truncate text-xs text-main/70">
               {[peek.shop.area, peek.shop.genre ? genreLabel(locale, peek.shop.genre) : null]
                 .filter(Boolean)
                 .join(" / ")}

@@ -23,11 +23,11 @@ export function FeaturedShowcase({ shops }: { shops: FeaturedShop[] }) {
   return (
     <section className="py-8 md:py-12">
       <div className="mx-auto max-w-[1400px] px-6 md:px-14">
-        <p className="flex items-center gap-4 font-display text-[11px] uppercase tracking-[0.55em] text-gold">
-          <span className="h-px w-10 bg-gold/70" />
+        <p className="flex items-center gap-4 font-display text-[11px] uppercase tracking-[0.55em] text-accent">
+          <span className="h-px w-10 bg-accent/70" />
           {labels.featured}
         </p>
-        <p className="mt-3 max-w-md font-mincho text-xs leading-[1.9] text-white/60">{labels.featuredLead}</p>
+        <p className="mt-3 max-w-md font-mincho text-xs leading-[1.9] text-main/60">{labels.featuredLead}</p>
       </div>
 
       <div className="mt-6 flex gap-4 overflow-x-auto px-6 pb-2 snap-x snap-mandatory [scrollbar-width:none] md:px-14 [&::-webkit-scrollbar]:hidden">
@@ -45,25 +45,25 @@ export function FeaturedShowcase({ shops }: { shops: FeaturedShop[] }) {
                 loading="lazy"
                 className="aspect-[3/4] w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
               />
-              <span className="pointer-events-none absolute inset-2 border border-gold/0 transition-colors duration-500 group-hover:border-gold/50" />
-              <span className="absolute left-2 top-2 font-display text-[11px] tracking-[0.2em] text-gold/90">
+              <span className="pointer-events-none absolute inset-2 border border-accent/0 transition-colors duration-500 group-hover:border-accent/50" />
+              <span className="absolute left-2 top-2 font-display text-[11px] tracking-[0.2em] text-accent/90">
                 {String(i + 1).padStart(2, "0")}
               </span>
             </div>
 
-            <p className="mt-3 truncate font-mincho text-[10px] tracking-[0.2em] text-white/50">{shop.meta}</p>
-            <h3 className="mt-1 truncate font-display text-lg font-medium uppercase tracking-[0.03em] text-white">
+            <p className="mt-3 truncate font-mincho text-[10px] tracking-[0.2em] text-main/50">{shop.meta}</p>
+            <h3 className="mt-1 truncate font-display text-lg font-medium uppercase tracking-[0.03em] text-main">
               {shop.name}
             </h3>
             {/* 紹介文は最大2行まで。明細・全文は店舗ページ側で見せる。 */}
             {shop.description && (
-              <p className="mt-1.5 line-clamp-2 font-mincho text-[11px] leading-[1.7] text-white/60">
+              <p className="mt-1.5 line-clamp-2 font-mincho text-[11px] leading-[1.7] text-main/60">
                 {shop.description}
               </p>
             )}
             {/* 代表価格1行のみ(料金表の全明細は出さない)。 */}
             {shop.setPriceFrom !== null && (
-              <p className="mt-2 font-display text-xs tracking-[0.15em] text-gold">
+              <p className="mt-2 font-display text-xs tracking-[0.15em] text-accent">
                 {labels.setFrom(shop.setPriceFrom.toLocaleString())}
               </p>
             )}

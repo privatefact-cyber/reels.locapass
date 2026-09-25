@@ -106,8 +106,8 @@ export function computeProfileCompleteness(input: CompletenessInput): {
       ? [
           {
             key: "cast",
-            label: "キャスト登録",
-            hint: "在籍キャストと本日の出勤が店舗ページに出るようになります。",
+            label: "パートナー登録",
+            hint: "在籍パートナーと本日の出勤が店舗ページに出るようになります。",
             weight: 10,
             done: input.castCount > 0,
             href: "/dashboard/cast",

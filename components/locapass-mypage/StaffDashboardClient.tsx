@@ -580,33 +580,33 @@ export function StaffDashboardClient({
         >
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full border border-white/10 object-cover" />
+            <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full border border-main/10 object-cover" />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-neutral-800 text-2xl font-semibold text-neutral-500">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
               {name.slice(0, 1)}
             </div>
           )}
-          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-black bg-brand text-white">
+          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-page bg-brand text-main">
             <Camera size={12} />
           </span>
         </button>
 
         <h1 className="mt-3 text-lg font-bold">{name}</h1>
-        {shopName && <p className="text-xs text-neutral-400">{shopName} スタッフ</p>}
+        {shopName && <p className="text-xs text-muted">{shopName} スタッフ</p>}
 
         <div className="mt-4 flex justify-center gap-8">
           <div className="text-center">
             <p className="text-base font-bold">{postCount}</p>
-            <p className="text-[11px] text-neutral-400">投稿</p>
+            <p className="text-[11px] text-muted">投稿</p>
           </div>
           <div className="text-center">
             <p className="text-base font-bold">{totalLikes}</p>
-            <p className="text-[11px] text-neutral-400">いいね</p>
+            <p className="text-[11px] text-muted">いいね</p>
           </div>
         </div>
 
         {bio && (
-          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
             {bio}
           </p>
         )}
@@ -616,14 +616,14 @@ export function StaffDashboardClient({
         <button
           type="button"
           onClick={openEditSheet}
-          className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-white/20 py-2 text-sm text-neutral-200"
+          className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-main/20 py-2 text-sm text-tone-200"
         >
           <Pencil size={13} /> プロフィール編集
         </button>
       </section>
 
       {/* タブ */}
-      <div className="mt-6 flex border-t border-b border-white/10 text-sm">
+      <div className="mt-6 flex border-t border-b border-main/10 text-sm">
         {(
           [
             ["posts", "投稿"],
@@ -636,12 +636,12 @@ export function StaffDashboardClient({
             type="button"
             onClick={() => setTab(key)}
             className={`flex-1 py-2.5 font-semibold ${
-              tab === key ? "border-b-2 border-brand text-white" : "text-neutral-500"
+              tab === key ? "border-b-2 border-brand text-main" : "text-tone-500"
             }`}
           >
             {label}
             {key === "inquiries" && inquiries.some((i) => i.status === "open") && (
-              <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle" />
+              <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-hl-400 align-middle" />
             )}
           </button>
         ))}
@@ -654,7 +654,7 @@ export function StaffDashboardClient({
             <button
               type="button"
               onClick={() => setFormOpen((v) => !v)}
-              className="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+              className="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark"
             >
               ＋ 新規投稿
             </button>
@@ -663,9 +663,9 @@ export function StaffDashboardClient({
           {formOpen && (
             <form
               onSubmit={handleSubmitReel}
-              className="mx-4 mt-4 space-y-3 rounded-xl border border-white/10 bg-neutral-900 p-4"
+              className="mx-4 mt-4 space-y-3 rounded-xl border border-main/10 bg-surface p-4"
             >
-              <label className="block cursor-pointer rounded-xl border-2 border-dashed border-white/20 bg-white/5 px-4 py-6 text-center transition hover:border-brand">
+              <label className="block cursor-pointer rounded-xl border-2 border-dashed border-main/20 bg-main/5 px-4 py-6 text-center transition hover:border-brand">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -681,7 +681,7 @@ export function StaffDashboardClient({
                     <img src={preview} alt="" className="mx-auto max-h-64 w-full rounded-lg object-cover" />
                   )
                 ) : (
-                  <span className="text-sm font-medium text-neutral-300">写真・動画を選択</span>
+                  <span className="text-sm font-medium text-tone-300">写真・動画を選択</span>
                 )}
               </label>
               <textarea
@@ -689,7 +689,7 @@ export function StaffDashboardClient({
                 onChange={(e) => setCaption(e.target.value)}
                 placeholder="ひとことコメントを入力"
                 rows={2}
-                className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+                className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main placeholder:text-tone-500"
               />
               <div>
                 <input
@@ -697,21 +697,21 @@ export function StaffDashboardClient({
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="リンク先URL(任意)"
-                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+                  className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main placeholder:text-tone-500"
                 />
-                <p className="mt-1 text-[11px] text-neutral-500">
+                <p className="mt-1 text-[11px] text-tone-500">
                   空欄なら通常のリンク先(店舗のリール一覧)になります。入力するとタップ時にそのURLへ飛びます。
                 </p>
               </div>
               {optimizing && (
-                <p className="text-xs text-neutral-400">動画をスマホ向けに最適化しています…</p>
+                <p className="text-xs text-muted">動画をスマホ向けに最適化しています…</p>
               )}
               {error && <p className="text-sm text-red-400">{error}</p>}
               <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={uploading || optimizing}
-                  className="flex-1 rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+                  className="flex-1 rounded bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
                 >
                   {uploading ? "投稿中..." : optimizing ? "最適化中..." : "投稿する"}
                 </button>
@@ -722,7 +722,7 @@ export function StaffDashboardClient({
                     setFile(null);
                     setPreview(null);
                   }}
-                  className="rounded border border-white/20 px-4 py-2 text-sm text-neutral-300"
+                  className="rounded border border-main/20 px-4 py-2 text-sm text-tone-300"
                 >
                   やめる
                 </button>
@@ -732,7 +732,7 @@ export function StaffDashboardClient({
 
           <div className="mt-4 space-y-4 px-4">
             {reels.map((r) => (
-              <div key={r.id} className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
+              <div key={r.id} className="overflow-hidden rounded-xl border border-main/10 bg-surface">
                 <div className="relative aspect-[9/16] max-h-96 bg-black">
                   {r.media[0]?.type === "video" ? (
                     <StreamThumb url={r.media[0].url} className="h-full w-full object-cover" />
@@ -743,33 +743,33 @@ export function StaffDashboardClient({
                   <button
                     type="button"
                     onClick={() => handleDeleteReel(r.id)}
-                    className="absolute right-2 top-2 rounded bg-black/70 px-2 py-1 text-[11px] text-white"
+                    className="absolute right-2 top-2 rounded bg-black/70 px-2 py-1 text-[11px] text-main"
                   >
                     削除
                   </button>
-                  <span className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-[11px] text-white">
+                  <span className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-[11px] text-main">
                     ♥ {r.likesCount}
                   </span>
                 </div>
-                {r.caption && <p className="px-3 pt-2 text-sm text-neutral-300">{r.caption}</p>}
+                {r.caption && <p className="px-3 pt-2 text-sm text-tone-300">{r.caption}</p>}
                 <button
                   type="button"
                   onClick={() => toggleComments(r.id)}
-                  className="w-full px-3 py-2 text-left text-xs text-neutral-400"
+                  className="w-full px-3 py-2 text-left text-xs text-muted"
                 >
                   {openCommentsFor === r.id ? "コメントを閉じる" : "コメントを見る・返信する"}
                 </button>
                 {openCommentsFor === r.id && (
-                  <div className="space-y-2 border-t border-white/10 px-3 py-3">
+                  <div className="space-y-2 border-t border-main/10 px-3 py-3">
                     {(comments[r.id] ?? []).length === 0 && (
-                      <p className="text-xs text-neutral-500">まだコメントはありません。</p>
+                      <p className="text-xs text-tone-500">まだコメントはありません。</p>
                     )}
                     {(comments[r.id] ?? []).map((c) => (
                       <div key={c.id} className="text-xs">
-                        <span className={c.authorType === "staff" ? "font-semibold text-brand" : "font-semibold text-neutral-300"}>
+                        <span className={c.authorType === "staff" ? "font-semibold text-brand" : "font-semibold text-tone-300"}>
                           {c.authorType === "staff" ? "自分" : "ゲスト"}
                         </span>
-                        <span className="ml-2 text-neutral-300">{c.body}</span>
+                        <span className="ml-2 text-tone-300">{c.body}</span>
                       </div>
                     ))}
                     <div className="flex gap-2 pt-1">
@@ -777,13 +777,13 @@ export function StaffDashboardClient({
                         value={commentDraft}
                         onChange={(e) => setCommentDraft(e.target.value)}
                         placeholder="返信を入力"
-                        className="flex-1 rounded border border-white/20 bg-white/5 px-2 py-1.5 text-[13px] text-white"
+                        className="flex-1 rounded border border-main/20 bg-main/5 px-2 py-1.5 text-[13px] text-main"
                       />
                       <button
                         type="button"
                         disabled={commentLoading}
                         onClick={() => handleReplyComment(r.id)}
-                        className="rounded bg-brand px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                        className="rounded bg-brand px-3 py-1.5 text-xs font-semibold text-main disabled:opacity-50"
                       >
                         送信
                       </button>
@@ -793,7 +793,7 @@ export function StaffDashboardClient({
               </div>
             ))}
             {reels.length === 0 && (
-              <p className="py-8 text-center text-sm text-neutral-500">
+              <p className="py-8 text-center text-sm text-tone-500">
                 まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。
               </p>
             )}
@@ -807,7 +807,7 @@ export function StaffDashboardClient({
           <button
             type="button"
             onClick={() => setEventFormOpen((v) => !v)}
-            className="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+            className="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark"
           >
             ＋ イベントを投稿
           </button>
@@ -816,40 +816,40 @@ export function StaffDashboardClient({
             <form
               key={eventGalleryKey}
               action={handleSubmitEvent}
-              className="mt-4 space-y-3 rounded-xl border border-white/10 bg-neutral-900 p-4"
+              className="mt-4 space-y-3 rounded-xl border border-main/10 bg-surface p-4"
             >
               <input
                 name="title"
                 required
                 placeholder="タイトル"
-                className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
               />
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs text-neutral-400">開始日</label>
+                  <label className="block text-xs text-muted">開始日</label>
                   <div className="mt-1 flex gap-2">
                     <input
                       name="start_date"
                       type="date"
-                      className="flex-1 rounded border border-white/20 bg-white/5 px-2 py-2 text-sm text-white"
+                      className="flex-1 rounded border border-main/20 bg-main/5 px-2 py-2 text-sm text-main"
                     />
                     <TimeOfDaySelect
                       name="start_time"
-                      className="rounded border border-white/20 bg-white/5 px-2 py-2 text-sm text-white"
+                      className="rounded border border-main/20 bg-main/5 px-2 py-2 text-sm text-main"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-neutral-400">終了日</label>
+                  <label className="block text-xs text-muted">終了日</label>
                   <div className="mt-1 flex gap-2">
                     <input
                       name="end_date"
                       type="date"
-                      className="flex-1 rounded border border-white/20 bg-white/5 px-2 py-2 text-sm text-white"
+                      className="flex-1 rounded border border-main/20 bg-main/5 px-2 py-2 text-sm text-main"
                     />
                     <TimeOfDaySelect
                       name="end_time"
-                      className="rounded border border-white/20 bg-white/5 px-2 py-2 text-sm text-white"
+                      className="rounded border border-main/20 bg-main/5 px-2 py-2 text-sm text-main"
                     />
                   </div>
                 </div>
@@ -867,7 +867,7 @@ export function StaffDashboardClient({
                 name="body"
                 placeholder="詳細(任意)"
                 rows={3}
-                className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
               />
 
               {eventError && <p className="text-sm text-red-400">{eventError}</p>}
@@ -875,14 +875,14 @@ export function StaffDashboardClient({
                 <button
                   type="submit"
                   disabled={eventSaving || !eventThumbnailUrl}
-                  className="flex-1 rounded bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="flex-1 rounded bg-brand px-4 py-2 text-sm font-semibold text-main disabled:opacity-50"
                 >
                   {eventSaving ? "投稿中..." : "投稿する"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setEventFormOpen(false)}
-                  className="rounded border border-white/20 px-4 py-2 text-sm text-neutral-300"
+                  className="rounded border border-main/20 px-4 py-2 text-sm text-tone-300"
                 >
                   やめる
                 </button>
@@ -892,40 +892,40 @@ export function StaffDashboardClient({
 
           <ul className="mt-4 space-y-3">
             {events.map((ev) => (
-              <li key={ev.id} className="flex gap-3 rounded-xl border border-white/10 bg-neutral-900 p-3">
+              <li key={ev.id} className="flex gap-3 rounded-xl border border-main/10 bg-surface p-3">
                 {ev.imageUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={ev.imageUrl} alt={ev.title} className="h-16 w-12 shrink-0 rounded object-cover" />
                 )}
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-main">
                       {ev.title}
                       {ev.isEnded && (
-                        <span className="ml-2 rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-neutral-400">終了</span>
+                        <span className="ml-2 rounded bg-main/10 px-1.5 py-0.5 text-[10px] text-muted">終了</span>
                       )}
                       {!ev.isOwn && (
-                        <span className="ml-2 rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-neutral-400">他スタッフ投稿</span>
+                        <span className="ml-2 rounded bg-main/10 px-1.5 py-0.5 text-[10px] text-muted">他スタッフ投稿</span>
                       )}
                     </span>
                     {ev.isOwn && (
                       <button
                         type="button"
                         onClick={() => handleDeleteEvent(ev.id)}
-                        className="text-xs text-neutral-500 hover:text-red-400"
+                        className="text-xs text-tone-500 hover:text-red-400"
                       >
                         削除
                       </button>
                     )}
                   </div>
                   {formatEventDateRange(ev) && (
-                    <p className="text-xs text-neutral-500">{formatEventDateRange(ev)}</p>
+                    <p className="text-xs text-tone-500">{formatEventDateRange(ev)}</p>
                   )}
                 </div>
               </li>
             ))}
             {events.length === 0 && (
-              <p className="py-8 text-center text-sm text-neutral-500">まだイベントはありません。</p>
+              <p className="py-8 text-center text-sm text-tone-500">まだイベントはありません。</p>
             )}
           </ul>
         </div>
@@ -936,23 +936,23 @@ export function StaffDashboardClient({
         <div className="px-4 pt-4">
           <ul className="space-y-2">
             {inquiries.map((inq) => (
-              <li key={inq.id} className="rounded-xl border border-white/10 bg-neutral-900">
+              <li key={inq.id} className="rounded-xl border border-main/10 bg-surface">
                 <button
                   type="button"
                   onClick={() => openInquiry(inq.id)}
                   className="flex w-full items-center justify-between gap-2 px-3 py-3 text-left"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-white">{inq.customerName || "名前未入力"}</p>
-                    <p className="text-xs text-neutral-500">{inq.contact || "連絡先未入力"}</p>
+                    <p className="text-sm font-semibold text-main">{inq.customerName || "名前未入力"}</p>
+                    <p className="text-xs text-tone-500">{inq.contact || "連絡先未入力"}</p>
                   </div>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                       inq.status === "open"
-                        ? "bg-amber-500/20 text-amber-300"
+                        ? "bg-hl-500/20 text-hl-300"
                         : inq.status === "responded"
                           ? "bg-emerald-500/20 text-emerald-300"
-                          : "bg-white/10 text-neutral-400"
+                          : "bg-main/10 text-muted"
                     }`}
                   >
                     {STATUS_LABEL[inq.status] ?? inq.status}
@@ -960,17 +960,17 @@ export function StaffDashboardClient({
                 </button>
 
                 {openInquiryId === inq.id && (
-                  <div className="space-y-2 border-t border-white/10 p-3">
+                  <div className="space-y-2 border-t border-main/10 p-3">
                     {threadLoading ? (
-                      <p className="text-xs text-neutral-500">読み込み中...</p>
+                      <p className="text-xs text-tone-500">読み込み中...</p>
                     ) : (
                       thread.map((m, i) => (
                         <div
                           key={i}
                           className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-xs ${
                             m.senderType === "shop"
-                              ? "ml-auto bg-brand text-white"
-                              : "mr-auto bg-white/10 text-neutral-200"
+                              ? "ml-auto bg-brand text-main"
+                              : "mr-auto bg-main/10 text-tone-200"
                           }`}
                         >
                           {m.body}
@@ -982,13 +982,13 @@ export function StaffDashboardClient({
                         value={replyDraft}
                         onChange={(e) => setReplyDraft(e.target.value)}
                         placeholder="返信を入力"
-                        className="flex-1 rounded border border-white/20 bg-white/5 px-2 py-1.5 text-[13px] text-white"
+                        className="flex-1 rounded border border-main/20 bg-main/5 px-2 py-1.5 text-[13px] text-main"
                       />
                       <button
                         type="button"
                         disabled={replySending}
                         onClick={() => handleReplyInquiry(inq.id)}
-                        className="rounded bg-brand px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                        className="rounded bg-brand px-3 py-1.5 text-xs font-semibold text-main disabled:opacity-50"
                       >
                         送信
                       </button>
@@ -998,7 +998,7 @@ export function StaffDashboardClient({
               </li>
             ))}
             {inquiries.length === 0 && (
-              <p className="py-8 text-center text-sm text-neutral-500">まだお問い合わせはありません。</p>
+              <p className="py-8 text-center text-sm text-tone-500">まだお問い合わせはありません。</p>
             )}
           </ul>
         </div>
@@ -1007,7 +1007,7 @@ export function StaffDashboardClient({
       <button
         type="button"
         onClick={handleLogout}
-        className="mx-auto mt-6 block text-xs text-neutral-500 underline"
+        className="mx-auto mt-6 block text-xs text-tone-500 underline"
       >
         ログアウト
       </button>
@@ -1015,9 +1015,9 @@ export function StaffDashboardClient({
       {/* プロフィール編集シート */}
       {editOpen && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center">
-          <div className="w-full max-w-sm rounded-t-2xl bg-neutral-900 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl">
+          <div className="w-full max-w-sm rounded-t-2xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <button type="button" onClick={() => setEditOpen(false)} className="text-sm text-neutral-400">
+              <button type="button" onClick={() => setEditOpen(false)} className="text-sm text-muted">
                 キャンセル
               </button>
               <h2 className="text-sm font-semibold">プロフィールを編集</h2>
@@ -1030,7 +1030,7 @@ export function StaffDashboardClient({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
                 ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-800 text-lg font-semibold text-neutral-500">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tone-800 text-lg font-semibold text-tone-500">
                     {name.slice(0, 1)}
                   </div>
                 )}
@@ -1045,26 +1045,26 @@ export function StaffDashboardClient({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-neutral-400">名前</label>
+                <label className="mb-1 block text-xs text-muted">名前</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   maxLength={50}
                   required
-                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                  className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-neutral-400">自己紹介</label>
+                <label className="mb-1 block text-xs text-muted">自己紹介</label>
                 <textarea
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
                   rows={4}
                   maxLength={600}
                   placeholder="担当曜日やひとことなど"
-                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+                  className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main placeholder:text-tone-500"
                 />
               </div>
 
@@ -1073,7 +1073,7 @@ export function StaffDashboardClient({
               <button
                 type="submit"
                 disabled={profileSaving}
-                className="w-full rounded bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+                className="w-full rounded bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
               >
                 {profileSaving ? "保存中..." : "保存する"}
               </button>

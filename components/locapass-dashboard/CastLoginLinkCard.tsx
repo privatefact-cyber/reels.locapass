@@ -19,7 +19,7 @@ export async function CastLoginLinkCard({
     <section className="rounded-lg border border-black/10 bg-white p-4">
       <h2 className="mb-2 text-sm font-bold">投稿用リンク(マイページ)</h2>
       <p className="mb-3 text-xs text-black/50">
-        このリンクを開くとキャスト本人が投稿用マイページに直接ログインできます。URLを紛失した・ログアウトしてしまった場合も、いつでもここから同じリンクを再確認・再送できます。
+        このリンクを開くとパートナー本人が投稿用マイページに直接ログインできます。URLを紛失した・ログアウトしてしまった場合も、いつでもここから同じリンクを再確認・再送できます。
       </p>
 
       <div className="flex flex-col gap-4 sm:flex-row">
@@ -44,7 +44,7 @@ export async function CastLoginLinkCard({
             href={lineShareUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block rounded bg-[#06C755] px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
+            className="inline-block rounded bg-[#06C755] px-4 py-2 text-xs font-semibold text-main hover:opacity-90"
           >
             LINEで送る
           </a>

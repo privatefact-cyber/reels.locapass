@@ -94,16 +94,16 @@ function NotificationRow({
   const Row = (
     <div
       className={`flex items-start gap-3 rounded-xl px-3 py-3 transition ${
-        n.read_at ? "bg-transparent" : "bg-white/5"
+        n.read_at ? "bg-transparent" : "bg-main/5"
       }`}
     >
-      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-gold">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-main/10 text-accent">
         <Icon size={16} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-neutral-100">{n.title}</p>
-        {n.body && <p className="mt-0.5 truncate text-xs text-neutral-400">{n.body}</p>}
-        <p className="mt-1 text-[11px] text-neutral-500">{new Date(n.created_at).toLocaleString("ja-JP")}</p>
+        <p className="text-sm font-semibold text-tone-100">{n.title}</p>
+        {n.body && <p className="mt-0.5 truncate text-xs text-muted">{n.body}</p>}
+        <p className="mt-1 text-[11px] text-tone-500">{new Date(n.created_at).toLocaleString("ja-JP")}</p>
       </div>
     </div>
   );
@@ -118,7 +118,7 @@ function NotificationRow({
         tabIndex={isOpen ? 0 : -1}
         aria-hidden={!isOpen}
         style={{ width: REVEAL_WIDTH }}
-        className="absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1 bg-red-600 text-white"
+        className="absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1 bg-red-600 text-main"
       >
         <Trash2 size={18} />
         <span className="text-[10px] font-semibold">{deleteLabel}</span>
@@ -133,7 +133,7 @@ function NotificationRow({
           transform: `translateX(${x}px)`,
           transition: dragX === null ? "transform 200ms ease-out" : "none",
         }}
-        className="relative bg-neutral-950"
+        className="relative bg-tone-950"
         // スワイプ直後の指離しで、リンクが開いてしまわないようにする。
         onClickCapture={(e) => {
           if (moved.current) {
@@ -166,7 +166,8 @@ function NotificationRow({
           }}
           aria-label={deleteLabel}
           title={deleteLabel}
-          className="absolute right-2 top-2 hidden h-8 w-8 items-center justify-center rounded-full bg-black/60 text-neutral-300 opacity-0 transition hover:bg-red-600 hover:text-white focus-visible:opacity-100 group-hover:opacity-100 md:flex"
+          data-surface="media"
+          className="absolute right-2 top-2 hidden h-8 w-8 items-center justify-center rounded-full bg-black/60 text-tone-300 opacity-0 transition hover:bg-red-600 hover:text-main focus-visible:opacity-100 group-hover:opacity-100 md:flex"
         >
           <Trash2 size={15} />
         </button>
@@ -231,7 +232,7 @@ export function NotificationsList() {
   if (notifications === null) return null;
 
   if (notifications.length === 0) {
-    return <p className="mt-10 text-center text-sm text-neutral-500">{t.notifications.empty}</p>;
+    return <p className="mt-10 text-center text-sm text-tone-500">{t.notifications.empty}</p>;
   }
 
   return (
@@ -244,7 +245,7 @@ export function NotificationsList() {
               void deleteNotifications(notifications.map((n) => n.id));
             }
           }}
-          className="rounded-full px-3 py-1 text-xs text-neutral-400 transition hover:bg-white/10 hover:text-red-400"
+          className="rounded-full px-3 py-1 text-xs text-muted transition hover:bg-main/10 hover:text-red-400"
         >
           {t.notifications.deleteAll}
         </button>

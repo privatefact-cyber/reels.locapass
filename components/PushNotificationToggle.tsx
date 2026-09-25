@@ -97,7 +97,7 @@ export function PushNotificationToggle() {
 
   if (status === "unsupported") {
     return (
-      <p className="mt-1 text-xs text-neutral-500">
+      <p className="mt-1 text-xs text-tone-500">
         このブラウザはプッシュ通知に対応していません。iPhoneの場合はホーム画面に追加すると利用できます。
       </p>
     );
@@ -105,7 +105,7 @@ export function PushNotificationToggle() {
 
   if (status === "denied") {
     return (
-      <p className="mt-1 text-xs text-neutral-500">
+      <p className="mt-1 text-xs text-tone-500">
         通知がブロックされています。端末の通知設定からLOCAPASSの通知を許可してください。
       </p>
     );
@@ -118,8 +118,8 @@ export function PushNotificationToggle() {
       disabled={status === "busy"}
       className={`mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-60 ${
         status === "on"
-          ? "border border-white/20 text-neutral-300"
-          : "bg-gold text-black hover:bg-gold-light"
+          ? "border border-main/20 text-tone-300"
+          : "bg-accent text-on-accent hover:bg-accent-light"
       }`}
     >
       {status === "on" ? (

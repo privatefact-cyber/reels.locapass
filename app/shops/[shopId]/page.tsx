@@ -339,7 +339,7 @@ export default async function ShopDetailPage({
         {site && (
           <Link
             href={`/${site.slug}`}
-            className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-xs font-medium text-white/90 shadow-lg backdrop-blur-md transition hover:border-white/40 hover:bg-black/60 hover:text-white sm:left-6 sm:top-6"
+            className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-full border border-main/20 bg-black/40 px-3 py-1.5 text-xs font-medium text-main/90 shadow-lg backdrop-blur-md transition hover:border-main/40 hover:bg-black/60 hover:text-main sm:left-6 sm:top-6"
           >
             <ChevronLeft size={14} />
             <span>{site.name}</span>
@@ -358,10 +358,10 @@ export default async function ShopDetailPage({
             />
           )
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-black to-neutral-900" />
+          <div className="absolute inset-0 bg-gradient-to-br from-tone-900 via-page to-tone-900" />
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-tone-950 via-tone-950/60 to-transparent" />
 
         {isPlacePhotoUrl(store.hero.url) && (
           <div className="absolute right-3 top-3 z-20 sm:right-6 sm:top-6">
@@ -370,14 +370,14 @@ export default async function ShopDetailPage({
         )}
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-6">
-          <p className="text-[11px] tracking-[0.2em] text-amber-300/80">
+          <p className="text-[11px] tracking-[0.2em] text-hl-300/80">
             {store.area ?? t.shop.areaNotSet} / {store.genre ? genreLabel(locale, store.genre) : t.shop.genreNotSet}
           </p>
-          <h1 className="font-display mt-1 break-keep text-3xl font-semibold tracking-wide text-white drop-shadow-lg [overflow-wrap:anywhere] sm:text-4xl">
+          <h1 className="font-display mt-1 break-keep text-3xl font-semibold tracking-wide text-main drop-shadow-lg [overflow-wrap:anywhere] sm:text-4xl">
             <bdi>{store.name}</bdi>
           </h1>
           {store.tagline && (
-            <p dir="auto" className="mt-2 max-w-md text-sm leading-relaxed text-amber-100/80">{store.tagline}</p>
+            <p dir="auto" className="mt-2 max-w-md text-sm leading-relaxed text-hl-100/80">{store.tagline}</p>
           )}
           <ShopFollowButton shopId={store.id} />
         </div>
@@ -397,10 +397,10 @@ export default async function ShopDetailPage({
       {castReelPreviews.length > 0 && (
         <div className="flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:px-6">
           {castReelPreviews.map((r) => (
-            <Link
+            <Link data-surface="media"
               key={r.id}
               href={`/shops/${store.id}/reels?start=${r.id}`}
-              className="relative aspect-[9/16] w-20 shrink-0 overflow-hidden rounded-lg bg-neutral-900"
+              className="relative aspect-[9/16] w-20 shrink-0 overflow-hidden rounded-lg bg-surface"
             >
               {r.thumbUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -424,7 +424,7 @@ export default async function ShopDetailPage({
                 )
               ) : null}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
-              <span className="absolute bottom-1 left-1 right-1 truncate text-[10px] text-white drop-shadow">
+              <span className="absolute bottom-1 left-1 right-1 truncate text-[10px] text-main drop-shadow">
                 {r.castName}
               </span>
             </Link>
@@ -437,7 +437,7 @@ export default async function ShopDetailPage({
         {todayCasts.length > 0 && (
         <section id="today" className="scroll-mt-24 space-y-6">
           <SectionHeading
-            eyebrow="TODAY'S CAST"
+            eyebrow="TODAY'S PARTNERS"
             title={t.shop.todaySchedule}
             subtitle={t.shop.todaySubtitle}
           />
@@ -449,7 +449,7 @@ export default async function ShopDetailPage({
                   className="flex min-w-[72px] flex-col items-center gap-1 snap-start group"
                 >
                   <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px] transition group-hover:scale-105">
-                    <div className="rounded-full bg-black p-[2px]">
+                    <div className="rounded-full bg-page p-[2px]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={cast.photoUrl || "https://via.placeholder.com/150"}
@@ -458,7 +458,7 @@ export default async function ShopDetailPage({
                       />
                     </div>
                   </div>
-                  <span className="max-w-[68px] truncate text-center text-xs text-neutral-300 group-hover:text-white">
+                  <span className="max-w-[68px] truncate text-center text-xs text-tone-300 group-hover:text-main">
                     {cast.name}
                   </span>
                 </Link>
@@ -469,7 +469,7 @@ export default async function ShopDetailPage({
 
         {casts.length > 0 && (
         <section id="cast" className="scroll-mt-24 space-y-6">
-          <SectionHeading eyebrow="ALL CAST" title={t.shop.allCast} icon={<Users size={14} />} />
+          <SectionHeading eyebrow="ALL PARTNERS" title={t.shop.allCast} icon={<Users size={14} />} />
             <>
               {/* モバイル: 9人ずつ(3列×3行)を1ページとして横スワイプでページ送り。 */}
               <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar md:hidden">
@@ -519,11 +519,11 @@ export default async function ShopDetailPage({
         {/* 3. 店舗基本情報 */}
         <section id="access" className="scroll-mt-24 space-y-4">
           {store.description && (
-            <p dir="auto" className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+            <p dir="auto" className="whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
               {store.description}
             </p>
           )}
-          {usedTranslation && <p className="text-[11px] text-neutral-500">{t.shop.autoTranslated}</p>}
+          {usedTranslation && <p className="text-[11px] text-tone-500">{t.shop.autoTranslated}</p>}
 
           {store.galleryImageUrls.length > 0 && (
             <div className="-mx-1 flex snap-x gap-2 overflow-x-auto pb-1">
@@ -533,13 +533,13 @@ export default async function ShopDetailPage({
                   key={url}
                   src={url}
                   alt=""
-                  className="h-32 w-24 flex-none snap-start rounded-lg border border-white/10 object-cover"
+                  className="h-32 w-24 flex-none snap-start rounded-lg border border-main/10 object-cover"
                 />
               ))}
             </div>
           )}
 
-          <div className="space-y-3 rounded-2xl border border-amber-500/20 bg-zinc-900/60 p-5 shadow-2xl backdrop-blur-xl">
+          <div className="space-y-3 rounded-2xl border border-line/20 bg-panel-900/60 p-5 shadow-2xl backdrop-blur-xl">
             {store.address && (
               <InfoRow icon={<MapPin size={16} />} label={t.shop.address} value={addressDisplay ?? store.address} />
             )}
@@ -554,13 +554,13 @@ export default async function ShopDetailPage({
 
           {/* 住所と連動した地図 */}
           {store.address && (
-            <div className="overflow-hidden rounded-2xl border border-amber-500/20 shadow-2xl">
+            <div className="overflow-hidden rounded-2xl border border-line/20 shadow-2xl">
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`${store.name}の地図をGoogleマップで開く`}
-                className="relative block h-44 w-full overflow-hidden bg-zinc-900"
+                className="relative block h-44 w-full overflow-hidden bg-panel-900"
               >
                 <iframe
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(store.address)}&z=16&output=embed&hl=${mapsHl}`}
@@ -569,14 +569,14 @@ export default async function ShopDetailPage({
                   tabIndex={-1}
                   className="pointer-events-none h-[calc(100%+80px)] w-full -translate-y-10 border-0 [filter:invert(92%)_hue-rotate(180deg)_brightness(0.9)_contrast(1.05)_saturate(0.8)]"
                 />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-2 bg-zinc-900" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2 bg-zinc-900" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-2 bg-panel-900" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2 bg-panel-900" />
               </a>
               <a
                 href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(store.address)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 border-t border-amber-500/20 bg-zinc-900/90 px-4 py-3 text-sm font-medium text-neutral-300 transition hover:bg-zinc-800 hover:text-neutral-100"
+                className="flex items-center justify-center gap-2 border-t border-line/20 bg-panel-900/90 px-4 py-3 text-sm font-medium text-tone-300 transition hover:bg-panel-800 hover:text-tone-100"
               >
                 <Navigation size={16} />
                 {t.shop.routeGuide}
@@ -606,9 +606,9 @@ export default async function ShopDetailPage({
 
           {/* 4. ご利用にあたって */}
           {store.usageNotes && (
-            <div className="rounded-2xl border border-amber-500/20 bg-zinc-900/60 p-5 shadow-2xl backdrop-blur-xl">
-              <p className="text-xs font-semibold text-amber-300/70">{t.shop.usageNotes}</p>
-              <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm text-neutral-300">{store.usageNotes}</p>
+            <div className="rounded-2xl border border-line/20 bg-panel-900/60 p-5 shadow-2xl backdrop-blur-xl">
+              <p className="text-xs font-semibold text-hl-300/70">{t.shop.usageNotes}</p>
+              <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm text-tone-300">{store.usageNotes}</p>
             </div>
           )}
         </section>
@@ -617,17 +617,17 @@ export default async function ShopDetailPage({
         {hasPriceSection && (
         <section id="price" className="scroll-mt-24 space-y-3">
           {priceItems.length > 0 && (
-            <ShopAccordion title={t.shop.priceList} icon={<Star size={16} className="text-amber-400" />} defaultOpen>
-              <ul className="divide-y divide-amber-500/10">
+            <ShopAccordion title={t.shop.priceList} icon={<Star size={16} className="text-hl-400" />} defaultOpen>
+              <ul className="divide-y divide-line/10">
                 {priceItems.map((item) => (
                   <li key={item.id} className="flex items-center justify-between py-2.5 text-sm">
-                    <span className="text-neutral-200">
+                    <span className="text-tone-200">
                       {item.name}
                       {item.durationMinutes ? (
-                        <span className="ml-1 text-neutral-500">{t.featured.minutes(item.durationMinutes)}</span>
+                        <span className="ml-1 text-tone-500">{t.featured.minutes(item.durationMinutes)}</span>
                       ) : null}
                     </span>
-                    <span className="font-semibold text-amber-300">¥{item.price.toLocaleString()}</span>
+                    <span className="font-semibold text-hl-300">¥{item.price.toLocaleString()}</span>
                   </li>
                 ))}
               </ul>
@@ -635,7 +635,7 @@ export default async function ShopDetailPage({
           )}
 
           {events.length > 0 && (
-            <ShopAccordion title={t.shop.eventAnnouncement} icon={<CalendarDays size={16} className="text-amber-400" />}>
+            <ShopAccordion title={t.shop.eventAnnouncement} icon={<CalendarDays size={16} className="text-hl-400" />}>
               <ul className="space-y-4">
                 {events.map((e) => (
                   <li key={e.id} className="flex gap-3">
@@ -644,18 +644,18 @@ export default async function ShopDetailPage({
                       <img
                         src={e.imageUrl}
                         alt={e.title}
-                        className="h-16 w-12 shrink-0 rounded-lg border border-amber-500/20 object-cover"
+                        className="h-16 w-12 shrink-0 rounded-lg border border-line/20 object-cover"
                       />
                     )}
                     <div>
-                      <p className="text-sm font-semibold text-neutral-100">
+                      <p className="text-sm font-semibold text-tone-100">
                         {e.title}
                         {formatEventDateRange(e) && (
-                          <span className="ml-2 text-xs text-neutral-500">{formatEventDateRange(e)}</span>
+                          <span className="ml-2 text-xs text-tone-500">{formatEventDateRange(e)}</span>
                         )}
                       </p>
                       {e.body && (
-                        <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-400">{e.body}</p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-muted">{e.body}</p>
                       )}
                       {e.galleryImageUrls.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -665,7 +665,7 @@ export default async function ShopDetailPage({
                               key={u}
                               src={u}
                               alt=""
-                              className="h-14 w-14 rounded-lg border border-amber-500/20 object-cover"
+                              className="h-14 w-14 rounded-lg border border-line/20 object-cover"
                             />
                           ))}
                         </div>
@@ -716,10 +716,10 @@ function shuffle<T>(items: T[]): T[] {
 function InfoRow({ icon, label, value, ltr }: { icon: React.ReactNode; label: string; value: string; ltr?: boolean }) {
   return (
     <div className="flex items-start gap-3 text-sm">
-      <span className="mt-0.5 text-amber-400/80">{icon}</span>
+      <span className="mt-0.5 text-hl-400/80">{icon}</span>
       <div>
-        <p className="text-[11px] text-amber-200/50">{label}</p>
-        <p dir={ltr ? "ltr" : "auto"} className={`text-neutral-200 ${ltr ? "text-start" : ""}`}>{value}</p>
+        <p className="text-[11px] text-hl-200/50">{label}</p>
+        <p dir={ltr ? "ltr" : "auto"} className={`text-tone-200 ${ltr ? "text-start" : ""}`}>{value}</p>
       </div>
     </div>
   );
@@ -731,7 +731,7 @@ function LinkPill({ href, icon, label }: { href: string; icon: React.ReactNode; 
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-4 py-2 text-xs font-bold text-black shadow-lg transition hover:brightness-110"
+      className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cta-light to-cta-deep px-4 py-2 text-xs font-bold text-on-cta-gold shadow-lg transition hover:brightness-110"
     >
       {icon}
       {label}
@@ -753,14 +753,14 @@ function SectionHeading({
 }) {
   return (
     <div className="text-center">
-      <p className="flex items-center justify-center gap-2 text-[11px] tracking-[0.3em] text-amber-400/60">
+      <p className="flex items-center justify-center gap-2 text-[11px] tracking-[0.3em] text-hl-400/60">
         {icon}
         ── {eyebrow} ──
       </p>
-      <h2 className="font-display mt-1 bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-2xl font-bold text-transparent">
+      <h2 className="font-display mt-1 bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-2xl font-bold text-transparent">
         {title}
       </h2>
-      {subtitle && <p className="mt-1 text-xs text-neutral-400">{subtitle}</p>}
+      {subtitle && <p className="mt-1 text-xs text-muted">{subtitle}</p>}
     </div>
   );
 }

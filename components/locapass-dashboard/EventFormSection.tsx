@@ -209,7 +209,7 @@ export function EventFormSection({
           <button
             type="submit"
             disabled={!thumbnailUrl}
-            className="rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
           >
             {editingEvent ? "更新する" : "告知する"}
           </button>

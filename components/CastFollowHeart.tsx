@@ -20,7 +20,7 @@ export function CastFollowHeart({ castId, size = 16 }: { castId: string; size?: 
     >
       <Heart
         size={size}
-        className={followed ? "fill-brand text-brand" : "text-neutral-400"}
+        className={followed ? "fill-brand text-brand" : "text-muted"}
         strokeWidth={followed ? 0 : 1.75}
       />
     </button>

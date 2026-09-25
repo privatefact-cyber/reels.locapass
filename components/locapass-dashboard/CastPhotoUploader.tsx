@@ -60,7 +60,7 @@ export function CastPhotoUploader({ castId, shopId }: { castId: string; shopId: 
         type="button"
         disabled={uploading}
         onClick={() => fileInputRef.current?.click()}
-        className="rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+        className="rounded bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
       >
         {uploading ? "アップロード中..." : "画像を追加"}
       </button>

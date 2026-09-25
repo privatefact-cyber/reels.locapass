@@ -33,7 +33,7 @@ export function SearchButton() {
     <button
       type="button"
       onClick={handleClick}
-      className="flex flex-col items-center gap-0.5 p-2 text-neutral-400 hover:text-white"
+      className="flex flex-col items-center gap-0.5 p-2 text-muted hover:text-main"
       aria-label={t.nav.search}
     >
       <Search size={22} />

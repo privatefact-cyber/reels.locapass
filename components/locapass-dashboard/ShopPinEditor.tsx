@@ -108,9 +108,9 @@ export function ShopPinEditor({ shopId, shopName, address, lat, lng, geocodeSour
         : "仮の位置(要調整)";
 
   return (
-    <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
+    <section className="space-y-3 rounded-lg border border-tone-200 bg-white p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 font-semibold text-neutral-900">
+        <h2 className="flex items-center gap-1.5 font-semibold text-tone-900">
           <MapPin size={16} /> マップのピン位置
         </h2>
         <span
@@ -119,21 +119,21 @@ export function ShopPinEditor({ shopId, shopName, address, lat, lng, geocodeSour
               ? "bg-emerald-100 text-emerald-700"
               : geocodeSource === "address"
                 ? "bg-sky-100 text-sky-700"
-                : "bg-amber-100 text-amber-800"
+                : "bg-hl-100 text-hl-800"
           }`}
         >
           {sourceLabel}
         </span>
       </div>
 
-      <p className="text-xs leading-relaxed text-neutral-500">
+      <p className="text-xs leading-relaxed text-tone-500">
         {shopName}がマップ上のどこに表示されるかを決めます。住所で検索してから、
         ビルの入口に合うようピンをドラッグしてください。
       </p>
 
       <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="flex flex-1 items-center gap-2 rounded border border-neutral-300 px-3 py-2">
-          <Search size={14} className="shrink-0 text-neutral-400" />
+        <div className="flex flex-1 items-center gap-2 rounded border border-tone-300 px-3 py-2">
+          <Search size={14} className="shrink-0 text-muted" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -143,7 +143,7 @@ export function ShopPinEditor({ shopId, shopName, address, lat, lng, geocodeSour
         </div>
         <button
           type="submit"
-          className="shrink-0 rounded bg-neutral-800 px-3 py-2 text-sm font-medium text-white transition hover:bg-neutral-700"
+          className="shrink-0 rounded bg-tone-800 px-3 py-2 text-sm font-medium text-main transition hover:bg-tone-700"
         >
           検索
         </button>
@@ -152,20 +152,20 @@ export function ShopPinEditor({ shopId, shopName, address, lat, lng, geocodeSour
       <div ref={containerRef} className="h-72 w-full overflow-hidden rounded" style={{ position: "relative" }} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-mono text-[11px] text-neutral-500">
+        <p className="font-mono text-[11px] text-tone-500">
           {pin.lat.toFixed(6)}, {pin.lng.toFixed(6)}
         </p>
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:opacity-60"
+          className="rounded bg-hl-500 px-4 py-2 text-sm font-semibold text-main transition hover:bg-hl-600 disabled:opacity-60"
         >
           {saving ? "保存中…" : "この位置で保存"}
         </button>
       </div>
 
-      {status && <p className="text-xs text-neutral-600">{status}</p>}
+      {status && <p className="text-xs text-tone-600">{status}</p>}
     </section>
   );
 }

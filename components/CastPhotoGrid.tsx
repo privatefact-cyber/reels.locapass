@@ -87,17 +87,17 @@ function PhotoViewer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
+    <div data-surface="media" className="fixed inset-0 z-50 bg-black">
       <button
         type="button"
         onClick={onClose}
         aria-label="閉じる"
-        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white"
+        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-main"
       >
         <X size={20} />
       </button>
 
-      <span className="absolute left-3 top-3 z-10 rounded bg-black/60 px-2 py-1 text-xs text-white">
+      <span className="absolute left-3 top-3 z-10 rounded bg-black/60 px-2 py-1 text-xs text-main">
         {activeIndex + 1} / {photos.length}
       </span>
 

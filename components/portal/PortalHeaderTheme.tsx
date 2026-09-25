@@ -17,11 +17,14 @@ export function PortalHeaderTheme({ color, opacity, outerBackgroundColor, fontCo
     const root = document.documentElement;
     root.style.setProperty("--portal-header-background", rgba(color, opacity));
     root.style.setProperty("--portal-header-glow", rgba(color, Math.min(0.35, opacity * 0.55)));
+    // ポータルの色の光を出すあいだは、配色テーマの3色の光暈を消す
+    root.style.setProperty("--portal-hide-theme-glow", "0");
     document.body.style.backgroundColor = outerBackgroundColor;
     document.body.style.color = fontColor;
     return () => {
       root.style.removeProperty("--portal-header-background");
       root.style.removeProperty("--portal-header-glow");
+      root.style.removeProperty("--portal-hide-theme-glow");
       document.body.style.removeProperty("background-color");
       document.body.style.removeProperty("color");
     };

@@ -57,7 +57,7 @@ export function FeaturedHero({ shops, onDismiss }: { shops: FeaturedShop[]; onDi
   const current = shops[index];
 
   return (
-    <section
+    <section data-surface="media"
       className="relative h-[58svh] min-h-[420px] max-h-[640px] w-full overflow-hidden bg-black md:h-[64vh]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -101,7 +101,7 @@ export function FeaturedHero({ shops, onDismiss }: { shops: FeaturedShop[]; onDi
           type="button"
           onClick={onDismiss}
           aria-label={t.common.close}
-          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur transition hover:bg-black/70 hover:text-white md:right-6 md:top-6"
+          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-main/80 backdrop-blur transition hover:bg-black/70 hover:text-main md:right-6 md:top-6"
         >
           <X size={16} />
         </button>
@@ -110,28 +110,28 @@ export function FeaturedHero({ shops, onDismiss }: { shops: FeaturedShop[]; onDi
       <div className="absolute inset-x-0 bottom-0">
         <div className="mx-auto max-w-[1400px] px-6 pb-8 md:px-14 md:pb-10">
           <div key={current.id} className="animate-[luxelaFadeUp_900ms_ease-out_both]">
-            <p className="flex items-center gap-4 font-display text-[11px] uppercase tracking-[0.55em] text-gold">
-              <span className="h-px w-10 bg-gold/70" />
+            <p className="flex items-center gap-4 font-display text-[11px] uppercase tracking-[0.55em] text-accent">
+              <span className="h-px w-10 bg-accent/70" />
               {labels.pickUp}
             </p>
-            <p className="mt-4 font-mincho text-[11px] tracking-[0.25em] text-white/60 md:text-xs">{current.meta}</p>
-            <h2 className="mt-2 font-display text-[2.2rem] font-medium uppercase leading-[0.95] tracking-[0.06em] text-white md:text-6xl">
+            <p className="mt-4 font-mincho text-[11px] tracking-[0.25em] text-main/60 md:text-xs">{current.meta}</p>
+            <h2 className="mt-2 font-display text-[2.2rem] font-medium uppercase leading-[0.95] tracking-[0.06em] text-main md:text-6xl">
               {current.name}
             </h2>
             {/* 紹介文は最大2行まで(詳細は「店舗を見る」の先の店舗ページで見せる)。 */}
             {current.description && (
-              <p className="mt-4 line-clamp-2 max-w-xl font-mincho text-[13px] leading-[1.9] text-white/75 md:text-[15px]">
+              <p className="mt-4 line-clamp-2 max-w-xl font-mincho text-[13px] leading-[1.9] text-main/75 md:text-[15px]">
                 {current.description}
               </p>
             )}
 
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] tracking-[0.15em] text-white/60">
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] tracking-[0.15em] text-main/60">
               {current.setPriceFrom !== null && (
-                <span className="font-display text-sm tracking-[0.2em] text-gold">
+                <span className="font-display text-sm tracking-[0.2em] text-accent">
                   {labels.setFrom(current.setPriceFrom.toLocaleString())}
                 </span>
               )}
-              {current.setPriceFrom !== null && current.businessHours && <span className="h-3 w-px bg-white/25" />}
+              {current.setPriceFrom !== null && current.businessHours && <span className="h-3 w-px bg-main/25" />}
               {current.businessHours && (
                 <span className="font-mincho">
                   {labels.hours} {current.businessHours}
@@ -142,25 +142,25 @@ export function FeaturedHero({ shops, onDismiss }: { shops: FeaturedShop[]; onDi
             <div className="mt-6 flex items-center gap-7">
               <Link
                 href={`/shops/${current.id}`}
-                className="border border-gold/80 px-8 py-3.5 font-display text-[11px] uppercase tracking-[0.4em] text-gold transition-colors duration-300 hover:bg-gold hover:text-black"
+                className="border border-accent/80 px-8 py-3.5 font-display text-[11px] uppercase tracking-[0.4em] text-accent transition-colors duration-300 hover:bg-accent hover:text-on-accent"
               >
                 {labels.viewShop}
               </Link>
               <Link
                 href="/map"
-                className="group flex items-center gap-3 font-display text-[11px] uppercase tracking-[0.4em] text-white/70 transition-colors hover:text-white"
+                className="group flex items-center gap-3 font-display text-[11px] uppercase tracking-[0.4em] text-main/70 transition-colors hover:text-main"
               >
                 {labels.viewMap}
-                <span className="h-px w-8 bg-white/40 transition-all duration-300 group-hover:w-12 group-hover:bg-white" />
+                <span className="h-px w-8 bg-main/40 transition-all duration-300 group-hover:w-12 group-hover:bg-white" />
               </Link>
             </div>
           </div>
 
           {count > 1 && (
             <div className="mt-8 flex items-center gap-6">
-              <span className="font-display text-xs tracking-[0.3em] text-white/70">
-                <span className="text-gold">{String(index + 1).padStart(2, "0")}</span>
-                <span className="mx-2 text-white/30">/</span>
+              <span className="font-display text-xs tracking-[0.3em] text-main/70">
+                <span className="text-accent">{String(index + 1).padStart(2, "0")}</span>
+                <span className="mx-2 text-main/30">/</span>
                 {String(count).padStart(2, "0")}
               </span>
               <div className="flex gap-2">
@@ -172,10 +172,10 @@ export function FeaturedHero({ shops, onDismiss }: { shops: FeaturedShop[]; onDi
                     aria-label={shop.name}
                     className="relative h-6 w-12 md:w-16"
                   >
-                    <span className="absolute inset-x-0 top-1/2 h-px bg-white/25" />
+                    <span className="absolute inset-x-0 top-1/2 h-px bg-main/25" />
                     <span
                       key={`${shop.id}-${index}-${paused}`}
-                      className={`absolute left-0 top-1/2 h-px bg-gold ${
+                      className={`absolute left-0 top-1/2 h-px bg-accent ${
                         i < index ? "w-full" : i === index ? (paused ? "w-full" : "animate-[luxelaProgress_linear_both]") : "w-0"
                       }`}
                       style={i === index && !paused ? { animationDuration: `${SLIDE_MS}ms` } : undefined}

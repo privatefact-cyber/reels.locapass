@@ -38,7 +38,7 @@ export async function StaffLoginLinkCard({
           href={lineShareUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block rounded bg-[#06C755] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+          className="inline-block rounded bg-[#06C755] px-3 py-1.5 text-xs font-semibold text-main hover:opacity-90"
         >
           LINEで送る
         </a>

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { requireAdmin, requireRootAdmin } from "@/lib/admin/require-admin";
+import { isSiteTheme, type SiteTheme } from "@/lib/theme";
 
 /**
  * ポータル/店舗の発行・権限付与チェーン。
@@ -337,4 +338,15 @@ export async function setMachiNoKoeBetaEnabled(enabled: boolean) {
   const { error } = await supabase.rpc("locapass_set_machi_no_koe_beta", { p_enabled: enabled });
   if (error) throw new Error(`街の声ベータ版の設定変更に失敗しました: ${error.message}`);
   revalidatePath("/admin");
+}
+
+/** locapass のサイト全体の配色テーマ。null は自動(12/1〜12/25はクリスマス、それ以外は通常)。LUXELAとは別に切り替わる。 */
+export async function setSiteTheme(theme: SiteTheme | null) {
+  await requireRootAdmin();
+  if (theme !== null && !isSiteTheme(theme)) throw new Error("不明な配色テーマです");
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("locapass_set_site_theme", { p_theme: theme });
+  if (error) throw new Error(`配色テーマの変更に失敗しました: ${error.message}`);
+  // 公開サイト全体(ルートレイアウト)に即時反映する
+  revalidatePath("/", "layout");
 }

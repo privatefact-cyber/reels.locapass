@@ -27,7 +27,7 @@ export function NowButton() {
     <button
       type="button"
       onClick={handleClick}
-      className="flex flex-col items-center gap-0.5 p-2 text-neutral-400 hover:text-white"
+      className="flex flex-col items-center gap-0.5 p-2 text-muted hover:text-main"
       aria-label={t.nav.now}
     >
       <Radio size={22} />

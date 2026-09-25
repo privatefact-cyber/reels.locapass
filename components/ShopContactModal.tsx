@@ -99,17 +99,17 @@ export function ShopContactModal({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ transform: `translateY(${dragY}px)`, transition: dragging.current ? "none" : "transform 0.2s ease" }}
-        className="w-full max-w-sm rounded-t-2xl border border-amber-500/20 bg-zinc-950 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 sm:rounded-2xl sm:pb-6"
+        className="w-full max-w-sm rounded-t-2xl border border-line/20 bg-panel-950 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 sm:rounded-2xl sm:pb-6"
       >
-        <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20 sm:hidden" />
+        <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-main/20 sm:hidden" />
 
         <div className="flex items-center justify-between px-5">
-          <h2 className="text-sm font-bold text-neutral-100">{t.contact.title}</h2>
+          <h2 className="text-sm font-bold text-tone-100">{t.contact.title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t.common.close}
-            className="rounded-full p-1 text-neutral-400 transition hover:text-neutral-200"
+            className="rounded-full p-1 text-muted transition hover:text-tone-200"
           >
             <X size={18} />
           </button>
@@ -121,7 +121,7 @@ export function ShopContactModal({
               <a
                 href={`tel:${phone}`}
                 onClick={() => trackTap("phone")}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-3 text-sm font-semibold text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cta-light to-cta px-4 py-3 text-sm font-semibold text-on-cta shadow-[0_0_20px_rgb(var(--cta-500)/0.25)]"
               >
                 <Phone size={16} />
                 {t.contact.callButton}
@@ -129,12 +129,12 @@ export function ShopContactModal({
               <button
                 type="button"
                 onClick={handleCopyPhone}
-                className="mx-auto mt-2 flex items-center gap-1.5 text-xs text-neutral-400 transition hover:text-amber-300"
+                className="mx-auto mt-2 flex items-center gap-1.5 text-xs text-muted transition hover:text-hl-300"
               >
                 <span className="tracking-wide">{phone}</span>
-                {copied ? <Check size={13} className="text-amber-400" /> : <Copy size={13} />}
+                {copied ? <Check size={13} className="text-hl-400" /> : <Copy size={13} />}
               </button>
-              <p className="mt-1 text-center text-[11px] text-neutral-500">
+              <p className="mt-1 text-center text-[11px] text-tone-500">
                 {copied ? t.contact.copied : t.contact.callHint}
               </p>
             </div>
@@ -147,7 +147,7 @@ export function ShopContactModal({
                 onClick={() => trackTap("line")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-300 backdrop-blur-xl transition hover:bg-amber-500/20"
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-line/40 bg-hl-500/10 px-4 py-3 text-sm font-semibold text-hl-300 backdrop-blur-xl transition hover:bg-hl-500/20"
               >
                 <MessageCircle size={16} />
                 {t.contact.lineButton}
@@ -166,31 +166,31 @@ export function ShopContactModal({
                   <img
                     src={lineQrImageUrl}
                     alt={t.contact.lineQrAlt}
-                    className="h-24 w-24 rounded-lg border border-white/10 bg-white object-contain p-1"
+                    className="h-24 w-24 rounded-lg border border-main/10 bg-white object-contain p-1"
                   />
-                  <span className="text-[11px] text-neutral-500">{t.contact.lineQrHint}</span>
+                  <span className="text-[11px] text-tone-500">{t.contact.lineQrHint}</span>
                 </button>
               )}
             </div>
           )}
 
           {(phone || lineContactUrl) && (
-            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center">
-              <p className="text-[11px] text-neutral-400">{t.contact.mentionHint}</p>
+            <div className="rounded-xl border border-main/10 bg-main/5 px-3 py-2.5 text-center">
+              <p className="text-[11px] text-muted">{t.contact.mentionHint}</p>
               <button
                 type="button"
                 onClick={handleCopyMention}
-                className="mx-auto mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-300 transition hover:text-amber-200"
+                className="mx-auto mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-hl-300 transition hover:text-hl-200"
               >
                 <span>{t.contact.mentionPhrase}</span>
-                {mentionCopied ? <Check size={13} className="text-amber-400" /> : <Copy size={13} />}
+                {mentionCopied ? <Check size={13} className="text-hl-400" /> : <Copy size={13} />}
               </button>
-              {mentionCopied && <p className="mt-1 text-[11px] text-neutral-500">{t.contact.copied2}</p>}
+              {mentionCopied && <p className="mt-1 text-[11px] text-tone-500">{t.contact.copied2}</p>}
             </div>
           )}
 
           {!phone && !lineContactUrl && (
-            <p className="py-2 text-center text-xs text-neutral-500">{t.contact.noContact}</p>
+            <p className="py-2 text-center text-xs text-tone-500">{t.contact.noContact}</p>
           )}
         </div>
       </div>

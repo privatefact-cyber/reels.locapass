@@ -89,15 +89,15 @@ export function EventReel({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-neutral-900/95 p-4 shadow-2xl"
+            className="w-full max-w-sm rounded-2xl border border-main/10 bg-surface/95 p-4 shadow-2xl"
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white">イベント検索</h2>
+              <h2 className="text-sm font-semibold text-main">イベント検索</h2>
               <button
                 type="button"
                 onClick={() => setSearchOpen(false)}
                 aria-label={t.common.close}
-                className="text-neutral-400 hover:text-white"
+                className="text-muted hover:text-main"
               >
                 ✕
               </button>
@@ -109,9 +109,9 @@ export function EventReel({
                 setOpenIndex(null);
                 setSearchOpen(false);
               }}
-              className="flex items-center gap-2 rounded-full border border-neutral-700 bg-white/5 px-3 py-2"
+              className="flex items-center gap-2 rounded-full border border-tone-700 bg-main/5 px-3 py-2"
             >
-              <Search size={16} className="shrink-0 text-neutral-400" />
+              <Search size={16} className="shrink-0 text-muted" />
               <input
                 autoFocus
                 type="search"
@@ -119,11 +119,11 @@ export function EventReel({
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
                 placeholder="イベント名・店舗名・エリア(例:六本木)"
-                className="w-full min-w-0 bg-transparent text-[16px] text-white placeholder:text-neutral-500 focus:outline-none"
+                className="w-full min-w-0 bg-transparent text-[16px] text-main placeholder:text-tone-500 focus:outline-none"
               />
             </form>
             {keywordInput && (
-              <button type="button" onClick={clearKeyword} className="mx-auto mt-3 block text-xs text-gold underline">
+              <button type="button" onClick={clearKeyword} className="mx-auto mt-3 block text-xs text-accent underline">
                 {t.feed.resetFilters}
               </button>
             )}
@@ -136,7 +136,7 @@ export function EventReel({
           type="button"
           onClick={() => setSearchOpen(true)}
           aria-label={t.nav.search}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-700 text-neutral-300 transition hover:border-gold hover:text-gold"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-tone-700 text-tone-300 transition hover:border-accent hover:text-accent"
         >
           <Search size={16} />
         </button>
@@ -145,7 +145,7 @@ export function EventReel({
             <button
               type="button"
               onClick={clearKeyword}
-              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-gold bg-gold px-3 py-1 text-xs font-semibold text-black"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-accent bg-accent px-3 py-1 text-xs font-semibold text-on-accent"
             >
               {keyword}
               <X size={12} strokeWidth={3} />
@@ -158,8 +158,8 @@ export function EventReel({
               onClick={() => toggleGenre(g)}
               className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs transition ${
                 activeGenres.includes(g)
-                  ? "border-gold bg-gold font-semibold text-black"
-                  : "border-neutral-700 text-neutral-300"
+                  ? "border-accent bg-accent font-semibold text-on-accent"
+                  : "border-tone-700 text-tone-300"
               }`}
             >
               {genreLabel(locale, g)}
@@ -169,7 +169,7 @@ export function EventReel({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="px-2 py-16 text-center text-sm text-neutral-500">{t.feed.noEvents}</p>
+        <p className="px-2 py-16 text-center text-sm text-tone-500">{t.feed.noEvents}</p>
       ) : openIndex === null ? (
         <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
           {filtered.map((event, index) => (
@@ -181,7 +181,7 @@ export function EventReel({
           <button
             type="button"
             onClick={() => setOpenIndex(null)}
-            className="flex items-center gap-1 px-1 text-sm text-neutral-300 hover:text-white"
+            className="flex items-center gap-1 px-1 text-sm text-tone-300 hover:text-main"
           >
             <ChevronLeft size={18} />
             グリッドに戻る
@@ -196,7 +196,7 @@ export function EventReel({
             >
               <div
                 aria-hidden
-                className="absolute inset-0 hidden scale-110 bg-neutral-950 bg-cover bg-center blur-2xl brightness-[0.45] md:block"
+                className="absolute inset-0 hidden scale-110 bg-tone-950 bg-cover bg-center blur-2xl brightness-[0.45] md:block"
                 style={{ backgroundImage: `url(${event.imageUrl})` }}
               />
               <EventExpandedCard event={event} />

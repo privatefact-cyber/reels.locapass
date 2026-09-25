@@ -11,7 +11,7 @@ export function LanguageSwitcher() {
   const { locale, setLocale } = useLocale();
 
   return (
-    <div className="flex items-center gap-0.5 rounded-full border border-white/15 bg-white/5 p-0.5 text-[11px] font-semibold">
+    <div className="flex items-center gap-0.5 rounded-full border border-main/15 bg-main/5 p-0.5 text-[11px] font-semibold">
       {LOCALES.map((l) => (
         <button
           key={l}
@@ -21,7 +21,7 @@ export function LanguageSwitcher() {
           aria-label={LOCALE_LABEL[l]}
           title={LOCALE_LABEL[l]}
           className={`rounded-full px-1.5 py-1 transition sm:px-2 ${
-            l === locale ? "bg-gold text-black" : "text-white/70 hover:text-white"
+            l === locale ? "bg-accent text-on-accent" : "text-main/70 hover:text-main"
           }`}
         >
           {LOCALE_SHORT_LABEL[l]}

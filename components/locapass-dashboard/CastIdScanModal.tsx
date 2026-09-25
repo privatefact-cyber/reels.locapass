@@ -91,7 +91,7 @@ export function CastIdScanModal({ onResult }: { onResult: (fields: ScannedIdFiel
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={scanning}
-                className="flex-1 rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-main hover:bg-slate-800 disabled:opacity-50"
               >
                 {previewUrl ? "撮り直す" : "写真を選択・撮影"}
               </button>

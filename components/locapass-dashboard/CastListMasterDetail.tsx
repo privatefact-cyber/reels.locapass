@@ -110,7 +110,7 @@ export function CastListMasterDetail({ castMembers, detailBasePath }: CastListMa
             onClick={() => setSelectedCastId(null)}
             className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold text-sm"
           >
-            ← キャスト一覧に戻る
+            ← パートナー一覧に戻る
           </button>
 
           <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-120px)]">
@@ -141,7 +141,7 @@ export function CastListMasterDetail({ castMembers, detailBasePath }: CastListMa
               </div>
               <Link
                 href={`${detailBasePath}/${selectedCast.id}`}
-                className="inline-block mt-3 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="inline-block mt-3 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-main text-sm font-semibold rounded-lg transition-colors"
               >
                 詳細を編集
               </Link>

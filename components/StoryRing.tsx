@@ -43,13 +43,13 @@ export function StoryRing({
         className="flex min-w-[64px] flex-col items-center gap-1"
       >
         <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px]">
-          <div className="rounded-full bg-black p-[2px]">
+          <div className="rounded-full bg-page p-[2px]">
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={sanitizeImageUrl(avatarUrl)} alt={castName} className={`${dimension} rounded-full object-cover`} />
             ) : (
               <div
-                className={`${dimension} flex items-center justify-center rounded-full bg-neutral-800 text-lg font-semibold text-neutral-500`}
+                className={`${dimension} flex items-center justify-center rounded-full bg-tone-800 text-lg font-semibold text-tone-500`}
               >
                 {castName.slice(0, 1)}
               </div>
@@ -57,7 +57,7 @@ export function StoryRing({
           </div>
         </div>
         {showLabel && (
-          <span className="max-w-[64px] truncate text-center text-[11px] text-neutral-300">{castName}</span>
+          <span className="max-w-[64px] truncate text-center text-[11px] text-tone-300">{castName}</span>
         )}
       </button>
 
@@ -71,10 +71,10 @@ export function StoryRing({
           onClick={() => setShowGate(false)}
         >
           <div
-            className="w-full max-w-xs rounded-2xl border border-white/10 bg-neutral-900 p-5 text-center"
+            className="w-full max-w-xs rounded-2xl border border-main/10 bg-surface p-5 text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-main">
               {castName}
               {t.cast.followGateTitle}
               <br />
@@ -87,14 +87,14 @@ export function StoryRing({
                   toggleCastFollow(castId);
                   setShowGate(false);
                 }}
-                className="rounded-full bg-gold px-6 py-2 text-sm font-semibold text-black hover:bg-gold-light"
+                className="rounded-full bg-accent px-6 py-2 text-sm font-semibold text-on-accent hover:bg-accent-light"
               >
                 {t.common.follow}
               </button>
               <button
                 type="button"
                 onClick={() => setShowGate(false)}
-                className="text-xs text-neutral-400 hover:text-neutral-300"
+                className="text-xs text-muted hover:text-tone-300"
               >
                 {t.common.close}
               </button>

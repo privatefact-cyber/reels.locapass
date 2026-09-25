@@ -28,7 +28,7 @@ export function MenuButton() {
       type="button"
       onClick={handleClick}
       aria-label={t.nav.menu}
-      className="flex h-7 w-7 items-center justify-center rounded-full border border-gold/60 bg-neutral-800 text-gold"
+      className="flex h-7 w-7 items-center justify-center rounded-full border border-accent/60 bg-tone-800 text-accent"
     >
       <Menu size={16} />
     </button>

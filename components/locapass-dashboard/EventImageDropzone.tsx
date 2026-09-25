@@ -225,7 +225,7 @@ export function EventGalleryDropzone({
               <button
                 type="button"
                 onClick={() => setUrls((prev) => prev.filter((_, idx) => idx !== i))}
-                className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center bg-black/60 text-[10px] text-white"
+                className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center bg-black/60 text-[10px] text-main"
                 aria-label="削除"
               >
                 ×

@@ -34,37 +34,40 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
 
   return (
     <>
-      {/* 高級感のあるゴールド調ヘッダー */}
+      {/* 高級感のあるゴールド調ヘッダー(色は配色テーマ。ポータル側でヘッダー色を設定した場合はそちらを優先) */}
       {!mapImmersive && (
         <header
-          className="sticky top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-white/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
-          style={{ backgroundColor: "var(--portal-header-background, rgba(0, 0, 0, .6))" }}
+          data-surface="header"
+          className="sticky top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-main/10 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
+          style={{ backgroundColor: "var(--portal-header-background, rgb(var(--color-header) / .6))" }}
         >
-          {/* 背景の光暈 */}
+          {/* 背景の光暈(LUXELAと同じ3色の帯。ポータル側でヘッダー色を設定した場合はその色の光に差し替える) */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[140%] -translate-x-1/2 rounded-full bg-gradient-to-r from-header-glow-1/20 via-header-glow-2/25 to-header-glow-3/20 blur-3xl"
+            style={{ opacity: "var(--portal-hide-theme-glow, 1)" }}
+          />
           <div
             aria-hidden
             className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[140%] -translate-x-1/2 rounded-full blur-3xl"
-            style={{
-              background:
-                "radial-gradient(ellipse at center, var(--portal-header-glow, rgba(168, 85, 247, .25)), transparent 68%)",
-            }}
+            style={{ background: "radial-gradient(ellipse at center, var(--portal-header-glow, transparent), transparent 68%)" }}
           />
 
           {/* お知らせバー */}
-          <div className="relative border-b border-white/5 px-4 py-1.5 text-center text-[11px] text-neutral-300">
+          <div className="relative border-b border-main/5 px-4 py-1.5 text-center text-[11px] text-tone-300">
             繋がる広がるリールメディア LOCAPASS【ロカパス】
           </div>
 
           {/* メインヘッダー行 */}
           <div className="relative mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3 sm:max-w-none md:max-w-[1400px] md:px-6">
-            <nav className="hidden items-center gap-6 text-sm font-medium text-neutral-300 md:flex">
-              <Link href="/" className="transition hover:text-gold">
+            <nav className="hidden items-center gap-6 text-sm font-medium text-tone-300 md:flex">
+              <Link href="/" className="transition hover:text-accent">
                 {t.nav.home}
               </Link>
-              <Link href="/events" className="transition hover:text-gold">
+              <Link href="/events" className="transition hover:text-accent">
                 {t.nav.events}
               </Link>
-              <Link href="/map" className="inline-flex items-center gap-1.5 transition hover:text-gold">
+              <Link href="/map" className="inline-flex items-center gap-1.5 transition hover:text-accent">
                 <MapIcon size={16} />
                 {t.nav.map}
               </Link>
@@ -72,7 +75,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
             <div className="w-8 md:hidden" />
             <Link
               href="/"
-              className="font-display text-2xl font-semibold uppercase tracking-[0.12em] text-gold sm:tracking-[0.2em]"
+              className="font-display text-2xl font-semibold uppercase tracking-[0.12em] text-accent sm:tracking-[0.2em]"
             >
               LOCAPASS
             </Link>
@@ -82,7 +85,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
               <Link
                 href="/mypage"
                 aria-label={t.nav.mypage}
-                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-gold/60 bg-gradient-to-tr from-gold-dark via-gold to-gold-light text-black"
+                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-accent/60 bg-gradient-to-tr from-accent-dark via-accent to-accent-light text-on-accent"
               >
                 {myPageAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -102,15 +105,15 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
       )}
 
       {/* 固定ボトムナビゲーション */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 transform-gpu border-t border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/20 pb-[env(safe-area-inset-bottom)] pt-2 px-3 flex items-center justify-between max-w-md mx-auto sm:max-w-none sm:px-6 md:hidden">
-        <Link href="/" className="flex flex-col items-center gap-0.5 p-2 text-white" aria-label={t.nav.home}>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 transform-gpu border-t border-main/10 bg-main/5 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/20 pb-[env(safe-area-inset-bottom)] pt-2 px-3 flex items-center justify-between max-w-md mx-auto sm:max-w-none sm:px-6 md:hidden">
+        <Link href="/" className="flex flex-col items-center gap-0.5 p-2 text-main" aria-label={t.nav.home}>
           <Home size={22} />
           <span className="text-[10px] leading-none">{t.nav.home}</span>
         </Link>
         <NowButton />
         <Link
           href="/events"
-          className="flex flex-col items-center gap-0.5 p-2 text-gold"
+          className="flex flex-col items-center gap-0.5 p-2 text-accent"
           aria-label={t.nav.events}
         >
           <PartyPopper size={22} />
@@ -118,7 +121,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
         </Link>
         <Link
           href="/map"
-          className="flex flex-col items-center gap-0.5 p-2 text-neutral-400 hover:text-white"
+          className="flex flex-col items-center gap-0.5 p-2 text-muted hover:text-main"
           aria-label={t.nav.map}
         >
           <MapIcon size={22} />

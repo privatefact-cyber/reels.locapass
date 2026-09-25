@@ -20,7 +20,7 @@ export function CastFollowBadge({ castId }: { castId: string }) {
       type="button"
       onClick={() => toggleCastFollow(castId)}
       aria-label={t.common.follow}
-      className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-black bg-gold text-black"
+      className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-page bg-accent text-on-accent"
     >
       <Plus size={14} strokeWidth={3} />
     </button>

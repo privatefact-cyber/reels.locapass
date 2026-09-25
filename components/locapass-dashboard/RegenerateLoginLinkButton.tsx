@@ -11,7 +11,7 @@ export function RegenerateLoginLinkButton({
       onSubmit={(e) => {
         if (
           !window.confirm(
-            "投稿用リンクを再発行します。今までのリンク/QRコードは無効になり、キャストは新しいリンクが必要になります。よろしいですか？",
+            "投稿用リンクを再発行します。今までのリンク/QRコードは無効になり、パートナーは新しいリンクが必要になります。よろしいですか？",
           )
         ) {
           e.preventDefault();

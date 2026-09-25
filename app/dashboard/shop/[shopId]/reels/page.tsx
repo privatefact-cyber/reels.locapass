@@ -65,7 +65,7 @@ export default async function LocapassShopReelsPage({
         <p className="text-xs text-slate-500">{shop.name}</p>
         <h1 className="mt-1 text-3xl font-bold text-slate-900">リール投稿</h1>
         <p className="mt-1 text-sm text-slate-600">
-          自店舗のキャスト・スタッフ・店舗アカウントが投稿したリール(縦型動画/写真)の一覧です。不適切な投稿はここから削除できます。
+          自店舗のパートナー・スタッフ・店舗アカウントが投稿したリール(縦型動画/写真)の一覧です。不適切な投稿はここから削除できます。
         </p>
       </section>
 

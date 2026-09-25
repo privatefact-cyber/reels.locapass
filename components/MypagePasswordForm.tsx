@@ -41,25 +41,25 @@ export function MypagePasswordForm({ onSuccess }: { onSuccess?: () => void } = {
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-3">
       <div>
-        <label className="block text-xs text-neutral-400">新しいパスワード</label>
+        <label className="block text-xs text-muted">新しいパスワード</label>
         <input
           type="password"
           required
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+          className="mt-1 w-full rounded-lg border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
         />
       </div>
       <div>
-        <label className="block text-xs text-neutral-400">新しいパスワード(確認)</label>
+        <label className="block text-xs text-muted">新しいパスワード(確認)</label>
         <input
           type="password"
           required
           minLength={6}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+          className="mt-1 w-full rounded-lg border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
         />
       </div>
       {message && (
@@ -70,7 +70,7 @@ export function MypagePasswordForm({ onSuccess }: { onSuccess?: () => void } = {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light py-2 text-sm font-semibold text-black disabled:opacity-60"
+        className="w-full rounded-full bg-gradient-to-r from-cta-gold-dark via-cta-gold to-cta-gold-light py-2 text-sm font-semibold text-on-cta-gold disabled:opacity-60"
       >
         {loading ? "保存中..." : "パスワードを設定する"}
       </button>

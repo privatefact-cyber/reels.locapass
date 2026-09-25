@@ -35,7 +35,7 @@ export default async function LocapassShopInquiriesPage({
       <div>
         <h1 className="text-3xl font-bold text-slate-900">お問い合わせ</h1>
         <p className="mt-1 text-sm text-slate-600">
-          一般ユーザーから届いた来店予約・問い合わせDMです。キャストへの個別DMはありません。
+          一般ユーザーから届いた来店予約・問い合わせDMです。パートナーへの個別DMはありません。
         </p>
       </div>
 

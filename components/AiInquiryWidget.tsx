@@ -149,7 +149,17 @@ function resetSessionId(mode: Mode): string {
  * - "map"      … マップページ。右下は店舗カードのカルーセルと重なるので、地図右上の
  *                ズーム/現在地ボタンの下に置き、チャットは下に開く(高さもカードに被らない範囲に抑える)。
  */
-export function AiInquiryWidget({ placement = "floating" }: { placement?: "floating" | "map" }) {
+/** 配色テーマ(値は app/globals.css の [data-theme])。通常はサイト全体のテーマに従う。 */
+export type AiWidgetTheme = "default" | "christmas" | "beauty" | "nature";
+
+export function AiInquiryWidget({
+  placement = "floating",
+  theme,
+}: {
+  placement?: "floating" | "map";
+  /** このウィジェットだけ配色を変えたいときに指定。未指定ならサイト全体のテーマ(12/1〜12/25はクリスマス)に従う。 */
+  theme?: AiWidgetTheme;
+}) {
   const isMap = placement === "map";
   const { t, locale } = useLocale();
   const pathname = usePathname();
@@ -434,6 +444,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
   return (
     <div
       ref={rootRef}
+      data-theme={theme}
       className={
         isMap
           ? "fixed right-3 top-[258px] z-[60] flex flex-col-reverse items-end"
@@ -442,18 +453,18 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
     >
       {open && (
         <div
-          className={`flex w-80 max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-zinc-900/60 shadow-2xl shadow-black/40 backdrop-blur-xl backdrop-saturate-150 ${
+          className={`flex w-80 max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border border-line/20 bg-panel-900/60 shadow-2xl shadow-black/40 backdrop-blur-xl backdrop-saturate-150 ${
             isMap ? "mt-3 h-[440px] max-h-[calc(100dvh-258px-80px)]" : "mb-3 h-[440px]"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-main/10 bg-main/5 px-4 py-3">
             <span className="flex items-center gap-2">
-              <span className="text-xs font-semibold tracking-wide text-gold">
+              <span className="text-xs font-semibold tracking-wide text-accent">
                 {isMachi ? t.ai.machiName : t.ai.assistantName}
               </span>
               {isMachi && <BetaBadge />}
               {/* 対応言語が一目で分かるよう表示する(国旗は国際問題になり得るため文字で示す) */}
-              <span className="text-[10px] font-semibold leading-none text-white/50" title="日本語 / English / 中文 / العربية" aria-label="対応言語">
+              <span className="text-[10px] font-semibold leading-none text-main/50" title="日本語 / English / 中文 / العربية" aria-label="対応言語">
                 {LOCALES.map((l) => LOCALE_SHORT_LABEL[l]).join(" · ")}
               </span>
             </span>
@@ -463,7 +474,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                 onClick={handleReset}
                 aria-label={t.ai.resetTooltip}
                 title={t.ai.resetTooltip}
-                className="text-white/60 hover:text-white"
+                className="text-main/60 hover:text-main"
               >
                 <RotateCcw size={16} />
               </button>
@@ -471,7 +482,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={t.common.close}
-                className="text-white/60 hover:text-white"
+                className="text-main/60 hover:text-main"
               >
                 <X size={18} />
               </button>
@@ -479,7 +490,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
           </div>
 
           {machiEnabled && (
-            <div className="flex gap-1 border-b border-white/10 bg-black/20 p-1" role="tablist">
+            <div className="flex gap-1 border-b border-main/10 bg-page/20 p-1" role="tablist">
               {(["concierge", "machi"] as const).map((m) => (
                 <button
                   key={m}
@@ -490,7 +501,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                   onClick={() => setMode(m)}
                   className={
                     "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-semibold transition disabled:opacity-50 " +
-                    (mode === m ? "bg-white/10 text-gold" : "text-white/50 hover:text-white/80")
+                    (mode === m ? "bg-main/10 text-accent" : "text-main/50 hover:text-main/80")
                   }
                 >
                   {m === "machi" ? t.ai.machiTab : t.ai.conciergeTab}
@@ -512,15 +523,15 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                   className={
                     "max-w-[85%] whitespace-pre-wrap rounded-xl border px-3 py-2 text-xs leading-relaxed " +
                     (m.role === "user"
-                      ? "border-white/20 bg-white/15 text-white"
+                      ? "border-main/20 bg-main/15 text-main"
                       : m.whisperShops
                         ? // 噂ネタ入りの回答は、ダークなすりガラス+ゴールドの差し色でトーンを変える。
-                          "relative overflow-hidden border-gold/25 bg-black/50 text-neutral-200 shadow-inner shadow-black/60"
-                        : "border-white/10 bg-white/5 text-neutral-200")
+                          "relative overflow-hidden border-accent/25 bg-page/50 text-tone-200 shadow-inner shadow-black/60"
+                        : "border-main/10 bg-main/5 text-tone-200")
                   }
                 >
                   {m.whisperShops && (
-                    <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-gradient-to-b from-gold-light via-gold to-gold-dark" />
+                    <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-gradient-to-b from-accent-light via-accent to-accent-dark" />
                   )}
                   {m.text}
                 </div>
@@ -531,7 +542,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                         key={link.url}
                         href={toPath(link.url)}
                         onClick={() => recordLinkClick(toPath(link.url))}
-                        className="flex w-full items-center justify-between gap-2 rounded-xl border border-gold/30 bg-white/5 px-3 py-2 text-left text-xs font-semibold text-gold hover:bg-white/10"
+                        className="flex w-full items-center justify-between gap-2 rounded-xl border border-accent/30 bg-main/5 px-3 py-2 text-left text-xs font-semibold text-accent hover:bg-main/10"
                       >
                         {link.title}
                         <ExternalLink size={12} className="shrink-0" />
@@ -542,25 +553,25 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
               </div>
             ))}
             {escalated && (
-              <div className="rounded-xl border border-gold/20 bg-white/5 px-3 py-2 text-[11px] leading-relaxed text-neutral-300">
+              <div className="rounded-xl border border-accent/20 bg-main/5 px-3 py-2 text-[11px] leading-relaxed text-tone-300">
                 {t.ai.escalatedNotice}
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="ml-1 font-semibold text-gold underline underline-offset-2"
+                  className="ml-1 font-semibold text-accent underline underline-offset-2"
                 >
                   {t.ai.startNewConversation}
                 </button>
               </div>
             )}
             {!checkingAuth && !accessToken && messages.length > 0 && (
-              <div className="rounded-xl border border-gold/20 bg-white/5 px-3 py-2 text-[11px] leading-relaxed text-neutral-300">
+              <div className="rounded-xl border border-accent/20 bg-main/5 px-3 py-2 text-[11px] leading-relaxed text-tone-300">
                 {t.ai.loginPrompt}
                 <a
                   href={`/mypage/login?redirect=${encodeURIComponent(
                     typeof window !== "undefined" ? window.location.pathname : "/",
                   )}`}
-                  className="ml-1 font-semibold text-gold underline underline-offset-2"
+                  className="ml-1 font-semibold text-accent underline underline-offset-2"
                 >
                   {t.ai.loginOrSignup}
                 </a>
@@ -570,7 +581,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
 
           <form
             onSubmit={handleSend}
-            className="flex gap-2 border-t border-white/10 bg-white/5 p-2"
+            className="flex gap-2 border-t border-main/10 bg-main/5 p-2"
           >
             <input
               ref={inputRef}
@@ -581,7 +592,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
               dir="auto"
               placeholder={t.ai.placeholder}
               disabled={loading}
-              className="min-w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none sm:text-xs"
+              className="min-w-0 flex-1 rounded-lg border border-main/15 bg-main/5 px-3 py-2 text-[16px] text-main placeholder:text-main/40 focus:border-main/40 focus:outline-none sm:text-xs"
             />
             {speechSupported && (
               <button
@@ -595,7 +606,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
                   "relative flex items-center justify-center rounded-lg border px-3 py-2 transition disabled:opacity-50 " +
                   (listening
                     ? "border-red-400/60 bg-red-500/20 text-red-300"
-                    : "border-white/15 bg-white/5 text-white/70 hover:text-white")
+                    : "border-main/15 bg-main/5 text-main/70 hover:text-main")
                 }
               >
                 {listening && <span className="absolute inset-0 animate-ping rounded-lg border border-red-400/40" />}
@@ -606,17 +617,17 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
               type="submit"
               disabled={loading}
               aria-label={t.ai.send}
-              className="flex items-center justify-center rounded-lg border border-amber-500/30 bg-gradient-to-tr from-gold-dark via-gold to-gold-light px-3 py-2 text-black disabled:opacity-50"
+              className="flex items-center justify-center rounded-lg border border-line/30 bg-gradient-to-tr from-cta-gold-dark via-cta-gold to-cta-gold-light px-3 py-2 text-on-cta-gold disabled:opacity-50"
             >
               <Send size={14} />
             </button>
           </form>
           {micMessage && (
-            <p role="status" className="bg-white/5 px-3 pb-1.5 text-[11px] leading-snug text-amber-200/80">
+            <p role="status" className="bg-main/5 px-3 pb-1.5 text-[11px] leading-snug text-hl-200/80">
               {micMessage}
             </p>
           )}
-          <p className="border-t border-white/5 bg-black/20 px-3 py-1.5 text-center text-[10px] leading-snug text-white/40">
+          <p className="border-t border-main/5 bg-page/20 px-3 py-1.5 text-center text-[10px] leading-snug text-main/40">
             {t.ai.disclaimer}
           </p>
         </div>
@@ -630,7 +641,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
         }}
         aria-label={t.ai.triggerLabel}
         // ✨だけのボタンに、ゴールドの光彩がゆっくり呼吸する演出(視差効果を減らす設定の端末では止める)。
-        className={`flex items-center justify-center rounded-full border border-amber-500/20 bg-black/60 text-gold backdrop-blur-md backdrop-saturate-150 transition hover:border-amber-500/40 hover:bg-black/70 motion-safe:animate-ai-glow ${
+        className={`flex items-center justify-center rounded-full border border-line/20 bg-page/60 text-accent backdrop-blur-md backdrop-saturate-150 transition hover:border-line/40 hover:bg-page/70 motion-safe:animate-ai-glow ${
           isMap ? "h-11 w-11" : "h-14 w-14"
         }`}
       >
@@ -642,7 +653,7 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
 
 function BetaBadge() {
   return (
-    <span className="rounded border border-gold/40 px-1 py-px text-[9px] font-bold leading-none tracking-wider text-gold/80">
+    <span className="rounded border border-accent/40 px-1 py-px text-[9px] font-bold leading-none tracking-wider text-accent/80">
       β
     </span>
   );

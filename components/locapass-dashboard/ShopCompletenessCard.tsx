@@ -4,7 +4,7 @@ import type { CompletenessItem } from "@/lib/shop/profileCompleteness";
 /** 店舗ダッシュボード上部に出す「掲載の充実度」。足りない項目を重要な順に並べ、入力場所へ飛べるようにする。 */
 export function ShopCompletenessCard({ percent, items }: { percent: number; items: CompletenessItem[] }) {
   const missing = items.filter((i) => !i.done).sort((a, b) => b.weight - a.weight);
-  const barColor = percent >= 80 ? "bg-emerald-500" : percent >= 50 ? "bg-amber-500" : "bg-rose-500";
+  const barColor = percent >= 80 ? "bg-emerald-500" : percent >= 50 ? "bg-hl-500" : "bg-rose-500";
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6">

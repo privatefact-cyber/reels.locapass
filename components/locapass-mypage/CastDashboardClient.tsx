@@ -442,7 +442,7 @@ export function CastDashboardClient({
             return (
               <div key={s.id} className="relative flex-shrink-0">
                 <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px]">
-                  <div className="rounded-full bg-black p-[2px]">
+                  <div className="rounded-full bg-page p-[2px]">
                     {thumb?.type === "video" ? (
                       <StreamThumb url={thumb.url} className="h-14 w-14 rounded-full object-cover" />
                     ) : thumb ? (
@@ -455,7 +455,7 @@ export function CastDashboardClient({
                   type="button"
                   onClick={() => handleDeleteStory(s.id)}
                   aria-label="ストーリーを削除"
-                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-black bg-neutral-700 text-white"
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-page bg-tone-700 text-main"
                 >
                   <X size={11} />
                 </button>
@@ -486,34 +486,34 @@ export function CastDashboardClient({
             <img
               src={avatarUrl}
               alt=""
-              className="h-20 w-20 rounded-full border border-white/10 object-cover"
+              className="h-20 w-20 rounded-full border border-main/10 object-cover"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-neutral-800 text-2xl font-semibold text-neutral-500">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
               {name.slice(0, 1)}
             </div>
           )}
-          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-black bg-brand text-white">
+          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-page bg-brand text-main">
             <Camera size={12} />
           </span>
         </button>
 
         <h1 className="mt-3 text-lg font-bold">{name}</h1>
-        {shopName && <p className="text-xs text-neutral-400">{shopName}</p>}
+        {shopName && <p className="text-xs text-muted">{shopName}</p>}
 
         <div className="mt-4 flex justify-center gap-8">
           <div className="text-center">
             <p className="text-base font-bold">{postCount}</p>
-            <p className="text-[11px] text-neutral-400">投稿</p>
+            <p className="text-[11px] text-muted">投稿</p>
           </div>
           <div className="text-center">
             <p className="text-base font-bold">{totalLikes}</p>
-            <p className="text-[11px] text-neutral-400">いいね</p>
+            <p className="text-[11px] text-muted">いいね</p>
           </div>
         </div>
 
         {prText && (
-          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
             {prText}
           </p>
         )}
@@ -524,14 +524,14 @@ export function CastDashboardClient({
           <button
             type="button"
             onClick={() => setFormOpen((v) => !v)}
-            className="flex-1 rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+            className="flex-1 rounded-lg bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark"
           >
             ＋ 新規投稿
           </button>
           <button
             type="button"
             onClick={openEditSheet}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-white/20 py-2 text-sm text-neutral-200"
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-main/20 py-2 text-sm text-tone-200"
           >
             <Pencil size={13} /> プロフィール編集
           </button>
@@ -539,15 +539,15 @@ export function CastDashboardClient({
 
         {/* インスタのプロフィール欄などに貼るための短縮URL。
             /cast/[uuid]は長すぎて改行・文字数制限にかかるため、6桁の短縮コードを案内する。 */}
-        <div className="mx-auto mt-4 max-w-xs rounded-lg border border-white/10 bg-neutral-900 p-3 text-left">
-          <p className="text-[11px] font-semibold text-neutral-300">
+        <div className="mx-auto mt-4 max-w-xs rounded-lg border border-main/10 bg-surface p-3 text-left">
+          <p className="text-[11px] font-semibold text-tone-300">
             あなたの公開プロフィールURL(インスタ等に貼る用)
           </p>
           <div className="mt-2 flex items-center gap-2">
             <input
               readOnly
               value={`https://reels.locapass.net/c/${castCode}`}
-              className="w-full rounded border border-white/20 bg-white/5 px-2 py-1.5 text-xs text-white"
+              className="w-full rounded border border-main/20 bg-main/5 px-2 py-1.5 text-xs text-main"
             />
             <CopyButton value={`https://reels.locapass.net/c/${castCode}`} />
           </div>
@@ -561,14 +561,14 @@ export function CastDashboardClient({
       {formOpen && (
         <form
           onSubmit={handleSubmit}
-          className="mx-4 mt-4 space-y-3 rounded-xl border border-white/10 bg-neutral-900 p-4"
+          className="mx-4 mt-4 space-y-3 rounded-xl border border-main/10 bg-surface p-4"
         >
-          <div className="flex rounded-full border border-white/20 bg-white/5 p-1 text-sm font-semibold">
+          <div className="flex rounded-full border border-main/20 bg-main/5 p-1 text-sm font-semibold">
             <button
               type="button"
               onClick={() => setPostType("reel")}
               className={`flex-1 rounded-full py-1.5 transition ${
-                postType === "reel" ? "bg-brand text-white" : "text-neutral-400"
+                postType === "reel" ? "bg-brand text-main" : "text-muted"
               }`}
             >
               リール
@@ -577,18 +577,18 @@ export function CastDashboardClient({
               type="button"
               onClick={() => setPostType("story")}
               className={`flex-1 rounded-full py-1.5 transition ${
-                postType === "story" ? "bg-gold text-black" : "text-neutral-400"
+                postType === "story" ? "bg-accent text-on-accent" : "text-muted"
               }`}
             >
               ストーリー(24時間)
             </button>
           </div>
-          <p className="text-[11px] text-neutral-500">
+          <p className="text-[11px] text-tone-500">
             {postType === "reel"
               ? "ポータル全体に公開され、ずっと残ります。"
               : "フォロワーだけに見え、24時間で自動的に消えます。"}
           </p>
-          <label className="block cursor-pointer rounded-xl border-2 border-dashed border-white/20 bg-white/5 px-4 py-6 text-center transition hover:border-brand">
+          <label className="block cursor-pointer rounded-xl border-2 border-dashed border-main/20 bg-main/5 px-4 py-6 text-center transition hover:border-brand">
             <input
               ref={fileInputRef}
               type="file"
@@ -604,16 +604,16 @@ export function CastDashboardClient({
                 <img src={preview} alt="" className="mx-auto max-h-64 w-full rounded-lg object-cover" />
               )
             ) : (
-              <span className="text-sm font-medium text-neutral-300">動画を選択</span>
+              <span className="text-sm font-medium text-tone-300">動画を選択</span>
             )}
           </label>
           {!preview && (
-            <label className="block cursor-pointer rounded-lg border border-white/15 px-4 py-3 text-center text-sm text-neutral-300">
+            <label className="block cursor-pointer rounded-lg border border-main/15 px-4 py-3 text-center text-sm text-tone-300">
               <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               写真を選択
             </label>
           )}
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-tone-500">
             ※カメラロールから選ぶか、その場で撮影できます。写真1枚または動画1本を投稿できます。
           </p>
           <textarea
@@ -621,7 +621,7 @@ export function CastDashboardClient({
             onChange={(e) => setCaption(e.target.value)}
             placeholder="ひとことコメントを入力"
             rows={2}
-            className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+            className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main placeholder:text-tone-500"
           />
           {postType === "reel" && (
             <>
@@ -631,13 +631,13 @@ export function CastDashboardClient({
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="リンク先URL(任意)"
-                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+                  className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main placeholder:text-tone-500"
                 />
-                <p className="mt-1 text-[11px] text-neutral-500">
+                <p className="mt-1 text-[11px] text-tone-500">
                   空欄なら通常のリンク先(自分のリール一覧)になります。入力するとタップ時にそのURLへ飛びます。
                 </p>
               </div>
-              <label className="flex items-center gap-2 text-sm text-white">
+              <label className="flex items-center gap-2 text-sm text-main">
                 <input
                   type="checkbox"
                   checked={commentsEnabled}
@@ -648,13 +648,13 @@ export function CastDashboardClient({
               </label>
             </>
           )}
-          {optimizing && <p className="text-xs text-neutral-300">動画を最適化中… {optimizationSeconds}秒</p>}
+          {optimizing && <p className="text-xs text-tone-300">動画を最適化中… {optimizationSeconds}秒</p>}
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={uploading || optimizing}
-              className="flex-1 rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+              className="flex-1 rounded bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
             >
               {uploading ? "投稿中..." : optimizing ? "最適化中..." : "投稿する"}
             </button>
@@ -666,7 +666,7 @@ export function CastDashboardClient({
                 setPreview(null);
                 setPostType("reel");
               }}
-              className="rounded border border-white/20 px-4 py-2 text-sm text-neutral-300"
+              className="rounded border border-main/20 px-4 py-2 text-sm text-tone-300"
             >
               やめる
             </button>
@@ -675,7 +675,7 @@ export function CastDashboardClient({
       )}
 
       {/* 投稿グリッド(ピン留めした投稿を先頭に固定表示) */}
-      <div className="mt-6 grid grid-cols-3 gap-1 border-t border-white/10 pt-1">
+      <div className="mt-6 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
         {[...reels]
           .sort((a, b) => {
             if (a.pinnedAt && b.pinnedAt) return b.pinnedAt.localeCompare(a.pinnedAt);
@@ -687,7 +687,7 @@ export function CastDashboardClient({
             <Link
               key={r.id}
               href={`/cast/${castId}/reels?start=${r.id}`}
-              className="relative block aspect-[9/16] overflow-hidden bg-neutral-900"
+              className="relative block aspect-[9/16] overflow-hidden bg-surface"
             >
               {r.media[0]?.type === "video" ? (
                 <StreamThumb url={r.media[0].url} className="h-full w-full object-cover" />
@@ -696,7 +696,7 @@ export function CastDashboardClient({
                 <img src={r.media[0]?.url} alt="" className="h-full w-full object-cover" />
               )}
               {r.pinnedAt && (
-                <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-gold px-1.5 py-0.5 text-[10px] font-semibold text-black">
+                <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-on-accent">
                   <Pin size={10} className="fill-black" /> 固定
                 </span>
               )}
@@ -708,7 +708,7 @@ export function CastDashboardClient({
                     e.stopPropagation();
                     handleDelete(r.id);
                   }}
-                  className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white"
+                  className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
                 >
                   削除
                 </button>
@@ -719,7 +719,7 @@ export function CastDashboardClient({
                     e.stopPropagation();
                     handleTogglePin(r.id, !!r.pinnedAt);
                   }}
-                  className="flex items-center gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white"
+                  className="flex items-center gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
                 >
                   {r.pinnedAt ? (
                     <>
@@ -738,19 +738,19 @@ export function CastDashboardClient({
                     e.stopPropagation();
                     handleToggleComments(r.id, !r.isCommentsEnabled);
                   }}
-                  className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white"
+                  className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
                 >
                   {r.isCommentsEnabled ? "コメント:許可" : "コメント:停止中"}
                 </button>
               </div>
-              <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
+              <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
                 ♥ {r.likesCount}
               </span>
             </Link>
           ))}
       </div>
       {reels.length === 0 && (
-        <p className="px-4 py-8 text-center text-sm text-neutral-500">
+        <p className="px-4 py-8 text-center text-sm text-tone-500">
           まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。
         </p>
       )}
@@ -760,7 +760,7 @@ export function CastDashboardClient({
       <button
         type="button"
         onClick={handleLogout}
-        className="mx-auto mt-6 block text-xs text-neutral-500 underline"
+        className="mx-auto mt-6 block text-xs text-tone-500 underline"
       >
         ログアウト
       </button>
@@ -768,9 +768,9 @@ export function CastDashboardClient({
       {/* プロフィール編集シート(Instagram風スライドイン) */}
       {editOpen && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center">
-          <div className="w-full max-w-sm rounded-t-2xl bg-neutral-900 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl">
+          <div className="w-full max-w-sm rounded-t-2xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <button type="button" onClick={() => setEditOpen(false)} className="text-sm text-neutral-400">
+              <button type="button" onClick={() => setEditOpen(false)} className="text-sm text-muted">
                 キャンセル
               </button>
               <h2 className="text-sm font-semibold">プロフィールを編集</h2>
@@ -783,7 +783,7 @@ export function CastDashboardClient({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
                 ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-800 text-lg font-semibold text-neutral-500">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tone-800 text-lg font-semibold text-tone-500">
                     {name.slice(0, 1)}
                   </div>
                 )}
@@ -798,26 +798,26 @@ export function CastDashboardClient({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-neutral-400">名前</label>
+                <label className="mb-1 block text-xs text-muted">名前</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   maxLength={50}
                   required
-                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+                  className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-neutral-400">自己紹介</label>
+                <label className="mb-1 block text-xs text-muted">自己紹介</label>
                 <textarea
                   value={editPrText}
                   onChange={(e) => setEditPrText(e.target.value)}
                   rows={4}
                   maxLength={600}
                   placeholder="出勤時間帯やSNSリンクなど"
-                  className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white placeholder:text-neutral-500"
+                  className="w-full rounded border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main placeholder:text-tone-500"
                 />
               </div>
 
@@ -826,7 +826,7 @@ export function CastDashboardClient({
               <button
                 type="submit"
                 disabled={profileSaving}
-                className="w-full rounded bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+                className="w-full rounded bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
               >
                 {profileSaving ? "保存中..." : "保存する"}
               </button>

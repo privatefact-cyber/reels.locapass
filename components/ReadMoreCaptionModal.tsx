@@ -25,17 +25,17 @@ export function ReadMoreCaptionModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[70vh] w-full max-w-sm overflow-y-auto rounded-2xl border border-white/20 bg-white/10 p-5 shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150"
+        className="max-h-[70vh] w-full max-w-sm overflow-y-auto rounded-2xl border border-main/20 bg-main/10 p-5 shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="閉じる"
-          className="float-right text-white/70 hover:text-white"
+          className="float-right text-main/70 hover:text-main"
         >
           ✕
         </button>
-        <p className="whitespace-pre-wrap pt-8 text-sm leading-relaxed text-white">{caption}</p>
+        <p className="whitespace-pre-wrap pt-8 text-sm leading-relaxed text-main">{caption}</p>
       </div>
     </div>
   );

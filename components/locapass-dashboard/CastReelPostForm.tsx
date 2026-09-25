@@ -178,9 +178,9 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+        className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-main transition-colors hover:bg-slate-800"
       >
-        キャストリールを投稿する
+        パートナーリールを投稿する
       </button>
     );
   }
@@ -232,7 +232,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
           placeholder="リンク先URL(任意)"
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
         />
-        <p className="mt-1 text-[11px] text-slate-500">空欄ならキャストのプロフィールページへのリンクになります。</p>
+        <p className="mt-1 text-[11px] text-slate-500">空欄ならパートナーのプロフィールページへのリンクになります。</p>
       </div>
       {optimizing && (
         <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2">
@@ -250,7 +250,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
         <button
           type="submit"
           disabled={uploading || optimizing}
-          className="flex-1 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+          className="flex-1 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-main hover:bg-slate-800 disabled:opacity-50"
         >
           {uploading ? "投稿中..." : optimizing ? "最適化中..." : "投稿する"}
         </button>

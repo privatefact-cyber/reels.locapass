@@ -6,6 +6,8 @@ import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShop
 import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
 import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
+import { SiteThemeSelector } from "@/components/admin/SiteThemeSelector";
+import { isSiteTheme, resolveSiteTheme } from "@/lib/theme";
 import { ConciergeBetaMetrics } from "@/components/admin/ConciergeBetaMetrics";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -63,9 +65,10 @@ export default async function AdminShopsPage({
       : portalIds.length
         ? supabase.from("locapass_portal_admins").select("portal_id").in("portal_id", portalIds)
         : Promise.resolve({ data: [] as { portal_id: number }[] }),
-    supabase.from("platform_settings").select("locapass_machi_no_koe_beta_enabled").eq("id", true).maybeSingle(),
+    supabase.from("platform_settings").select("locapass_machi_no_koe_beta_enabled, locapass_site_theme").eq("id", true).maybeSingle(),
   ]);
   const machiNoKoeEnabled = settings?.locapass_machi_no_koe_beta_enabled ?? false;
+  const siteTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
   const totalCount = allShops?.length ?? 0;
   const activeCount = allShops?.filter((s) => s.status === "active").length ?? 0;
@@ -123,6 +126,19 @@ export default async function AdminShopsPage({
           <div className="w-full">
             <ConciergeBetaMetrics />
           </div>
+        </div>
+      )}
+
+      {scope.portalIds === null && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">サイトの配色テーマ</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              公開サイト全体の配色を切り替える(レイアウトは変わらない)。「自動」は12/1〜12/25だけクリスマス、それ以外は通常。
+              LUXELAとは別に切り替わる。この管理画面・店舗ダッシュボードの配色は変わらない。
+            </p>
+          </div>
+          <SiteThemeSelector current={siteTheme} effective={resolveSiteTheme("/", siteTheme)} />
         </div>
       )}
 

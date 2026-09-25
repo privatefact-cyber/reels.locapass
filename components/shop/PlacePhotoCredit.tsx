@@ -23,11 +23,11 @@ export function PlacePhotoCredit({
     </>
   );
   return (
-    <span
-      className={`pointer-events-auto rounded bg-black/55 px-1.5 py-0.5 text-[9px] leading-none text-white/80 backdrop-blur-sm ${className}`}
+    <span data-surface="media"
+      className={`pointer-events-auto rounded bg-black/55 px-1.5 py-0.5 text-[9px] leading-none text-main/80 backdrop-blur-sm ${className}`}
     >
       {linked && attribution?.uri ? (
-        <a href={attribution.uri} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+        <a href={attribution.uri} target="_blank" rel="noopener noreferrer" className="hover:text-main">
           {label}
         </a>
       ) : (

@@ -152,9 +152,9 @@ export function AvatarPeek({
       </button>
 
       {hovering && (
-        <div className="pointer-events-none absolute bottom-full right-0 z-[60] mb-2 overflow-hidden rounded-2xl border border-white/20 bg-black shadow-2xl">
+        <div data-surface="media" className="pointer-events-none absolute bottom-full right-0 z-[60] mb-2 overflow-hidden rounded-2xl border border-main/20 bg-black shadow-2xl">
           <div
-            className="relative overflow-hidden bg-neutral-950"
+            className="relative overflow-hidden bg-tone-950"
             style={{ width: HOVER_PEEK_WIDTH, height: HOVER_PEEK_HEIGHT }}
           >
             <iframe
@@ -182,8 +182,8 @@ export function AvatarPeek({
           }`}
           onClick={closeModal}
         >
-          <div
-            className={`relative h-[60vh] w-[74vw] max-w-sm transform-gpu overflow-hidden rounded-3xl border border-white/20 bg-black shadow-2xl transition-transform duration-200 will-change-transform md:h-[75vh] md:w-[92vw] ${
+          <div data-surface="media"
+            className={`relative h-[60vh] w-[74vw] max-w-sm transform-gpu overflow-hidden rounded-3xl border border-main/20 bg-black shadow-2xl transition-transform duration-200 will-change-transform md:h-[75vh] md:w-[92vw] ${
               peeking ? "scale-100" : "scale-95"
             }`}
             onClick={(e) => e.stopPropagation()}
@@ -191,7 +191,7 @@ export function AvatarPeek({
             {/* 読み込みが終わるまでは真っ黒のまま止まって見えないよう、スピナーを重ねておく。 */}
             {!loaded && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="animate-spin text-white/60" size={28} />
+                <Loader2 className="animate-spin text-main/60" size={28} />
               </div>
             )}
             <iframe
@@ -204,7 +204,7 @@ export function AvatarPeek({
           <button
             type="button"
             onClick={handleOpenPage}
-            className="pointer-events-auto rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs text-white"
+            className="pointer-events-auto rounded-full border border-main/30 bg-main/10 px-4 py-2 text-xs text-main"
           >
             {t.common.openThisPage}
           </button>

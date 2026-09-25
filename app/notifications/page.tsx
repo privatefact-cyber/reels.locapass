@@ -10,7 +10,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <h1 className="text-lg font-bold text-neutral-100">{t.nav.notifications}</h1>
+      <h1 className="text-lg font-bold text-tone-100">{t.nav.notifications}</h1>
       <NotificationsList />
     </div>
   );

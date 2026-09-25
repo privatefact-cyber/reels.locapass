@@ -142,7 +142,7 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+        className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark"
       >
         リールを投稿する
       </button>
@@ -207,7 +207,7 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
         <button
           type="submit"
           disabled={uploading || optimizing}
-          className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+          className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
         >
           {uploading ? "投稿中..." : optimizing ? "最適化中..." : "投稿する"}
         </button>

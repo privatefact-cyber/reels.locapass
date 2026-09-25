@@ -111,7 +111,7 @@ export function ShopImportPanel({
         <button
           type="submit"
           disabled={loading}
-          className="shrink-0 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+          className="shrink-0 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-main transition-colors hover:bg-slate-800 disabled:opacity-50"
         >
           {loading ? "読み取り中…(10秒ほど)" : "読み取る"}
         </button>
@@ -233,7 +233,7 @@ export function ShopImportPanel({
             type="button"
             onClick={handleApply}
             disabled={applying || !rights}
-            className="w-full rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+            className="w-full rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-main transition-colors hover:bg-slate-800 disabled:opacity-50"
           >
             {applying ? "反映中…" : "選んだ内容を反映する"}
           </button>

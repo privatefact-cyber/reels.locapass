@@ -34,8 +34,8 @@ export async function generateMetadata({
   if (!resolved) return { title: "ページが見つかりません | LOCAPASS" };
   const { area, genre } = resolved;
 
-  const title = `${area}の${genre}｜本日の出勤・キャスト一覧 - LOCAPASS`;
-  const description = `${area}エリアの${genre}求人・出勤情報をリールでチェック。${area} ${genre} 出勤中のキャストを今すぐ探せる。`;
+  const title = `${area}の${genre}｜本日の出勤・パートナー一覧 - LOCAPASS`;
+  const description = `${area}エリアの${genre}求人・出勤情報をリールでチェック。${area} ${genre} 出勤中のパートナーを今すぐ探せる。`;
   const url = `https://reels.locapass.net/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`;
 
   return {
@@ -114,25 +114,25 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
       />
 
       <header className="space-y-2">
-        <p className="text-xs tracking-[0.2em] text-amber-400/70">
+        <p className="text-xs tracking-[0.2em] text-hl-400/70">
           {PREFECTURE_LABEL} / {area}
         </p>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-main sm:text-3xl">
           {area}
           {genre}
         </h1>
-        <p className="text-sm leading-relaxed text-neutral-400">
+        <p className="text-sm leading-relaxed text-muted">
           {area}エリアの{genre}
-          {shops.length}店舗を掲載中。本日出勤中のキャストや店舗の雰囲気をリールで確認して、気になるお店をチェックしてください。
+          {shops.length}店舗を掲載中。本日出勤中のパートナーや店舗の雰囲気をリールで確認して、気になるお店をチェックしてください。
         </p>
       </header>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-amber-200">掲載店舗一覧</h2>
+          <h2 className="font-display text-lg font-semibold text-hl-200">掲載店舗一覧</h2>
           <Link
             href={`/${PREFECTURE_SLUG}/${resolvedParams.city}/map`}
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:bg-amber-400/20"
+            className="inline-flex items-center gap-1.5 rounded-full border border-hl-400/40 bg-hl-400/10 px-3 py-1.5 text-xs font-semibold text-hl-300 transition hover:bg-hl-400/20"
           >
             🗺️ マップで見る
           </Link>
@@ -144,9 +144,9 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
               <Link
                 key={shop.id}
                 href={`/shops/${shop.id}`}
-                className="group flex gap-3 overflow-hidden rounded-2xl border border-amber-500/20 bg-zinc-900/60 p-3 shadow-lg transition hover:border-amber-400/50"
+                className="group flex gap-3 overflow-hidden rounded-2xl border border-line/20 bg-panel-900/60 p-3 shadow-lg transition hover:border-hl-400/50"
               >
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-800">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-tone-800">
                   {shop.cover_image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -164,12 +164,12 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-white">{shop.name}</p>
+                  <p className="truncate font-semibold text-main">{shop.name}</p>
                   {shop.tagline && (
-                    <p className="mt-0.5 line-clamp-2 text-xs text-neutral-400">{shop.tagline}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted">{shop.tagline}</p>
                   )}
                   {workingCount > 0 && (
-                    <span className="mt-2 inline-block rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
+                    <span className="mt-2 inline-block rounded-full bg-hl-400/15 px-2 py-0.5 text-[11px] font-semibold text-hl-300">
                       本日出勤 {workingCount}名
                     </span>
                   )}
@@ -181,13 +181,13 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-display text-lg font-semibold text-amber-200">
+        <h2 className="font-display text-lg font-semibold text-hl-200">
           {area}で{genre}を探す方へ
         </h2>
-        <p className="text-sm leading-relaxed text-neutral-400">
+        <p className="text-sm leading-relaxed text-muted">
           LOCAPASSでは{area}エリアの{genre}
-          の出勤情報・キャストのリールをまとめてチェックできます。他のエリア・業態から探したい場合は
-          <Link href="/" className="text-amber-300 underline underline-offset-2">
+          の出勤情報・パートナーのリールをまとめてチェックできます。他のエリア・業態から探したい場合は
+          <Link href="/" className="text-hl-300 underline underline-offset-2">
             トップページ
           </Link>
           からも検索できます。

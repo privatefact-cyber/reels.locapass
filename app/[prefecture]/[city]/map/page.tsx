@@ -20,8 +20,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const area = resolveArea(await params);
   if (!area) return { title: "ページが見つかりません | LOCAPASS" };
-  const title = `${area}のマップで探す｜出勤中のキャストをリールでチェック - LOCAPASS`;
-  const description = `${area}エリアの店舗をGPSマップと縦型動画で直感的に探せます。近くの店舗、出勤中のキャストを今すぐチェック。`;
+  const title = `${area}のマップで探す｜出勤中のパートナーをリールでチェック - LOCAPASS`;
+  const description = `${area}エリアの店舗をGPSマップと縦型動画で直感的に探せます。近くの店舗、出勤中のパートナーを今すぐチェック。`;
   return { title, description };
 }
 

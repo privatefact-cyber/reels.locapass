@@ -75,7 +75,7 @@ export function ApplicantListMasterDetail({ applicants }: ApplicantListMasterDet
               onClick={() => setStatusFilter("")}
               className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
                 statusFilter === ""
-                  ? "bg-slate-700 text-white"
+                  ? "bg-slate-700 text-main"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}
             >
@@ -87,7 +87,7 @@ export function ApplicantListMasterDetail({ applicants }: ApplicantListMasterDet
                 onClick={() => setStatusFilter(status)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
                   statusFilter === status
-                    ? "bg-slate-700 text-white"
+                    ? "bg-slate-700 text-main"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
@@ -245,7 +245,7 @@ export function ApplicantListMasterDetail({ applicants }: ApplicantListMasterDet
             </div>
 
             {/* Action Button */}
-            <button className="w-full px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors">
+            <button className="w-full px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-main font-semibold rounded-lg transition-colors">
               詳細を編集
             </button>
           </div>

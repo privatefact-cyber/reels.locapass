@@ -234,7 +234,7 @@ export default async function LocapassCastEditPage({
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-2 text-sm font-semibold text-slate-900">リール投稿用ログイン</h2>
         <p className="mb-3 text-xs text-slate-500">
-          発行すると、キャスト本人がリール(縦型動画/写真)を自分のスマホから直接投稿できるようになります。
+          発行すると、パートナー本人がリール(縦型動画/写真)を自分のスマホから直接投稿できるようになります。
           {cast.user_id && " 既にログインは発行済みです。"}
         </p>
         <InviteCastButton shopId={shop.id} castId={castId} hasLogin={!!cast.user_id} />
@@ -321,9 +321,9 @@ export default async function LocapassCastEditPage({
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-1 text-sm font-semibold text-slate-900">キャストリール</h2>
+        <h2 className="mb-1 text-sm font-semibold text-slate-900">パートナーリール</h2>
         <p className="mb-3 text-xs text-slate-500">
-          ここから投稿するとキャスト本人のリールとしてタグ付けされます(店舗リールは
+          ここから投稿するとパートナー本人のリールとしてタグ付けされます(店舗リールは
           「リール投稿」ページから)。
         </p>
         <div className="mb-4">
@@ -361,7 +361,7 @@ export default async function LocapassCastEditPage({
             })}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">まだキャストリールの投稿はありません。</p>
+          <p className="text-sm text-slate-500">まだパートナーリールの投稿はありません。</p>
         )}
       </section>
 
@@ -386,7 +386,7 @@ export default async function LocapassCastEditPage({
                   </div>
                   {reply && (
                     <div className="mt-1 flex items-center justify-between gap-2 pl-3">
-                      <p className="text-xs text-slate-500">キャストより: {reply.body}</p>
+                      <p className="text-xs text-slate-500">パートナーより: {reply.body}</p>
                       <form action={deleteCastReelComment.bind(null, shop.id, castId, reply.id)}>
                         <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
                           削除

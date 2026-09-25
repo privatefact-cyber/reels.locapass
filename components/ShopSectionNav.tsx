@@ -64,7 +64,7 @@ export function ShopSectionNav({
   return (
     <>
       <nav className="fixed inset-x-0 bottom-24 z-50 mx-auto w-fit max-w-[92%] md:bottom-6">
-        <ul className="flex items-center gap-4 rounded-full border border-amber-500/30 bg-zinc-950/70 px-5 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(245,158,11,0.15)] backdrop-blur-2xl sm:gap-6">
+        <ul className="flex items-center gap-4 rounded-full border border-line/30 bg-panel-950/70 px-5 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_20px_rgb(var(--hl-500)/0.15)] backdrop-blur-2xl sm:gap-6">
           {SCROLL_ITEMS.map(({ id, label, icon: Icon }) => {
             const isActive = activeId === id;
             return (
@@ -74,8 +74,8 @@ export function ShopSectionNav({
                   onClick={(e) => handleClick(e, id)}
                   className={
                     isActive
-                      ? "flex flex-col items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-3 py-1 text-[10px] font-bold text-zinc-950 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
-                      : "flex flex-col items-center gap-1 text-[10px] text-zinc-400 transition hover:text-amber-300"
+                      ? "flex flex-col items-center gap-1 rounded-full bg-gradient-to-r from-cta-light to-cta px-3 py-1 text-[10px] font-bold text-on-cta shadow-[0_0_12px_rgb(var(--cta-500)/0.4)]"
+                      : "flex flex-col items-center gap-1 text-[10px] text-panel-400 transition hover:text-hl-300"
                   }
                 >
                   <Icon size={16} />
@@ -89,7 +89,7 @@ export function ShopSectionNav({
               <button
                 type="button"
                 onClick={() => setContactOpen(true)}
-                className="flex flex-col items-center gap-1 text-[10px] text-zinc-400 transition hover:text-amber-300"
+                className="flex flex-col items-center gap-1 text-[10px] text-panel-400 transition hover:text-hl-300"
               >
                 <Phone size={16} />
                 {t.shop.navContact}

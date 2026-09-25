@@ -39,7 +39,7 @@ export function ReelLoopFeed({ reels }: { reels: ReelItem[] }) {
   }, [activeIndex, loopedReels.length, reels.length]);
 
   if (!reels.length) {
-    return <p className="px-2 py-10 text-center text-sm text-neutral-500">投稿はまだありません。</p>;
+    return <p className="px-2 py-10 text-center text-sm text-tone-500">投稿はまだありません。</p>;
   }
 
   return (

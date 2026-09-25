@@ -17,19 +17,19 @@ export function ShopAccordion({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-amber-500/20 bg-zinc-900/60 shadow-2xl backdrop-blur-xl">
+    <div className="overflow-hidden rounded-2xl border border-line/20 bg-panel-900/60 shadow-2xl backdrop-blur-xl">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
       >
-        <h2 className="flex items-center gap-2 font-display text-base font-semibold text-amber-100">
+        <h2 className="flex items-center gap-2 font-display text-base font-semibold text-hl-100">
           {icon}
           {title}
         </h2>
         <ChevronDown
           size={18}
-          className={`text-amber-400/70 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`text-hl-400/70 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         />
       </button>
       <div
@@ -38,7 +38,7 @@ export function ShopAccordion({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="space-y-3 border-t border-amber-500/10 px-5 py-4">{children}</div>
+          <div className="space-y-3 border-t border-line/10 px-5 py-4">{children}</div>
         </div>
       </div>
     </div>

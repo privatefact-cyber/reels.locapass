@@ -784,7 +784,7 @@ export function VenueMapExplorer({
   }, []);
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-black">
+    <div data-surface="media" className="flex h-[100dvh] flex-col bg-page">
       <div className="relative flex-1">
         {/*
           maplibre-gl.css は自身が挿入するコンテナに `.maplibregl-map { position: relative }` を
@@ -803,18 +803,18 @@ export function VenueMapExplorer({
             */}
             <Link
               href="/"
-              className="pointer-events-auto hidden shrink-0 items-center rounded-full border border-amber-500/20 bg-black/70 px-4 py-2 font-display text-lg font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur transition hover:border-amber-400/50 md:inline-flex"
+              className="pointer-events-auto hidden shrink-0 items-center rounded-full border border-line/20 bg-black/70 px-4 py-2 font-display text-lg font-semibold uppercase tracking-[0.2em] text-accent backdrop-blur transition hover:border-hl-400/50 md:inline-flex"
             >
               LOCAPASS
             </Link>
           {/* 近くに店舗が無いときの最後の手段。住所・エリア名で地図を飛ばす。 */}
           <form
             onSubmit={handleSearch}
-            className="pointer-events-auto flex flex-1 items-center gap-2 rounded-full border border-amber-500/20 bg-black/70 px-4 py-2 backdrop-blur"
+            className="pointer-events-auto flex flex-1 items-center gap-2 rounded-full border border-line/20 bg-black/70 px-4 py-2 backdrop-blur"
           >
             {/* 送信ボタンを明示的に置く。input1個だけのフォームは暗黙送信に頼ることになり、
                 Enterが効かない環境がある(PCでは押せる要素も無くなる)。 */}
-            <button type="submit" aria-label={t.map.search} className="shrink-0 text-amber-400/80">
+            <button type="submit" aria-label={t.map.search} className="shrink-0 text-hl-400/80">
               <Search size={15} />
             </button>
             <input
@@ -824,7 +824,7 @@ export function VenueMapExplorer({
               placeholder={t.map.searchPlaceholder}
               aria-label={t.map.search}
               // iOSで16px未満のinputにフォーカスすると画面が自動ズームするため16px以上にする
-              className="min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-neutral-500 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent text-[16px] text-main placeholder:text-tone-500 focus:outline-none"
             />
             {query && (
               <button
@@ -834,7 +834,7 @@ export function VenueMapExplorer({
                   setSearchState("idle");
                 }}
                 aria-label={t.common.close}
-                className="shrink-0 text-neutral-400 hover:text-white"
+                className="shrink-0 text-muted hover:text-main"
               >
                 <X size={15} />
               </button>
@@ -843,7 +843,7 @@ export function VenueMapExplorer({
               type="button"
               onClick={goToMyLocation}
               aria-label={t.map.useMyLocation}
-              className="shrink-0 text-amber-300"
+              className="shrink-0 text-hl-300"
             >
               <Navigation size={15} />
             </button>
@@ -854,7 +854,7 @@ export function VenueMapExplorer({
           </div>
           </div>
           {searchState !== "idle" && (
-            <p className="pointer-events-none px-3 text-[11px] text-neutral-300">
+            <p className="pointer-events-none px-3 text-[11px] text-tone-300">
               {searchState === "searching" ? t.map.searching : t.map.notFound}
             </p>
           )}
@@ -865,8 +865,8 @@ export function VenueMapExplorer({
                 onClick={() => setGenre(pill.value)}
                 className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide transition ${
                   genre === pill.value
-                    ? "border-amber-400 bg-amber-400 text-black"
-                    : "border-white/15 bg-black/70 text-neutral-200 backdrop-blur"
+                    ? "border-hl-400 bg-hl-400 text-on-accent"
+                    : "border-main/15 bg-black/70 text-tone-200 backdrop-blur"
                 }`}
               >
                 [ {pill.value === "all" ? t.map.all : genreLabel(locale, pill.value)} ]
@@ -879,7 +879,7 @@ export function VenueMapExplorer({
       {/* モバイルではボトムナビ(SiteChrome、fixed bottom-0)がこの下に重なるので、
           カードが隠れないようナビ+セーフエリアぶんの余白を下に確保する。
 
-          カルーセルの高さは固定する。カードの中身(キャストの有無、同一ビル表記の有無、
+          カルーセルの高さは固定する。カードの中身(パートナーの有無、同一ビル表記の有無、
           そもそも0件かどうか)で高さが変わると、地図(flex-1)の高さが動く
           → resize → 表示範囲が変わる → 取り直す → カードが入れ替わる → また高さが動く、
           という再描画ループになる(PCの広い画面で発生)。 */}
@@ -890,11 +890,11 @@ export function VenueMapExplorer({
               [0, 1].map((i) => (
                 <div
                   key={i}
-                  className="h-full w-[82vw] shrink-0 animate-pulse rounded-2xl border border-white/10 bg-zinc-900/60 sm:w-80"
+                  className="h-full w-[82vw] shrink-0 animate-pulse rounded-2xl border border-main/10 bg-panel-900/60 sm:w-80"
                 />
               ))
             ) : (
-              <p className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-neutral-500">
+              <p className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-tone-500">
                 {tooWide ? t.map.zoomIn : t.map.noVenuesInView}
               </p>
             )}
@@ -920,16 +920,16 @@ export function VenueMapExplorer({
                   onClick={() => focusVenue(venue.id)}
                   // 中央のカードは原寸・左右のカードは少し縮めて暗くし、スワイプで入れ替わる様子を見せる。
                   // transformは高さのレイアウトを変えないので、カルーセル固定高さの制約(再描画ループ防止)は崩れない。
-                  className={`flex h-full w-[82vw] shrink-0 snap-center flex-col overflow-hidden rounded-2xl border bg-zinc-950 shadow-xl transition-[transform,opacity,border-color,box-shadow] duration-300 ease-out sm:w-80 ${
+                  className={`flex h-full w-[82vw] shrink-0 snap-center flex-col overflow-hidden rounded-2xl border bg-panel-950 shadow-xl transition-[transform,opacity,border-color,box-shadow] duration-300 ease-out sm:w-80 ${
                     isActive
-                      ? "scale-100 border-amber-400/70 opacity-100 shadow-amber-500/20"
-                      : "scale-[0.94] border-white/10 opacity-60"
+                      ? "scale-100 border-hl-400/70 opacity-100 shadow-hl-500/20"
+                      : "scale-[0.94] border-main/10 opacity-60"
                   } ${venue.isSponsored ? "ring-1 ring-purple-500/40" : ""}`}
                 >
                   <div
                     data-card-preview
                     onClick={(e) => handlePreviewTap(venue, e)}
-                    className="relative min-h-0 w-full flex-1 cursor-pointer bg-neutral-900"
+                    className="relative min-h-0 w-full flex-1 cursor-pointer bg-surface"
                   >
                     {/* 動画は動画オプション契約店舗だけ(サーバー側でpreviewVideoUrlを出し分け)。
                         中央のカード以外はpreload="none"にして、並んでいるだけの動画を読み込ませない
@@ -959,8 +959,8 @@ export function VenueMapExplorer({
                       />
                     ) : (
                       // 画像も無い店舗はLOCAPASSの黒背景(画像ファイルを持たずCSSだけで描く)。
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-900 via-black to-neutral-950">
-                        <span className="font-display text-sm uppercase tracking-[0.3em] text-gold/40">
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-tone-900 via-black to-tone-950">
+                        <span className="font-display text-sm uppercase tracking-[0.3em] text-accent/40">
                           LOCAPASS
                         </span>
                       </div>
@@ -972,14 +972,14 @@ export function VenueMapExplorer({
                     )}
                     <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2">
                       {venue.isSponsored ? (
-                        <span className="rounded bg-purple-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">
+                        <span className="rounded bg-purple-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-main">
                           SPONSORED
                         </span>
                       ) : (
                         <span />
                       )}
                       {venue.isSponsored && venue.sponsoredRank === 1 && (
-                        <span className="rounded bg-black/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-300">
+                        <span className="rounded bg-black/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-hl-300">
                           RANK #1
                         </span>
                       )}
@@ -987,24 +987,24 @@ export function VenueMapExplorer({
                     {/* 再生中(=アクティブカード)は再生アイコンを出さない */}
                     {venue.previewVideoUrl && !isActive && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Play className="h-9 w-9 fill-white/90 text-white/90 drop-shadow" />
+                        <Play className="h-9 w-9 fill-main/90 text-main/90 drop-shadow" />
                       </div>
                     )}
                     {/* リールがある店舗は、選択中なら「タップでリール」、それ以外は本数を出す。 */}
                     {venue.reelCount > 0 && (
-                      <span className="pointer-events-none absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white backdrop-blur">
-                        <Play className="h-3 w-3 fill-white text-white" />
+                      <span className="pointer-events-none absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-main backdrop-blur">
+                        <Play className="h-3 w-3 fill-main text-main" />
                         {isActive ? t.map.watchReels : `REEL ${venue.reelCount}`}
                       </span>
                     )}
                   </div>
 
                   <div className="shrink-0 space-y-2 p-3">
-                    <p className="truncate font-display text-sm font-bold text-white">{venue.name}</p>
-                    <div className="flex items-center gap-2 text-[11px] text-neutral-400">
+                    <p className="truncate font-display text-sm font-bold text-main">{venue.name}</p>
+                    <div className="flex items-center gap-2 text-[11px] text-muted">
                       {venue.genre && <span>{genreLabel(locale, venue.genre)}</span>}
                       {venue.supportsEnglish && (
-                        <span className="inline-flex items-center gap-0.5 text-amber-300">
+                        <span className="inline-flex items-center gap-0.5 text-hl-300">
                           <Globe2 className="h-3 w-3" /> EN
                         </span>
                       )}
@@ -1021,8 +1021,8 @@ export function VenueMapExplorer({
                           <div
                             key={c.id}
                             title={c.name}
-                            className={`h-7 w-7 shrink-0 overflow-hidden rounded-full border-2 bg-neutral-800 ${
-                              c.isWorkingNow ? "border-emerald-400" : "border-zinc-950"
+                            className={`h-7 w-7 shrink-0 overflow-hidden rounded-full border-2 bg-tone-800 ${
+                              c.isWorkingNow ? "border-emerald-400" : "border-panel-950"
                             }`}
                           >
                             {c.avatarUrl && (
@@ -1035,17 +1035,17 @@ export function VenueMapExplorer({
                     )}
 
                     {mates.length > 0 && (
-                      <p className="text-[11px] text-neutral-500">{t.map.sameBuilding(mates.length)}</p>
+                      <p className="text-[11px] text-tone-500">{t.map.sameBuilding(mates.length)}</p>
                     )}
 
                     {eta && (eta.carMinutes > 0 || eta.walkMinutes !== null) && (
-                      <div className="flex items-center gap-2 text-[11px] text-amber-300/90">
+                      <div className="flex items-center gap-2 text-[11px] text-hl-300/90">
                         {eta.walkMinutes !== null && (
                           <span>
                             {eta.walkMinutes < 2 ? t.map.walkNow : t.map.walkTime(eta.walkMinutes)}
                           </span>
                         )}
-                        {eta.walkMinutes !== null && eta.carMinutes >= 3 && <span className="text-neutral-600">・</span>}
+                        {eta.walkMinutes !== null && eta.carMinutes >= 3 && <span className="text-tone-600">・</span>}
                         {eta.carMinutes >= 3 && <span>{t.map.carTime(eta.carMinutes)}</span>}
                       </div>
                     )}
@@ -1056,14 +1056,14 @@ export function VenueMapExplorer({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex-1 rounded-full bg-amber-400 py-2 text-center text-xs font-bold tracking-wide text-black transition hover:bg-amber-300"
+                        className="flex-1 rounded-full bg-cta-light py-2 text-center text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
                       >
                         {t.map.visitNow} →
                       </a>
                       <Link
                         href={`/shops/${venue.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="rounded-full border border-white/15 px-3 py-2 text-xs text-neutral-300 transition hover:border-amber-400/50 hover:text-amber-300"
+                        className="rounded-full border border-main/15 px-3 py-2 text-xs text-tone-300 transition hover:border-hl-400/50 hover:text-hl-300"
                       >
                         {t.map.details}
                       </Link>

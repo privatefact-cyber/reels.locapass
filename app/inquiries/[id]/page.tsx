@@ -75,14 +75,14 @@ export default function InquiryThreadPage() {
   }
 
   if (loading) {
-    return <div className="mx-auto max-w-md px-4 py-10 text-center text-sm text-neutral-500">読み込み中...</div>;
+    return <div className="mx-auto max-w-md px-4 py-10 text-center text-sm text-tone-500">読み込み中...</div>;
   }
 
   if (notFoundError || !thread) {
     return (
       <div className="mx-auto max-w-md px-4 py-10 text-center">
-        <p className="text-sm text-neutral-500">この問い合わせは見つかりませんでした。</p>
-        <Link href="/inquiries" className="mt-3 inline-block text-xs text-amber-400">
+        <p className="text-sm text-tone-500">この問い合わせは見つかりませんでした。</p>
+        <Link href="/inquiries" className="mt-3 inline-block text-xs text-hl-400">
           問い合わせ一覧に戻る
         </Link>
       </div>
@@ -92,10 +92,10 @@ export default function InquiryThreadPage() {
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-56px)] max-w-md flex-col px-4 py-4">
       <div className="mb-3 flex items-center gap-2">
-        <Link href="/inquiries" aria-label="戻る" className="text-neutral-400">
+        <Link href="/inquiries" aria-label="戻る" className="text-muted">
           <ArrowLeft size={18} />
         </Link>
-        <h1 className="text-sm font-bold text-neutral-100">{thread.shopName}</h1>
+        <h1 className="text-sm font-bold text-tone-100">{thread.shopName}</h1>
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto">
@@ -104,8 +104,8 @@ export default function InquiryThreadPage() {
             key={i}
             className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
               m.senderType === "shop"
-                ? "ml-0 bg-zinc-800 text-neutral-100"
-                : "ml-auto bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950"
+                ? "ml-0 bg-panel-800 text-tone-100"
+                : "ml-auto bg-gradient-to-r from-hl-400 to-hl-500 text-panel-950"
             }`}
           >
             <p className="whitespace-pre-wrap">{m.body}</p>
@@ -121,12 +121,12 @@ export default function InquiryThreadPage() {
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           placeholder="メッセージを入力"
-          className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[16px] text-white"
+          className="flex-1 rounded-full border border-main/20 bg-main/5 px-4 py-2 text-[16px] text-main"
         />
         <button
           type="submit"
           disabled={sending}
-          className="rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-50"
+          className="rounded-full bg-gradient-to-r from-cta-light to-cta px-4 py-2 text-sm font-semibold text-on-cta disabled:opacity-50"
         >
           送信
         </button>

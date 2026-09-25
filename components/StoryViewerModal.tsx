@@ -75,12 +75,12 @@ export function StoryViewerModal({
   }, [current, index, stories, onClose]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
+    <div data-surface="media" className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
       <button
         type="button"
         onClick={onClose}
         aria-label={t.common.close}
-        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
+        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-main"
       >
         <X size={20} />
       </button>
@@ -88,14 +88,14 @@ export function StoryViewerModal({
       {stories && stories.length > 0 && (
         <div className="absolute inset-x-3 top-3 z-10 flex gap-1">
           {stories.map((s, i) => (
-            <div key={s.id} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/30">
+            <div key={s.id} className="h-0.5 flex-1 overflow-hidden rounded-full bg-main/30">
               <div className={`h-full bg-white ${i < index ? "w-full" : i === index ? "w-full" : "w-0"}`} />
             </div>
           ))}
         </div>
       )}
 
-      <div className="absolute left-3 top-8 z-10 text-sm font-semibold text-white drop-shadow">{castName}</div>
+      <div className="absolute left-3 top-8 z-10 text-sm font-semibold text-main drop-shadow">{castName}</div>
 
       {/* タップで前/次へ */}
       <div className="absolute inset-y-0 left-0 z-10 w-1/3" onClick={() => setIndex((i) => Math.max(0, i - 1))} />
@@ -108,9 +108,9 @@ export function StoryViewerModal({
       />
 
       {!stories ? (
-        <p className="text-sm text-neutral-400">{t.common.loading}</p>
+        <p className="text-sm text-muted">{t.common.loading}</p>
       ) : stories.length === 0 ? (
-        <p className="text-sm text-neutral-400">{t.cast.storyNotFound}</p>
+        <p className="text-sm text-muted">{t.cast.storyNotFound}</p>
       ) : current ? (
         <div className="flex h-full w-full max-w-md flex-col items-center justify-center">
           {current.media[0]?.type === "video" ? (
@@ -129,7 +129,7 @@ export function StoryViewerModal({
             <img src={current.media[0].url} alt="" className="max-h-full w-full object-contain" />
           ) : null}
           {current.caption && (
-            <p className="absolute bottom-6 left-4 right-4 text-center text-sm text-white drop-shadow">
+            <p className="absolute bottom-6 left-4 right-4 text-center text-sm text-main drop-shadow">
               {current.caption}
             </p>
           )}

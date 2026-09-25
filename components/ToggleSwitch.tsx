@@ -21,7 +21,7 @@ export function ToggleSwitch({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-        checked ? "bg-gold" : "bg-white/15"
+        checked ? "bg-accent" : "bg-main/15"
       }`}
     >
       <span

@@ -11,7 +11,7 @@ export default async function Loading() {
   return (
     <div className="flex min-h-[60vh] w-full items-center justify-center">
       <div
-        className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-gold"
+        className="h-8 w-8 animate-spin rounded-full border-2 border-main/15 border-t-accent"
         role="status"
         aria-label={t.common.loading}
       />

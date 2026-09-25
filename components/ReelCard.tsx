@@ -153,7 +153,7 @@ export function ReelCard({
   }
 
   return (
-    <div
+    <div data-surface="media"
       ref={containerRef}
       className={`relative w-full transform-gpu will-change-transform ${
         fullBleed ? "h-full" : "aspect-[9/16] md:h-full md:w-auto"
@@ -163,7 +163,7 @@ export function ReelCard({
           右側の縦アイコン列(PCでは動画の外側にはみ出す)はこの内側レイヤーの外に置き、
           ここでクリップされて消えてしまわないようにする。 */}
       <div
-        className={`absolute inset-0 overflow-hidden bg-neutral-950 ${
+        className={`absolute inset-0 overflow-hidden bg-tone-950 ${
           fullBleed ? "rounded-none" : "rounded-2xl"
         }`}
       >
@@ -222,14 +222,14 @@ export function ReelCard({
           />
         )
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-xs text-neutral-600">
+        <div className="flex h-full w-full items-center justify-center text-xs text-tone-600">
           {t.common.noMedia}
         </div>
       )}
 
       {/* 読み込み中/回線遅延時のフォールバック: サムネイルを重ねてスピナー表示(アクティブな1本のみ) */}
       {videoUrl && isActive && status !== "ready" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-neutral-950">
+        <div className="absolute inset-0 flex items-center justify-center bg-tone-950">
           {posterImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -239,9 +239,9 @@ export function ReelCard({
             />
           )}
           {status === "loading" ? (
-            <Loader2 className="relative z-10 animate-spin text-white/80" size={32} />
+            <Loader2 className="relative z-10 animate-spin text-main/80" size={32} />
           ) : (
-            <p className="relative z-10 text-xs text-white/70">{t.common.loadFailed}</p>
+            <p className="relative z-10 text-xs text-main/70">{t.common.loadFailed}</p>
           )}
         </div>
       )}
@@ -270,14 +270,14 @@ export function ReelCard({
             setMuted(!muted);
           }}
           aria-label={muted ? t.common.unmute : t.common.mute}
-          className="pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm"
+          className="pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
         >
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
       )}
 
       {isAd && (
-        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-amber-400/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-black">
+        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-hl-400/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-on-accent">
           PR
         </span>
       )}
@@ -285,7 +285,7 @@ export function ReelCard({
 
       {/* 右下: アイコン(プロフィールへ)・いいね・コメント・シェア (TikTok同様の並び)。
           PC(md以上)では動画の外側(右)に配置し、映像に被らないようにする。 */}
-      <div className="pointer-events-auto absolute bottom-24 right-3 flex flex-col items-center gap-5 text-white md:bottom-28 md:right-[-64px]">
+      <div className="pointer-events-auto absolute bottom-24 right-3 flex flex-col items-center gap-5 text-main md:bottom-28 md:right-[-64px]">
         <div className="relative">
           <AvatarPeek
             href={profileUrl}
@@ -300,10 +300,10 @@ export function ReelCard({
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
-                className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                className="h-10 w-10 rounded-full border-2 border-main object-cover"
               />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-neutral-700 text-sm font-semibold">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-main bg-tone-700 text-sm font-semibold">
                 {accountName.slice(0, 1)}
               </div>
             )}
@@ -313,7 +313,7 @@ export function ReelCard({
               type="button"
               onClick={onToggleFollow}
               aria-label={`${accountName}をフォローする`}
-              className="absolute -bottom-1.5 left-1/2 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full bg-gold text-black ring-2 ring-black"
+              className="absolute -bottom-1.5 left-1/2 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full bg-accent text-on-accent ring-2 ring-black"
             >
               <Plus size={12} strokeWidth={3} />
             </button>
@@ -321,7 +321,7 @@ export function ReelCard({
         </div>
         {!isAd && (
           <button type="button" onClick={onToggleLike} className="flex flex-col items-center gap-1">
-            <Heart size={26} className={liked ? "fill-gold text-gold" : "text-white"} />
+            <Heart size={26} className={liked ? "fill-accent text-accent" : "text-main"} />
             <span className="text-[11px] drop-shadow">{likesCount}</span>
           </button>
         )}
@@ -343,7 +343,7 @@ export function ReelCard({
           <Share2 size={24} />
           <span className="text-[11px] drop-shadow">{t.common.share}</span>
           {shareCopied && (
-            <span className="pointer-events-none absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded-full bg-black/80 px-3 py-1 text-xs text-white shadow-lg">
+            <span className="pointer-events-none absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded-full bg-black/80 px-3 py-1 text-xs text-main shadow-lg">
               {t.common.linkCopied}
             </span>
           )}
@@ -354,15 +354,15 @@ export function ReelCard({
       <div className="pointer-events-auto absolute bottom-4 left-3 right-16 space-y-2">
         <Link
           href={ctaUrl}
-          className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur-md"
+          className="inline-flex items-center gap-1 rounded-full border border-main/30 bg-main/15 px-4 py-2 text-sm font-medium text-main backdrop-blur-md"
         >
           {resolvedCtaText} <span aria-hidden>▷</span>
         </Link>
-        <Link href={profileUrl} className="block w-fit text-white drop-shadow">
+        <Link href={profileUrl} className="block w-fit text-main drop-shadow">
           <p className="text-sm font-semibold">@{accountName}</p>
-          <p className="text-xs text-white/80">
+          <p className="text-xs text-main/80">
             {shopName}
-            {createdAt && <span className="text-white/40"> · {formatPostedAt(createdAt)}</span>}
+            {createdAt && <span className="text-main/40"> · {formatPostedAt(createdAt)}</span>}
           </p>
         </Link>
       </div>

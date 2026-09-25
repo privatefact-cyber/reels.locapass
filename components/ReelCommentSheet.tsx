@@ -195,21 +195,21 @@ export function ReelCommentSheet({
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60" onClick={onClose}>
       <div
-        className="flex max-h-[75vh] w-full max-w-md flex-col rounded-t-2xl bg-neutral-950 text-white"
+        className="flex max-h-[75vh] w-full max-w-md flex-col rounded-t-2xl bg-tone-950 text-main"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-main/10 px-4 py-3">
           <p className="text-sm font-semibold">{t.comment.title}</p>
-          <button type="button" onClick={onClose} aria-label={t.common.close} className="p-1 text-white/70">
+          <button type="button" onClick={onClose} aria-label={t.common.close} className="p-1 text-main/70">
             <X size={20} />
           </button>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-3">
           {loading ? (
-            <p className="text-center text-xs text-white/50">{t.common.loading}</p>
+            <p className="text-center text-xs text-main/50">{t.common.loading}</p>
           ) : topLevels.length === 0 ? (
-            <p className="text-center text-xs text-white/50">{t.comment.empty}</p>
+            <p className="text-center text-xs text-main/50">{t.comment.empty}</p>
           ) : (
             topLevels.map((c) => {
               const reply = repliesByParent.get(c.id);
@@ -224,20 +224,20 @@ export function ReelCommentSheet({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={commenter.avatarUrl} alt="" className="h-4 w-4 rounded-full object-cover" />
                       ) : (
-                        <div className="h-4 w-4 rounded-full bg-white/20" />
+                        <div className="h-4 w-4 rounded-full bg-main/20" />
                       )}
-                      <span className="text-[10px] text-white/50">{commenter.nickname}</span>
+                      <span className="text-[10px] text-main/50">{commenter.nickname}</span>
                     </div>
                   )}
                   <div className="flex items-start gap-2">
-                    <span className="rounded-2xl bg-white/10 px-3 py-1.5 text-sm">{c.body}</span>
-                    {isMine && <span className="mt-1.5 text-[10px] text-white/40">{t.comment.you}</span>}
+                    <span className="rounded-2xl bg-main/10 px-3 py-1.5 text-sm">{c.body}</span>
+                    {isMine && <span className="mt-1.5 text-[10px] text-main/40">{t.comment.you}</span>}
                     {(isMine || canModerate) && (
                       <button
                         type="button"
                         disabled={posting}
                         onClick={() => deleteComment(c.id)}
-                        className="mt-1 text-[10px] text-white/40 underline disabled:opacity-40"
+                        className="mt-1 text-[10px] text-main/40 underline disabled:opacity-40"
                       >
                         {t.comment.delete}
                       </button>
@@ -247,7 +247,7 @@ export function ReelCommentSheet({
                         type="button"
                         disabled={posting}
                         onClick={() => blockCommenter(c.user_id)}
-                        className="mt-1 text-[10px] text-white/40 underline disabled:opacity-40"
+                        className="mt-1 text-[10px] text-main/40 underline disabled:opacity-40"
                       >
                         {t.comment.block}
                       </button>
@@ -255,14 +255,14 @@ export function ReelCommentSheet({
                   </div>
                   {reply && (
                     <div className="ml-4 flex items-start gap-2">
-                      <span className="rounded-2xl bg-gold/20 px-3 py-1.5 text-sm text-gold">{reply.body}</span>
-                      <span className="mt-1.5 text-[10px] text-white/40">{t.comment.fromCast}</span>
+                      <span className="rounded-2xl bg-accent/20 px-3 py-1.5 text-sm text-accent">{reply.body}</span>
+                      <span className="mt-1.5 text-[10px] text-main/40">{t.comment.fromCast}</span>
                       {canModerate && (
                         <button
                           type="button"
                           disabled={posting}
                           onClick={() => deleteComment(reply.id)}
-                          className="mt-1 text-[10px] text-white/40 underline disabled:opacity-40"
+                          className="mt-1 text-[10px] text-main/40 underline disabled:opacity-40"
                         >
                           {t.comment.delete}
                         </button>
@@ -279,13 +279,13 @@ export function ReelCommentSheet({
                         }
                         maxLength={MAX_LEN}
                         placeholder={t.comment.replyPlaceholder}
-                        className="w-40 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-white placeholder:text-white/30"
+                        className="w-40 rounded-full border border-main/20 bg-main/5 px-3 py-1 text-xs text-main placeholder:text-main/30"
                       />
                       <button
                         type="button"
                         disabled={posting || !(replyDrafts[c.id] ?? "").trim()}
                         onClick={() => postReply(c.id, replyDrafts[c.id] ?? "")}
-                        className="rounded-full bg-gold px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
+                        className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-on-accent disabled:opacity-40"
                       >
                         {t.comment.reply}
                       </button>
@@ -299,9 +299,9 @@ export function ReelCommentSheet({
 
         {error && <p className="px-4 pb-1 text-xs text-red-400">{error}</p>}
 
-        <div className="border-t border-white/10 px-4 py-3">
+        <div className="border-t border-main/10 px-4 py-3">
           {!commentsEnabled ? (
-            <p className="text-center text-xs text-white/40">{t.comment.disabled}</p>
+            <p className="text-center text-xs text-main/40">{t.comment.disabled}</p>
           ) : (
             <>
               {role === "guest" && (
@@ -309,7 +309,7 @@ export function ReelCommentSheet({
                   href={`/mypage/login?redirect=${encodeURIComponent(
                     typeof window !== "undefined" ? window.location.pathname : "/",
                   )}`}
-                  className="block w-full rounded-full bg-gold py-2 text-center text-sm font-semibold text-black"
+                  className="block w-full rounded-full bg-accent py-2 text-center text-sm font-semibold text-on-accent"
                 >
                   {t.comment.loginToComment}
                 </Link>
@@ -324,7 +324,7 @@ export function ReelCommentSheet({
                         type="button"
                         disabled={posting}
                         onClick={() => postComment(stamp)}
-                        className="rounded-full bg-white/10 px-2.5 py-1 text-lg leading-none disabled:opacity-40"
+                        className="rounded-full bg-main/10 px-2.5 py-1 text-lg leading-none disabled:opacity-40"
                       >
                         {stamp}
                       </button>
@@ -337,13 +337,13 @@ export function ReelCommentSheet({
                       onChange={(e) => setComposerText(e.target.value.slice(0, MAX_LEN))}
                       maxLength={MAX_LEN}
                       placeholder={t.comment.commentPlaceholder}
-                      className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/30"
+                      className="flex-1 rounded-full border border-main/20 bg-main/5 px-4 py-2 text-sm text-main placeholder:text-main/30"
                     />
                     <button
                       type="button"
                       disabled={posting || !composerText.trim()}
                       onClick={() => postComment(composerText)}
-                      className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
+                      className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-on-accent disabled:opacity-40"
                     >
                       {t.comment.send}
                     </button>
@@ -352,13 +352,13 @@ export function ReelCommentSheet({
               )}
 
               {role === "customer" && myComment && (
-                <p className="text-center text-xs text-white/40">
+                <p className="text-center text-xs text-main/40">
                   {t.comment.alreadyCommented}
                 </p>
               )}
 
               {role === "cast" && (
-                <p className="text-center text-xs text-white/40">
+                <p className="text-center text-xs text-main/40">
                   {t.comment.castReplyHint}
                 </p>
               )}

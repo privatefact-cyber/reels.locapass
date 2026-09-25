@@ -186,7 +186,7 @@ export function MapReelOverlay({
   const currentVenue = segments.find((s) => s.venue.id === activeVenueId)?.venue ?? queue[0];
 
   return (
-    <div
+    <div data-surface="media"
       className="fixed inset-0 z-[70] bg-black"
       style={{
         clipPath,
@@ -244,11 +244,11 @@ export function MapReelOverlay({
             ref={registerItem(items.length)}
             className="flex h-[100dvh] w-full snap-start flex-col items-center justify-center gap-4 px-8 text-center"
           >
-            <p className="text-sm text-neutral-300">{t.map.reelsEnd}</p>
+            <p className="text-sm text-tone-300">{t.map.reelsEnd}</p>
             <button
               type="button"
               onClick={() => window.history.back()}
-              className="rounded-full border border-white/20 px-5 py-2 text-sm text-white hover:border-amber-400/60"
+              className="rounded-full border border-main/20 px-5 py-2 text-sm text-main hover:border-hl-400/60"
             >
               {t.common.close}
             </button>
@@ -258,20 +258,20 @@ export function MapReelOverlay({
 
       {items.length === 0 && !exhausted && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <Loader2 className="h-7 w-7 animate-spin text-white/80" />
+          <Loader2 className="h-7 w-7 animate-spin text-main/80" />
         </div>
       )}
 
       {/* 上部: いま見ている店舗名と閉じるボタン。店舗が切り替わったことが分かるように常に出す。 */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-3 bg-gradient-to-b from-black/60 to-transparent px-3 pb-6 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <span className="truncate rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+        <span className="truncate rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-main backdrop-blur">
           {currentVenue?.name}
         </span>
         <button
           type="button"
           onClick={() => window.history.back()}
           aria-label={t.common.close}
-          className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur hover:bg-black/80"
+          className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-main backdrop-blur hover:bg-black/80"
         >
           <X size={18} />
         </button>

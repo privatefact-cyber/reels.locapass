@@ -200,18 +200,18 @@ export function MypageClient({
     <div className="pb-8">
       <header className="flex items-center justify-between px-4 pt-6">
         <div className="w-6" />
-        <h1 className="font-display text-xl font-semibold uppercase tracking-[0.3em] text-gold">
+        <h1 className="font-display text-xl font-semibold uppercase tracking-[0.3em] text-accent">
           MY PAGE
         </h1>
         <div className="flex items-center gap-3">
           <NotificationBell size={18} />
-          <Link href="/inquiries" aria-label={t.mypage.inquiryHistory} className="text-white/80">
+          <Link href="/inquiries" aria-label={t.mypage.inquiryHistory} className="text-main/80">
             <MessageCircle size={18} />
           </Link>
-          <Link href="/mypage/account" aria-label={t.mypage.accountSettings} className="text-white/80">
+          <Link href="/mypage/account" aria-label={t.mypage.accountSettings} className="text-main/80">
             <Settings size={18} />
           </Link>
-          <button type="button" onClick={handleLogout} aria-label={t.mypage.logout} className="text-white/80">
+          <button type="button" onClick={handleLogout} aria-label={t.mypage.logout} className="text-main/80">
             <LogOut size={18} />
           </button>
         </div>
@@ -238,14 +238,14 @@ export function MypageClient({
             <img
               src={avatarUrl}
               alt=""
-              className="h-20 w-20 rounded-full border border-gold/50 object-cover"
+              className="h-20 w-20 rounded-full border border-accent/50 object-cover"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-gold/50 bg-neutral-800 text-2xl font-semibold text-gold">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-accent/50 bg-tone-800 text-2xl font-semibold text-accent">
               {nickname.slice(0, 1)}
             </div>
           )}
-          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-black bg-gold text-black">
+          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-page bg-accent text-on-accent">
             <Camera size={12} />
           </span>
         </button>
@@ -259,7 +259,7 @@ export function MypageClient({
             setProfileError(null);
             setEditOpen(true);
           }}
-          className="mt-2 rounded-full border border-white/20 px-4 py-1 text-xs text-neutral-300 transition hover:border-gold/60 hover:text-gold"
+          className="mt-2 rounded-full border border-main/20 px-4 py-1 text-xs text-tone-300 transition hover:border-accent/60 hover:text-accent"
         >
           {t.mypage.editProfile}
         </button>
@@ -267,23 +267,23 @@ export function MypageClient({
         <div className="mt-5 flex justify-center gap-8">
           <button type="button" onClick={() => setTab("casts")} className="text-center">
             <p className="text-base font-bold">{followedCasts.length}</p>
-            <p className="text-[11px] text-neutral-400">{t.mypage.following}</p>
+            <p className="text-[11px] text-muted">{t.mypage.following}</p>
           </button>
           <button type="button" onClick={() => setTab("shops")} className="text-center">
             <p className="text-base font-bold">{favoriteShops.length}</p>
-            <p className="text-[11px] text-neutral-400">{t.mypage.favoriteShops}</p>
+            <p className="text-[11px] text-muted">{t.mypage.favoriteShops}</p>
           </button>
           <button type="button" onClick={() => setTab("reels")} className="text-center">
             <p className="text-base font-bold">{savedReels.length}</p>
-            <p className="text-[11px] text-neutral-400">{t.mypage.savedReels}</p>
+            <p className="text-[11px] text-muted">{t.mypage.savedReels}</p>
           </button>
         </div>
       </section>
 
       {/* 本日出勤中の推し(丸アイコン、店舗詳細ページの「本日の出勤」と同じ見た目) */}
       {followedCasts.some((c) => c.isWorkingToday) && (
-        <section className="border-t border-white/10 px-2 py-3">
-          <p className="px-2 text-xs font-semibold text-neutral-400">{t.mypage.workingToday}</p>
+        <section className="border-t border-main/10 px-2 py-3">
+          <p className="px-2 text-xs font-semibold text-muted">{t.mypage.workingToday}</p>
           <div className="mt-2 flex items-start gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar px-2">
             {followedCasts
               .filter((c) => c.isWorkingToday)
@@ -294,18 +294,18 @@ export function MypageClient({
                   className="flex min-w-[72px] flex-col items-center gap-1 snap-start group"
                 >
                   <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px] transition group-hover:scale-105">
-                    <div className="rounded-full bg-black p-[2px]">
+                    <div className="rounded-full bg-page p-[2px]">
                       {c.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={c.avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
                       ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-800 text-neutral-500">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tone-800 text-tone-500">
                           {c.name.slice(0, 1)}
                         </div>
                       )}
                     </div>
                   </div>
-                  <span className="max-w-[68px] truncate text-center text-xs text-neutral-300 group-hover:text-white">
+                  <span className="max-w-[68px] truncate text-center text-xs text-tone-300 group-hover:text-main">
                     {c.name}
                   </span>
                 </Link>
@@ -315,14 +315,14 @@ export function MypageClient({
       )}
 
       {/* タブ */}
-      <nav className="mt-6 flex border-b border-white/10 px-2">
+      <nav className="mt-6 flex border-b border-main/10 px-2">
         {TABS.map((tabItem) => (
           <button
             key={tabItem.key}
             type="button"
             onClick={() => setTab(tabItem.key)}
             className={`flex-1 px-1 py-3 text-[11px] font-medium transition ${
-              tab === tabItem.key ? "border-b-2 border-gold text-gold" : "text-neutral-500"
+              tab === tabItem.key ? "border-b-2 border-accent text-accent" : "text-tone-500"
             }`}
           >
             {tabItem.label}
@@ -342,7 +342,7 @@ export function MypageClient({
                 <Link
                   key={r.id}
                   href={`/shops/${r.shopId}/reels?start=${r.id}`}
-                  className="relative block aspect-[9/16] overflow-hidden rounded bg-neutral-900"
+                  className="relative block aspect-[9/16] overflow-hidden rounded bg-surface"
                 >
                   {r.media[0]?.type === "video" ? (
                     // eslint-disable-next-line jsx-a11y/media-has-caption
@@ -365,11 +365,11 @@ export function MypageClient({
                   )}
                   {r.media[0]?.type === "video" && (
                     <span className="absolute inset-0 flex items-center justify-center">
-                      <Play size={22} className="fill-white/80 text-white/80 drop-shadow" />
+                      <Play size={22} className="fill-main/80 text-main/80 drop-shadow" />
                     </span>
                   )}
                   {r.shopName && (
-                    <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                    <span data-surface="media" className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-main">
                       {r.shopName}
                     </span>
                   )}
@@ -388,23 +388,23 @@ export function MypageClient({
                 <li key={c.id} className="flex items-center gap-2">
                   <Link
                     href={`/cast/${c.id}`}
-                    className="flex flex-1 items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3"
+                    className="flex flex-1 items-center gap-3 rounded-lg border border-main/10 bg-main/[0.03] p-3"
                   >
                     {c.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={c.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800 text-neutral-500">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tone-800 text-tone-500">
                         {c.name.slice(0, 1)}
                       </div>
                     )}
                     <div className="flex-1">
                       <p className="text-sm font-medium">{c.name}</p>
-                      {c.shopName && <p className="text-xs text-neutral-400">{c.shopName}</p>}
+                      {c.shopName && <p className="text-xs text-muted">{c.shopName}</p>}
                     </div>
                     <span
                       className={`rounded-full px-2 py-1 text-[10px] font-medium ${
-                        c.isWorkingToday ? "bg-brand/20 text-brand" : "bg-white/10 text-neutral-400"
+                        c.isWorkingToday ? "bg-brand/20 text-brand" : "bg-main/10 text-muted"
                       }`}
                     >
                       {c.isWorkingToday ? t.mypage.workingTodayBadge : t.mypage.offTodayBadge}
@@ -414,7 +414,7 @@ export function MypageClient({
                     type="button"
                     onClick={() => handleUnfollowCast(c.id)}
                     aria-label={t.mypage.unfollow}
-                    className="shrink-0 rounded-full border border-white/20 p-2 text-neutral-400 transition hover:border-red-400/60 hover:text-red-400"
+                    className="shrink-0 rounded-full border border-main/20 p-2 text-muted transition hover:border-red-400/60 hover:text-red-400"
                   >
                     <X size={14} />
                   </button>
@@ -433,12 +433,12 @@ export function MypageClient({
                 <li key={s.id} className="flex items-center gap-2">
                   <Link
                     href={`/shops/${s.id}`}
-                    className="block flex-1 rounded-lg border border-white/10 bg-white/[0.03] p-3"
+                    className="block flex-1 rounded-lg border border-main/10 bg-main/[0.03] p-3"
                   >
                     <p className="text-sm font-medium">{s.name}</p>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-neutral-400">
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted">
                       {s.area && <span>{s.area}</span>}
-                      <span className={s.status === "active" ? "text-emerald-400" : "text-neutral-500"}>
+                      <span className={s.status === "active" ? "text-emerald-400" : "text-tone-500"}>
                         {s.status === "active" ? t.mypage.open : t.mypage.closed}
                       </span>
                     </div>
@@ -447,7 +447,7 @@ export function MypageClient({
                     type="button"
                     onClick={() => handleUnfavoriteShop(s.id)}
                     aria-label={t.mypage.unfavorite}
-                    className="shrink-0 rounded-full border border-white/20 p-2 text-neutral-400 transition hover:border-red-400/60 hover:text-red-400"
+                    className="shrink-0 rounded-full border border-main/20 p-2 text-muted transition hover:border-red-400/60 hover:text-red-400"
                   >
                     <X size={14} />
                   </button>
@@ -463,16 +463,16 @@ export function MypageClient({
           ) : (
             <ul className="space-y-3">
               {comments.map((c) => (
-                <li key={c.id} className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-                  <div className="h-12 w-9 flex-shrink-0 overflow-hidden rounded bg-neutral-900">
+                <li key={c.id} className="flex gap-3 rounded-lg border border-main/10 bg-main/[0.03] p-3">
+                  <div className="h-12 w-9 flex-shrink-0 overflow-hidden rounded bg-surface">
                     {c.reelThumbnailUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={c.reelThumbnailUrl} alt="" className="h-full w-full object-cover" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-neutral-200">{c.body}</p>
-                    <p className="mt-1 text-[11px] text-neutral-500">
+                    <p className="text-sm text-tone-200">{c.body}</p>
+                    <p className="mt-1 text-[11px] text-tone-500">
                       {new Date(c.createdAt).toLocaleDateString("ja-JP")}
                     </p>
                   </div>
@@ -480,7 +480,7 @@ export function MypageClient({
                     type="button"
                     onClick={() => handleDeleteComment(c.id)}
                     aria-label={t.mypage.deleteComment}
-                    className="self-start text-neutral-500 transition hover:text-red-400"
+                    className="self-start text-tone-500 transition hover:text-red-400"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -495,7 +495,7 @@ export function MypageClient({
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-white/20 py-3 text-sm font-medium text-neutral-300 transition hover:border-red-400/60 hover:text-red-400"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-main/20 py-3 text-sm font-medium text-tone-300 transition hover:border-red-400/60 hover:text-red-400"
         >
           <LogOut size={16} />
           {t.mypage.logout}
@@ -506,29 +506,29 @@ export function MypageClient({
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 backdrop-blur-sm md:items-center">
           <form
             onSubmit={handleSaveProfile}
-            className="w-full max-w-sm rounded-t-2xl border border-white/10 bg-neutral-900 p-5 md:rounded-2xl"
+            className="w-full max-w-sm rounded-t-2xl border border-main/10 bg-surface p-5 md:rounded-2xl"
           >
-            <h3 className="text-sm font-bold text-gold">{t.mypage.editProfileTitle}</h3>
-            <label className="mt-4 block text-xs text-neutral-400">{t.mypage.nicknameLabel}</label>
+            <h3 className="text-sm font-bold text-accent">{t.mypage.editProfileTitle}</h3>
+            <label className="mt-4 block text-xs text-muted">{t.mypage.nicknameLabel}</label>
             <input
               type="text"
               value={editNickname}
               onChange={(e) => setEditNickname(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-[16px] text-white"
+              className="mt-1 w-full rounded-lg border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
             />
             {profileError && <p className="mt-2 text-xs text-red-400">{profileError}</p>}
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="flex-1 rounded-full border border-white/20 py-2 text-sm text-neutral-300"
+                className="flex-1 rounded-full border border-main/20 py-2 text-sm text-tone-300"
               >
                 {t.mypage.cancel}
               </button>
               <button
                 type="submit"
                 disabled={profileSaving}
-                className="flex-1 rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light py-2 text-sm font-semibold text-black disabled:opacity-60"
+                className="flex-1 rounded-full bg-gradient-to-r from-cta-gold-dark via-cta-gold to-cta-gold-light py-2 text-sm font-semibold text-on-cta-gold disabled:opacity-60"
               >
                 {profileSaving ? t.mypage.saving : t.mypage.save}
               </button>
@@ -549,5 +549,5 @@ export function MypageClient({
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <p className="py-10 text-center text-sm text-neutral-500">{text}</p>;
+  return <p className="py-10 text-center text-sm text-tone-500">{text}</p>;
 }

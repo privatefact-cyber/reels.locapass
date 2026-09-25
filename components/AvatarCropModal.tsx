@@ -129,10 +129,10 @@ export function AvatarCropModal({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-t-2xl bg-neutral-900 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl"
+        className="w-full max-w-sm rounded-t-2xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-center text-sm font-semibold text-white">アイコン画像を調整</h2>
+        <h2 className="text-center text-sm font-semibold text-main">アイコン画像を調整</h2>
 
         <div className="relative mx-auto mt-4 h-[320px] w-[320px]">
           <canvas
@@ -148,7 +148,7 @@ export function AvatarCropModal({
           {/* 円形ガイド: 外側を暗くして「ここが実際に使われる範囲」を示す */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-full border-2 border-white/90"
+            className="pointer-events-none absolute inset-0 rounded-full border-2 border-main/90"
             style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)" }}
           />
         </div>
@@ -169,7 +169,7 @@ export function AvatarCropModal({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 rounded border border-white/20 py-2 text-sm text-neutral-300"
+            className="flex-1 rounded border border-main/20 py-2 text-sm text-tone-300"
           >
             キャンセル
           </button>
@@ -177,7 +177,7 @@ export function AvatarCropModal({
             type="button"
             onClick={handleApply}
             disabled={!ready}
-            className="flex-1 rounded bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+            className="flex-1 rounded bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
           >
             この画像で保存
           </button>

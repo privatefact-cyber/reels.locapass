@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       ? await supabase.rpc("locapass_is_shop_admin", { p_shop_id: cast.shop_id })
       : { data: false };
     if (!cast || !canManage) {
-      return NextResponse.json({ error: "このキャストへの投稿権限がありません" }, { status: 403 });
+      return NextResponse.json({ error: "このパートナーへの投稿権限がありません" }, { status: 403 });
     }
     folderId = targetCastId;
   } else if (context === "shop_self") {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     folderId = targetShopId;
   } else {
     const { data: castId } = await supabase.rpc("locapass_current_cast_id");
-    if (!castId) return NextResponse.json({ error: "キャストとして認証されていません" }, { status: 403 });
+    if (!castId) return NextResponse.json({ error: "パートナーとして認証されていません" }, { status: 403 });
     folderId = castId;
   }
 

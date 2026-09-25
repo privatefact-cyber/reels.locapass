@@ -14,10 +14,10 @@ export default async function MypageResetPasswordPage() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="font-display text-xl font-semibold uppercase tracking-[0.2em] text-gold">
+      <h1 className="font-display text-xl font-semibold uppercase tracking-[0.2em] text-accent">
         新しいパスワードを設定
       </h1>
-      <p className="mt-2 text-sm text-neutral-400">{user.email}</p>
+      <p className="mt-2 text-sm text-muted">{user.email}</p>
       <MypageResetPasswordClient />
     </div>
   );

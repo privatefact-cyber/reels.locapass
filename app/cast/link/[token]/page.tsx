@@ -54,7 +54,7 @@ export default function CastLoginLinkPage() {
     return (
       <div className="mx-auto max-w-sm px-4 py-10 text-center">
         <h1 className="text-lg font-bold">ログインできませんでした</h1>
-        <p className="mt-2 text-sm text-neutral-400">
+        <p className="mt-2 text-sm text-muted">
           このリンクは無効です。店舗の担当者に最新のリンクを再送してもらってください。
         </p>
       </div>
@@ -63,7 +63,7 @@ export default function CastLoginLinkPage() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-10 text-center">
-      <p className="text-sm text-neutral-400">ログイン中...</p>
+      <p className="text-sm text-muted">ログイン中...</p>
     </div>
   );
 }

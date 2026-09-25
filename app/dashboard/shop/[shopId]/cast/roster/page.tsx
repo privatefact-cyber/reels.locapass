@@ -33,7 +33,7 @@ export default async function LocapassShopCastRosterPage({
       <div className="flex items-center justify-between print:hidden">
         <div>
           <Link href={`/dashboard/shop/${shop.id}/cast`} className="text-xs text-slate-500 hover:underline">
-            ← キャスト管理に戻る
+            ← パートナー管理に戻る
           </Link>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">従業者名簿</h1>
           <p className="mt-1 text-sm text-slate-600">
@@ -79,7 +79,7 @@ export default async function LocapassShopCastRosterPage({
         </table>
 
         {(!castMembers || castMembers.length === 0) && (
-          <p className="mt-4 text-sm text-slate-500">キャストの登録はまだありません。</p>
+          <p className="mt-4 text-sm text-slate-500">パートナーの登録はまだありません。</p>
         )}
       </div>
 

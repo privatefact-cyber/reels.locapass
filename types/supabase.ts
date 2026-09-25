@@ -2791,18 +2791,21 @@ export type Database = {
         Row: {
           featured_section_enabled: boolean
           locapass_machi_no_koe_beta_enabled: boolean
+          locapass_site_theme: string | null
           id: boolean
           updated_at: string
         }
         Insert: {
           featured_section_enabled?: boolean
           locapass_machi_no_koe_beta_enabled?: boolean
+          locapass_site_theme?: string | null
           id?: boolean
           updated_at?: string
         }
         Update: {
           featured_section_enabled?: boolean
           locapass_machi_no_koe_beta_enabled?: boolean
+          locapass_site_theme?: string | null
           id?: boolean
           updated_at?: string
         }
@@ -3687,6 +3690,10 @@ export type Database = {
       }
       locapass_set_machi_no_koe_beta: {
         Args: { p_enabled: boolean }
+        Returns: undefined
+      }
+      locapass_set_site_theme: {
+        Args: { p_theme: string | null }
         Returns: undefined
       }
       add_inquiry_message: {

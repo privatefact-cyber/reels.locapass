@@ -33,11 +33,11 @@ export async function generateMetadata({
     .single();
 
   if (!cast) {
-    return { title: "キャストが見つかりません | LOCAPASS" };
+    return { title: "パートナーが見つかりません | LOCAPASS" };
   }
   const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
 
-  const title = `${cast.name}${cast.age ? `(${cast.age})` : ""}｜${shop?.name ?? "LOCAPASS"}のキャスト`;
+  const title = `${cast.name}${cast.age ? `(${cast.age})` : ""}｜${shop?.name ?? "LOCAPASS"}のパートナー`;
   const description =
     cast.pr_text?.slice(0, 120) ||
     `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」在籍、${cast.name}のプロフィール・出勤情報・投稿リール。`;
@@ -156,8 +156,8 @@ export default async function CastDetailPage({
             image: sanitizeImageUrl(cast.avatar_url),
             description:
               cast.pr_text?.slice(0, 200) ||
-              `${shop?.name ?? "LOCAPASS"}所属のキャスト「${cast.name}」のプロフィール`,
-            jobTitle: "キャスト",
+              `${shop?.name ?? "LOCAPASS"}所属のパートナー「${cast.name}」のプロフィール`,
+            jobTitle: "パートナー",
             url: castUrl,
             worksFor: shop
               ? {
@@ -203,10 +203,10 @@ export default async function CastDetailPage({
             <img
               src={sanitizeImageUrl(cast.avatar_url)}
               alt=""
-              className="h-20 w-20 rounded-full border border-white/10 object-cover"
+              className="h-20 w-20 rounded-full border border-main/10 object-cover"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-neutral-800 text-2xl font-semibold text-neutral-500">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
               {cast.name.slice(0, 1)}
             </div>
           )}
@@ -215,35 +215,35 @@ export default async function CastDetailPage({
 
         <h1 className="mt-3 text-lg font-bold">
           {cast.name}
-          {cast.age != null && <span className="ml-2 text-base text-white/50">{t.cast.age(cast.age)}</span>}
+          {cast.age != null && <span className="ml-2 text-base text-main/50">{t.cast.age(cast.age)}</span>}
         </h1>
-        {shop && <p className="text-xs text-neutral-400">{shop.name} ・ {shop.area}</p>}
+        {shop && <p className="text-xs text-muted">{shop.name} ・ {shop.area}</p>}
 
         <div className="mt-4 flex justify-center gap-8">
           <div className="text-center">
             <p className="text-base font-bold">{postCount}</p>
-            <p className="text-[11px] text-neutral-400">{t.common.posts}</p>
+            <p className="text-[11px] text-muted">{t.common.posts}</p>
           </div>
           <div className="text-center">
             <p className="text-base font-bold">{totalLikes}</p>
-            <p className="text-[11px] text-neutral-400">{t.common.likes}</p>
+            <p className="text-[11px] text-muted">{t.common.likes}</p>
           </div>
           <div className="text-center">
             <div className="flex h-6 items-center justify-center">
               <CastFollowHeart castId={cast.id} size={18} />
             </div>
-            <p className="text-[11px] text-neutral-400">{t.common.follow}</p>
+            <p className="text-[11px] text-muted">{t.common.follow}</p>
           </div>
         </div>
 
         {sizes && (
-          <p className="mt-3 text-sm text-neutral-400">
+          <p className="mt-3 text-sm text-muted">
             T{sizes.t ?? "-"} / B{sizes.b ?? "-"} W{sizes.w ?? "-"} H{sizes.h ?? "-"}
           </p>
         )}
 
         {cast.pr_text && (
-          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
             {cast.pr_text}
           </p>
         )}
@@ -251,7 +251,7 @@ export default async function CastDetailPage({
         {shop && (
           <Link
             href={`/shops/${shop.id}`}
-            className="mt-4 inline-block rounded-lg bg-brand px-6 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+            className="mt-4 inline-block rounded-lg bg-brand px-6 py-2 text-sm font-semibold text-main hover:bg-brand-dark"
           >
             {t.common.seeShopPage}
           </Link>
@@ -263,14 +263,14 @@ export default async function CastDetailPage({
           投稿・出勤・日記は未入力なら見出しごと出さない(「まだありません」が並ぶとサボっているように見えるため)。 */}
       {reelItems.length > 0 && (
       <section>
-        <div className="grid grid-cols-3 gap-1 border-t border-white/10 pt-1">
+        <div className="grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
           {reelItems.map((r) => {
             const item = (r.media as { type: "video" | "image"; url: string }[])[0];
             return (
               <Link
                 key={r.id}
                 href={`/cast/${castId}/reels?start=${r.id}`}
-                className="relative block aspect-[9/16] overflow-hidden bg-neutral-900"
+                className="relative block aspect-[9/16] overflow-hidden bg-surface"
               >
                 {item?.type === "video" ? (
                   <StreamThumb url={item.url} className="h-full w-full object-cover" />
@@ -284,12 +284,12 @@ export default async function CastDetailPage({
                   />
                 ) : null}
                 {r.pinned_at && (
-                  <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-gold">
-                    <Pin size={11} className="fill-gold" />
+                  <span data-surface="media" className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-accent">
+                    <Pin size={11} className="fill-accent" />
                   </span>
                 )}
-                <span className="absolute bottom-1 left-1 flex items-center gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
-                  <Heart size={10} className="fill-white" /> {r.likes_count}
+                <span data-surface="media" className="absolute bottom-1 left-1 flex items-center gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
+                  <Heart size={10} className="fill-main" /> {r.likes_count}
                 </span>
               </Link>
             );
@@ -300,19 +300,19 @@ export default async function CastDetailPage({
 
       {media && media.length > 0 && (
         <section className="px-1">
-          <h2 className="mb-3 text-sm font-bold text-neutral-300">{t.cast.photos}</h2>
+          <h2 className="mb-3 text-sm font-bold text-tone-300">{t.cast.photos}</h2>
           <CastPhotoGrid photos={media} castName={cast.name} />
         </section>
       )}
 
       {schedules && schedules.length > 0 && (
       <section className="px-1">
-        <h2 className="mb-3 text-sm font-bold text-neutral-300">{t.cast.schedule}</h2>
-          <ul className="divide-y divide-white/10 rounded-lg border border-white/10 bg-neutral-900">
+        <h2 className="mb-3 text-sm font-bold text-tone-300">{t.cast.schedule}</h2>
+          <ul className="divide-y divide-main/10 rounded-lg border border-main/10 bg-surface">
             {schedules.map((s) => (
               <li key={s.id} className="flex items-center justify-between px-4 py-3 text-sm">
                 <span>{s.date}</span>
-                <span className="text-neutral-400">
+                <span className="text-muted">
                   {s.is_working_today
                     ? `${s.start_time ?? "--:--"} 〜 ${s.end_time ?? "--:--"}`
                     : t.cast.dayOff}
@@ -325,15 +325,15 @@ export default async function CastDetailPage({
 
       {diaryEntries && diaryEntries.length > 0 && (
       <section className="px-1">
-        <h2 className="mb-3 text-sm font-bold text-neutral-300">{t.cast.diary}</h2>
+        <h2 className="mb-3 text-sm font-bold text-tone-300">{t.cast.diary}</h2>
           <ul className="space-y-4">
             {diaryEntries.map((d) => (
-              <li key={d.id} className="rounded-lg border border-white/10 bg-neutral-900 p-4">
+              <li key={d.id} className="rounded-lg border border-main/10 bg-surface p-4">
                 <p className="font-semibold">{d.title || t.cast.untitled}</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
                   {d.body}
                 </p>
-                <p className="mt-2 text-xs text-neutral-500">
+                <p className="mt-2 text-xs text-tone-500">
                   {new Date(d.created_at).toLocaleString(locale === "zh" ? "zh-CN" : locale)}
                 </p>
               </li>

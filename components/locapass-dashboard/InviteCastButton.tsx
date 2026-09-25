@@ -15,15 +15,15 @@ export function InviteCastButton({ shopId, castId, hasLogin }: { shopId: string;
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+        className="rounded bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
       >
         {pending ? "発行中..." : hasLogin ? "パスワードを再発行する" : "ログインを発行する"}
       </button>
 
       {state.status === "success" && (
-        <div className="rounded border border-amber-400 bg-amber-50 p-3 text-sm">
-          <p className="font-semibold text-amber-800">
-            この情報は今だけ表示されます。必ずキャスト本人に伝えてください。
+        <div className="rounded border border-hl-400 bg-hl-50 p-3 text-sm">
+          <p className="font-semibold text-hl-800">
+            この情報は今だけ表示されます。必ずパートナー本人に伝えてください。
           </p>
           <dl className="mt-2 space-y-1">
             <div>
