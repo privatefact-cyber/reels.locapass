@@ -21,23 +21,19 @@ const config: Config = {
         },
       },
       keyframes: {
-        // AIチャットボタンの初回アピール(一度だけ「ぷるん」と弾む)。
-        "ai-nudge": {
-          "0%, 100%": { transform: "translateY(0) scale(1)" },
-          "25%": { transform: "translateY(-7px) scale(1.07)" },
-          "45%": { transform: "translateY(0) scale(0.96)" },
-          "65%": { transform: "translateY(-3px) scale(1.03)" },
-          "85%": { transform: "translateY(0) scale(0.99)" },
+        // AIチャットボタンの「呼吸する光」。ゴールドの光彩が淡くじんわり浮かんで消える(派手な点滅にしない)。
+        "ai-glow": {
+          "0%, 100%": { boxShadow: "0 0 6px 0 rgba(212, 175, 106, 0.12), 0 10px 15px -3px rgba(0, 0, 0, 0.4)" },
+          "50%": { boxShadow: "0 0 18px 3px rgba(212, 175, 106, 0.35), 0 10px 15px -3px rgba(0, 0, 0, 0.4)" },
         },
-        "ai-teaser-in": {
-          "0%": { opacity: "0", transform: "translateY(4px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+        "ai-glow-icon": {
+          "0%, 100%": { opacity: "0.75", filter: "drop-shadow(0 0 2px rgba(212, 175, 106, 0.25))" },
+          "50%": { opacity: "1", filter: "drop-shadow(0 0 8px rgba(212, 175, 106, 0.6))" },
         },
       },
       animation: {
-        "ai-nudge": "ai-nudge 0.9s ease-out 1",
-        // 終わりの状態を保持しない(保持すると、消えるときの opacity-0 のフェードが効かなくなる)。
-        "ai-teaser-in": "ai-teaser-in 0.35s ease-out",
+        "ai-glow": "ai-glow 3.6s ease-in-out infinite",
+        "ai-glow-icon": "ai-glow-icon 3.6s ease-in-out infinite",
       },
     },
   },
