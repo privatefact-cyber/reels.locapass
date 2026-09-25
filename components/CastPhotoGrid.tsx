@@ -41,7 +41,7 @@ export function CastPhotoGrid({ photos, castName }: { photos: Photo[]; castName:
   );
 }
 
-function PhotoViewer({
+export function PhotoViewer({
   photos,
   initialIndex,
   castName,
@@ -87,7 +87,7 @@ function PhotoViewer({
   };
 
   return (
-    <div data-surface="media" className="fixed inset-0 z-50 bg-black">
+    <div data-surface="media" className="fixed inset-0 z-[100] bg-black">
       <button
         type="button"
         onClick={onClose}

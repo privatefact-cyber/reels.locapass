@@ -26,6 +26,7 @@ import { ShopAccordion } from "@/components/ShopAccordion";
 import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
+import { GalleryThumbs } from "@/components/shop/GalleryThumbs";
 import { JsonLd } from "@/components/JsonLd";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
@@ -527,15 +528,11 @@ export default async function ShopDetailPage({
 
           {store.galleryImageUrls.length > 0 && (
             <div className="-mx-1 flex snap-x gap-2 overflow-x-auto pb-1">
-              {store.galleryImageUrls.map((url) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={url}
-                  src={url}
-                  alt=""
-                  className="h-32 w-24 flex-none snap-start rounded-lg border border-main/10 object-cover"
-                />
-              ))}
+              <GalleryThumbs
+                urls={store.galleryImageUrls}
+                alt={store.name}
+                thumbClassName="h-32 w-24 flex-none snap-start rounded-lg border border-main/10"
+              />
             </div>
           )}
 
@@ -659,15 +656,11 @@ export default async function ShopDetailPage({
                       )}
                       {e.galleryImageUrls.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                          {e.galleryImageUrls.map((u) => (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              key={u}
-                              src={u}
-                              alt=""
-                              className="h-14 w-14 rounded-lg border border-line/20 object-cover"
-                            />
-                          ))}
+                          <GalleryThumbs
+                            urls={e.galleryImageUrls}
+                            alt={e.title}
+                            thumbClassName="h-14 w-14 rounded-lg border border-line/20"
+                          />
                         </div>
                       )}
                     </div>
