@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, X, Send, RotateCcw, ExternalLink, Mic } from "lucide-react";
+import { MessageCircle, X, Send, RotateCcw, ExternalLink, Mic, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAiSelectedContext } from "@/lib/aiContext";
 import { LOCALES, LOCALE_SHORT_LABEL, type Locale } from "@/lib/i18n/locale";
@@ -91,6 +91,13 @@ function isIOS(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
+// 初回アピール: ページ表示から少し置いてボタンを一度だけ弾ませ、吹き出しで「AIに聞ける」ことを知らせる。
+// ページ遷移のたびに出ると鬱陶しいので、ブラウザのセッション中は1回だけ。
+const TEASER_STORAGE_KEY = "ai_concierge_teaser_shown";
+const TEASER_DELAY_MS = 1800;
+const TEASER_VISIBLE_MS = 3500;
+const TEASER_FADE_MS = 500;
+
 /** 何も聞き取れないまま、この時間が経ったら自動でマイクを止める(止まらない事故の保険)。 */
 const MIC_SILENCE_TIMEOUT_MS = 8000;
 
@@ -155,6 +162,9 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
   const pathname = usePathname();
   const currentAreaSlug = guessCurrentAreaSlug(pathname);
   const [open, setOpen] = useState(false);
+  const [nudge, setNudge] = useState(false);
+  // "off" → "in"(表示中) → "out"(フェードアウト中) → "off"
+  const [teaser, setTeaser] = useState<"off" | "in" | "out">("off");
   const [speechSupported, setSpeechSupported] = useState(false);
   const [iosDictation, setIosDictation] = useState(false);
   const [listening, setListening] = useState(false);
@@ -224,6 +234,24 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
       setAccessToken(session?.access_token ?? null);
     });
     return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(TEASER_STORAGE_KEY)) return;
+      sessionStorage.setItem(TEASER_STORAGE_KEY, "1");
+    } catch {
+      return; // sessionStorageが使えない環境では、毎回出るのを避けて出さない
+    }
+    const timers = [
+      setTimeout(() => {
+        setNudge(true);
+        setTeaser("in");
+      }, TEASER_DELAY_MS),
+      setTimeout(() => setTeaser((v) => (v === "in" ? "out" : v)), TEASER_DELAY_MS + TEASER_VISIBLE_MS),
+      setTimeout(() => setTeaser("off"), TEASER_DELAY_MS + TEASER_VISIBLE_MS + TEASER_FADE_MS),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   // SSRとの不一致を避けるため、対応可否はマウント後に判定する(非対応ブラウザではマイクを出さない)。
@@ -622,19 +650,39 @@ export function AiInquiryWidget({ placement = "floating" }: { placement?: "float
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => {
-          if (!open) requestLocation();
-          setOpen((v) => !v);
-        }}
-        aria-label={t.ai.triggerLabel}
-        className={`flex items-center justify-center rounded-full border border-white/20 bg-zinc-900/60 text-white shadow-lg shadow-black/40 backdrop-blur-xl backdrop-saturate-150 transition hover:bg-zinc-800/70 ${
-          isMap ? "h-11 w-11" : "h-14 w-14"
-        }`}
-      >
-        <MessageCircle size={isMap ? 18 : 22} />
-      </button>
+      <div className="relative">
+        {teaser !== "off" && !open && (
+          <div
+            aria-hidden
+            className={`pointer-events-none absolute z-10 whitespace-nowrap rounded-full border border-gold/40 bg-zinc-900/80 px-3 py-1.5 text-[11px] font-semibold text-gold shadow-lg shadow-black/40 backdrop-blur-xl transition-opacity duration-500 animate-ai-teaser-in ${
+              teaser === "out" ? "opacity-0" : "opacity-100"
+            } ${isMap ? "bottom-0 right-full top-0 my-auto mr-2 h-fit" : "bottom-full right-0 mb-2"}`}
+          >
+            {machiEnabled ? t.ai.teaserMachi : t.ai.teaserConcierge}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            setTeaser("off");
+            if (!open) requestLocation();
+            setOpen((v) => !v);
+          }}
+          onAnimationEnd={() => setNudge(false)}
+          aria-label={t.ai.triggerLabel}
+          className={`relative flex items-center justify-center rounded-full border border-white/20 bg-zinc-900/60 text-white shadow-lg shadow-black/40 backdrop-blur-xl backdrop-saturate-150 transition hover:bg-zinc-800/70 ${
+            isMap ? "h-11 w-11" : "h-14 w-14"
+          } ${nudge ? "animate-ai-nudge" : ""}`}
+        >
+          <MessageCircle size={isMap ? 18 : 22} />
+          {/* 吹き出し単体だと「問い合わせ窓口」に見えるので、AIだと分かるゴールドの✨を添える */}
+          <Sparkles
+            aria-hidden
+            size={isMap ? 10 : 12}
+            className={`absolute text-gold drop-shadow ${isMap ? "right-1.5 top-1.5" : "right-2.5 top-2.5"}`}
+          />
+        </button>
+      </div>
     </div>
   );
 }

@@ -183,6 +183,8 @@ export type Dictionary = {
     micNoSpeech: string;
     micUnavailable: string;
     disclaimer: string;
+    teaserMachi: string;
+    teaserConcierge: string;
   };
   mypage: {
     inquiryHistory: string;
@@ -421,6 +423,8 @@ const ja: Dictionary = {
     micNoSpeech: "声が聞き取れませんでした。もう一度マイクを押して話してください。",
     micUnavailable: "このブラウザでは音声入力が使えませんでした。キーボードの音声入力をお使いください。",
     disclaimer: "AIによる回答です。不正確な情報を表示することがあります。",
+    teaserMachi: "街の声を聞いてみる 💬",
+    teaserConcierge: "AIに聞いてみる ✨",
   },
   mypage: {
     inquiryHistory: "問い合わせ履歴",
@@ -659,6 +663,8 @@ const en: Dictionary = {
     micNoSpeech: "We couldn't hear you. Tap the mic and try again.",
     micUnavailable: "Voice input isn't available in this browser. Please use your keyboard's dictation.",
     disclaimer: "AI-generated answers may be inaccurate.",
+    teaserMachi: "Hear the street buzz 💬",
+    teaserConcierge: "Ask our AI ✨",
   },
   mypage: {
     inquiryHistory: "Inquiry History",
@@ -897,6 +903,8 @@ const zh: Dictionary = {
     micNoSpeech: "没有听到声音，请再点一次麦克风说话。",
     micUnavailable: "此浏览器无法使用语音输入，请使用键盘的语音输入。",
     disclaimer: "回答由AI生成，可能不准确。",
+    teaserMachi: "听听街头的声音 💬",
+    teaserConcierge: "问问AI ✨",
   },
   mypage: {
     inquiryHistory: "咨询记录",
@@ -1135,7 +1143,9 @@ const ar: Dictionary = {
     micDenied: "الوصول إلى الميكروفون محظور. يرجى السماح به من إعدادات المتصفح.",
     micNoSpeech: "لم نتمكن من سماعك. اضغط على الميكروفون وحاول مرة أخرى.",
     micUnavailable: "الإدخال الصوتي غير متاح في هذا المتصفح. استخدم الإملاء في لوحة المفاتيح.",
-    disclaimer: "إجابات الذكاء الاصطناعي قد تكون غير دقيقة."
+    disclaimer: "إجابات الذكاء الاصطناعي قد تكون غير دقيقة.",
+    teaserMachi: "اسمع أخبار الشارع 💬",
+    teaserConcierge: "اسأل الذكاء الاصطناعي ✨"
   },
   "mypage": {
     "inquiryHistory": "سجل الاستفسارات",
