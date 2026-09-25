@@ -40,6 +40,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/auth") ||
     pathname.startsWith("/embed") ||
     pathname === "/favicon.ico" ||
+    // ブラウザのタブ・ホーム画面用アイコン(app/icon.png, app/apple-icon.png)。
+    pathname === "/icon.png" ||
+    pathname === "/apple-icon.png" ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
     pathname === "/webauth.html"
