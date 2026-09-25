@@ -242,14 +242,8 @@ export default async function CastDetailPage({
           </div>
         </div>
 
-        {sizes && (
-          <p className="mt-4 text-sm text-muted">
-            T{sizes.t ?? "-"} / B{sizes.b ?? "-"} W{sizes.w ?? "-"} H{sizes.h ?? "-"}
-          </p>
-        )}
-
         {cast.pr_text && (
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
             {cast.pr_text}
           </p>
         )}
