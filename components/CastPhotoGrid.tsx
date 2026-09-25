@@ -16,13 +16,14 @@ export function CastPhotoGrid({ photos, castName }: { photos: Photo[]; castName:
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
+      {/* 1列の横スワイプ。枚数が増えたら右に流れる(次の1枚が少し見えて続きがあると分かる) */}
+      <div className="-mx-1 flex snap-x gap-[2px] overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {photos.map((m, i) => (
           <button
             key={m.id}
             type="button"
             onClick={() => setOpenIndex(i)}
-            className="aspect-square w-full"
+            className="aspect-square w-[30%] shrink-0 snap-start sm:w-[18%] md:w-[12%]"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={sanitizeImageUrl(m.url)} alt={castName} loading="lazy" className="h-full w-full object-cover" />

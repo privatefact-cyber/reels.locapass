@@ -194,56 +194,62 @@ export default async function CastDetailPage({
       )}
 
       {/* プロフィールヘッダー(Instagramのプロフィール画面と同じ構成、閲覧専用) */}
-      <section className="px-1 text-center">
-        <div className="relative mx-auto inline-block">
-          {hasActiveStory ? (
-            <StoryRing castId={cast.id} castName={cast.name} avatarUrl={cast.avatar_url} size="lg" showLabel={false} />
-          ) : cast.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={sanitizeImageUrl(cast.avatar_url)}
-              alt=""
-              className="h-20 w-20 rounded-full border border-main/10 object-cover"
-            />
-          ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
-              {cast.name.slice(0, 1)}
-            </div>
-          )}
-          <CastFollowBadge castId={cast.id} />
-        </div>
-
-        <h1 className="mt-3 text-lg font-bold">
-          {cast.name}
-          {cast.age != null && <span className="ml-2 text-base text-main/50">{t.cast.age(cast.age)}</span>}
-        </h1>
-        {shop && <p className="text-xs text-muted">{shop.name} ・ {shop.area}</p>}
-
-        <div className="mt-4 flex justify-center gap-8">
-          <div className="text-center">
-            <p className="text-base font-bold">{postCount}</p>
-            <p className="text-[11px] text-muted">{t.common.posts}</p>
+      <section className="px-1">
+        <div className="flex items-center gap-4">
+          {/* 左: アイコン */}
+          <div className="relative shrink-0">
+            {hasActiveStory ? (
+              <StoryRing castId={cast.id} castName={cast.name} avatarUrl={cast.avatar_url} size="lg" showLabel={false} />
+            ) : cast.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={sanitizeImageUrl(cast.avatar_url)}
+                alt=""
+                className="h-20 w-20 rounded-full border border-main/10 object-cover"
+              />
+            ) : (
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
+                {cast.name.slice(0, 1)}
+              </div>
+            )}
+            <CastFollowBadge castId={cast.id} />
           </div>
-          <div className="text-center">
-            <p className="text-base font-bold">{totalLikes}</p>
-            <p className="text-[11px] text-muted">{t.common.likes}</p>
-          </div>
-          <div className="text-center">
-            <div className="flex h-6 items-center justify-center">
-              <CastFollowHeart castId={cast.id} size={18} />
+
+          {/* 右: 名前・店舗・スタッツ */}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-bold">
+              {cast.name}
+              {cast.age != null && <span className="ml-2 text-base text-main/50">{t.cast.age(cast.age)}</span>}
+            </h1>
+            {shop && <p className="truncate text-xs text-muted">{shop.name} ・ {shop.area}</p>}
+
+            <div className="mt-2 flex gap-6">
+              <div>
+                <p className="text-base font-bold">{postCount}</p>
+                <p className="text-[11px] text-muted">{t.common.posts}</p>
+              </div>
+              <div>
+                <p className="text-base font-bold">{totalLikes}</p>
+                <p className="text-[11px] text-muted">{t.common.likes}</p>
+              </div>
+              <div>
+                <div className="flex h-6 items-center">
+                  <CastFollowHeart castId={cast.id} size={18} />
+                </div>
+                <p className="text-[11px] text-muted">{t.common.follow}</p>
+              </div>
             </div>
-            <p className="text-[11px] text-muted">{t.common.follow}</p>
           </div>
         </div>
 
         {sizes && (
-          <p className="mt-3 text-sm text-muted">
+          <p className="mt-4 text-sm text-muted">
             T{sizes.t ?? "-"} / B{sizes.b ?? "-"} W{sizes.w ?? "-"} H{sizes.h ?? "-"}
           </p>
         )}
 
         {cast.pr_text && (
-          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
             {cast.pr_text}
           </p>
         )}
@@ -251,12 +257,20 @@ export default async function CastDetailPage({
         {shop && (
           <Link
             href={`/shops/${shop.id}`}
-            className="mt-4 inline-block rounded-lg bg-brand px-6 py-2 text-sm font-semibold text-main hover:bg-brand-dark"
+            className="mt-4 block w-full rounded-lg bg-brand px-6 py-2 text-center text-sm font-semibold text-main hover:bg-brand-dark"
           >
             {t.common.seeShopPage}
           </Link>
         )}
       </section>
+
+      {/* キャストギャラリー(1列の横スワイプ)。リール一覧の上に置く。 */}
+      {media && media.length > 0 && (
+        <section className="px-1">
+          <h2 className="mb-3 text-sm font-bold text-tone-300">{t.cast.photos}</h2>
+          <CastPhotoGrid photos={media} castName={cast.name} />
+        </section>
+      )}
 
       {/* 投稿グリッド(リール)。タップすると、このキャストの投稿だけを対象にした
           縦スワイプのリール再生(/cast/[castId]/reels)がタップした投稿から始まる。
@@ -296,13 +310,6 @@ export default async function CastDetailPage({
           })}
         </div>
       </section>
-      )}
-
-      {media && media.length > 0 && (
-        <section className="px-1">
-          <h2 className="mb-3 text-sm font-bold text-tone-300">{t.cast.photos}</h2>
-          <CastPhotoGrid photos={media} castName={cast.name} />
-        </section>
       )}
 
       {schedules && schedules.length > 0 && (
