@@ -80,7 +80,7 @@ export function StoryViewerModal({
         type="button"
         onClick={onClose}
         aria-label={t.common.close}
-        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-main"
+        className="absolute right-3 top-[calc(env(safe-area-inset-top)+12px)] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-main"
       >
         <X size={20} />
       </button>

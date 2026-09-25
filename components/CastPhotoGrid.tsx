@@ -91,16 +91,17 @@ export function PhotoViewer({
   // 全画面(fixed)がその枠の中に閉じ込められ、下の要素に隠れてしまうため。
   return createPortal(
     <div data-surface="media" className="fixed inset-0 z-[100] bg-black">
+      {/* 上端はiPhoneのステータスバー(時計・電池)の下に潜るとタップがOS側に取られるので、セーフエリア分下げる */}
       <button
         type="button"
         onClick={onClose}
         aria-label="閉じる"
-        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-main"
+        className="absolute right-3 top-[calc(env(safe-area-inset-top)+12px)] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-main"
       >
         <X size={20} />
       </button>
 
-      <span className="absolute left-3 top-3 z-10 rounded bg-black/60 px-2 py-1 text-xs text-main">
+      <span className="absolute left-3 top-[calc(env(safe-area-inset-top)+12px)] z-10 rounded bg-black/60 px-2 py-1 text-xs text-main">
         {activeIndex + 1} / {photos.length}
       </span>
 
