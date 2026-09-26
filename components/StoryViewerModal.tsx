@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CaptionDrawer } from "@/components/CaptionDrawer";
 import { StreamVideo } from "@/components/video/StreamVideo";
 
 type StoryMedia = { type: "video" | "image"; url: string };
@@ -36,6 +37,10 @@ export function StoryViewerModal({
   const { t } = useLocale();
   const [stories, setStories] = useState<StoryItem[] | null>(null);
   const [index, setIndex] = useState(0);
+  const [captionOpen, setCaptionOpen] = useState(false);
+  const [captionLong, setCaptionLong] = useState(false);
+  const captionOneRef = useRef<HTMLSpanElement>(null);
+  const mediaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,14 +70,34 @@ export function StoryViewerModal({
 
   const current = stories?.[index];
 
+  // コメントは最初は1行だけ。1行に入りきらないとき(改行を含むときも)だけ「続きを読む」を出す。
+  const captionText = current?.caption?.trim() ?? "";
   useEffect(() => {
-    if (!current || current.media[0]?.type === "video") return;
+    const el = captionOneRef.current;
+    if (el) setCaptionLong(captionText.includes("\n") || el.scrollWidth > el.clientWidth + 1);
+  }, [captionText]);
+
+  // 別のストーリーへ進んだら、ドロワーは閉じる。
+  useEffect(() => {
+    setCaptionOpen(false);
+  }, [index]);
+
+  // ドロワーを開いている間は、自動で進まないよう止める(動画も一時停止)。
+  useEffect(() => {
+    const video = mediaRef.current?.querySelector("video");
+    if (!video) return;
+    if (captionOpen) video.pause();
+    else video.play().catch(() => {});
+  }, [captionOpen]);
+
+  useEffect(() => {
+    if (!current || captionOpen || current.media[0]?.type === "video") return;
     const timer = setTimeout(() => {
       if (stories && index < stories.length - 1) setIndex(index + 1);
       else onClose();
     }, STORY_DURATION_MS);
     return () => clearTimeout(timer);
-  }, [current, index, stories, onClose]);
+  }, [current, index, stories, onClose, captionOpen]);
 
   return (
     <div data-surface="media" className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
@@ -112,7 +137,7 @@ export function StoryViewerModal({
       ) : stories.length === 0 ? (
         <p className="text-sm text-muted">{t.cast.storyNotFound}</p>
       ) : current ? (
-        <div className="flex h-full w-full max-w-md flex-col items-center justify-center">
+        <div ref={mediaRef} className="flex h-full w-full max-w-md flex-col items-center justify-center">
           {current.media[0]?.type === "video" ? (
             <StreamVideo
               src={current.media[0].url}
@@ -128,13 +153,31 @@ export function StoryViewerModal({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={current.media[0].url} alt="" className="max-h-full w-full object-contain" />
           ) : null}
-          {current.caption && (
-            <p className="absolute bottom-6 left-4 right-4 text-center text-sm text-main drop-shadow">
-              {current.caption}
-            </p>
+          {captionText && (
+            <>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute inset-x-4 bottom-6 z-20 mx-auto max-w-md">
+                <button
+                  type="button"
+                  onClick={() => setCaptionOpen(true)}
+                  className="flex w-full items-baseline gap-2 text-left text-main drop-shadow"
+                >
+                  <span ref={captionOneRef} className="min-w-0 flex-1 truncate text-sm leading-snug">
+                    {captionText}
+                  </span>
+                  {captionLong && (
+                    <span className="shrink-0 text-xs text-main/70 underline underline-offset-2">続きを読む</span>
+                  )}
+                </button>
+              </div>
+            </>
           )}
         </div>
       ) : null}
+
+      {captionOpen && captionText && (
+        <CaptionDrawer caption={captionText} zIndex={110} onClose={() => setCaptionOpen(false)} />
+      )}
     </div>
   );
 }

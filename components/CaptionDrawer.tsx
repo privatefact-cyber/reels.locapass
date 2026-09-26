@@ -12,7 +12,7 @@ const CLOSE_BELOW = 0.2;
  * 上部のハンドルを引っ張ると 1/3 → 1/2 の2段階で止まり、
  * 下へ引き下げると閉じる。全文が入りきらない場合は本文をスクロールする。
  */
-export function CaptionDrawer({ caption, onClose }: { caption: string; onClose: () => void }) {
+export function CaptionDrawer({ caption, onClose, zIndex }: { caption: string; onClose: () => void; zIndex?: number }) {
   const [snapIndex, setSnapIndex] = useState(0);
   const [viewportH, setViewportH] = useState(0);
   const [dragHeight, setDragHeight] = useState<number | null>(null);
@@ -89,6 +89,7 @@ export function CaptionDrawer({ caption, onClose }: { caption: string; onClose: 
   return createPortal(
     <div
       className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 backdrop-blur-[2px]"
+      style={zIndex ? { zIndex } : undefined}
       onClick={onClose}
     >
       <div
