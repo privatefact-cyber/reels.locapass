@@ -36,7 +36,7 @@ export async function generateMetadata({
 
   const title = `${area}の${genre}｜本日の出勤・パートナー一覧 - LOCAPASS`;
   const description = `${area}エリアの${genre}求人・出勤情報をリールでチェック。${area} ${genre} 出勤中のパートナーを今すぐ探せる。`;
-  const url = `https://reels.locapass.net/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`;
+  const url = `https://locapass.net/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`;
 
   return {
     title,
@@ -86,7 +86,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
     workingCountByShopId.set(targetShopId, (workingCountByShopId.get(targetShopId) ?? 0) + 1);
   }
 
-  const pageUrl = `https://reels.locapass.net/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`;
+  const pageUrl = `https://locapass.net/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`;
 
   return (
     <div className="mx-auto max-w-md space-y-8 px-4 py-8 md:max-w-4xl">
@@ -95,7 +95,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "ホーム", item: "https://reels.locapass.net" },
+            { "@type": "ListItem", position: 1, name: "ホーム", item: "https://locapass.net" },
             { "@type": "ListItem", position: 2, name: `${area}の${genre}`, item: pageUrl },
           ],
         }}
@@ -107,7 +107,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
           itemListElement: shops.map((s, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            url: `https://reels.locapass.net/shops/${s.id}`,
+            url: `https://locapass.net/shops/${s.id}`,
             name: s.name,
           })),
         }}

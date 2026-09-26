@@ -103,13 +103,13 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-// n8n側から返るlinksは絶対URL(https://reels.locapass.net/shops/...)なので、AvatarPeekの
+// n8n側から返るlinksは絶対URL(https://locapass.net/shops/...)なので、AvatarPeekの
 // iframeプレビュー/router.pushにはパス部分だけを渡す(絶対URLのままだと
 // クロスオリジン扱いになりrouter.pushが効かず、ローカル開発時は本番サイトを
 // 埋め込んでしまう)。
 function toPath(url: string): string {
   try {
-    return new URL(url, "https://reels.locapass.net").pathname;
+    return new URL(url, "https://locapass.net").pathname;
   } catch {
     return url;
   }

@@ -69,7 +69,7 @@ export async function generateMetadata({
     shop.tagline ||
     (shop.description ? shop.description.slice(0, 120) : null) ||
     `「${shop.name}」の店舗情報・リールを今すぐチェック。`;
-  const url = `https://reels.locapass.net/shops/${shopId}`;
+  const url = `https://locapass.net/shops/${shopId}`;
   const image = shop.cover_url ?? shop.icon_url ?? undefined;
 
   return {
@@ -291,14 +291,14 @@ export default async function ShopDetailPage({
 
   const hasPriceSection = priceItems.length > 0 || events.length > 0;
 
-  const shopUrl = `https://reels.locapass.net/shops/${store.id}`;
+  const shopUrl = `https://locapass.net/shops/${store.id}`;
 
   // locapass_shops.categoryはサイトごとの自由入力(観光・飲食・宿泊等)なので、
   // LUXELA側のようなジャンル別スキーマ判定はせず汎用のLocalBusinessにする。
   const schemaType = "LocalBusiness";
 
   const breadcrumbItems: { name: string; item: string }[] = [
-    { name: "ホーム", item: "https://reels.locapass.net" },
+    { name: "ホーム", item: "https://locapass.net" },
     { name: store.name, item: shopUrl },
   ];
 

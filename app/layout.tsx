@@ -11,7 +11,7 @@ import { ThemeSync } from "@/components/ThemeSync";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://reels.locapass.net"),
+  metadataBase: new URL("https://locapass.net"),
   title: {
     default: "LOCAPASS【ロカパス】| 街と人が繋がるリールメディア",
     template: "%s | LOCAPASS【ロカパス】",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     description:
       "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。最新のショート動画やリールから、エリアごとの人気スポットや話題の店舗の魅力をリアルにお届けします。",
     siteName: "LOCAPASS",
-    url: "https://reels.locapass.net",
+    url: "https://locapass.net",
     locale: "ja_JP",
     type: "website",
   },
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
       "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。街や店舗のリアルな今をショート動画でお届け。",
   },
   alternates: {
-    canonical: "https://reels.locapass.net",
+    canonical: "https://locapass.net",
   },
 };
 

@@ -21,6 +21,6 @@ export default function robots(): MetadataRoute.Robots {
         "/api/",
       ],
     },
-    sitemap: "https://reels.locapass.net/sitemap.xml",
+    sitemap: "https://locapass.net/sitemap.xml",
   };
 }
