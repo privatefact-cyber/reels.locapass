@@ -76,3 +76,12 @@ export async function regenerateStaffLoginToken(shopId: string, staffMemberId: s
   if (error) throw new Error(`リンクの再発行に失敗しました: ${error.message}`);
   revalidatePath(`/dashboard/shop/${shopId}/staff`);
 }
+
+/** ログインリンク用の6桁PINを(再)発行する。平文PINは戻り値でしか取得できない(DBにはハッシュのみ)。 */
+export async function issueStaffLoginPin(shopId: string, staffMemberId: string): Promise<{ pin?: string; error?: string }> {
+  const supabase = await requireShopAdmin(shopId);
+  const { data, error } = await supabase.rpc("locapass_set_staff_login_pin", { p_staff_member_id: staffMemberId });
+  if (error || !data) return { error: `暗証番号の発行に失敗しました: ${error?.message ?? "unknown"}` };
+  revalidatePath(`/dashboard/shop/${shopId}/staff`);
+  return { pin: data };
+}

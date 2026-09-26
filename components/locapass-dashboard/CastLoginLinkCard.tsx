@@ -1,25 +1,30 @@
 import QRCode from "qrcode";
 import { CopyButton } from "./CopyButton";
 import { RegenerateLoginLinkButton } from "./RegenerateLoginLinkButton";
+import { LoginPinPanel } from "./LoginPinPanel";
 
 export async function CastLoginLinkCard({
   castName,
   loginUrl,
   regenerateAction,
+  hasPin,
+  issuePin,
 }: {
   castName: string;
   loginUrl: string;
   regenerateAction: (formData: FormData) => Promise<void>;
+  hasPin: boolean;
+  issuePin: () => Promise<{ pin?: string; error?: string }>;
 }) {
   const qrDataUrl = await QRCode.toDataURL(loginUrl, { margin: 1, width: 220 });
-  const lineShareText = `${castName}さんの投稿用リンクです。タップしてログインしてください。\n${loginUrl}`;
+  const lineShareText = `${castName}さんの投稿用リンクです。タップして、別途お伝えする暗証番号でログインしてください。\n${loginUrl}`;
   const lineShareUrl = `https://line.me/R/msg/text/?${encodeURIComponent(lineShareText)}`;
 
   return (
     <section className="rounded-lg border border-black/10 bg-white p-4">
       <h2 className="mb-2 text-sm font-bold">投稿用リンク(マイページ)</h2>
       <p className="mb-3 text-xs text-black/50">
-        このリンクを開くとパートナー本人が投稿用マイページに直接ログインできます。URLを紛失した・ログアウトしてしまった場合も、いつでもここから同じリンクを再確認・再送できます。
+        このリンクを開き、6桁の暗証番号を入力するとパートナー本人が投稿用マイページにログインできます。URLだけでは入れません。暗証番号はリンクとは別の方法で伝えてください(LINE送信には含まれません)。
       </p>
 
       <div className="flex flex-col gap-4 sm:flex-row">
@@ -48,6 +53,7 @@ export async function CastLoginLinkCard({
           >
             LINEで送る
           </a>
+          <LoginPinPanel hasPin={hasPin} issue={issuePin} />
           <div>
             <RegenerateLoginLinkButton action={regenerateAction} />
           </div>

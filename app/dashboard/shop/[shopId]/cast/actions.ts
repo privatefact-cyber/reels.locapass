@@ -312,3 +312,12 @@ export async function deleteCastReelComment(shopId: string, castId: string, comm
   }
   revalidatePath(castPath(shopId, castId));
 }
+
+/** ログインリンク用の6桁PINを(再)発行する。平文PINは戻り値でしか取得できない(DBにはハッシュのみ)。 */
+export async function issueCastLoginPin(shopId: string, castId: string): Promise<{ pin?: string; error?: string }> {
+  const supabase = await requireShopAdmin(shopId);
+  const { data, error } = await supabase.rpc("locapass_set_cast_login_pin", { p_cast_id: castId });
+  if (error || !data) return { error: `暗証番号の発行に失敗しました: ${error?.message ?? "unknown"}` };
+  revalidatePath(castPath(shopId, castId));
+  return { pin: data };
+}

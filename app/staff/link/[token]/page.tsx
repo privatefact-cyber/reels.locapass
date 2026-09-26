@@ -1,69 +1,92 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * 店舗が発行したマジックリンク経由でスタッフマイページへログインする。
- * トークンを消費してワンタイムパスワードを発行し、そのままsignInWithPasswordする。
- * リンクは何度でも再利用できる(訪問のたびにパスワードが更新される)。
+ * 店舗が発行したリンク+6桁PINでマイページへログインする。
+ * URLだけでは入れない(漏洩対策)。PINは店舗ダッシュボードで発行され、5回間違えると30分ロックされる。
+ * 成功のたびにパスワードが更新される(リンクとPINが有効な限り何度でも使える)。
  */
 export default function StaffLoginLinkPage() {
   const router = useRouter();
   const params = useParams<{ token: string }>();
-  const [status, setStatus] = useState<"loading" | "error">("loading");
+  const [pin, setPin] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy || pin.length !== 6) return;
+    setBusy(true);
+    setMessage(null);
 
-    async function login() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .rpc("locapass_redeem_staff_login_token", { p_token: params.token })
-        .single();
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .rpc("locapass_redeem_staff_login_token", { p_token: params.token, p_pin: pin })
+      .single();
 
-      if (cancelled) return;
-      if (error || !data) {
-        setStatus("error");
-        return;
-      }
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: data.login_email,
-        password: data.one_time_password,
-      });
-
-      if (cancelled) return;
-      if (signInError) {
-        setStatus("error");
-        return;
-      }
-
-      router.push("/dashboard/staff");
-      router.refresh();
+    if (error || !data) {
+      setMessage("ログインできませんでした。時間をおいてもう一度お試しください。");
+      setBusy(false);
+      return;
+    }
+    if (data.status === "locked") {
+      setMessage("暗証番号を続けて間違えたため、30分ロックしました。時間をおくか、店舗にお問い合わせください。");
+      setBusy(false);
+      return;
+    }
+    if (data.status === "wrong_pin") {
+      setMessage("暗証番号が違います。");
+      setPin("");
+      setBusy(false);
+      return;
+    }
+    if (data.status !== "ok") {
+      setMessage("このリンクは無効です。店舗の担当者に最新のリンクと暗証番号を再発行してもらってください。");
+      setBusy(false);
+      return;
     }
 
-    void login();
-    return () => {
-      cancelled = true;
-    };
-  }, [params.token, router]);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.login_email,
+      password: data.one_time_password,
+    });
+    if (signInError) {
+      setMessage("ログインできませんでした。時間をおいてもう一度お試しください。");
+      setBusy(false);
+      return;
+    }
 
-  if (status === "error") {
-    return (
-      <div className="mx-auto max-w-sm px-4 py-10 text-center">
-        <h1 className="text-lg font-bold">ログインできませんでした</h1>
-        <p className="mt-2 text-sm text-neutral-400">
-          このリンクは無効です。店舗の担当者に最新のリンクを再送してもらってください。
-        </p>
-      </div>
-    );
+    router.push("/staff/mypage");
+    router.refresh();
   }
 
   return (
     <div className="mx-auto max-w-sm px-4 py-10 text-center">
-      <p className="text-sm text-neutral-400">ログイン中...</p>
+      <h1 className="text-lg font-bold">マイページにログイン</h1>
+      <p className="mt-2 text-sm text-muted">店舗から教えてもらった6桁の暗証番号を入力してください。</p>
+      <form onSubmit={submit} className="mt-6 space-y-3">
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))}
+          placeholder="000000"
+          className="w-full rounded border border-black/20 px-3 py-3 text-center text-2xl tracking-[0.5em]"
+        />
+        <button
+          type="submit"
+          disabled={busy || pin.length !== 6}
+          className="w-full rounded bg-black px-4 py-3 text-sm font-semibold text-white disabled:opacity-40"
+        >
+          {busy ? "確認中..." : "ログイン"}
+        </button>
+        {message && <p className="text-sm text-red-600">{message}</p>}
+      </form>
     </div>
   );
 }

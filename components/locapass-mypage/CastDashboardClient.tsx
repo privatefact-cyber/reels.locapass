@@ -546,10 +546,10 @@ export function CastDashboardClient({
           <div className="mt-2 flex items-center gap-2">
             <input
               readOnly
-              value={`https://reels.locapass.net/c/${castCode}`}
+              value={`https://locapass.net/c/${castCode}`}
               className="w-full rounded border border-main/20 bg-main/5 px-2 py-1.5 text-xs text-main"
             />
-            <CopyButton value={`https://reels.locapass.net/c/${castCode}`} />
+            <CopyButton value={`https://locapass.net/c/${castCode}`} />
           </div>
           <div className="mt-2">
             <RevealableQr qrDataUrl={qrDataUrl} label="QRコードを表示(お客様にその場で見せる用)" />

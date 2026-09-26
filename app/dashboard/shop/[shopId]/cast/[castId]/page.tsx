@@ -18,6 +18,7 @@ import {
   deletePhoto,
   deleteSchedule,
   regenerateCastLoginToken,
+  issueCastLoginPin,
   updateCastProfile,
 } from "../actions";
 
@@ -70,7 +71,7 @@ export default async function LocapassCastEditPage({
         .select("id, caption, video_url, images, poster_url, like_count, published_at, updated_at")
         .eq("cast_id", castId)
         .order("published_at", { ascending: false, nullsFirst: false }),
-      supabase.from("locapass_cast_login_tokens").select("token").eq("cast_id", castId).maybeSingle(),
+      supabase.from("locapass_cast_login_tokens").select("token, pin_hash").eq("cast_id", castId).maybeSingle(),
       supabase
         .from("locapass_reel_comments")
         .select("id, body, author_type, parent_comment_id, created_at, locapass_reels!inner(cast_id)")
@@ -245,6 +246,8 @@ export default async function LocapassCastEditPage({
           castName={cast.name}
           loginUrl={loginUrl}
           regenerateAction={boundRegenerateLoginToken}
+          hasPin={!!loginToken?.pin_hash}
+          issuePin={issueCastLoginPin.bind(null, shop.id, castId)}
         />
       )}
 

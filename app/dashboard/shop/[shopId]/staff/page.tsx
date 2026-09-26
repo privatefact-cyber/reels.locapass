@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { InviteStaffButton } from "@/components/locapass-dashboard/InviteStaffButton";
 import { StaffLoginLinkCard } from "@/components/locapass-dashboard/StaffLoginLinkCard";
 import { createClient } from "@/lib/supabase/server";
-import { addStaffMember, deleteStaffMember, regenerateStaffLoginToken } from "./actions";
+import { addStaffMember, deleteStaffMember, regenerateStaffLoginToken, issueStaffLoginPin } from "./actions";
 
 /**
  * LUXELA本家のスタッフ管理画面(app/dashboard/staff/page.tsx)と同じ画面。
@@ -23,7 +23,7 @@ export default async function LocapassShopStaffPage({
   const supabase = await createClient();
   const { data: staffRows } = await supabase
     .from("locapass_shop_staff_members")
-    .select("id, name, avatar_url, user_id, created_at, locapass_staff_login_tokens ( token )")
+    .select("id, name, avatar_url, user_id, created_at, locapass_staff_login_tokens ( token, pin_hash )")
     .eq("shop_id", shop.id)
     .order("created_at", { ascending: true });
   // 本家の列名(staff_login_tokens)に揃える。
@@ -108,6 +108,8 @@ export default async function LocapassShopStaffPage({
                     staffName={s.name}
                     loginUrl={loginUrl}
                     regenerateAction={boundRegenerate}
+                    hasPin={!!tokenRow?.pin_hash}
+                    issuePin={issueStaffLoginPin.bind(null, shop.id, s.id)}
                   />
                 </div>
               )}

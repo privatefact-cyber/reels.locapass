@@ -1,18 +1,23 @@
 import QRCode from "qrcode";
 import { CopyButton } from "./CopyButton";
 import { RegenerateLoginLinkButton } from "./RegenerateLoginLinkButton";
+import { LoginPinPanel } from "./LoginPinPanel";
 
 export async function StaffLoginLinkCard({
   staffName,
   loginUrl,
   regenerateAction,
+  hasPin,
+  issuePin,
 }: {
   staffName: string;
   loginUrl: string;
   regenerateAction: (formData: FormData) => Promise<void>;
+  hasPin: boolean;
+  issuePin: () => Promise<{ pin?: string; error?: string }>;
 }) {
   const qrDataUrl = await QRCode.toDataURL(loginUrl, { margin: 1, width: 160 });
-  const lineShareText = `${staffName}さんのマイページ用リンクです。タップしてログインしてください。\n${loginUrl}`;
+  const lineShareText = `${staffName}さんのマイページ用リンクです。タップして、別途お伝えする暗証番号でログインしてください。\n${loginUrl}`;
   const lineShareUrl = `https://line.me/R/msg/text/?${encodeURIComponent(lineShareText)}`;
 
   return (
@@ -42,6 +47,7 @@ export async function StaffLoginLinkCard({
         >
           LINEで送る
         </a>
+        <LoginPinPanel hasPin={hasPin} issue={issuePin} />
         <div>
           <RegenerateLoginLinkButton action={regenerateAction} />
         </div>

@@ -1034,18 +1034,27 @@ export type Database = {
         Row: {
           cast_id: string
           created_at: string
+          failed_attempts: number
+          locked_until: string | null
+          pin_hash: string | null
           shop_id: string
           token: string
         }
         Insert: {
           cast_id: string
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id: string
           token?: string
         }
         Update: {
           cast_id?: string
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id?: string
           token?: string
         }
@@ -2340,18 +2349,27 @@ export type Database = {
       locapass_staff_login_tokens: {
         Row: {
           created_at: string
+          failed_attempts: number
+          locked_until: string | null
+          pin_hash: string | null
           shop_id: string
           staff_member_id: string
           token: string
         }
         Insert: {
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id: string
           staff_member_id: string
           token?: string
         }
         Update: {
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id?: string
           staff_member_id?: string
           token?: string
@@ -4065,18 +4083,28 @@ export type Database = {
       }
       locapass_my_roles: { Args: never; Returns: Json }
       locapass_redeem_cast_login_token: {
-        Args: { p_token: string }
+        Args: { p_pin: string; p_token: string }
         Returns: {
           login_email: string
           one_time_password: string
+          status: string
         }[]
       }
+      locapass_set_cast_login_pin: {
+        Args: { p_cast_id: string }
+        Returns: string
+      }
       locapass_redeem_staff_login_token: {
-        Args: { p_token: string }
+        Args: { p_pin: string; p_token: string }
         Returns: {
           login_email: string
           one_time_password: string
+          status: string
         }[]
+      }
+      locapass_set_staff_login_pin: {
+        Args: { p_staff_member_id: string }
+        Returns: string
       }
       locapass_regenerate_cast_login_token: {
         Args: { p_cast_id: string }
