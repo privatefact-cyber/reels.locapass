@@ -227,6 +227,7 @@ export function MapReelOverlay({
                 shopName={reel.shopName}
                 createdAt={reel.createdAt}
                 ctaUrl={reelCtaUrl(reel)}
+                caption={reel.caption}
                 likesCount={likeCounts[reel.id] ?? reel.likesCount}
                 liked={liked.has(reel.id)}
                 onToggleLike={() => toggleLike(reel.id)}

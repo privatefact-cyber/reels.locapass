@@ -793,6 +793,7 @@ export function ReelFeed({
                       shopName={tile.reel.shopName}
                       createdAt={tile.reel.createdAt}
                       ctaUrl={reelCtaUrl(tile.reel)}
+                      caption={tile.reel.caption}
                       likesCount={likeCounts[tile.reel.id] ?? tile.reel.likesCount}
                       liked={liked.has(tile.reel.id)}
                       onToggleLike={() => toggleLike(tile.reel.id)}

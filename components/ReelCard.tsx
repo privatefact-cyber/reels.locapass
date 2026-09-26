@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, Loader2, MessageCircle, Plus, Share2, Volume2, VolumeX } from "lucide-react";
 import { AvatarPeek } from "@/components/AvatarPeek";
 import { ReelCommentSheet } from "@/components/ReelCommentSheet";
+import { CaptionDrawer } from "@/components/CaptionDrawer";
 import { formatPostedAt } from "@/lib/reels/formatPostedAt";
 import { useReelMutedPreference } from "@/lib/reels/useReelMutedPreference";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -40,6 +41,8 @@ export type ReelCardProps = {
   ctaUrl: string;
   /** CTAボタンのラベル。省略時は「詳しく見る」。 */
   ctaText?: string;
+  /** 投稿本文。先頭の数行だけカード上に出し、タップで下からのドロワーに全文を表示する。 */
+  caption?: string | null;
   likesCount: number;
   liked?: boolean;
   onToggleLike?: () => void;
@@ -78,6 +81,7 @@ export function ReelCard({
   createdAt,
   ctaUrl,
   ctaText,
+  caption,
   likesCount,
   liked = false,
   onToggleLike,
@@ -99,6 +103,8 @@ export function ReelCard({
   );
   const [shareCopied, setShareCopied] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [captionOpen, setCaptionOpen] = useState(false);
+  const captionText = caption?.trim() ?? "";
 
   // トースト(「リンクをコピーしました」)を数秒後に自動で消す。
   useEffect(() => {
@@ -352,6 +358,18 @@ export function ReelCard({
 
       {/* 左下: CTA + アカウント情報 */}
       <div className="pointer-events-auto absolute bottom-4 left-3 right-16 space-y-2">
+        {captionText && !isAd && (
+          <button
+            type="button"
+            onClick={() => setCaptionOpen(true)}
+            className="block w-full text-left text-main drop-shadow"
+          >
+            <span className="line-clamp-3 whitespace-pre-wrap break-words text-sm leading-snug">{captionText}</span>
+            {(captionText.length > 60 || captionText.split("\n").length > 3) && (
+              <span className="text-xs text-main/70">…続きを読む</span>
+            )}
+          </button>
+        )}
         <Link
           href={ctaUrl}
           className="inline-flex items-center gap-1 rounded-full border border-main/30 bg-main/15 px-4 py-2 text-sm font-medium text-main backdrop-blur-md"
@@ -366,6 +384,10 @@ export function ReelCard({
           </p>
         </Link>
       </div>
+
+      {captionOpen && captionText && (
+        <CaptionDrawer caption={captionText} onClose={() => setCaptionOpen(false)} />
+      )}
 
       {reelId && commentsOpen && (
         <ReelCommentSheet

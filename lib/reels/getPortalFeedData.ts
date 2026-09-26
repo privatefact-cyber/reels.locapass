@@ -6,6 +6,7 @@ import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 export type ReelRow = {
   id: string;
+  caption: string | null;
   video_url: string | null;
   images: unknown;
   poster_url: string | null;
@@ -49,7 +50,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
 
   return {
     id: row.id,
-    caption: null, // トップページのグリッド/リール一覧では未使用のため取得しない
+    caption: row.caption,
     media,
     likesCount: row.like_count,
     castId: row.cast_id,
@@ -67,7 +68,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
 }
 
 export const REEL_SELECT =
-  "id, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category ), cast_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url ), locapass_shop_staff_members ( name, avatar_url )";
+  "id, caption, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category ), cast_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url ), locapass_shop_staff_members ( name, avatar_url )";
 
 export type PortalFeedData = {
   reels: ReelItem[];
