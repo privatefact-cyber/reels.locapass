@@ -20,14 +20,24 @@ export function RevealableQr({
         {visible ? "QRコードを隠す" : label}
       </button>
       {visible && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={qrDataUrl}
-          alt="QRコード"
-          width={160}
-          height={160}
-          className="mt-2 h-40 w-40 rounded border border-black/10 bg-white p-2"
-        />
+        <div className="mt-2">
+          {/* サイト全体のimgガード(右クリック保存不可)をQRだけ回避するため、保存はダウンロードリンクで提供する。 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={qrDataUrl}
+            alt="QRコード"
+            width={160}
+            height={160}
+            className="h-40 w-40 rounded border border-black/10 bg-white p-2"
+          />
+          <a
+            href={qrDataUrl}
+            download="qr-code.png"
+            className="mt-1 inline-block text-xs font-semibold text-brand underline"
+          >
+            画像として保存
+          </a>
+        </div>
       )}
     </div>
   );
