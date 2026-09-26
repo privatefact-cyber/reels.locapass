@@ -22,6 +22,6 @@ export default async function MapPage() {
   const genres = await getVenueGenres();
   // 位置情報が拒否/未許可/取得失敗のときのフォールバック中心。
   // 未指定だと東京駅にフォールバックしてしまうため、
-  // config/site.tsに用意済みの初期中心(現状は皇居)を渡す。
+  // config/site.tsに用意済みの初期中心(現状は銀座)を渡す。
   return <VenueMapExplorer autoLocate initialCenter={siteConfig.map.initialCenter} genres={genres} />;
 }
