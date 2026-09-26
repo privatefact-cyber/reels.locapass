@@ -28,14 +28,24 @@ export async function CastLoginLinkCard({
       </p>
 
       <div className="flex flex-col gap-4 sm:flex-row">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={qrDataUrl}
-          alt="投稿用リンクのQRコード"
-          width={128}
-          height={128}
-          className="h-32 w-32 shrink-0 self-start rounded border border-black/10 object-contain"
-        />
+        <div className="shrink-0 self-start">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={qrDataUrl}
+            alt="投稿用リンクのQRコード"
+            width={128}
+            height={128}
+            className="h-32 w-32 rounded border border-black/10 object-contain"
+          />
+          {/* サイト全体のimgガードで右クリック保存できないため、ダウンロードリンクで保存できるようにする */}
+          <a
+            href={qrDataUrl}
+            download="login-qr.png"
+            className="mt-1 inline-block text-xs font-semibold text-brand underline"
+          >
+            画像として保存
+          </a>
+        </div>
         <div className="flex-1 space-y-2">
           <div className="flex gap-2">
             <input
