@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-/** ドロワーが止まる高さ(画面高さに対する割合)。1/3 → 1/2 → ほぼ全画面。 */
-const SNAPS = [1 / 3, 1 / 2, 0.9];
+/** ドロワーが止まる高さ(画面高さに対する割合)。1/3 → 1/2。 */
+const SNAPS = [1 / 3, 1 / 2];
 const CLOSE_BELOW = 0.2;
 
 /**
  * リール投稿の全文を表示する、下からのドロワー。
- * 上部のハンドルを引っ張ると 1/3 → 1/2 → ほぼ全画面 の3段階で止まり、
+ * 上部のハンドルを引っ張ると 1/3 → 1/2 の2段階で止まり、
  * 下へ引き下げると閉じる。全文が入りきらない場合は本文をスクロールする。
  */
 export function CaptionDrawer({ caption, onClose }: { caption: string; onClose: () => void }) {
@@ -62,10 +62,11 @@ export function CaptionDrawer({ caption, onClose }: { caption: string; onClose: 
     const d = drag.current;
     drag.current = null;
     if (!d) return;
-    // タップ(ほぼ動いていない): 次の段階へ。最大まで開いていたら1段階目へ戻す。
+    // タップ(ほぼ動いていない): 次の段階へ。最大まで開いていたら閉じる。
     if (!d.moved) {
       setDragHeight(null);
-      setSnapIndex((i) => (i + 1) % SNAPS.length);
+      if (snapIndex >= SNAPS.length - 1) onClose();
+      else setSnapIndex(snapIndex + 1);
       return;
     }
     const h = dragHeight ?? d.startHeight;

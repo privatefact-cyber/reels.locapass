@@ -105,6 +105,13 @@ export function ReelCard({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [captionOpen, setCaptionOpen] = useState(false);
   const captionText = caption?.trim() ?? "";
+  // コメントは最初は1行だけ。1行に入りきらないとき(改行を含むときも)だけ「続きを読む」を出す。
+  const captionOneRef = useRef<HTMLSpanElement>(null);
+  const [captionLong, setCaptionLong] = useState(false);
+  useEffect(() => {
+    const el = captionOneRef.current;
+    if (el) setCaptionLong(captionText.includes("\n") || el.scrollWidth > el.clientWidth + 1);
+  }, [captionText]);
 
   // トースト(「リンクをコピーしました」)を数秒後に自動で消す。
   useEffect(() => {
@@ -362,12 +369,12 @@ export function ReelCard({
           <button
             type="button"
             onClick={() => setCaptionOpen(true)}
-            className="block w-full text-left text-main drop-shadow"
+            className="flex w-full items-baseline gap-2 text-left text-main drop-shadow"
           >
-            <span className="line-clamp-3 whitespace-pre-wrap break-words text-sm leading-snug">{captionText}</span>
-            {(captionText.length > 60 || captionText.split("\n").length > 3) && (
-              <span className="text-xs text-main/70">…続きを読む</span>
-            )}
+            <span ref={captionOneRef} className="min-w-0 flex-1 truncate text-sm leading-snug">
+              {captionText}
+            </span>
+            {captionLong && <span className="shrink-0 text-xs text-main/70 underline underline-offset-2">続きを読む</span>}
           </button>
         )}
         <Link
