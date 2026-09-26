@@ -10,16 +10,16 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
  * トップページではその場でイベントを飛ばして開閉し、他ページからはトップへ遷移した上で開く
  * (?now=1をReelFeed側で拾う、SearchButton/MenuButtonと同じ思想)。
  */
-export function NowButton() {
+export function NowButton({ home = "/" }: { home?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLocale();
 
   function handleClick() {
-    if (pathname === "/") {
+    if (pathname === home) {
       window.dispatchEvent(new Event(TOGGLE_NOW_EVENT));
     } else {
-      router.push("/?now=1");
+      router.push(`${home}?now=1`);
     }
   }
 

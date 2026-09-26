@@ -69,11 +69,15 @@ export default async function RootLayout({
       data: { user },
     },
     { data: settings },
+    { data: portalRows },
   ] = await Promise.all([
     supabase.auth.getUser(),
     // 管理画面で選んだ配色テーマ(null=自動)。LUXELAとは別の列。
     supabase.from("platform_settings").select("locapass_site_theme").eq("id", true).maybeSingle(),
+    // 子ポータルのslug一覧。ヘッダー/ボトムナビの「イベント」を、子ポータル内ではそのポータル限定のページへ向けるため。
+    supabase.from("locapass_portals").select("slug").eq("status", "active").neq("slug", ""),
   ]);
+  const portalSlugs = (portalRows ?? []).map((p) => p.slug);
   const manualTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
   let myPageAvatarUrl: string | null = null;
@@ -98,7 +102,7 @@ export default async function RootLayout({
         <ThemeSync manual={manualTheme} />
         <ImageInteractionGuard />
         <LocaleProvider initialLocale={locale}>
-          <SiteChrome myPageAvatarUrl={myPageAvatarUrl} myPageInitial={myPageInitial} />
+          <SiteChrome myPageAvatarUrl={myPageAvatarUrl} myPageInitial={myPageInitial} portalSlugs={portalSlugs} />
 
           {/* メインコンテンツ(PC幅ではワイドに広がる、リール一覧はデスクトップでグリッド表示に切り替わる) */}
           <AppShell>{children}</AppShell>

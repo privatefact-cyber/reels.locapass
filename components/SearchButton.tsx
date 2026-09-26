@@ -7,8 +7,6 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // マップは/mapと/[prefecture]/[city]/mapの2パターンあるので末尾一致で判定する。
 // マップにはモーダルが無く、常時表示の住所検索欄にフォーカスするだけ(グリッド絞り込みには繋がない)。
-// その場で検索モーダルを開けるページ(ページ自身がOPEN_SEARCH_EVENTを購読している)。
-const IN_PLACE_SEARCH_PATHS = ["/", "/events"];
 const MAP_PATH_PATTERN = /(^|\/)map$/;
 
 /**
@@ -16,16 +14,19 @@ const MAP_PATH_PATTERN = /(^|\/)map$/;
  * トップページ・マップではその場でイベントを飛ばして開き、他ページからはトップへ遷移した上で開く
  * (?search=1をReelFeed側で拾う、MenuButtonと同じ思想)。
  */
-export function SearchButton() {
+export function SearchButton({ home = "/" }: { home?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLocale();
 
   function handleClick() {
-    if (pathname && (IN_PLACE_SEARCH_PATHS.includes(pathname) || MAP_PATH_PATTERN.test(pathname))) {
+    // homeは今いるポータルのトップ("/"=全体、"/mito"=子ポータル)。子ポータルでは検索対象もそのポータルに限るため、
+    // 全体トップ("/")ではなくそのポータルのトップへ戻して開く。
+    const inPlacePaths = [home, `${home === "/" ? "" : home}/events`];
+    if (pathname && (inPlacePaths.includes(pathname) || MAP_PATH_PATTERN.test(pathname))) {
       window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
     } else {
-      router.push("/?search=1");
+      router.push(`${home}?search=1`);
     }
   }
 

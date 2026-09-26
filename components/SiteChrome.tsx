@@ -14,6 +14,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 type Props = {
   myPageAvatarUrl: string | null;
   myPageInitial: string | null;
+  portalSlugs: string[];
 };
 
 const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
@@ -26,11 +27,17 @@ function isExcludedPath(pathname: string): boolean {
   return EXCLUDED_PREFIXES.some(matches);
 }
 
-export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
+export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs }: Props) {
   const pathname = usePathname();
   const { t } = useLocale();
   if (isExcludedPath(pathname ?? "")) return null;
   const mapImmersive = FULL_BLEED_PATTERN.test(pathname ?? "");
+  // 子ポータル(/mito, /mito/events 等)の中にいる間は、イベントをそのポータル限定のページへ向ける。
+  const firstSegment = (pathname ?? "").split("/")[1] ?? "";
+  const inPortal = portalSlugs.includes(firstSegment);
+  const eventsHref = inPortal ? `/${firstSegment}/events` : "/events";
+  // 検索・NOW・メニューが戻る先。子ポータル内ではそのポータルのトップ(全体トップへ飛ばさない)。
+  const home = inPortal ? `/${firstSegment}` : "/";
 
   return (
     <>
@@ -57,7 +64,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
               <Link href="/" className="transition hover:text-accent">
                 {t.nav.home}
               </Link>
-              <Link href="/events" className="transition hover:text-accent">
+              <Link href={eventsHref} className="transition hover:text-accent">
                 {t.nav.events}
               </Link>
               <Link href="/map" className="inline-flex items-center gap-1.5 transition hover:text-accent">
@@ -90,7 +97,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
                 )}
               </Link>
               <div className="hidden md:block">
-                <MenuButton />
+                <MenuButton home={home} />
               </div>
             </div>
           </div>
@@ -103,9 +110,9 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
           <Home size={22} />
           <span className="text-[10px] leading-none">{t.nav.home}</span>
         </Link>
-        <NowButton />
+        <NowButton home={home} />
         <Link
-          href="/events"
+          href={eventsHref}
           className="flex flex-col items-center gap-0.5 p-2 text-accent"
           aria-label={t.nav.events}
         >
@@ -120,8 +127,8 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial }: Props) {
           <MapIcon size={22} />
           <span className="text-[10px] leading-none">{t.nav.map}</span>
         </Link>
-        <SearchButton />
-        <MenuButton />
+        <SearchButton home={home} />
+        <MenuButton home={home} />
       </nav>
 
       <AiInquiryWidget placement={mapImmersive ? "map" : "floating"} />

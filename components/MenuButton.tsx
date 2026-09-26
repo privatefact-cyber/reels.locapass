@@ -10,16 +10,16 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
  * トップページではCAST/SHOP選択モーダルをその場で再度開き、他ページからは
  * トップへ遷移した上で開く(?menu=1をReelFeed側で拾う)。
  */
-export function MenuButton() {
+export function MenuButton({ home = "/" }: { home?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLocale();
 
   function handleClick() {
-    if (pathname === "/") {
+    if (pathname === home) {
       window.dispatchEvent(new Event(OPEN_FEED_GATE_EVENT));
     } else {
-      router.push("/?menu=1");
+      router.push(`${home}?menu=1`);
     }
   }
 
