@@ -101,6 +101,11 @@ export function ReelCard({
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     videoUrl ? "loading" : "ready",
   );
+  // 動画の最初のコマが出るまでは動画を透明にして、下に敷いたサムネイルを見せる(一瞬の真っ黒/暗転を防ぐ)。
+  const [firstFrame, setFirstFrame] = useState(false);
+  useEffect(() => {
+    setFirstFrame(false);
+  }, [videoUrl, isActive]);
   const [shareCopied, setShareCopied] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [captionOpen, setCaptionOpen] = useState(false);
@@ -186,22 +191,36 @@ export function ReelCard({
         </div>
       )}
       {videoUrl && isActive ? (
-        <StreamVideo
-          ref={videoRef}
-          src={videoUrl}
-          active={isActive}
-          poster={sanitizeImageUrl(posterImageUrl)}
-          className="h-full w-full object-contain"
-          autoPlay
-          playsInline
-          muted={muted}
-          loop
-          preload="metadata"
-          onLoadedData={() => setStatus("ready")}
-          onWaiting={() => setStatus("loading")}
-          onPlaying={() => setStatus("ready")}
-          onError={() => setStatus("error")}
-        />
+        <>
+          {posterImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={sanitizeImageUrl(posterImageUrl)} alt="" className="absolute inset-0 h-full w-full object-contain" />
+          )}
+          <StreamVideo
+            ref={videoRef}
+            src={videoUrl}
+            active={isActive}
+            poster={sanitizeImageUrl(posterImageUrl)}
+            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-200 ${
+              firstFrame ? "opacity-100" : "opacity-0"
+            }`}
+            autoPlay
+            playsInline
+            muted={muted}
+            loop
+            preload="metadata"
+            onLoadedData={() => {
+              setStatus("ready");
+              setFirstFrame(true);
+            }}
+            onWaiting={() => setStatus("loading")}
+            onPlaying={() => {
+              setStatus("ready");
+              setFirstFrame(true);
+            }}
+            onError={() => setStatus("error")}
+          />
+        </>
       ) : posterImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -242,15 +261,7 @@ export function ReelCard({
 
       {/* 読み込み中/回線遅延時のフォールバック: サムネイルを重ねてスピナー表示(アクティブな1本のみ) */}
       {videoUrl && isActive && status !== "ready" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-tone-950">
-          {posterImageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={sanitizeImageUrl(posterImageUrl)}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-60"
-            />
-          )}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           {status === "loading" ? (
             <Loader2 className="relative z-10 animate-spin text-main/80" size={32} />
           ) : (
