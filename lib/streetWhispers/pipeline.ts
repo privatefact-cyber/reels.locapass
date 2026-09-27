@@ -11,6 +11,7 @@
  *   → 収集(検索)は Flash、蒸留は安い Flash-Lite。どちらも出力を短くしてトークン代を抑える。
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchOfficialSnsPosts } from "./officialSnsSource";
 
 export type WhisperSite = "luxela" | "locapass";
 
@@ -193,22 +194,48 @@ ${shopIdentity(site, shop)}
 出力: 見つけた情報を最大8件、1行1件の箇条書きで。各行は「日付(分かれば)・媒体名・内容」を60文字以内で短く。
 新しい情報を優先。同名の別店舗(別の地域・別業態)の情報は除く。推測は書かない。何も見つからなければ「情報なし」とだけ書く。`;
 
-  const data = await callGemini(COLLECT_MODEL, {
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    tools: [{ google_search: {} }],
-    // 考える時間を0にし、検索回数・出力も絞る(無制限だと1店舗で検索170回・165秒かかった。絞ると約8秒)。
-    generationConfig: { temperature: 0.2, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
-  });
+  const [data, officialPosts] = await Promise.all([
+    callGemini(COLLECT_MODEL, {
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      tools: [{ google_search: {} }],
+      // 考える時間を0にし、検索回数・出力も絞る(無制限だと1店舗で検索170回・165秒かかった。絞ると約8秒)。
+      generationConfig: { temperature: 0.2, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
+    }),
+    // Google検索はSNS内部の投稿本文まではほとんど拾えないため、運営がAPI連携済みの公式アカウント
+    // (Instagram/Facebook/Threads)があれば、検索とは別に実際の投稿を直接取得して混ぜる。
+    fetchOfficialSnsPosts(shop.sns_links).catch((err) => {
+      console.error("公式SNS投稿の取得に失敗(検索結果のみで続行)", err);
+      return [] as Awaited<ReturnType<typeof fetchOfficialSnsPosts>>;
+    }),
+  ]);
   const candidate = data?.candidates?.[0];
-  const raw: string = (candidate?.content?.parts ?? [])
+  const searchRaw: string = (candidate?.content?.parts ?? [])
     .map((p: { text?: string }) => p.text ?? "")
     .join("")
     .trim();
   const meta = candidate?.groundingMetadata ?? {};
-  const sources: Source[] = (meta.groundingChunks ?? [])
+  const searchSources: Source[] = (meta.groundingChunks ?? [])
     .map((c: { web?: { title?: string; uri?: string } }) => ({ title: c.web?.title ?? "", uri: c.web?.uri ?? "" }))
     .filter((s: Source) => s.uri);
-  return { raw, sources, queries: (meta.webSearchQueries ?? []) as string[] };
+
+  // 公式投稿は検索と違って本人発信そのものなので、蒸留プロンプトに「信頼性が高い」と分かる形で渡す。
+  const officialBlock =
+    officialPosts.length > 0
+      ? `\n\n【公式SNS投稿(API取得・本人発信のため信頼性が高い。最新${officialPosts.length}件)】\n` +
+        officialPosts
+          .slice(0, 10)
+          .map((p) => `[${p.platform}] ${p.text.replace(/\s+/gu, " ").trim().slice(0, 150)}`)
+          .join("\n")
+      : "";
+  const officialSources: Source[] = officialPosts
+    .filter((p) => p.permalink)
+    .map((p) => ({ title: `${p.platform}公式投稿`, uri: p.permalink as string }));
+
+  return {
+    raw: searchRaw + officialBlock,
+    sources: [...searchSources, ...officialSources],
+    queries: (meta.webSearchQueries ?? []) as string[],
+  };
 }
 
 /** 2. 蒸留: 生データから客向けのポジティブなネタと営業実態を判定する(検索なし・JSON出力)。 */
