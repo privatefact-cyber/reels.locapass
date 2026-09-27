@@ -107,6 +107,18 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
 // iframeプレビュー/router.pushにはパス部分だけを渡す(絶対URLのままだと
 // クロスオリジン扱いになりrouter.pushが効かず、ローカル開発時は本番サイトを
 // 埋め込んでしまう)。
+const OWN_HOSTS = new Set(["locapass.net", "www.locapass.net", "reels.locapass.net"]);
+
+// 自サイト(locapass)のURLかどうか。外部サイト(店舗の公式サイト等)のURLからパス部分だけを
+// 取り出すと、"https://外部/" が "/" になってグランドトップへ飛ばされてしまうため、判定して分ける。
+function isOwnUrl(url: string): boolean {
+  try {
+    return OWN_HOSTS.has(new URL(url, "https://locapass.net").hostname);
+  } catch {
+    return true; // 相対パス等はそのまま自サイト扱い
+  }
+}
+
 function toPath(url: string): string {
   try {
     return new URL(url, "https://locapass.net").pathname;
@@ -540,8 +552,9 @@ export function AiInquiryWidget({
                     {m.links.map((link) => (
                       <Link
                         key={link.url}
-                        href={toPath(link.url)}
-                        onClick={() => recordLinkClick(toPath(link.url))}
+                        href={isOwnUrl(link.url) ? toPath(link.url) : link.url}
+                        {...(isOwnUrl(link.url) ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+                        onClick={() => recordLinkClick(isOwnUrl(link.url) ? toPath(link.url) : link.url)}
                         className="flex w-full items-center justify-between gap-2 rounded-xl border border-accent/30 bg-main/5 px-3 py-2 text-left text-xs font-semibold text-accent hover:bg-main/10"
                       >
                         {link.title}
