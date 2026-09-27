@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPanel";
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
-import { RevealableQr } from "@/components/RevealableQr";
+import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
@@ -508,7 +508,7 @@ export function CastDashboardClient({
         <h1 className="mt-3 text-lg font-bold">{name}</h1>
         {shopName && <p className="text-xs text-muted">{shopName}</p>}
 
-        <div className="mt-4 flex justify-center gap-8">
+        <div className="mt-4 flex items-center justify-center gap-8">
           <div className="text-center">
             <p className="text-base font-bold">{postCount}</p>
             <p className="text-[11px] text-muted">投稿</p>
@@ -517,6 +517,10 @@ export function CastDashboardClient({
             <p className="text-base font-bold">{totalLikes}</p>
             <p className="text-[11px] text-muted">いいね</p>
           </div>
+          <QrCodeIconButton
+            qrDataUrl={qrDataUrl}
+            label="QRコードを表示(お客様にその場で見せる用)"
+          />
         </div>
 
         {prText && (
@@ -557,9 +561,6 @@ export function CastDashboardClient({
               className="w-full rounded border border-main/20 bg-main/5 px-2 py-1.5 text-xs text-main"
             />
             <CopyButton value={`https://locapass.net/c/${castCode}`} />
-          </div>
-          <div className="mt-2">
-            <RevealableQr qrDataUrl={qrDataUrl} label="QRコードを表示(お客様にその場で見せる用)" />
           </div>
         </div>
       </section>

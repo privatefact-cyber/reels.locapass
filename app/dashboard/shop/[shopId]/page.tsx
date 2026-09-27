@@ -8,7 +8,7 @@ import { SingleImageDropzone } from "@/components/locapass-dashboard/EventImageD
 import { FloorStatusDropzone } from "@/components/locapass-dashboard/FloorStatusDropzone";
 import { ShopGalleryUploader } from "@/components/locapass-dashboard/ShopGalleryUploader";
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
-import { RevealableQr } from "@/components/RevealableQr";
+import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { TodayScheduleBoard, type TodayScheduleRow } from "@/components/locapass-dashboard/TodayScheduleBoard";
 import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel";
 import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapStatsCard";
@@ -248,19 +248,17 @@ export default async function LocapassShopSettingsPage({
         <p className="mb-2 text-xs text-slate-500">
           お客様にこの店舗の公開ページへアクセスしてもらうための短縮URL・QRコードです。
         </p>
-        <div className="flex max-w-xs gap-2">
+        <div className="flex max-w-xs items-center gap-2">
           <input
             readOnly
             value={shopPageUrl}
             className="w-full rounded border border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-900"
           />
           <CopyButton value={shopPageUrl} />
-        </div>
-        <div className="mt-2">
-          <RevealableQr
+          <QrCodeIconButton
             qrDataUrl={shopQrDataUrl}
             label="QRコードを表示(お客様にその場で見せる用)"
-            buttonClassName="text-xs font-semibold text-blue-600 underline"
+            theme="light"
           />
         </div>
       </section>
