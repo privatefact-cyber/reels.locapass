@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Heart, Loader2, MessageCircle, Plus, Share2, Volume2, VolumeX } from "lucide-react";
+import { Heart, Loader2, Maximize, MessageCircle, Plus, Share2, Volume2, VolumeX } from "lucide-react";
 import { AvatarPeek } from "@/components/AvatarPeek";
 import { ReelCommentSheet } from "@/components/ReelCommentSheet";
 import { CaptionDrawer } from "@/components/CaptionDrawer";
@@ -124,6 +124,40 @@ export function ReelCard({
     const timer = window.setTimeout(() => setShareCopied(false), 2000);
     return () => window.clearTimeout(timer);
   }, [shareCopied]);
+
+  // 全画面: iPhoneは標準プレイヤー(横向き動画は自動で横向きに)、Android・パソコンは全画面＋横向き固定(YouTubeと同じ)。
+  async function handleFullscreen() {
+    const v = videoRef.current as
+      | (HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitRequestFullscreen?: () => Promise<void> })
+      | null;
+    if (!v) return;
+    try {
+      if (v.requestFullscreen) {
+        await v.requestFullscreen();
+        if (v.videoWidth > v.videoHeight) {
+          const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+          await orientation?.lock?.("landscape").catch(() => undefined);
+        }
+      } else if (v.webkitEnterFullscreen) {
+        v.webkitEnterFullscreen();
+      } else if (v.webkitRequestFullscreen) {
+        await v.webkitRequestFullscreen();
+      }
+      void v.play().catch(() => undefined);
+    } catch {
+      v.webkitEnterFullscreen?.();
+    }
+  }
+
+  // 全画面を終えたら、画面の向きの固定を解除する。
+  useEffect(() => {
+    if (!isActive) return;
+    const onChange = () => {
+      if (!document.fullscreenElement) (screen.orientation as ScreenOrientation & { unlock?: () => void })?.unlock?.();
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, [isActive]);
 
   async function handleShare() {
     const shareUrl = new URL(ctaUrl, window.location.origin).toString();
@@ -357,6 +391,17 @@ export function ReelCard({
           >
             <MessageCircle size={26} />
             {commentsCount != null && <span className="text-[11px] drop-shadow">{commentsCount}</span>}
+          </button>
+        )}
+        {videoUrl && isActive && (
+          <button
+            type="button"
+            onClick={handleFullscreen}
+            aria-label={t.common.fullscreen}
+            className="flex flex-col items-center gap-1"
+          >
+            <Maximize size={24} />
+            <span className="text-[11px] drop-shadow">{t.common.fullscreen}</span>
           </button>
         )}
         <button

@@ -48,6 +48,7 @@ export type Dictionary = {
     addToFavorites: string;
     favorited: string;
     share: string;
+    fullscreen: string;
     loadFailed: string;
     learnMore: string;
     linkCopied: string;
@@ -287,6 +288,7 @@ const ja: Dictionary = {
     addToFavorites: "お気に入りに追加",
     favorited: "お気に入り登録済み",
     share: "シェア",
+    fullscreen: "全画面",
     loadFailed: "読み込めませんでした",
     learnMore: "詳しく見る",
     linkCopied: "リンクをコピーしました",
@@ -525,6 +527,7 @@ const en: Dictionary = {
     addToFavorites: "Add to Favorites",
     favorited: "Favorited",
     share: "Share",
+    fullscreen: "Fullscreen",
     loadFailed: "Failed to load",
     learnMore: "Learn more",
     linkCopied: "Link copied",
@@ -763,6 +766,7 @@ const zh: Dictionary = {
     addToFavorites: "加入收藏",
     favorited: "已收藏",
     share: "分享",
+    fullscreen: "全屏",
     loadFailed: "加载失败",
     learnMore: "查看详情",
     linkCopied: "链接已复制",
@@ -1002,6 +1006,7 @@ const ar: Dictionary = {
     "addToFavorites": "إضافة إلى المفضلة",
     "favorited": "مضاف للمفضلة",
     "share": "مشاركة",
+    "fullscreen": "ملء الشاشة",
     "loadFailed": "تعذر التحميل",
     "learnMore": "معرفة المزيد",
     "linkCopied": "تم نسخ الرابط",
