@@ -29,6 +29,8 @@ export interface VenuePin {
 export interface VenueCardData {
   id: string;
   name: string;
+  slug: string;
+  portalSlug: string;
   area: string | null;
   genre: string | null;
   location: VenueLocation;

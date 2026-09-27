@@ -118,7 +118,7 @@ export async function getVenueCards(
   const { data: shopRows } = await supabase
     .from("locapass_shops")
     .select(
-      "id, name, area, category, lat, lng, address_en, icon_url, cover_url, cover_image_attribution, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id",
+      "id, name, slug, area, category, lat, lng, address_en, icon_url, cover_url, cover_image_attribution, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id, portal:locapass_portals ( slug )",
     )
     .eq("status", "active")
     .not("lat", "is", null)
@@ -133,8 +133,10 @@ export async function getVenueCards(
   const shops = (shopRows ?? [])
     .map((s) => ({
       ...s,
+      portal: Array.isArray(s.portal) ? s.portal[0] : s.portal,
       distance: distanceMeters(center.lat, center.lng, s.lat as number, s.lng as number),
     }))
+    .filter((s) => s.portal !== null)
     .sort((a, b) => a.distance - b.distance)
     .slice(0, cardLimit);
 
@@ -228,6 +230,8 @@ export async function getVenueCards(
     return {
       id: s.id,
       name: s.name,
+      slug: s.slug,
+      portalSlug: s.portal!.slug,
       area: s.area ?? null,
       genre: s.category,
       location: {

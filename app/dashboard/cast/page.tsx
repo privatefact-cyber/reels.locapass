@@ -76,6 +76,7 @@ export default async function CastDashboardPage() {
   }));
 
   const shop = Array.isArray(cast.locapass_shops) ? cast.locapass_shops[0] : cast.locapass_shops;
+  const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
 
   return (
     <CastDashboardClient
@@ -83,6 +84,9 @@ export default async function CastDashboardPage() {
       portalId={shop?.portal_id ?? 0}
       castId={cast.id}
       shopId={cast.shop_id}
+      shopSlug={shop?.slug ?? null}
+      portalSlug={portal?.slug ?? null}
+      issueNo={cast.issue_no}
       shopName={shop?.name ?? null}
       castCode={cast.cast_code}
       qrDataUrl={qrDataUrl}

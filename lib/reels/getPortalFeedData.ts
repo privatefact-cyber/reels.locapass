@@ -17,10 +17,13 @@ export type ReelRow = {
   action_url: string | null;
   published_at: string | null;
   updated_at: string;
-  locapass_shops: { name: string; address: string | null; category: string | null } | { name: string; address: string | null; category: string | null }[] | null;
+  locapass_shops:
+    | { name: string; address: string | null; category: string | null; slug: string; portal: { slug: string } | { slug: string }[] | null }
+    | { name: string; address: string | null; category: string | null; slug: string; portal: { slug: string } | { slug: string }[] | null }[]
+    | null;
   cast_id: string | null;
   is_comments_enabled: boolean;
-  locapass_cast_members: { name: string | null; avatar_url: string | null } | { name: string | null; avatar_url: string | null }[] | null;
+  locapass_cast_members: { name: string | null; avatar_url: string | null; issue_no: number } | { name: string | null; avatar_url: string | null; issue_no: number }[] | null;
   locapass_shop_staff_members: { name: string; avatar_url: string | null } | { name: string; avatar_url: string | null }[] | null;
 };
 
@@ -30,7 +33,8 @@ export function toReelItem(row: ReelRow): ReelItem | null {
   const staff = Array.isArray(row.locapass_shop_staff_members)
     ? row.locapass_shop_staff_members[0]
     : row.locapass_shop_staff_members;
-  if (!shop || !row.shop_id) return null;
+  const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
+  if (!shop || !row.shop_id || !portal) return null;
 
   // 動画が無いリールはimages配列を使うが、WordPress取込データはimagesが空でも
   // poster_urlだけに静止画が入っているケースが多いため、その場合はposter_urlを画像として使う。
@@ -58,6 +62,9 @@ export function toReelItem(row: ReelRow): ReelItem | null {
     castAvatarUrl: sanitizeImageUrl(cast?.avatar_url ?? staff?.avatar_url ?? row.author_icon_url) ?? null,
     shopId: row.shop_id,
     shopName: shop.name,
+    shopSlug: shop.slug,
+    portalSlug: portal.slug,
+    castIssueNo: cast?.issue_no ?? null,
     area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
     address: shop.address,
     genre: shop.category,
@@ -68,7 +75,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
 }
 
 export const REEL_SELECT =
-  "id, caption, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category ), cast_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url ), locapass_shop_staff_members ( name, avatar_url )";
+  "id, caption, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url )";
 
 export type PortalFeedData = {
   reels: ReelItem[];
@@ -86,7 +93,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
 
   let shopsQuery = supabase
     .from("locapass_shops")
-    .select("id, name, address, category, icon_url, cover_url, cover_image_attribution")
+    .select("id, name, slug, address, category, icon_url, cover_url, cover_image_attribution, portal:locapass_portals ( slug )")
     .eq("status", "active")
     .or(EXCLUDE_OFFICIAL_FILTER)
     .order("created_at", { ascending: false });
@@ -113,17 +120,25 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
 
   const reels: ReelItem[] = (reelRows ?? []).flatMap((row) => toReelItem(row) ?? []);
 
-  const shopItems: ShopGridItem[] = (shops ?? []).map((s) => ({
-    id: s.id,
-    name: s.name,
-    area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
-    address: s.address,
-    genre: s.category,
-    coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url) ?? null,
-    coverAttribution: isPlacePhotoUrl(s.cover_url)
-      ? (s.cover_image_attribution as { name?: string; uri?: string | null } | null)
-      : null,
-  }));
+  const shopItems: ShopGridItem[] = (shops ?? []).flatMap((s) => {
+    const portal = Array.isArray(s.portal) ? s.portal[0] : s.portal;
+    if (!portal) return [];
+    return [
+      {
+        id: s.id,
+        name: s.name,
+        slug: s.slug,
+        portalSlug: portal.slug,
+        area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
+        address: s.address,
+        genre: s.category,
+        coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url) ?? null,
+        coverAttribution: isPlacePhotoUrl(s.cover_url)
+          ? (s.cover_image_attribution as { name?: string; uri?: string | null } | null)
+          : null,
+      },
+    ];
+  });
 
   const genreChoices = Array.from(
     new Set((shops ?? []).map((s) => s.category).filter((g): g is string => !!g)),

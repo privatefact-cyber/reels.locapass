@@ -8,6 +8,11 @@ export type ReelItem = {
   castAvatarUrl: string | null;
   shopId: string;
   shopName: string;
+  /** 公開URL組み立て用(reelProfileUrl/reelCtaUrl)。店舗は必ず所属ポータルとslugを持つ。 */
+  shopSlug: string;
+  portalSlug: string;
+  /** キャスト投稿の場合の発行番号。店舗投稿(castIdがnull)なら常にnull。 */
+  castIssueNo: number | null;
   area: string | null;
   address: string | null;
   genre: string | null;
@@ -33,6 +38,8 @@ export type AdItem = {
 export type ShopGridItem = {
   id: string;
   name: string;
+  slug: string;
+  portalSlug: string;
   area: string | null;
   address: string | null;
   genre: string | null;

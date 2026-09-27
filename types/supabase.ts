@@ -1095,6 +1095,7 @@ export type Database = {
           id_check_match_level: string | null
           id_checked_at: string | null
           id_document_path: string | null
+          issue_no: number
           legal_name: string | null
           legal_name_kana: string | null
           metadata: Json
@@ -1118,6 +1119,7 @@ export type Database = {
           id_check_match_level?: string | null
           id_checked_at?: string | null
           id_document_path?: string | null
+          issue_no?: number
           legal_name?: string | null
           legal_name_kana?: string | null
           metadata?: Json
@@ -1141,6 +1143,7 @@ export type Database = {
           id_check_match_level?: string | null
           id_checked_at?: string | null
           id_document_path?: string | null
+          issue_no?: number
           legal_name?: string | null
           legal_name_kana?: string | null
           metadata?: Json
@@ -2213,6 +2216,7 @@ export type Database = {
           sns_whisper_sources: Json | null
           sns_whisper_updated_at: string | null
           plan: string
+          next_cast_no: number
           portal_id: number
           price_info: string | null
           shop_code: string
@@ -2260,6 +2264,7 @@ export type Database = {
           sns_whisper_sources?: Json | null
           sns_whisper_updated_at?: string | null
           plan?: string
+          next_cast_no?: number
           portal_id: number
           price_info?: string | null
           shop_code?: string
@@ -2307,6 +2312,7 @@ export type Database = {
           sns_whisper_sources?: Json | null
           sns_whisper_updated_at?: string | null
           plan?: string
+          next_cast_no?: number
           portal_id?: number
           price_info?: string | null
           shop_code?: string
@@ -3670,6 +3676,7 @@ export type Database = {
           cast_code: string
           created_at: string
           id: string
+          issue_no: number
           name: string
           pr_text: string | null
           shop_id: string

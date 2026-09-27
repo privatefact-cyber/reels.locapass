@@ -7,7 +7,7 @@ import { ReelCard } from "@/components/ReelCard";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
-import { reelCtaUrl } from "@/lib/reels/links";
+import { reelCtaUrl, reelProfileUrl } from "@/lib/reels/links";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { ReelItem } from "@/lib/reels/types";
 import type { VenueCardData } from "@/types/venue";
@@ -223,7 +223,7 @@ export function MapReelOverlay({
                 posterImageUrl={media?.type === "video" ? media.poster : media?.url}
                 accountName={reel.castName}
                 accountAvatarUrl={reel.castAvatarUrl ?? undefined}
-                profileUrl={reel.castId ? `/cast/${reel.castId}` : `/shops/${reel.shopId}`}
+                profileUrl={reelProfileUrl(reel)}
                 shopName={reel.shopName}
                 createdAt={reel.createdAt}
                 ctaUrl={reelCtaUrl(reel)}

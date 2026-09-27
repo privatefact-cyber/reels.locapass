@@ -5,7 +5,8 @@ import { Search, ChevronLeft, X } from "lucide-react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
-import { reelCtaUrl } from "@/lib/reels/links";
+import { reelCtaUrl, reelProfileUrl } from "@/lib/reels/links";
+import { shopPath } from "@/lib/locapass/publicUrls";
 import { ReelCard } from "@/components/ReelCard";
 import { PreloadNextVideo } from "@/components/video/PreloadNextVideo";
 import type { AdItem, ReelItem, ShopGridItem } from "@/lib/reels/types";
@@ -787,9 +788,7 @@ export function ReelFeed({
                       posterImageUrl={media?.type === "video" ? media.poster : media?.url}
                       accountName={tile.reel.castName}
                       accountAvatarUrl={tile.reel.castAvatarUrl ?? undefined}
-                      profileUrl={
-                        tile.reel.castId ? `/cast/${tile.reel.castId}` : `/shops/${tile.reel.shopId}`
-                      }
+                      profileUrl={reelProfileUrl(tile.reel)}
                       shopName={tile.reel.shopName}
                       createdAt={tile.reel.createdAt}
                       ctaUrl={reelCtaUrl(tile.reel)}
@@ -816,9 +815,9 @@ export function ReelFeed({
                   posterImageUrl={tile.shop.coverImageUrl ?? undefined}
                   posterCredit={tile.shop.coverAttribution}
                   accountName={tile.shop.name}
-                  profileUrl={`/shops/${tile.shop.id}`}
+                  profileUrl={shopPath(tile.shop.portalSlug, tile.shop.slug)}
                   shopName={tile.shop.area ?? ""}
-                  ctaUrl={`/shops/${tile.shop.id}`}
+                  ctaUrl={shopPath(tile.shop.portalSlug, tile.shop.slug)}
                   likesCount={0}
                   followed={favoritedShopIds.has(tile.shop.id)}
                   onToggleFollow={() => toggleShopFavorite(tile.shop.id)}
@@ -876,7 +875,7 @@ export function ReelFeed({
               />
             )}
             <iframe
-              src={`/shops/${peek.shop.id}`}
+              src={shopPath(peek.shop.portalSlug, peek.shop.slug)}
               title={`${peek.shop.name}のプレビュー`}
               tabIndex={-1}
               scrolling="no"

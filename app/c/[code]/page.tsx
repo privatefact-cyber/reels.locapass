@@ -1,9 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { castPath } from "@/lib/locapass/publicUrls";
 
 // インスタのプロフィール欄などに貼るための短縮URL(/c/AB12CD)。
-// 公開プロフィールページ(/cast/[castId])のUUID直リンクは長すぎて改行・文字数制限に
-// かかるため、6桁の短いコード(cast_code、shop_codeと同じ発想)から本来のページへ飛ばす。
+// 6桁の短いコード(cast_code)から、slugベースの公開プロフィール
+// (/{portalSlug}/cast/{shopSlug}-{発行番号})へ飛ばす。
 export default async function CastShortLinkPage({
   params,
 }: {
@@ -14,13 +15,16 @@ export default async function CastShortLinkPage({
 
   const { data: cast } = await supabase
     .from("locapass_public_casts")
-    .select("id")
+    .select("issue_no, shop:locapass_shops ( slug, portal:locapass_portals ( slug ) )")
     .eq("cast_code", code.toUpperCase())
     .maybeSingle();
 
-  if (!cast) {
+  const shop = Array.isArray(cast?.shop) ? cast.shop[0] : cast?.shop;
+  const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
+
+  if (!cast || !shop || !portal) {
     notFound();
   }
 
-  redirect(`/cast/${cast.id}`);
+  redirect(castPath(portal.slug, shop.slug, cast.issue_no));
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
-import { reelCtaUrl } from "@/lib/reels/links";
+import { reelCtaUrl, reelProfileUrl } from "@/lib/reels/links";
 import { ReelCard } from "@/components/ReelCard";
 import type { ReelItem } from "@/lib/reels/types";
 
@@ -61,7 +61,7 @@ export function ReelLoopFeed({ reels }: { reels: ReelItem[] }) {
               posterImageUrl={media?.type === "video" ? media.poster : media?.url}
               accountName={reel.castName}
               accountAvatarUrl={reel.castAvatarUrl ?? undefined}
-              profileUrl={reel.castId ? `/cast/${reel.castId}` : `/shops/${reel.shopId}`}
+              profileUrl={reelProfileUrl(reel)}
               shopName={reel.shopName}
               createdAt={reel.createdAt}
               ctaUrl={reelCtaUrl(reel)}

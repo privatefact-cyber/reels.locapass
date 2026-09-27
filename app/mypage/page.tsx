@@ -21,13 +21,13 @@ export default async function MypagePage() {
     supabase
       .from("locapass_cast_follows")
       .select(
-        "cast_id, cast:locapass_public_casts ( id, name, avatar_url, shop_id, shops:locapass_shops ( name ), schedules:locapass_schedules ( is_working_today, date ) )",
+        "cast_id, cast:locapass_public_casts ( id, name, avatar_url, shop_id, issue_no, shops:locapass_shops ( name, slug, portal:locapass_portals ( slug ) ), schedules:locapass_schedules ( is_working_today, date ) )",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("locapass_shop_favorites")
-      .select("shop_id, shop:locapass_shops ( id, name, area, status )")
+      .select("shop_id, shop:locapass_shops ( id, name, slug, area, status, portal:locapass_portals ( slug ) )")
       .eq("member_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
@@ -43,6 +43,7 @@ export default async function MypagePage() {
       const cast = Array.isArray(row.cast) ? row.cast[0] : row.cast;
       if (!cast) return null;
       const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
+      const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
       const schedules = Array.isArray(cast.schedules) ? cast.schedules : cast.schedules ? [cast.schedules] : [];
       const isWorkingToday = schedules.some(
         (sch: { date: string; is_working_today: boolean }) => sch.date === today && sch.is_working_today,
@@ -52,6 +53,9 @@ export default async function MypagePage() {
         name: cast.name,
         avatarUrl: cast.avatar_url,
         shopName: shop?.name ?? null,
+        shopSlug: shop?.slug ?? null,
+        portalSlug: portal?.slug ?? null,
+        issueNo: cast.issue_no,
         isWorkingToday,
       };
     })
@@ -61,7 +65,9 @@ export default async function MypagePage() {
     .map((row) => {
       const shop = Array.isArray(row.shop) ? row.shop[0] : row.shop;
       if (!shop) return null;
-      return { id: shop.id, name: shop.name, area: shop.area, status: shop.status };
+      const portal = Array.isArray(shop.portal) ? shop.portal[0] : shop.portal;
+      if (!portal) return null;
+      return { id: shop.id, name: shop.name, slug: shop.slug, portalSlug: portal.slug, area: shop.area, status: shop.status };
     })
     .filter((s): s is FavoriteShop => s !== null);
 
@@ -81,7 +87,7 @@ export default async function MypagePage() {
   const favoriteReelsRes = await supabase
     .from("locapass_member_favorite_reels")
     .select(
-      "reel_id, locapass_reels ( id, caption, video_url, poster_url, images, like_count, shop_id, locapass_shops!locapass_reels_shop_id_fkey ( name ) )",
+      "reel_id, locapass_reels ( id, caption, video_url, poster_url, images, like_count, shop_id, locapass_shops!locapass_reels_shop_id_fkey ( name, slug, portal:locapass_portals ( slug ) ) )",
     )
     .eq("member_id", user.id)
     .order("created_at", { ascending: false });
@@ -91,12 +97,16 @@ export default async function MypagePage() {
       const reel = Array.isArray(row.locapass_reels) ? row.locapass_reels[0] : row.locapass_reels;
       if (!reel || !reel.shop_id) return null;
       const shop = Array.isArray(reel.locapass_shops) ? reel.locapass_shops[0] : reel.locapass_shops;
+      const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
+      if (!shop || !portal) return null;
       return {
         id: reel.id,
         caption: reel.caption,
         media: buildMedia(reel.video_url, reel.poster_url, reel.images),
         likesCount: reel.like_count,
         shopId: reel.shop_id,
+        shopSlug: shop.slug,
+        portalSlug: portal.slug,
         shopName: shop?.name ?? null,
       };
     })

@@ -25,7 +25,9 @@ export async function requireCurrentCast() {
 
   const { data: cast } = await supabase
     .from("locapass_cast_members")
-    .select("id, name, shop_id, pr_text, avatar_url, cast_code, user_id, locapass_shops ( name, portal_id )")
+    .select(
+      "id, name, shop_id, pr_text, avatar_url, cast_code, user_id, issue_no, locapass_shops ( name, slug, portal_id, portal:locapass_portals ( slug ) )",
+    )
     .eq("id", castId)
     .single();
 

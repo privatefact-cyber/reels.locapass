@@ -3,7 +3,7 @@ import { UserRound } from "lucide-react";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 export function CastCard({
-  id,
+  href,
   name,
   age,
   prText,
@@ -12,7 +12,7 @@ export function CastCard({
   isNew = false,
   dense = false,
 }: {
-  id: string;
+  href: string;
   name: string;
   age: number | null;
   prText: string | null;
@@ -25,7 +25,7 @@ export function CastCard({
 }) {
   return (
     <Link data-surface="media"
-      href={`/cast/${id}`}
+      href={href}
       className={`group relative block aspect-[3/4] overflow-hidden border-line/30 bg-gradient-to-br from-panel-900 to-black transition hover:border-hl-400/60 hover:shadow-lg hover:shadow-hl-500/10 ${
         dense ? "border" : "rounded-2xl border"
       }`}

@@ -7,6 +7,7 @@ import { PREFECTURE_SLUG, PREFECTURE_LABEL, areaToSlug, slugToArea } from "@/lib
 import { genreToSlug, slugToGenre } from "@/lib/shop/genres";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
+import { shopPath } from "@/lib/locapass/publicUrls";
 
 // この動的ルートは generateStaticParams を持たない(=ビルド時の事前レンダリング対象に
 // 含めない)。店舗詳細・キャスト詳細ページと同じく、初回アクセス時にオンデマンドで
@@ -56,13 +57,16 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
   const supabase = await createClient();
   const { data: shopRows } = await supabase
     .from("locapass_shops")
-    .select("id, name, tagline, cover_image_url:cover_url, cover_image_attribution")
+    .select("id, slug, name, tagline, cover_image_url:cover_url, cover_image_attribution, portal:locapass_portals ( slug )")
     .eq("status", "active")
     .eq("area", area)
     .eq("category", genre)
     .order("created_at", { ascending: false });
 
-  const shops = shopRows ?? [];
+  const shops = (shopRows ?? []).map((s) => ({
+    ...s,
+    portal: Array.isArray(s.portal) ? s.portal[0] : s.portal,
+  }));
   if (shops.length === 0) notFound();
 
   const shopIds = shops.map((s) => s.id);
@@ -104,12 +108,14 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
         data={{
           "@context": "https://schema.org",
           "@type": "ItemList",
-          itemListElement: shops.map((s, i) => ({
-            "@type": "ListItem",
-            position: i + 1,
-            url: `https://locapass.net/shops/${s.id}`,
-            name: s.name,
-          })),
+          itemListElement: shops
+            .filter((s) => s.portal)
+            .map((s, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              url: `https://locapass.net${shopPath(s.portal!.slug, s.slug)}`,
+              name: s.name,
+            })),
         }}
       />
 
@@ -138,12 +144,12 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {shops.map((shop) => {
+          {shops.filter((shop) => shop.portal).map((shop) => {
             const workingCount = workingCountByShopId.get(shop.id) ?? 0;
             return (
               <Link
                 key={shop.id}
-                href={`/shops/${shop.id}`}
+                href={shopPath(shop.portal!.slug, shop.slug)}
                 className="group flex gap-3 overflow-hidden rounded-2xl border border-line/20 bg-panel-900/60 p-3 shadow-lg transition hover:border-hl-400/50"
               >
                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-tone-800">

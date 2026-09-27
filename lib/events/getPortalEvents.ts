@@ -23,7 +23,7 @@ export async function getPortalEvents(portalId: number | null): Promise<{
     supabase
       .from("locapass_shop_events")
       .select(
-        "id, title, body, starts_at, ends_at, image_url, gallery_image_urls, shop_id, shops:locapass_shops ( name, area, genre:category, status, portal_id )",
+        "id, title, body, starts_at, ends_at, image_url, gallery_image_urls, shop_id, shops:locapass_shops ( name, slug, area, genre:category, status, portal_id, portal:locapass_portals ( slug ) )",
       )
       .not("image_url", "is", null)
       .order("created_at", { ascending: false }),
@@ -33,7 +33,8 @@ export async function getPortalEvents(portalId: number | null): Promise<{
   const now = Date.now();
   const events: PortalEvent[] = (eventRows ?? []).flatMap((row) => {
     const shop = Array.isArray(row.shops) ? row.shops[0] : row.shops;
-    if (!shop || shop.status !== "active" || !row.image_url) return [];
+    const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
+    if (!shop || !portal || shop.status !== "active" || !row.image_url) return [];
     if (portalId !== null && shop.portal_id !== portalId) return [];
     // 終了日時を過ぎたイベントはイベントリールから除外する。
     if (row.ends_at && new Date(row.ends_at).getTime() < now) return [];
@@ -48,6 +49,8 @@ export async function getPortalEvents(portalId: number | null): Promise<{
         galleryImageUrls: row.gallery_image_urls ?? [],
         shopId: row.shop_id,
         shopName: shop.name,
+        shopSlug: shop.slug,
+        portalSlug: portal.slug,
         area: shop.area,
         genre: shop.genre,
       },

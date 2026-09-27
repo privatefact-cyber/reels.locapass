@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { PortalEvent } from "@/lib/types/shop";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
+import { shopPath } from "@/lib/locapass/publicUrls";
 
 export function EventCard({
   event,
@@ -56,7 +57,7 @@ export function EventCard({
         </div>
 
         <Link
-          href={`/shops/${event.shopId}`}
+          href={shopPath(event.portalSlug, event.shopSlug)}
           className="flex w-fit items-center gap-1 rounded-full border border-main/30 bg-main/10 px-4 py-2 text-xs font-semibold tracking-wide text-main backdrop-blur-md"
         >
           ▲ SWIPE UP FOR DETAILS

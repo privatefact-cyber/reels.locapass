@@ -15,6 +15,7 @@ import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 import { uploadPosterToR2, uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
+import { castReelsPath } from "@/lib/locapass/publicUrls";
 
 export type MyReel = {
   id: string;
@@ -46,6 +47,9 @@ export function CastDashboardClient({
   portalId,
   castId,
   shopId,
+  shopSlug,
+  portalSlug,
+  issueNo,
   shopName,
   castCode,
   qrDataUrl,
@@ -59,6 +63,9 @@ export function CastDashboardClient({
   portalId: number;
   castId: string;
   shopId: string;
+  shopSlug: string | null;
+  portalSlug: string | null;
+  issueNo: number | null;
   shopName: string | null;
   castCode: string;
   qrDataUrl: string;
@@ -686,7 +693,11 @@ export function CastDashboardClient({
           .map((r) => (
             <Link
               key={r.id}
-              href={`/cast/${castId}/reels?start=${r.id}`}
+              href={
+                portalSlug && shopSlug && issueNo != null
+                  ? `${castReelsPath(portalSlug, shopSlug, issueNo)}?start=${r.id}`
+                  : `/cast/${castId}/reels?start=${r.id}`
+              }
               className="relative block aspect-[9/16] overflow-hidden bg-surface"
             >
               {r.media[0]?.type === "video" ? (

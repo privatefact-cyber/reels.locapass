@@ -81,6 +81,8 @@ export interface PortalEvent {
   galleryImageUrls: string[];
   shopId: string;
   shopName: string;
+  shopSlug: string;
+  portalSlug: string;
   area: string | null;
   genre: string | null;
 }

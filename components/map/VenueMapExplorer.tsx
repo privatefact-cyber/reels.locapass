@@ -18,6 +18,7 @@ import { OPEN_SEARCH_EVENT } from "@/lib/reels/events";
 import type { NightlifeGenre, VenueCardData, VenuePin } from "@/types/venue";
 import { StreamVideo } from "@/components/video/StreamVideo";
 import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
+import { shopPath } from "@/lib/locapass/publicUrls";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const SOURCE_ID = "venues";
@@ -731,7 +732,7 @@ export function VenueMapExplorer({
       if (venue.reelCount > 0) {
         setReelOverlayVenueId(venue.id);
       } else {
-        router.push(`/shops/${venue.id}`);
+        router.push(shopPath(venue.portalSlug, venue.slug));
       }
     },
     [activeId, focusVenue, router],
@@ -1061,7 +1062,7 @@ export function VenueMapExplorer({
                         {t.map.visitNow} →
                       </a>
                       <Link
-                        href={`/shops/${venue.id}`}
+                        href={shopPath(venue.portalSlug, venue.slug)}
                         onClick={(e) => e.stopPropagation()}
                         className="rounded-full border border-main/15 px-3 py-2 text-xs text-tone-300 transition hover:border-hl-400/50 hover:text-hl-300"
                       >

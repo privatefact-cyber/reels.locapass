@@ -6,6 +6,7 @@ import { Share2 } from "lucide-react";
 import type { PortalEvent } from "@/lib/types/shop";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { shopPath } from "@/lib/locapass/publicUrls";
 
 /**
  * グリッドのイベントをタップしたときに開く拡大カード。見た目はReelCardと同じ(9:16・右にアクション・左下にCTA)で、
@@ -14,7 +15,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 export function EventExpandedCard({ event }: { event: PortalEvent }) {
   const { t } = useLocale();
   const [shareCopied, setShareCopied] = useState(false);
-  const shopUrl = `/shops/${event.shopId}`;
+  const shopUrl = shopPath(event.portalSlug, event.shopSlug);
   const dates = formatEventDateRange(event);
 
   useEffect(() => {

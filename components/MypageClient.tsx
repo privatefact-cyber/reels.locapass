@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StreamVideo } from "@/components/video/StreamVideo";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
+import { shopPath, shopReelsPath, castPath } from "@/lib/locapass/publicUrls";
 
 export type SavedReel = {
   id: string;
@@ -17,6 +18,8 @@ export type SavedReel = {
   media: { type: "video" | "image"; url: string; poster?: string }[];
   likesCount: number;
   shopId: string;
+  shopSlug: string;
+  portalSlug: string;
   shopName: string | null;
 };
 
@@ -25,12 +28,17 @@ export type FollowedCast = {
   name: string;
   avatarUrl: string | null;
   shopName: string | null;
+  shopSlug: string | null;
+  portalSlug: string | null;
+  issueNo: number | null;
   isWorkingToday: boolean;
 };
 
 export type FavoriteShop = {
   id: string;
   name: string;
+  slug: string;
+  portalSlug: string;
   area: string | null;
   status: string;
 };
@@ -290,7 +298,7 @@ export function MypageClient({
               .map((c) => (
                 <Link
                   key={c.id}
-                  href={`/cast/${c.id}`}
+                  href={c.portalSlug && c.shopSlug && c.issueNo != null ? castPath(c.portalSlug, c.shopSlug, c.issueNo) : `/cast/${c.id}`}
                   className="flex min-w-[72px] flex-col items-center gap-1 snap-start group"
                 >
                   <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px] transition group-hover:scale-105">
@@ -341,7 +349,7 @@ export function MypageClient({
                 // (グリッド内のvideoはサムネイル表示専用で再生しない)。
                 <Link
                   key={r.id}
-                  href={`/shops/${r.shopId}/reels?start=${r.id}`}
+                  href={`${shopReelsPath(r.portalSlug, r.shopSlug)}?start=${r.id}`}
                   className="relative block aspect-[9/16] overflow-hidden rounded bg-surface"
                 >
                   {r.media[0]?.type === "video" ? (
@@ -387,7 +395,7 @@ export function MypageClient({
               {followedCasts.map((c) => (
                 <li key={c.id} className="flex items-center gap-2">
                   <Link
-                    href={`/cast/${c.id}`}
+                    href={c.portalSlug && c.shopSlug && c.issueNo != null ? castPath(c.portalSlug, c.shopSlug, c.issueNo) : `/cast/${c.id}`}
                     className="flex flex-1 items-center gap-3 rounded-lg border border-main/10 bg-main/[0.03] p-3"
                   >
                     {c.avatarUrl ? (
@@ -432,7 +440,7 @@ export function MypageClient({
               {favoriteShops.map((s) => (
                 <li key={s.id} className="flex items-center gap-2">
                   <Link
-                    href={`/shops/${s.id}`}
+                    href={shopPath(s.portalSlug, s.slug)}
                     className="block flex-1 rounded-lg border border-main/10 bg-main/[0.03] p-3"
                   >
                     <p className="text-sm font-medium">{s.name}</p>
