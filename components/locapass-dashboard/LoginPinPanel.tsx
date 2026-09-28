@@ -34,7 +34,7 @@ export function LoginPinPanel({
       <p className="text-xs font-semibold text-black/70">ログイン用の暗証番号(6桁)</p>
       {pin ? (
         <>
-          <p className="mt-1 font-mono text-2xl font-bold tracking-[0.4em]">{pin}</p>
+          <p className="mt-1 font-mono text-2xl font-bold tracking-[0.4em] text-black">{pin}</p>
           <p className="mt-1 text-[11px] text-red-600">
             この画面を閉じると二度と表示できません。リンクとは別の方法(口頭など)で本人に伝えてください。
           </p>
