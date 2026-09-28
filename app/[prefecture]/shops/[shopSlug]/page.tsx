@@ -161,7 +161,9 @@ export default async function ShopDetailPage({
     // 店舗公式リール(shop_id一致)および所属ICONリールを取得
     supabase
       .from("locapass_reels")
-      .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, cast_id, shop_id, cast_members:locapass_public_casts ( name )`)
+      .select(
+        `id, ${LOCAPASS_REEL_MEDIA_SELECT}, cast_id, posted_by_staff_id, shop_id, cast_members:locapass_public_casts ( name ), staff_members:locapass_shop_staff_members ( name )`,
+      )
       .eq("shop_id", shopId)
       .eq("status", "publish")
       .eq("reel_type", "permanent")
@@ -239,19 +241,19 @@ export default async function ShopDetailPage({
     thumbUrl: string | null;
     videoUrl: string | null;
   };
-  const seenReelAuthors = new Set<string>();
+  // ヒーロー直下のプレビュー帯: 店舗直接投稿・キャスト・スタッフの投稿を全件、新着順にそのまま並べる
+  // (以前はcast_id無しの投稿を全部"shop"という1つの投稿者に丸めてしまい、店舗直接投稿や
+  // スタッフ投稿が複数あっても最初の1件しか出ない不具合があった)。
   const castReelPreviews: CastReelPreview[] = [];
   for (const row of allReelRows ?? []) {
-    const authorKey = row.cast_id ?? "shop";
-    if (seenReelAuthors.has(authorKey)) continue;
     const media = toReelMedia(row)[0] as { type: "image" | "video"; url: string; poster?: string } | undefined;
     if (!media) continue;
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
-    seenReelAuthors.add(authorKey);
+    const staff = Array.isArray(row.staff_members) ? row.staff_members[0] : row.staff_members;
     castReelPreviews.push({
       id: row.id,
       castId: row.cast_id ?? null,
-      castName: cast?.name ?? store.name,
+      castName: cast?.name ?? staff?.name ?? store.name,
       thumbUrl: media.type === "video" ? (media.poster ?? null) : media.url,
       videoUrl: media.type === "video" ? media.url : null,
     });
