@@ -20,7 +20,6 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
-import { CastCard } from "@/components/CastCard";
 import { InquiryButton } from "@/components/InquiryButton";
 import { ShopAccordion } from "@/components/ShopAccordion";
 import { ShopSectionNav } from "@/components/ShopSectionNav";
@@ -484,49 +483,36 @@ export default async function ShopDetailPage({
         {casts.length > 0 && (
         <section id="cast" className="scroll-mt-24 space-y-6">
           <SectionHeading eyebrow="ALL PARTNERS" title={t.shop.allCast} icon={<Users size={14} />} />
-            <>
-              {/* モバイル: 9人ずつ(3列×3行)を1ページとして横スワイプでページ送り。 */}
-              <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar md:hidden">
-                {chunk(casts, 9).map((page, pageIndex) => (
-                  <div key={pageIndex} className="grid w-full flex-none grid-cols-3 gap-1.5 snap-start">
-                    {page.map((cast) => (
-                      <CastCard
-                        key={cast.id}
-                        href={cast.href}
-                        name={cast.name}
-                        age={cast.age}
-                        prText={cast.prText}
-                        photoUrl={cast.photoUrl}
-                        shiftLabel={cast.isWorkingToday ? cast.shiftLabel : null}
-                        isNew={cast.isNew}
-                        dense
+            {/* パートナー(宣伝してくれるインフルエンサー)は人数が多くなりがちなので、キャストのような
+                大きいカードではなく丸型アイコンを1列に並べ、横スライドで流す(TODAY'S PARTNERSと同じ見せ方)。 */}
+            <div className="flex items-start gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-1">
+              {casts.map((cast) => (
+                <Link
+                  key={cast.id}
+                  href={cast.href}
+                  className="flex min-w-[72px] flex-col items-center gap-1 snap-start group"
+                >
+                  <div className="relative rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px] transition group-hover:scale-105">
+                    <div className="rounded-full bg-page p-[2px]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={cast.photoUrl || "https://via.placeholder.com/150"}
+                        alt={cast.name}
+                        className="h-14 w-14 rounded-full object-cover"
                       />
-                    ))}
+                    </div>
+                    {cast.isNew && (
+                      <span className="absolute -right-1 -top-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        NEW
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
-
-              {/* PC/iPad */}
-              <div className="hidden gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar md:flex">
-                {chunk(casts, 15).map((page, pageIndex) => (
-                  <div key={pageIndex} className="grid w-full flex-none grid-cols-5 gap-2 snap-start">
-                    {page.map((cast) => (
-                      <CastCard
-                        key={cast.id}
-                        href={cast.href}
-                        name={cast.name}
-                        age={cast.age}
-                        prText={cast.prText}
-                        photoUrl={cast.photoUrl}
-                        shiftLabel={cast.isWorkingToday ? cast.shiftLabel : null}
-                        isNew={cast.isNew}
-                        dense
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </>
+                  <span className="max-w-[68px] truncate text-center text-xs text-tone-300 group-hover:text-main">
+                    {cast.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
         </section>
         )}
 
@@ -700,14 +686,6 @@ export default async function ShopDetailPage({
       />
     </div>
   );
-}
-
-function chunk<T>(items: T[], size: number): T[][] {
-  const result: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    result.push(items.slice(i, i + size));
-  }
-  return result;
 }
 
 function shuffle<T>(items: T[]): T[] {

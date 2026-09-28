@@ -701,6 +701,7 @@ export function StaffDashboardClient({
             <p className="text-base font-bold">{totalLikes}</p>
             <p className="text-[11px] text-muted">いいね</p>
           </div>
+          {!isOwner && <StaffDmButton staffId={staffId} staffName={name} variant="icon" />}
           {isOwner && qrDataUrl && portalSlug && shopSlug && (
             <QrCodeIconButton
               qrDataUrl={qrDataUrl}
@@ -727,17 +728,15 @@ export function StaffDashboardClient({
             <Pencil size={13} /> プロフィール編集
           </button>
         ) : (
-          <div className="mt-4 space-y-2">
-            <StaffDmButton staffId={staffId} staffName={name} />
-            {portalSlug && shopSlug && (
-              <Link
-                href={shopPath(portalSlug, shopSlug)}
-                className="block w-full rounded-lg bg-brand px-6 py-2 text-center text-sm font-semibold text-main hover:bg-brand-dark"
-              >
-                店舗ページを見る
-              </Link>
-            )}
-          </div>
+          portalSlug &&
+          shopSlug && (
+            <Link
+              href={shopPath(portalSlug, shopSlug)}
+              className="mt-4 block w-full rounded-lg bg-brand px-6 py-2 text-center text-sm font-semibold text-main hover:bg-brand-dark"
+            >
+              店舗ページを見る
+            </Link>
+          )
         )}
       </section>
 

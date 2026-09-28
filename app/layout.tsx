@@ -90,6 +90,32 @@ export default async function RootLayout({
       .maybeSingle();
     myPageAvatarUrl = profile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined) ?? null;
     myPageInitial = profile?.nickname?.slice(0, 1) ?? null;
+
+    // 一般会員(locapass_members)にプロフィールが無い場合、スタッフ/パートナー本人としてログイン
+    // している可能性がある。ヘッダーのアカウントアイコンが常にゲスト表示のままになる不具合の修正。
+    if (!myPageAvatarUrl && !myPageInitial) {
+      const [{ data: staffId }, { data: castId }] = await Promise.all([
+        supabase.rpc("locapass_current_staff_member_id"),
+        supabase.rpc("locapass_current_cast_id"),
+      ]);
+      if (staffId) {
+        const { data: staff } = await supabase
+          .from("locapass_shop_staff_members")
+          .select("name, avatar_url")
+          .eq("id", staffId)
+          .maybeSingle();
+        myPageAvatarUrl = staff?.avatar_url ?? null;
+        myPageInitial = staff?.name?.slice(0, 1) ?? null;
+      } else if (castId) {
+        const { data: cast } = await supabase
+          .from("locapass_cast_members")
+          .select("name, avatar_url")
+          .eq("id", castId)
+          .maybeSingle();
+        myPageAvatarUrl = cast?.avatar_url ?? null;
+        myPageInitial = cast?.name?.slice(0, 1) ?? null;
+      }
+    }
   }
 
   return (

@@ -13,7 +13,16 @@ type Message = { id: string; senderType: "user" | "staff"; body: string; created
  * とは違い、登録ユーザー本人とスタッフ本人が直接やり取りする1対1スレッド(locapass_staff_dm_threads)を使う。
  * 未ログインならログインを促すだけで、ゲストのまま送信はできない。
  */
-export function StaffDmButton({ staffId, staffName }: { staffId: string; staffName: string }) {
+export function StaffDmButton({
+  staffId,
+  staffName,
+  variant = "button",
+}: {
+  staffId: string;
+  staffName: string;
+  /** "icon": Instagramのプロフィール統計行に置く丸アイコン版。既定は全幅ボタン。 */
+  variant?: "button" | "icon";
+}) {
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -88,6 +97,17 @@ export function StaffDmButton({ staffId, staffName }: { staffId: string; staffNa
   if (checkingAuth) return null;
 
   if (!loggedIn) {
+    if (variant === "icon") {
+      return (
+        <Link
+          href={`/mypage/login?redirect=${encodeURIComponent(pathname)}`}
+          aria-label="ログインしてメッセージを送る"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-main/15 text-tone-300 transition hover:border-hl-400/50 hover:text-hl-300"
+        >
+          <MessageCircle size={16} />
+        </Link>
+      );
+    }
     return (
       <Link
         href={`/mypage/login?redirect=${encodeURIComponent(pathname)}`}
@@ -101,14 +121,25 @@ export function StaffDmButton({ staffId, staffName }: { staffId: string; staffNa
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        className="flex w-full items-center justify-center gap-2 rounded-full border border-line/40 bg-hl-500/10 px-4 py-3 text-sm font-semibold text-hl-300 backdrop-blur-xl transition hover:bg-hl-500/20"
-      >
-        <MessageCircle size={16} />
-        メッセージを送る
-      </button>
+      {variant === "icon" ? (
+        <button
+          type="button"
+          onClick={handleOpen}
+          aria-label="メッセージを送る"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-main/15 text-tone-300 transition hover:border-hl-400/50 hover:text-hl-300"
+        >
+          <MessageCircle size={16} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-line/40 bg-hl-500/10 px-4 py-3 text-sm font-semibold text-hl-300 backdrop-blur-xl transition hover:bg-hl-500/20"
+        >
+          <MessageCircle size={16} />
+          メッセージを送る
+        </button>
+      )}
 
       {open && (
         <div
