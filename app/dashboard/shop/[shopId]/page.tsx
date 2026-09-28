@@ -387,7 +387,7 @@ export default async function LocapassShopSettingsPage({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500">連絡用LINE友だち追加URL</label>
+            <label className="block text-xs font-semibold text-slate-500">連絡・ご予約用URL</label>
             <input
               name="line_url"
               defaultValue={shop.line_url ?? ""}
@@ -395,7 +395,7 @@ export default async function LocapassShopSettingsPage({
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
             <p className="mt-1 text-[11px] text-slate-400">
-              店舗ページの「連絡」ボタンから開くLINE問い合わせ用です。個人アカウント運用でも構いません。
+              店舗ページの「連絡・ご予約はこちら」ボタンから開くリンクです。LINE友だち追加URLのほか、ホットペッパー・STORES予約などの予約ページURLも設定できます。個人LINEアカウント運用でも構いません。
             </p>
           </div>
           <div className="sm:col-span-2">
