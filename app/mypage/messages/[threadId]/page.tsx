@@ -42,13 +42,34 @@ export default function StaffDmThreadPage() {
     void load();
   }, [load]);
 
-  // 開いている間、スタッフからの新着返信を自動で反映する(リロード不要にするため)。
+  // 開いている間、スタッフからの新着返信をRealtimeで即時反映する
+  // (大規模運用を見据え、ポーリングではなくpush配信にする。RLSはそのまま効く)。
   useEffect(() => {
-    const interval = setInterval(() => {
-      void load();
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [load]);
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`locapass_staff_dm_messages_thread:${params.threadId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "locapass_staff_dm_messages",
+          filter: `thread_id=eq.${params.threadId}`,
+        },
+        (payload) => {
+          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; created_at: string };
+          setMessages((prev) =>
+            prev && !prev.some((existing) => existing.id === m.id)
+              ? [...prev, { id: m.id, senderType: m.sender_type, body: m.body, createdAt: m.created_at }]
+              : prev,
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [params.threadId]);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();

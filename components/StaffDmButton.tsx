@@ -77,13 +77,33 @@ export function StaffDmButton({
     setLoadingThread(false);
   }
 
-  // モーダルを開いている間、相手からの新着メッセージを自動で反映する(リロード不要にするため)。
+  // モーダルを開いている間、相手からの新着メッセージをRealtimeで即時反映する
+  // (大規模運用を見据え、ポーリングではなくpush配信にする。RLSはそのまま効く)。
   useEffect(() => {
     if (!open || !threadId) return;
-    const interval = setInterval(() => {
-      void fetchMessages(threadId);
-    }, 4000);
-    return () => clearInterval(interval);
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`locapass_staff_dm_messages:${threadId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "locapass_staff_dm_messages",
+          filter: `thread_id=eq.${threadId}`,
+        },
+        (payload) => {
+          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; created_at: string };
+          setMessages((prev) => (prev.some((existing) => existing.id === m.id) ? prev : [
+            ...prev,
+            { id: m.id, senderType: m.sender_type, body: m.body, createdAt: m.created_at },
+          ]));
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [open, threadId]);
 
   async function handleSend() {

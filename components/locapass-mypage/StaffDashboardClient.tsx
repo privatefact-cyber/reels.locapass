@@ -181,13 +181,33 @@ export function StaffDashboardClient({
   const postCount = reels.length;
   const totalLikes = reels.reduce((sum, r) => sum + r.likesCount, 0);
 
-  // メッセージを開いている間、新着を自動で反映する(リロード不要にするため)。
+  // メッセージを開いている間、新着をRealtimeで即時反映する
+  // (大規模運用を見据え、ポーリングではなくpush配信にする。RLSはそのまま効く)。
   useEffect(() => {
     if (!openDmThreadId) return;
-    const interval = setInterval(() => {
-      void fetchDmMessages(openDmThreadId);
-    }, 4000);
-    return () => clearInterval(interval);
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`locapass_staff_dm_messages_owner:${openDmThreadId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "locapass_staff_dm_messages",
+          filter: `thread_id=eq.${openDmThreadId}`,
+        },
+        (payload) => {
+          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; created_at: string };
+          setDmMessages((prev) => (prev.some((existing) => existing.id === m.id) ? prev : [
+            ...prev,
+            { id: m.id, senderType: m.sender_type, body: m.body, createdAt: m.created_at },
+          ]));
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [openDmThreadId]);
 
   // ---------- プロフィール ----------
