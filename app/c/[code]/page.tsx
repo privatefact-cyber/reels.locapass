@@ -26,5 +26,5 @@ export default async function CastShortLinkPage({
     notFound();
   }
 
-  redirect(castPath(portal.slug, shop.slug, cast.issue_no));
+  redirect(castPath(portal.slug, shop.slug, cast.issue_no!));
 }

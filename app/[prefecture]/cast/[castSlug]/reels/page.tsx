@@ -67,7 +67,7 @@ export default async function CastReelsPage({
     .select(
       `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled`,
     )
-    .eq("cast_id", cast.id)
+    .eq("cast_id", cast.id!)
     .eq("status", "publish")
     // ストーリー(24時間)はリール再生に混ざらないよう明示的に除外する。
     .eq("reel_type", "permanent")
@@ -80,9 +80,9 @@ export default async function CastReelsPage({
     media: toReelMedia(row),
     likesCount: row.like_count,
     castId: row.cast_id,
-    castName: cast.name,
+    castName: cast.name ?? "",
     castAvatarUrl: cast.avatar_url,
-    shopId: row.shop_id ?? cast.shop_id,
+    shopId: row.shop_id ?? cast.shop_id ?? "",
     shopName: shop?.name ?? "",
     shopSlug: parsed.shopSlug,
     portalSlug: portal.slug,
@@ -106,7 +106,7 @@ export default async function CastReelsPage({
   return (
     <div className="space-y-3">
       <Link
-        href={castPath(portal.slug, parsed.shopSlug, cast.issue_no)}
+        href={castPath(portal.slug, parsed.shopSlug, cast.issue_no!)}
         className="inline-block px-1 text-sm text-brand hover:underline"
       >
         ← {cast.name} のプロフィールに戻る

@@ -28,5 +28,5 @@ export default async function LegacyCastReelsRedirect({
   }
 
   const query = start ? `?start=${encodeURIComponent(start)}` : "";
-  permanentRedirect(`${castReelsPath(portal.slug, shop.slug, cast.issue_no)}${query}`);
+  permanentRedirect(`${castReelsPath(portal.slug, shop.slug, cast.issue_no!)}${query}`);
 }

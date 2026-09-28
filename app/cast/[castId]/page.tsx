@@ -25,5 +25,5 @@ export default async function LegacyCastDetailRedirect({
     notFound();
   }
 
-  permanentRedirect(castPath(portal.slug, shop.slug, cast.issue_no));
+  permanentRedirect(castPath(portal.slug, shop.slug, cast.issue_no!));
 }

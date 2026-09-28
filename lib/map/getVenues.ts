@@ -184,7 +184,9 @@ export async function getVenueCards(
     if (r.shop_id && url) chosenVideoByShopId.set(r.shop_id, url);
   }
 
-  const casts = castRows ?? [];
+  const casts = (castRows ?? []).filter(
+    (c): c is typeof c & { id: string; shop_id: string } => c.id !== null && c.shop_id !== null,
+  );
   const castIds = casts.map((c) => c.id);
   const [{ data: mediaRows }, { data: scheduleRows }] = await Promise.all([
     castIds.length
@@ -215,7 +217,7 @@ export async function getVenueCards(
     const list = castsByShopId.get(c.shop_id) ?? [];
     list.push({
       id: c.id,
-      name: c.name,
+      name: c.name ?? "",
       avatarUrl: avatarByCastId.get(c.id) ?? null,
       isWorkingNow: workingCastIds.has(c.id),
     });

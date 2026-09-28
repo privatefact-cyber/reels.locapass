@@ -362,7 +362,7 @@ export async function setSiteTheme(theme: SiteTheme | null) {
   await requireRootAdmin();
   if (theme !== null && !isSiteTheme(theme)) throw new Error("不明な配色テーマです");
   const supabase = await createClient();
-  const { error } = await supabase.rpc("locapass_set_site_theme", { p_theme: theme });
+  const { error } = await supabase.rpc("locapass_set_site_theme", { p_theme: theme as string });
   if (error) throw new Error(`配色テーマの変更に失敗しました: ${error.message}`);
   // 公開サイト全体(ルートレイアウト)に即時反映する
   revalidatePath("/", "layout");

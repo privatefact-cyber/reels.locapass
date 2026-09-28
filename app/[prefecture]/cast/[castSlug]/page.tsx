@@ -73,7 +73,7 @@ export async function generateMetadata({
   const description =
     cast.pr_text?.slice(0, 120) ||
     `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」のパートナー、${cast.name}のプロフィール・出勤情報・投稿リール。`;
-  const url = `https://locapass.net${castPath(portal.slug, shop!.slug, cast.issue_no)}`;
+  const url = `https://locapass.net${castPath(portal.slug, shop!.slug, cast.issue_no!)}`;
   const image = sanitizeImageUrl(cast.avatar_url);
 
   return {
@@ -103,7 +103,8 @@ export default async function CastDetailPage({
     notFound();
   }
 
-  const castId = cast.id;
+  const castId = cast.id!;
+  const castName = cast.name ?? "";
 
   // それ以外の4クエリは互いに依存しない(すべてcastIdだけで絞り込める)ため、並列で投げる。
   // モーダルプレビュー(iframe埋め込み)でのタップ後の表示待ちを縮めるための最適化。
@@ -154,7 +155,7 @@ export default async function CastDetailPage({
   const totalLikes = reelItems.reduce((sum, r) => sum + r.likes_count, 0);
 
   const shopUrl = shop ? `https://locapass.net${shopPath(portal.slug, shop.slug)}` : null;
-  const castUrl = `https://locapass.net${castPath(portal.slug, shop!.slug, cast.issue_no)}`;
+  const castUrl = `https://locapass.net${castPath(portal.slug, shop!.slug, cast.issue_no!)}`;
 
   const breadcrumbItems = [
     { name: "ホーム", item: "https://locapass.net" },
@@ -178,7 +179,7 @@ export default async function CastDetailPage({
           mainEntity: {
             "@type": "Person",
             "@id": `${castUrl}#person`,
-            identifier: cast.id,
+            identifier: castId,
             name: cast.name,
             image: sanitizeImageUrl(cast.avatar_url),
             description:
@@ -227,7 +228,7 @@ export default async function CastDetailPage({
           {/* 左: アイコン */}
           <div className="relative shrink-0">
             {hasActiveStory ? (
-              <StoryRing castId={cast.id} castName={cast.name} avatarUrl={cast.avatar_url} size="lg" showLabel={false} />
+              <StoryRing castId={castId} castName={castName} avatarUrl={cast.avatar_url} size="lg" showLabel={false} />
             ) : cast.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -237,10 +238,10 @@ export default async function CastDetailPage({
               />
             ) : (
               <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
-                {cast.name.slice(0, 1)}
+                {castName.slice(0, 1)}
               </div>
             )}
-            <CastFollowBadge castId={cast.id} />
+            <CastFollowBadge castId={castId} />
           </div>
 
           {/* 右: 名前・店舗・スタッツ */}
@@ -262,7 +263,7 @@ export default async function CastDetailPage({
               </div>
               <div>
                 <div className="flex h-6 items-center">
-                  <CastFollowHeart castId={cast.id} size={18} />
+                  <CastFollowHeart castId={castId} size={18} />
                 </div>
                 <p className="text-[11px] text-muted">{t.common.follow}</p>
               </div>
@@ -290,7 +291,7 @@ export default async function CastDetailPage({
       {media && media.length > 0 && (
         <section className="px-1">
           <h2 className="mb-3 text-sm font-bold text-tone-300">{t.cast.photos}</h2>
-          <CastPhotoGrid photos={media} castName={cast.name} />
+          <CastPhotoGrid photos={media} castName={castName} />
         </section>
       )}
 
@@ -305,7 +306,7 @@ export default async function CastDetailPage({
             return (
               <Link
                 key={r.id}
-                href={`${castReelsPath(portal.slug, shop!.slug, cast.issue_no)}?start=${r.id}`}
+                href={`${castReelsPath(portal.slug, shop!.slug, cast.issue_no!)}?start=${r.id}`}
                 className="relative block aspect-[9/16] overflow-hidden bg-surface"
               >
                 {item?.type === "video" ? (

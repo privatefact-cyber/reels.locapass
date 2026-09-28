@@ -24,7 +24,7 @@ export type ReelRow = {
   cast_id: string | null;
   posted_by_staff_id: string | null;
   is_comments_enabled: boolean;
-  locapass_cast_members: { name: string | null; avatar_url: string | null; issue_no: number } | { name: string | null; avatar_url: string | null; issue_no: number }[] | null;
+  locapass_cast_members: { name: string | null; avatar_url: string | null; issue_no: number | null } | { name: string | null; avatar_url: string | null; issue_no: number | null }[] | null;
   locapass_shop_staff_members: { name: string; avatar_url: string | null; issue_no: number } | { name: string; avatar_url: string | null; issue_no: number }[] | null;
 };
 

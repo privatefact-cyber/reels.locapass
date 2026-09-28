@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
       if (!shop || !portal) return null;
       return {
-        url: `${BASE_URL}${castPath(portal.slug, shop.slug, c.issue_no)}`,
+        url: `${BASE_URL}${castPath(portal.slug, shop.slug, c.issue_no!)}`,
         changeFrequency: "daily" as const,
         priority: 0.7,
       };

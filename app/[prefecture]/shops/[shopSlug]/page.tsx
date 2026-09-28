@@ -169,7 +169,7 @@ export default async function ShopDetailPage({
       .order("published_at", { ascending: false }),
   ]);
 
-  const castIds = castMembers?.map((c) => c.id) ?? [];
+  const castIds = (castMembers ?? []).map((c) => c.id).filter((id): id is string => id !== null);
 
   // 最新リールがある場合、その先頭メディアをヒーロー表示用に採用
   const latestReel = allReelRows?.[0];
@@ -215,7 +215,7 @@ export default async function ShopDetailPage({
     ? await supabase.rpc("locapass_cast_ids_with_active_story", { p_cast_ids: castIds })
     : { data: [] as string[] };
   const activeStoryCastIdSet = new Set(activeStoryCastIds ?? []);
-  const castsWithActiveStory = (castMembers ?? []).filter((c) => activeStoryCastIdSet.has(c.id));
+  const castsWithActiveStory = (castMembers ?? []).filter((c) => c.id !== null && activeStoryCastIdSet.has(c.id));
 
   const { data: todaySchedules } = castIds.length
     ? await supabase
@@ -263,16 +263,17 @@ export default async function ShopDetailPage({
 
   const castsUnshuffled: (Cast & { href: string })[] = (castMembers ?? []).map((c) => {
     const media = [...(c.media ?? [])].sort((a, b) => a.display_order - b.display_order);
+    const castId = c.id ?? "";
     return {
-      id: c.id,
-      name: c.name,
+      id: castId,
+      name: c.name ?? "",
       age: c.age,
       prText: c.pr_text,
       photoUrl: media[0]?.url,
-      isWorkingToday: shiftByCastId.has(c.id),
-      shiftLabel: shiftByCastId.get(c.id) ?? null,
-      isNew: now - new Date(c.created_at).getTime() <= TWO_WEEKS_MS,
-      href: castPath(site.slug, shopRow.slug, c.issue_no),
+      isWorkingToday: shiftByCastId.has(castId),
+      shiftLabel: shiftByCastId.get(castId) ?? null,
+      isNew: c.created_at ? now - new Date(c.created_at).getTime() <= TWO_WEEKS_MS : false,
+      href: castPath(site.slug, shopRow.slug, c.issue_no!),
     };
   });
   // 在籍一覧の表示順は毎回ランダムにする(特定のキャストが常に先頭に固定されないように)。
@@ -401,7 +402,7 @@ export default async function ShopDetailPage({
       {castsWithActiveStory.length > 0 && (
         <div className="flex gap-3 overflow-x-auto px-4 pb-1 no-scrollbar sm:px-6">
           {castsWithActiveStory.map((c) => (
-            <StoryRing key={c.id} castId={c.id} castName={c.name} avatarUrl={c.avatar_url} />
+            <StoryRing key={c.id} castId={c.id ?? ""} castName={c.name ?? ""} avatarUrl={c.avatar_url} />
           ))}
         </div>
       )}

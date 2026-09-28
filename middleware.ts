@@ -32,7 +32,7 @@ async function rewriteHandle(request: NextRequest): Promise<NextResponse | null>
   if (!cast || !shop || !portal) return null; // 該当ハンドル無し。マッチするルートも無いので通常の404になる。
 
   const url = request.nextUrl.clone();
-  url.pathname = castPath(portal.slug, shop.slug, cast.issue_no);
+  url.pathname = castPath(portal.slug, shop.slug, cast.issue_no!);
   return NextResponse.rewrite(url);
 }
 

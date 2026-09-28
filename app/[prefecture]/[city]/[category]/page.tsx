@@ -72,7 +72,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
   const shopIds = shops.map((s) => s.id);
   const { data: castRows } = await supabase.from("locapass_public_casts").select("id, shop_id").in("shop_id", shopIds);
   const shopIdByCastId = new Map((castRows ?? []).map((c) => [c.id, c.shop_id]));
-  const castIds = (castRows ?? []).map((c) => c.id);
+  const castIds = (castRows ?? []).map((c) => c.id).filter((id): id is string => id !== null);
 
   const { data: todaySchedules } = castIds.length
     ? await supabase
