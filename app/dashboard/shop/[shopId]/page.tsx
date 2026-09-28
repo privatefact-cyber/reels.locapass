@@ -12,6 +12,7 @@ import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { TodayScheduleBoard, type TodayScheduleRow } from "@/components/locapass-dashboard/TodayScheduleBoard";
 import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel";
 import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapStatsCard";
+import { PriceListSection } from "@/components/locapass-dashboard/PriceListSection";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
@@ -23,6 +24,7 @@ import {
   deleteEvent,
   deletePriceItem,
   updateEvent,
+  updatePriceItem,
   updateShopProfile,
   upsertTodaySchedule,
 } from "./actions";
@@ -464,56 +466,12 @@ export default async function LocapassShopSettingsPage({
         <ShopGalleryUploader shopId={currentShop.id} initialUrls={shop.gallery_image_urls ?? []} />
       </section>
 
-      <section id="shop-price" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">料金表</h2>
-        {priceItems && priceItems.length > 0 && (
-          <ul className="mb-4 divide-y divide-black/10">
-            {priceItems.map((item) => (
-              <li key={item.id} className="flex items-center justify-between py-2 text-sm">
-                <span>
-                  {item.name}
-                  {item.duration_minutes ? `(${item.duration_minutes}分)` : ""}
-                </span>
-                <div className="flex items-center gap-3">
-                  <span>¥{item.price.toLocaleString()}</span>
-                  <form action={deletePriceItem.bind(null, currentShop.id, item.id)}>
-                    <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
-                      削除
-                    </button>
-                  </form>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        <form action={addPriceItem.bind(null, currentShop.id)} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <input
-            name="name"
-            required
-            placeholder="コース名"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-          />
-          <input
-            name="duration_minutes"
-            type="number"
-            placeholder="時間(分)"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-          />
-          <input
-            name="price"
-            type="number"
-            required
-            placeholder="料金(円)"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-          >
-            追加
-          </button>
-        </form>
-      </section>
+      <PriceListSection
+        priceItems={priceItems}
+        addPriceItem={addPriceItem.bind(null, currentShop.id)}
+        updatePriceItem={updatePriceItem.bind(null, currentShop.id)}
+        deletePriceItem={deletePriceItem.bind(null, currentShop.id)}
+      />
 
       <EventFormSection
         shopId={currentShop.id}

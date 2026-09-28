@@ -249,6 +249,31 @@ export async function addPriceItem(shopId: string, formData: FormData) {
   revalidateShop(shopId);
 }
 
+export async function updatePriceItem(shopId: string, itemId: string, formData: FormData) {
+  const supabase = await requireShopAccess(shopId);
+
+  const name = String(formData.get("name") ?? "").trim();
+  const durationRaw = String(formData.get("duration_minutes") ?? "").trim();
+  const priceRaw = String(formData.get("price") ?? "").trim();
+  if (!name || !priceRaw) throw new Error("コース名と料金は必須です");
+
+  const [nameTranslations] = await translatePriceItemNames([name]);
+  const { data, error } = await supabase
+    .from("locapass_shop_price_items")
+    .update({
+      name,
+      duration_minutes: durationRaw ? Number(durationRaw) : null,
+      price: Number(priceRaw),
+      name_translations: nameTranslations ?? {},
+    })
+    .eq("id", itemId)
+    .eq("shop_id", shopId)
+    .select("id");
+  if (error) throw new Error(`料金項目の更新に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) throw new Error("料金項目の更新に失敗しました(対象が見つからないか、権限がありません)");
+  revalidateShop(shopId);
+}
+
 export async function deletePriceItem(shopId: string, itemId: string) {
   const supabase = await requireShopAccess(shopId);
   const { data, error } = await supabase
