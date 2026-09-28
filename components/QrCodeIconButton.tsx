@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { QrCode, X } from "lucide-react";
+import { QrCode, X, Copy, Check } from "lucide-react";
 
 /**
  * QRコードをアイコンボタンにして、タップ時だけモーダルで見せる。
  * 常時テキストリンクやQR画像を画面に出しっぱなしにしないための省スペース版。
+ * profileUrlを渡すと、モーダル内にURL表示+コピー機能もまとめて出す
+ * (画面に常時露出する「公開プロフィールURL」欄を別途置かなくて済むようにするため)。
  */
 export function QrCodeIconButton({
   qrDataUrl,
+  profileUrl,
   label = "QRコードを表示",
   iconClassName,
   theme = "dark",
 }: {
   qrDataUrl: string;
+  profileUrl?: string;
   label?: string;
   iconClassName?: string;
   /** "light": 管理画面(白背景)向けの配色。既定は公開ページ・キャストマイページ向けのダーク配色。 */
@@ -26,6 +30,18 @@ export function QrCodeIconButton({
       : "flex h-9 w-9 items-center justify-center rounded-full border border-main/15 text-tone-300 transition hover:border-hl-400/50 hover:text-hl-300");
   const [open, setOpen] = useState(false);
   const [saveHint, setSaveHint] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopyUrl() {
+    if (!profileUrl) return;
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // クリップボードAPIが使えない環境では無視する(URLはモーダル内に表示済みなので手動コピー可能)。
+    }
+  }
 
   // iOS Safariはdata: URLへのdownload属性を無視して画像をそのまま開いてしまうため、
   // まずWeb Share API(ファイル共有)を試し、それも使えない環境では
@@ -113,6 +129,38 @@ export function QrCodeIconButton({
               <p className={theme === "light" ? "mt-1 text-[11px] text-slate-500" : "mt-1 text-[11px] text-tone-500"}>
                 {saveHint}
               </p>
+            )}
+
+            {profileUrl && (
+              <div className="mt-4 border-t border-current/10 pt-3 text-left">
+                <p className={theme === "light" ? "text-[11px] font-semibold text-slate-500" : "text-[11px] font-semibold text-tone-500"}>
+                  公開プロフィールURL(インスタ等に貼る用)
+                </p>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <input
+                    readOnly
+                    value={profileUrl}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className={
+                      theme === "light"
+                        ? "w-full rounded border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-900"
+                        : "w-full rounded border border-main/20 bg-main/5 px-2 py-1.5 text-xs text-main"
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopyUrl}
+                    aria-label="URLをコピー"
+                    className={
+                      theme === "light"
+                        ? "flex h-8 w-8 shrink-0 items-center justify-center rounded border border-slate-300 text-slate-500"
+                        : "flex h-8 w-8 shrink-0 items-center justify-center rounded border border-main/20 text-tone-300"
+                    }
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

@@ -76,7 +76,7 @@ export default function CastLoginLinkPage() {
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))}
           placeholder="000000"
-          className="w-full rounded border border-black/20 px-3 py-3 text-center text-2xl tracking-[0.5em]"
+          className="w-full rounded border border-black/20 px-3 py-3 text-center text-2xl tracking-[0.5em] text-black"
         />
         <button
           type="submit"

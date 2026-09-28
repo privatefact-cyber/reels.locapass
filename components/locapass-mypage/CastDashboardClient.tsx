@@ -7,7 +7,6 @@ import { Camera, Pencil, Pin, PinOff, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPanel";
-import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
@@ -519,6 +518,7 @@ export function CastDashboardClient({
           </div>
           <QrCodeIconButton
             qrDataUrl={qrDataUrl}
+            profileUrl={`https://locapass.net/c/${castCode}`}
             label="QRコードを表示(お客様にその場で見せる用)"
           />
         </div>
@@ -548,21 +548,6 @@ export function CastDashboardClient({
           </button>
         </div>
 
-        {/* インスタのプロフィール欄などに貼るための短縮URL。
-            /cast/[uuid]は長すぎて改行・文字数制限にかかるため、6桁の短縮コードを案内する。 */}
-        <div className="mx-auto mt-4 max-w-xs rounded-lg border border-main/10 bg-surface p-3 text-left">
-          <p className="text-[11px] font-semibold text-tone-300">
-            あなたの公開プロフィールURL(インスタ等に貼る用)
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              readOnly
-              value={`https://locapass.net/c/${castCode}`}
-              className="w-full rounded border border-main/20 bg-main/5 px-2 py-1.5 text-xs text-main"
-            />
-            <CopyButton value={`https://locapass.net/c/${castCode}`} />
-          </div>
-        </div>
       </section>
 
       {/* 投稿フォーム */}
