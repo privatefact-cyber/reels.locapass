@@ -20,14 +20,17 @@ export default function ShopAdminRecoverPage() {
 
     const supabase = createClient();
     // recover_locapass_shop_admin_login はDBには存在するが、生成済みのtypes/supabase.tsが
-    // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める。
+    // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める
+    // (supabase自体をanyにcastして呼ぶ。.rpcだけ切り離すとthisが外れてクライアント内部が壊れるため注意)。
     // 一致しないときは0行(→ .single() がエラー)、同じ電話番号で失敗が続いて
     // 一時的にロックされているときは login_email が null の1行が返る(DB側で24時間に5回まで)。
-    const { data, error: recoverError } = (await (supabase.rpc as any)("recover_locapass_shop_admin_login", {
-      p_phone: phone,
-      p_birth_date: birthDate,
-      p_pin: pin,
-    }).single()) as { data: { login_email: string; one_time_password: string } | null; error: { message: string } | null };
+    const { data, error: recoverError } = (await (supabase as any)
+      .rpc("recover_locapass_shop_admin_login", {
+        p_phone: phone,
+        p_birth_date: birthDate,
+        p_pin: pin,
+      })
+      .single()) as { data: { login_email: string; one_time_password: string } | null; error: { message: string } | null };
 
     if (data && !data.login_email) {
       setLoading(false);

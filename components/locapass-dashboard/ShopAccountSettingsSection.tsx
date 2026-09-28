@@ -18,14 +18,13 @@ export function ShopAccountSettingsSection() {
 
   useEffect(() => {
     const supabase = createClient();
-    // locapass_my_shop_admin_login_email / needs_password_setup はDBには存在するが、
-    // 生成済みのtypes/supabase.tsが巨大すぎて自動編集ツールがタイムアウトするため
-    // 型定義への追記を見送っている。ここだけ型を緩める。
-    const rpc = supabase.rpc as unknown as (fn: string) => Promise<{ data: unknown }>;
-    rpc("locapass_my_shop_admin_login_email").then(({ data }) => {
+    // locapass_my_shop_admin_login_email はDBには存在するが、生成済みのtypes/supabase.tsが
+    // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める
+    // (supabase自体をanyにcastして呼ぶ。.rpcだけ切り離すとthisが外れてクライアント内部が壊れるため注意)。
+    (supabase as any).rpc("locapass_my_shop_admin_login_email").then(({ data }: { data: unknown }) => {
       if (typeof data === "string") setLoginEmail(data);
     });
-    rpc("needs_password_setup").then(({ data }) => {
+    supabase.rpc("needs_password_setup").then(({ data }) => {
       if (data) {
         setPasswordSetupForced(true);
         setPasswordModalOpen(true);

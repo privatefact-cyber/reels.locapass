@@ -42,11 +42,10 @@ export const getShopForManager = cache(async (shopId: string): Promise<ShopManag
 
   const { data: isOperator } = await supabase.rpc("locapass_is_portal_admin", { p_portal_id: shop.portal_id });
   // locapass_shop_admin_needs_recovery_setup はDBには存在するが、生成済みのtypes/supabase.tsが
-  // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める。
+  // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める
+  // (supabase自体をanyにcastして呼ぶ。.rpcだけ切り離すとthisが外れてクライアント内部が壊れるため注意)。
   const { data: needsRecoverySetup } = isOperator
     ? { data: false }
-    : await (supabase.rpc as unknown as (fn: "locapass_shop_admin_needs_recovery_setup") => Promise<{ data: boolean | null }>)(
-        "locapass_shop_admin_needs_recovery_setup",
-      );
+    : await (supabase as any).rpc("locapass_shop_admin_needs_recovery_setup");
   return { shop, isOperator: !!isOperator, needsRecoverySetup: !!needsRecoverySetup };
 });

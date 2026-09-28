@@ -35,13 +35,9 @@ export function RecoveryInfoGateModal() {
     setLoading(true);
     const supabase = createClient();
     // set_locapass_shop_admin_recovery_info はDBには存在するが、生成済みのtypes/supabase.tsが
-    // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める。
-    const { error: rpcError } = await (
-      supabase.rpc as unknown as (
-        fn: "set_locapass_shop_admin_recovery_info",
-        args: { p_phone: string; p_birth_date: string; p_pin: string },
-      ) => Promise<{ error: { message: string } | null }>
-    )("set_locapass_shop_admin_recovery_info", {
+    // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める
+    // (supabase自体をanyにcastして呼ぶ。.rpcだけ切り離すとthisが外れてクライアント内部が壊れるため注意)。
+    const { error: rpcError } = await (supabase as any).rpc("set_locapass_shop_admin_recovery_info", {
       p_phone: phone,
       p_birth_date: birthDate,
       p_pin: pin,
