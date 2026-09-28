@@ -42,6 +42,14 @@ export default function StaffDmThreadPage() {
     void load();
   }, [load]);
 
+  // 開いている間、スタッフからの新着返信を自動で反映する(リロード不要にするため)。
+  useEffect(() => {
+    const interval = setInterval(() => {
+      void load();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [load]);
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim()) return;

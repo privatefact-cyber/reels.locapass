@@ -42,6 +42,23 @@ export function StaffDmButton({
     });
   }, []);
 
+  async function fetchMessages(id: string) {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("locapass_staff_dm_messages")
+      .select("id, sender_type, body, created_at")
+      .eq("thread_id", id)
+      .order("created_at", { ascending: true });
+    setMessages(
+      (data ?? []).map((m) => ({
+        id: m.id,
+        senderType: m.sender_type as "user" | "staff",
+        body: m.body,
+        createdAt: m.created_at,
+      })),
+    );
+  }
+
   async function handleOpen() {
     setOpen(true);
     setError(null);
@@ -56,21 +73,18 @@ export function StaffDmButton({
       return;
     }
     setThreadId(id);
-    const { data } = await supabase
-      .from("locapass_staff_dm_messages")
-      .select("id, sender_type, body, created_at")
-      .eq("thread_id", id)
-      .order("created_at", { ascending: true });
-    setMessages(
-      (data ?? []).map((m) => ({
-        id: m.id,
-        senderType: m.sender_type as "user" | "staff",
-        body: m.body,
-        createdAt: m.created_at,
-      })),
-    );
+    await fetchMessages(id);
     setLoadingThread(false);
   }
+
+  // モーダルを開いている間、相手からの新着メッセージを自動で反映する(リロード不要にするため)。
+  useEffect(() => {
+    if (!open || !threadId) return;
+    const interval = setInterval(() => {
+      void fetchMessages(threadId);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [open, threadId]);
 
   async function handleSend() {
     if (!threadId || !draft.trim()) return;

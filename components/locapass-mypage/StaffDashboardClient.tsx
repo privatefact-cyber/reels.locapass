@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Camera, Pencil } from "lucide-react";
@@ -180,6 +180,15 @@ export function StaffDashboardClient({
 
   const postCount = reels.length;
   const totalLikes = reels.reduce((sum, r) => sum + r.likesCount, 0);
+
+  // メッセージを開いている間、新着を自動で反映する(リロード不要にするため)。
+  useEffect(() => {
+    if (!openDmThreadId) return;
+    const interval = setInterval(() => {
+      void fetchDmMessages(openDmThreadId);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [openDmThreadId]);
 
   // ---------- プロフィール ----------
   function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -595,13 +604,7 @@ export function StaffDashboardClient({
   }
 
   // ---------- メッセージ(登録ユーザーとのDM) ----------
-  async function openDmThread(threadId: string) {
-    if (openDmThreadId === threadId) {
-      setOpenDmThreadId(null);
-      return;
-    }
-    setOpenDmThreadId(threadId);
-    setDmLoading(true);
+  async function fetchDmMessages(threadId: string) {
     const supabase = createClient();
     const { data } = await supabase
       .from("locapass_staff_dm_messages")
@@ -616,6 +619,16 @@ export function StaffDashboardClient({
         createdAt: m.created_at,
       })),
     );
+  }
+
+  async function openDmThread(threadId: string) {
+    if (openDmThreadId === threadId) {
+      setOpenDmThreadId(null);
+      return;
+    }
+    setOpenDmThreadId(threadId);
+    setDmLoading(true);
+    await fetchDmMessages(threadId);
     setDmLoading(false);
   }
 
