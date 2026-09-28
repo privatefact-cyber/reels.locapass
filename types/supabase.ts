@@ -2109,6 +2109,7 @@ export type Database = {
           bio: string | null
           created_at: string
           id: string
+          issue_no: number
           name: string
           shop_id: string
           user_id: string | null
@@ -2118,6 +2119,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           id?: string
+          issue_no?: number
           name: string
           shop_id: string
           user_id?: string | null
@@ -2127,6 +2129,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           id?: string
+          issue_no?: number
           name?: string
           shop_id?: string
           user_id?: string | null
@@ -2217,6 +2220,7 @@ export type Database = {
           sns_whisper_updated_at: string | null
           plan: string
           next_cast_no: number
+          next_staff_no: number
           portal_id: number
           price_info: string | null
           shop_code: string
@@ -2265,6 +2269,7 @@ export type Database = {
           sns_whisper_updated_at?: string | null
           plan?: string
           next_cast_no?: number
+          next_staff_no?: number
           portal_id: number
           price_info?: string | null
           shop_code?: string
@@ -2313,6 +2318,7 @@ export type Database = {
           sns_whisper_updated_at?: string | null
           plan?: string
           next_cast_no?: number
+          next_staff_no?: number
           portal_id?: number
           price_info?: string | null
           shop_code?: string

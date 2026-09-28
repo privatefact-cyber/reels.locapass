@@ -2,17 +2,20 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Camera, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { SingleImageDropzone, EventGalleryDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
 import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect";
+import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
+import { staffPath, staffReelsPath } from "@/lib/locapass/publicUrls";
 
 export type MyReel = {
   id: string;
@@ -71,9 +74,13 @@ type Tab = "posts" | "events" | "inquiries";
 export function StaffDashboardClient({
   userId,
   portalId,
+  portalSlug,
   staffId,
   shopId,
+  shopSlug,
+  issueNo,
   shopName,
+  qrDataUrl,
   initialName,
   initialBio,
   initialAvatarUrl,
@@ -83,9 +90,13 @@ export function StaffDashboardClient({
 }: {
   userId: string;
   portalId: number;
+  portalSlug: string | null;
   staffId: string;
   shopId: string;
+  shopSlug: string | null;
+  issueNo: number;
   shopName: string | null;
+  qrDataUrl: string | null;
   initialName: string;
   initialBio: string | null;
   initialAvatarUrl: string | null;
@@ -594,7 +605,7 @@ export function StaffDashboardClient({
         <h1 className="mt-3 text-lg font-bold">{name}</h1>
         {shopName && <p className="text-xs text-muted">{shopName} スタッフ</p>}
 
-        <div className="mt-4 flex justify-center gap-8">
+        <div className="mt-4 flex items-center justify-center gap-8">
           <div className="text-center">
             <p className="text-base font-bold">{postCount}</p>
             <p className="text-[11px] text-muted">投稿</p>
@@ -603,7 +614,23 @@ export function StaffDashboardClient({
             <p className="text-base font-bold">{totalLikes}</p>
             <p className="text-[11px] text-muted">いいね</p>
           </div>
+          {qrDataUrl && portalSlug && shopSlug && (
+            <QrCodeIconButton
+              qrDataUrl={qrDataUrl}
+              profileUrl={`https://locapass.net${staffPath(portalSlug, shopSlug, issueNo)}`}
+              label="QRコードを表示(お客様にその場で見せる用)"
+            />
+          )}
         </div>
+
+        {portalSlug && shopSlug && (
+          <Link
+            href={staffPath(portalSlug, shopSlug, issueNo)}
+            className="mt-2 inline-block text-xs text-brand underline"
+          >
+            公開プロフィールを見る
+          </Link>
+        )}
 
         {bio && (
           <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
@@ -730,74 +757,97 @@ export function StaffDashboardClient({
             </form>
           )}
 
-          <div className="mt-4 space-y-4 px-4">
+          {/* 投稿グリッド(キャストマイページと同じサムネイル3列表示)。
+              タップすると、このスタッフの投稿だけを対象にした公開リール再生ページへ飛ぶ。 */}
+          <div className="mt-4 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
             {reels.map((r) => (
-              <div key={r.id} className="overflow-hidden rounded-xl border border-main/10 bg-surface">
-                <div className="relative aspect-[9/16] max-h-96 bg-black">
-                  {r.media[0]?.type === "video" ? (
-                    <StreamThumb url={r.media[0].url} className="h-full w-full object-cover" />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={r.media[0]?.url} alt="" className="h-full w-full object-cover" />
-                  )}
+              <Link
+                key={r.id}
+                href={portalSlug && shopSlug ? `${staffReelsPath(portalSlug, shopSlug, issueNo)}?start=${r.id}` : "#"}
+                className="relative block aspect-[9/16] overflow-hidden bg-surface"
+              >
+                {r.media[0]?.type === "video" ? (
+                  <StreamThumb url={r.media[0].url} className="h-full w-full object-cover" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={r.media[0]?.url} alt="" className="h-full w-full object-cover" />
+                )}
+                <div className="absolute right-1 top-1 flex flex-col items-end gap-1">
                   <button
                     type="button"
-                    onClick={() => handleDeleteReel(r.id)}
-                    className="absolute right-2 top-2 rounded bg-black/70 px-2 py-1 text-[11px] text-main"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteReel(r.id);
+                    }}
+                    className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
                   >
                     削除
                   </button>
-                  <span className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-[11px] text-main">
-                    ♥ {r.likesCount}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleComments(r.id);
+                    }}
+                    className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
+                  >
+                    コメント
+                  </button>
                 </div>
-                {r.caption && <p className="px-3 pt-2 text-sm text-tone-300">{r.caption}</p>}
+                <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
+                  ♥ {r.likesCount}
+                </span>
+              </Link>
+            ))}
+          </div>
+          {reels.length === 0 && (
+            <p className="px-4 py-8 text-center text-sm text-tone-500">
+              まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。
+            </p>
+          )}
+
+          {/* コメント管理(グリッドの「コメント」から開く。1件ずつ返信を確認・送信できる) */}
+          {openCommentsFor && (
+            <div className="mx-4 mt-3 space-y-2 rounded-xl border border-main/10 bg-surface p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-tone-300">
+                  {reels.find((r) => r.id === openCommentsFor)?.caption || "この投稿へのコメント"}
+                </p>
+                <button type="button" onClick={() => setOpenCommentsFor(null)} className="text-xs text-tone-500">
+                  閉じる
+                </button>
+              </div>
+              {(comments[openCommentsFor] ?? []).length === 0 && (
+                <p className="text-xs text-tone-500">まだコメントはありません。</p>
+              )}
+              {(comments[openCommentsFor] ?? []).map((c) => (
+                <div key={c.id} className="text-xs">
+                  <span className={c.authorType === "staff" ? "font-semibold text-brand" : "font-semibold text-tone-300"}>
+                    {c.authorType === "staff" ? "自分" : "ゲスト"}
+                  </span>
+                  <span className="ml-2 text-tone-300">{c.body}</span>
+                </div>
+              ))}
+              <div className="flex gap-2 pt-1">
+                <input
+                  value={commentDraft}
+                  onChange={(e) => setCommentDraft(e.target.value)}
+                  placeholder="返信を入力"
+                  className="flex-1 rounded border border-main/20 bg-main/5 px-2 py-1.5 text-[13px] text-main"
+                />
                 <button
                   type="button"
-                  onClick={() => toggleComments(r.id)}
-                  className="w-full px-3 py-2 text-left text-xs text-muted"
+                  disabled={commentLoading}
+                  onClick={() => handleReplyComment(openCommentsFor)}
+                  className="rounded bg-brand px-3 py-1.5 text-xs font-semibold text-main disabled:opacity-50"
                 >
-                  {openCommentsFor === r.id ? "コメントを閉じる" : "コメントを見る・返信する"}
+                  送信
                 </button>
-                {openCommentsFor === r.id && (
-                  <div className="space-y-2 border-t border-main/10 px-3 py-3">
-                    {(comments[r.id] ?? []).length === 0 && (
-                      <p className="text-xs text-tone-500">まだコメントはありません。</p>
-                    )}
-                    {(comments[r.id] ?? []).map((c) => (
-                      <div key={c.id} className="text-xs">
-                        <span className={c.authorType === "staff" ? "font-semibold text-brand" : "font-semibold text-tone-300"}>
-                          {c.authorType === "staff" ? "自分" : "ゲスト"}
-                        </span>
-                        <span className="ml-2 text-tone-300">{c.body}</span>
-                      </div>
-                    ))}
-                    <div className="flex gap-2 pt-1">
-                      <input
-                        value={commentDraft}
-                        onChange={(e) => setCommentDraft(e.target.value)}
-                        placeholder="返信を入力"
-                        className="flex-1 rounded border border-main/20 bg-main/5 px-2 py-1.5 text-[13px] text-main"
-                      />
-                      <button
-                        type="button"
-                        disabled={commentLoading}
-                        onClick={() => handleReplyComment(r.id)}
-                        className="rounded bg-brand px-3 py-1.5 text-xs font-semibold text-main disabled:opacity-50"
-                      >
-                        送信
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
-            ))}
-            {reels.length === 0 && (
-              <p className="py-8 text-center text-sm text-tone-500">
-                まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。
-              </p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

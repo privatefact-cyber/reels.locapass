@@ -48,7 +48,7 @@ export default async function ShopReelsPage({
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
-      `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled, posted_by_staff_id, author_name, author_icon_url, cast_members:locapass_public_casts ( name, avatar_url, issue_no ), shop_staff_members:locapass_shop_staff_members ( name, avatar_url )`,
+      `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled, posted_by_staff_id, author_name, author_icon_url, cast_members:locapass_public_casts ( name, avatar_url, issue_no ), shop_staff_members:locapass_shop_staff_members ( name, avatar_url, issue_no )`,
     )
     .eq("shop_id", shop.id)
     .eq("status", "publish")
@@ -74,6 +74,8 @@ export default async function ShopReelsPage({
       shopSlug: shop.slug,
       portalSlug: portal.slug,
       castIssueNo: row.cast_id ? (cast?.issue_no ?? null) : null,
+      staffId: row.posted_by_staff_id,
+      staffIssueNo: row.posted_by_staff_id ? (staff?.issue_no ?? null) : null,
       area: shop.area,
       address: shop.address,
       genre: shop.genre,

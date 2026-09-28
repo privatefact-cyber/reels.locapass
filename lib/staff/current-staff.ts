@@ -24,7 +24,9 @@ export async function requireCurrentStaff() {
 
   const { data: staff } = await supabase
     .from("locapass_shop_staff_members")
-    .select("id, name, shop_id, bio, avatar_url, user_id, locapass_shops ( name, portal_id )")
+    .select(
+      "id, name, shop_id, bio, avatar_url, user_id, issue_no, locapass_shops ( name, slug, portal_id, portal:locapass_portals ( slug ) )",
+    )
     .eq("id", staffMemberId)
     .single();
 

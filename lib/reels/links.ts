@@ -1,15 +1,22 @@
 import type { ReelItem } from "@/lib/reels/types";
-import { shopPath, castPath } from "@/lib/locapass/publicUrls";
+import { shopPath, castPath, staffPath } from "@/lib/locapass/publicUrls";
 
-type ReelLinkFields = Pick<ReelItem, "castId" | "shopId" | "shopSlug" | "portalSlug" | "castIssueNo">;
+type ReelLinkFields = Pick<
+  ReelItem,
+  "castId" | "shopId" | "shopSlug" | "portalSlug" | "castIssueNo" | "staffId" | "staffIssueNo"
+>;
 
 /**
  * 画像タップ・アバタータップ時の遷移先(投稿者がキャストならキャストマイページ、
- * 店舗スタッフなら店舗詳細)。常にslugベースの公開URLを返す。
+ * スタッフならスタッフの公開マイページ、それ以外(店舗直接投稿)なら店舗詳細)。
+ * 常にslugベースの公開URLを返す。
  */
 export function reelProfileUrl(reel: ReelLinkFields): string {
   if (reel.castId && reel.castIssueNo != null) {
     return castPath(reel.portalSlug, reel.shopSlug, reel.castIssueNo);
+  }
+  if (reel.staffId && reel.staffIssueNo != null) {
+    return staffPath(reel.portalSlug, reel.shopSlug, reel.staffIssueNo);
   }
   return shopPath(reel.portalSlug, reel.shopSlug);
 }

@@ -4,22 +4,22 @@ import { createClient } from "@/lib/supabase/server";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
 import type { ReelItem } from "@/lib/reels/types";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
-import { parseCastSlug, castPath } from "@/lib/locapass/publicUrls";
+import { staffPath, parseStaffSlug } from "@/lib/locapass/publicUrls";
 
 export const revalidate = 60;
 
-export default async function CastReelsPage({
+export default async function StaffReelsPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ prefecture: string; castSlug: string }>;
+  params: Promise<{ prefecture: string; staffSlug: string }>;
   searchParams: Promise<{ start?: string }>;
 }) {
-  const { prefecture, castSlug } = await params;
+  const { prefecture, staffSlug } = await params;
   const { start } = await searchParams;
   const supabase = await createClient();
 
-  const parsed = parseCastSlug(castSlug);
+  const parsed = parseStaffSlug(staffSlug);
   if (!parsed) {
     notFound();
   }
@@ -45,33 +45,29 @@ export default async function CastReelsPage({
     notFound();
   }
 
-  const { data: cast, error: castError } = await supabase
-    .from("locapass_public_casts")
-    .select("id, name, avatar_url, shop_id, issue_no, shops:locapass_shops ( id, slug, name, area, address, genre:category )")
+  const { data: staff, error: staffError } = await supabase
+    .from("locapass_shop_staff_members")
+    .select("id, name, avatar_url, shop_id, issue_no, shops:locapass_shops ( id, slug, name, address, category )")
     .eq("shop_id", shopRow.id)
     .eq("issue_no", parsed.issueNo)
     .maybeSingle();
 
-  if (castError && castError.code !== "PGRST116") {
-    throw new Error(`locapass_public_casts取得に失敗しました: ${castError.message}`);
+  if (staffError && staffError.code !== "PGRST116") {
+    throw new Error(`locapass_shop_staff_members取得に失敗しました: ${staffError.message}`);
   }
 
-  if (!cast) {
+  if (!staff) {
     notFound();
   }
 
-  const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
+  const shop = Array.isArray(staff.shops) ? staff.shops[0] : staff.shops;
 
   const { data: reelRows } = await supabase
     .from("locapass_reels")
-    .select(
-      `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled`,
-    )
-    .eq("cast_id", cast.id)
+    .select(`id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, shop_id, action_url, published_at, updated_at, is_comments_enabled`)
+    .eq("posted_by_staff_id", staff.id)
     .eq("status", "publish")
-    // ストーリー(24時間)はリール再生に混ざらないよう明示的に除外する。
     .eq("reel_type", "permanent")
-    .order("pinned_at", { ascending: false, nullsFirst: false })
     .order("published_at", { ascending: false });
 
   const reels: ReelItem[] = (reelRows ?? []).map((row) => ({
@@ -79,26 +75,25 @@ export default async function CastReelsPage({
     caption: row.caption,
     media: toReelMedia(row),
     likesCount: row.like_count,
-    castId: row.cast_id,
-    castName: cast.name,
-    castAvatarUrl: cast.avatar_url,
-    shopId: row.shop_id ?? cast.shop_id,
+    castId: null,
+    castName: staff.name,
+    castAvatarUrl: staff.avatar_url,
+    shopId: row.shop_id ?? staff.shop_id,
     shopName: shop?.name ?? "",
     shopSlug: parsed.shopSlug,
     portalSlug: portal.slug,
-    castIssueNo: cast.issue_no,
-    staffId: null,
-    staffIssueNo: null,
-    area: shop?.area ?? null,
+    castIssueNo: null,
+    staffId: staff.id,
+    staffIssueNo: staff.issue_no,
+    area: null,
     address: shop?.address ?? null,
-    genre: shop?.genre ?? null,
+    genre: shop?.category ?? null,
     linkUrl: row.action_url,
     createdAt: row.published_at ?? row.updated_at,
     isCommentsEnabled: row.is_comments_enabled,
   }));
 
-  // プロフィールのグリッドから特定の投稿をタップして来た場合、その投稿から再生を始める
-  // (並び自体は変えず、配列を回転させて対象を先頭に持ってくるだけ)。
+  // プロフィールのグリッドから特定の投稿をタップして来た場合、その投稿から再生を始める。
   const startIndex = start ? reels.findIndex((r) => r.id === start) : -1;
   const orderedReels =
     startIndex > 0 ? [...reels.slice(startIndex), ...reels.slice(0, startIndex)] : reels;
@@ -106,10 +101,10 @@ export default async function CastReelsPage({
   return (
     <div className="space-y-3">
       <Link
-        href={castPath(portal.slug, parsed.shopSlug, cast.issue_no)}
+        href={staffPath(portal.slug, parsed.shopSlug, staff.issue_no)}
         className="inline-block px-1 text-sm text-brand hover:underline"
       >
-        ← {cast.name} のプロフィールに戻る
+        ← {staff.name} のプロフィールに戻る
       </Link>
       <ReelLoopFeed reels={orderedReels} />
     </div>

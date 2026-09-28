@@ -22,9 +22,10 @@ export type ReelRow = {
     | { name: string; address: string | null; category: string | null; slug: string; portal: { slug: string } | { slug: string }[] | null }[]
     | null;
   cast_id: string | null;
+  posted_by_staff_id: string | null;
   is_comments_enabled: boolean;
   locapass_cast_members: { name: string | null; avatar_url: string | null; issue_no: number } | { name: string | null; avatar_url: string | null; issue_no: number }[] | null;
-  locapass_shop_staff_members: { name: string; avatar_url: string | null } | { name: string; avatar_url: string | null }[] | null;
+  locapass_shop_staff_members: { name: string; avatar_url: string | null; issue_no: number } | { name: string; avatar_url: string | null; issue_no: number }[] | null;
 };
 
 export function toReelItem(row: ReelRow): ReelItem | null {
@@ -64,7 +65,9 @@ export function toReelItem(row: ReelRow): ReelItem | null {
     shopName: shop.name,
     shopSlug: shop.slug,
     portalSlug: portal.slug,
-    castIssueNo: cast?.issue_no ?? null,
+    castIssueNo: row.cast_id ? (cast?.issue_no ?? null) : null,
+    staffId: row.posted_by_staff_id,
+    staffIssueNo: row.posted_by_staff_id ? (staff?.issue_no ?? null) : null,
     area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
     address: shop.address,
     genre: shop.category,
@@ -75,7 +78,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
 }
 
 export const REEL_SELECT =
-  "id, caption, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url )";
+  "id, caption, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, posted_by_staff_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url, issue_no )";
 
 export type PortalFeedData = {
   reels: ReelItem[];

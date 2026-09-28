@@ -1,3 +1,4 @@
+import QRCode from "qrcode";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentStaff } from "@/lib/staff/current-staff";
@@ -7,6 +8,7 @@ import {
   type ShopEventRow,
   type InquiryRow,
 } from "@/components/locapass-mypage/StaffDashboardClient";
+import { staffPath } from "@/lib/locapass/publicUrls";
 
 /**
  * staff 本人の画面。LUXELA本家のスタッフマイページ(app/staff/mypage)と同じUI。
@@ -15,6 +17,18 @@ import {
 export default async function StaffDashboardPage() {
   const staff = await requireCurrentStaff();
   if (!staff) redirect("/dashboard");
+
+  const shopForUrl = Array.isArray(staff.locapass_shops) ? staff.locapass_shops[0] : staff.locapass_shops;
+  const portalForUrl = shopForUrl
+    ? Array.isArray(shopForUrl.portal)
+      ? shopForUrl.portal[0]
+      : shopForUrl.portal
+    : null;
+  const staffUrl =
+    shopForUrl?.slug && portalForUrl?.slug
+      ? `https://locapass.net${staffPath(portalForUrl.slug, shopForUrl.slug, staff.issue_no)}`
+      : null;
+  const qrDataUrl = staffUrl ? await QRCode.toDataURL(staffUrl, { margin: 1, width: 220 }) : null;
 
   const supabase = await createClient();
   const [{ data: reels }, { data: events }, { data: inquiries }] = await Promise.all([
@@ -74,14 +88,19 @@ export default async function StaffDashboardPage() {
   }));
 
   const shop = Array.isArray(staff.locapass_shops) ? staff.locapass_shops[0] : staff.locapass_shops;
+  const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
 
   return (
     <StaffDashboardClient
       userId={staff.user_id ?? ""}
       portalId={shop?.portal_id ?? 0}
+      portalSlug={portal?.slug ?? null}
       staffId={staff.id}
       shopId={staff.shop_id}
+      shopSlug={shop?.slug ?? null}
+      issueNo={staff.issue_no}
       shopName={shop?.name ?? null}
+      qrDataUrl={qrDataUrl}
       initialName={staff.name}
       initialBio={staff.bio}
       initialAvatarUrl={staff.avatar_url}

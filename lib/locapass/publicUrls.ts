@@ -26,6 +26,23 @@ export function castReelsPath(portalSlug: string, shopSlug: string, issueNo: num
   return `${castPath(portalSlug, shopSlug, issueNo)}/reels`;
 }
 
+export function staffSlugOf(shopSlug: string, issueNo: number): string {
+  return `${shopSlug}-${issueNo}`;
+}
+
+export function staffPath(portalSlug: string, shopSlug: string, issueNo: number): string {
+  return `/${portalSlug}/staff/${staffSlugOf(shopSlug, issueNo)}`;
+}
+
+export function staffReelsPath(portalSlug: string, shopSlug: string, issueNo: number): string {
+  return `${staffPath(portalSlug, shopSlug, issueNo)}/reels`;
+}
+
+/** "{shopSlug}-{issueNo}" 形式のスタッフslugを分解する(parseCastSlugと同じロジック)。 */
+export function parseStaffSlug(staffSlug: string): { shopSlug: string; issueNo: number } | null {
+  return parseCastSlug(staffSlug);
+}
+
 /**
  * "{shopSlug}-{issueNo}" 形式のキャストslugを分解する。
  * 店舗slug自体が"-2"のような数字サフィックスで終わる場合(重複解決で付与されたもの)にも

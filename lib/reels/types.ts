@@ -13,6 +13,10 @@ export type ReelItem = {
   portalSlug: string;
   /** キャスト投稿の場合の発行番号。店舗投稿(castIdがnull)なら常にnull。 */
   castIssueNo: number | null;
+  /** スタッフ投稿の場合の投稿者id。キャスト投稿・店舗直接投稿ならnull。 */
+  staffId: string | null;
+  /** スタッフ投稿の場合の発行番号(店舗ごとの連番)。それ以外ならnull。 */
+  staffIssueNo: number | null;
   area: string | null;
   address: string | null;
   genre: string | null;
