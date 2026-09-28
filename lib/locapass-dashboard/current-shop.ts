@@ -6,6 +6,12 @@ export type ShopManagerView = {
   shop: { id: string; name: string; portal_id: number };
   /** super_admin / portal_admin として開いている(店舗本人ではない)なら true。代理閲覧バナーの出し分けに使う。 */
   isOperator: boolean;
+  /**
+   * 店舗本人(shop_admin)として開いていて、かつ復旧用情報(電話番号・生年月日・PIN)が
+   * 未登録なら true。ダッシュボードで登録必須のゲートを出す判定に使う
+   * (代理閲覧中のisOperatorでは出さない)。
+   */
+  needsRecoverySetup: boolean;
 };
 
 /**
@@ -35,5 +41,12 @@ export const getShopForManager = cache(async (shopId: string): Promise<ShopManag
   if (!shop) return null;
 
   const { data: isOperator } = await supabase.rpc("locapass_is_portal_admin", { p_portal_id: shop.portal_id });
-  return { shop, isOperator: !!isOperator };
+  // locapass_shop_admin_needs_recovery_setup はDBには存在するが、生成済みのtypes/supabase.tsが
+  // 巨大すぎて自動編集ツールがタイムアウトするため型定義への追記を見送っている。ここだけ型を緩める。
+  const { data: needsRecoverySetup } = isOperator
+    ? { data: false }
+    : await (supabase.rpc as unknown as (fn: "locapass_shop_admin_needs_recovery_setup") => Promise<{ data: boolean | null }>)(
+        "locapass_shop_admin_needs_recovery_setup",
+      );
+  return { shop, isOperator: !!isOperator, needsRecoverySetup: !!needsRecoverySetup };
 });

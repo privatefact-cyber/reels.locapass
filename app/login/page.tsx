@@ -86,7 +86,12 @@ export default function LoginPage() {
         </button>
       </form>
       <p className="mt-4 text-center text-xs text-slate-500">
-        ログインIDやパスワードがわからない場合は、所属店舗またはポータルの管理者に再発行を依頼してください。
+        <a href="/shop-recover" className="underline hover:text-slate-900">
+          店舗管理者の方で、ログインID・パスワードがわからない場合はこちら
+        </a>
+      </p>
+      <p className="mt-2 text-center text-xs text-slate-500">
+        スタッフ・パートナーの方は、所属店舗の管理者に再発行を依頼してください。
       </p>
     </div>
   );
