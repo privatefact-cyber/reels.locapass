@@ -13,6 +13,7 @@ import { TodayScheduleBoard, type TodayScheduleRow } from "@/components/locapass
 import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel";
 import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapStatsCard";
 import { PriceListSection } from "@/components/locapass-dashboard/PriceListSection";
+import { ShopAccountSettingsSection } from "@/components/locapass-dashboard/ShopAccountSettingsSection";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
@@ -229,6 +230,8 @@ export default async function LocapassShopSettingsPage({
           geocodeSource={shop?.geocode_source ?? null}
         />
       </div>
+
+      {!viewer.isOperator && <ShopAccountSettingsSection />}
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">店舗コード</h2>
