@@ -28,16 +28,22 @@ export async function addStaffMember(shopId: string, formData: FormData) {
   revalidatePath(`/dashboard/shop/${shopId}/staff`);
 }
 
+/**
+ * スタッフの退店処理。即時削除ではなくソフト削除で、ログインは即座にできなくなるが、
+ * 30日以内なら同じアカウントを復帰できる。
+ */
 export async function deleteStaffMember(shopId: string, staffMemberId: string) {
   const supabase = await requireShopAdmin(shopId);
-  const { data, error } = await supabase
-    .from("locapass_shop_staff_members")
-    .delete()
-    .eq("id", staffMemberId)
-    .eq("shop_id", shopId)
-    .select("id");
+  const { error } = await supabase.rpc("locapass_soft_delete_staff_member", { p_staff_member_id: staffMemberId });
   if (error) throw new Error(`スタッフの削除に失敗しました: ${error.message}`);
-  if (!data || data.length === 0) throw new Error("スタッフの削除に失敗しました(対象が見つからないか、権限がありません)");
+  revalidatePath(`/dashboard/shop/${shopId}/staff`);
+}
+
+/** 退店から30日以内のスタッフを復帰させる(アカウント・ログイン情報はそのまま)。 */
+export async function restoreStaffMember(shopId: string, staffMemberId: string) {
+  const supabase = await requireShopAdmin(shopId);
+  const { error } = await supabase.rpc("locapass_restore_staff_member", { p_staff_member_id: staffMemberId });
+  if (error) throw new Error(`復帰に失敗しました: ${error.message}`);
   revalidatePath(`/dashboard/shop/${shopId}/staff`);
 }
 

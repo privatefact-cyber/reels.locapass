@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { InviteCastButton } from "@/components/locapass-dashboard/InviteCastButton";
+import { DeleteMemberButton } from "@/components/locapass-dashboard/DeleteMemberButton";
 import { CastPhotoUploader } from "@/components/locapass-dashboard/CastPhotoUploader";
 import { CastLoginLinkCard } from "@/components/locapass-dashboard/CastLoginLinkCard";
 import { CastIdentityFields } from "@/components/locapass-dashboard/CastIdentityFields";
@@ -13,6 +14,7 @@ import { TimeSelect } from "@/components/locapass-dashboard/TimeSelect";
 import { StreamThumb } from "@/components/video/StreamThumb";
 import {
   addSchedule,
+  deleteCast,
   deleteCastReel,
   deleteCastReelComment,
   deletePhoto,
@@ -125,10 +127,17 @@ export default async function LocapassCastEditPage({
       .map((c) => [c.parent_comment_id, c]),
   );
 
+  const boundDeleteCast = deleteCast.bind(null, shop.id, castId);
+
   return (
     <div className="space-y-8">
-      <p className="text-xs text-slate-500">{shop.name}</p>
-      <h1 className="text-3xl font-bold text-slate-900">{cast.name} の管理</h1>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs text-slate-500">{shop.name}</p>
+          <h1 className="text-3xl font-bold text-slate-900">{cast.name} の管理</h1>
+        </div>
+        <DeleteMemberButton action={boundDeleteCast} label="パートナーを削除" targetName={cast.name} />
+      </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">プロフィール</h2>

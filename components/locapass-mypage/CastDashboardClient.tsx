@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPanel";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
+import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
@@ -109,6 +110,21 @@ export function CastDashboardClient({
 
   const postCount = reels.length;
   const totalLikes = reels.reduce((sum, r) => sum + r.likesCount, 0);
+
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordSetupForced, setPasswordSetupForced] = useState(false);
+
+  // 初回ログイン(ワンタイムパスワードのまま)なら、マイページを開いた時点で
+  // パスワード設定を促すモーダルを自動で開く。
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.rpc("needs_password_setup").then(({ data }) => {
+      if (data) {
+        setPasswordSetupForced(true);
+        setPasswordModalOpen(true);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (!optimizing) return;
@@ -754,13 +770,27 @@ export function CastDashboardClient({
 
       <CastCommentsPanel castId={castId} />
 
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="mx-auto mt-6 block text-xs text-tone-500 underline"
-      >
-        ログアウト
-      </button>
+      <div className="mx-auto mt-6 flex items-center justify-center gap-4 text-xs">
+        <button
+          type="button"
+          onClick={() => {
+            setPasswordSetupForced(false);
+            setPasswordModalOpen(true);
+          }}
+          className="text-tone-500 underline"
+        >
+          パスワードを設定・変更
+        </button>
+        <button type="button" onClick={handleLogout} className="text-tone-500 underline">
+          ログアウト
+        </button>
+      </div>
+
+      <PasswordSetupModal
+        open={passwordModalOpen}
+        forced={passwordSetupForced}
+        onClose={() => setPasswordModalOpen(false)}
+      />
 
       {/* プロフィール編集シート(Instagram風スライドイン) */}
       {editOpen && (

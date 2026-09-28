@@ -10,6 +10,7 @@ import { SingleImageDropzone, EventGalleryDropzone } from "@/components/locapass
 import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { StaffDmButton } from "@/components/StaffDmButton";
+import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
@@ -180,6 +181,22 @@ export function StaffDashboardClient({
 
   const postCount = reels.length;
   const totalLikes = reels.reduce((sum, r) => sum + r.likesCount, 0);
+
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordSetupForced, setPasswordSetupForced] = useState(false);
+
+  // 初回ログイン(ワンタイムパスワードのまま)なら、自分のページを開いた時点で
+  // パスワード設定を促すモーダルを自動で開く(本人が見ている時だけ)。
+  useEffect(() => {
+    if (!isOwner) return;
+    const supabase = createClient();
+    supabase.rpc("needs_password_setup").then(({ data }) => {
+      if (data) {
+        setPasswordSetupForced(true);
+        setPasswordModalOpen(true);
+      }
+    });
+  }, [isOwner]);
 
   // メッセージを開いている間、新着をRealtimeで即時反映する
   // (大規模運用を見据え、ポーリングではなくpush配信にする。RLSはそのまま効く)。
@@ -1248,13 +1265,29 @@ export function StaffDashboardClient({
       )}
 
       {isOwner && (
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="mx-auto mt-6 block text-xs text-tone-500 underline"
-      >
-        ログアウト
-      </button>
+      <div className="mx-auto mt-6 flex items-center justify-center gap-4 text-xs">
+        <button
+          type="button"
+          onClick={() => {
+            setPasswordSetupForced(false);
+            setPasswordModalOpen(true);
+          }}
+          className="text-tone-500 underline"
+        >
+          パスワードを設定・変更
+        </button>
+        <button type="button" onClick={handleLogout} className="text-tone-500 underline">
+          ログアウト
+        </button>
+      </div>
+      )}
+
+      {isOwner && (
+        <PasswordSetupModal
+          open={passwordModalOpen}
+          forced={passwordSetupForced}
+          onClose={() => setPasswordModalOpen(false)}
+        />
       )}
 
       {/* プロフィール編集シート */}

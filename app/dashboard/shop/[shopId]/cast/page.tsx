@@ -3,8 +3,11 @@ import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import Link from "next/link";
 import { CastListMasterDetail } from "@/components/locapass-dashboard/CastListMasterDetail";
 import { CastIdentityFields } from "@/components/locapass-dashboard/CastIdentityFields";
+import { RestoreMemberButton } from "@/components/locapass-dashboard/RestoreMemberButton";
 import { createClient } from "@/lib/supabase/server";
-import { addCast } from "./actions";
+import { addCast, restoreCast } from "./actions";
+
+const RESTORE_WINDOW_DAYS = 30;
 
 /**
  * LUXELA本家のキャスト管理画面(app/dashboard/cast/page.tsx)と同じ画面。
@@ -25,7 +28,18 @@ export default async function LocapassShopCastPage({
     .from("locapass_cast_members")
     .select("id, name, age, pr_text, created_at")
     .eq("shop_id", shop.id)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
+
+  // 退店から30日以内は復帰可能な状態で一覧に出す(それより古いものは復帰対象外なので出さない)。
+  const restoreCutoff = new Date(Date.now() - RESTORE_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const { data: deletedCastMembers } = await supabase
+    .from("locapass_cast_members")
+    .select("id, name, deleted_at")
+    .eq("shop_id", shop.id)
+    .not("deleted_at", "is", null)
+    .gt("deleted_at", restoreCutoff)
+    .order("deleted_at", { ascending: false });
 
   // 各パートナーの先頭写真とフォロワー数(本家と同じく1人ずつ取得)。
   const castMembersWithMedia = await Promise.all(
@@ -109,6 +123,31 @@ export default async function LocapassShopCastPage({
           </div>
         )}
       </section>
+
+      {deletedCastMembers && deletedCastMembers.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">退店済み(30日以内は復帰可能)</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            退店から30日を過ぎると復帰できなくなります。復帰させるとアカウント・ログイン情報・投稿履歴はそのまま戻ります。
+          </p>
+          <div className="space-y-2">
+            {deletedCastMembers.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">{c.name}</p>
+                  <p className="text-xs text-slate-400">
+                    退店日: {new Date(c.deleted_at as string).toLocaleDateString("ja-JP")}
+                  </p>
+                </div>
+                <RestoreMemberButton action={restoreCast.bind(null, shop.id, c.id)} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

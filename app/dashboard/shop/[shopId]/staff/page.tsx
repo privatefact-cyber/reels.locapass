@@ -3,8 +3,17 @@ import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { headers } from "next/headers";
 import { InviteStaffButton } from "@/components/locapass-dashboard/InviteStaffButton";
 import { StaffLoginLinkCard } from "@/components/locapass-dashboard/StaffLoginLinkCard";
+import { RestoreMemberButton } from "@/components/locapass-dashboard/RestoreMemberButton";
 import { createClient } from "@/lib/supabase/server";
-import { addStaffMember, deleteStaffMember, regenerateStaffLoginToken, issueStaffLoginPin } from "./actions";
+import {
+  addStaffMember,
+  deleteStaffMember,
+  restoreStaffMember,
+  regenerateStaffLoginToken,
+  issueStaffLoginPin,
+} from "./actions";
+
+const RESTORE_WINDOW_DAYS = 30;
 
 /**
  * LUXELA本家のスタッフ管理画面(app/dashboard/staff/page.tsx)と同じ画面。
@@ -25,9 +34,20 @@ export default async function LocapassShopStaffPage({
     .from("locapass_shop_staff_members")
     .select("id, name, avatar_url, user_id, created_at, locapass_staff_login_tokens ( token, pin_hash )")
     .eq("shop_id", shop.id)
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
   // 本家の列名(staff_login_tokens)に揃える。
   const staffMembers = (staffRows ?? []).map((s) => ({ ...s, staff_login_tokens: s.locapass_staff_login_tokens }));
+
+  // 退店から30日以内は復帰可能な状態で一覧に出す(それより古いものは復帰対象外なので出さない)。
+  const restoreCutoff = new Date(Date.now() - RESTORE_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const { data: deletedStaffMembers } = await supabase
+    .from("locapass_shop_staff_members")
+    .select("id, name, deleted_at")
+    .eq("shop_id", shop.id)
+    .not("deleted_at", "is", null)
+    .gt("deleted_at", restoreCutoff)
+    .order("deleted_at", { ascending: false });
 
   const requestHeaders = await headers();
   const origin =
@@ -122,6 +142,31 @@ export default async function LocapassShopStaffPage({
           </p>
         )}
       </div>
+
+      {deletedStaffMembers && deletedStaffMembers.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">退店済み(30日以内は復帰可能)</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            退店から30日を過ぎると復帰できなくなります。復帰させるとアカウント・ログイン情報はそのまま戻ります。
+          </p>
+          <div className="space-y-2">
+            {deletedStaffMembers.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">{s.name}</p>
+                  <p className="text-xs text-slate-400">
+                    退店日: {new Date(s.deleted_at as string).toLocaleDateString("ja-JP")}
+                  </p>
+                </div>
+                <RestoreMemberButton action={restoreStaffMember.bind(null, shop.id, s.id)} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

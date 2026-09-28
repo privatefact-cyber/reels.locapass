@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      concierge_link_clicks: {
-        Row: {
-          created_at: string
-          id: number
-          mode: string
-          session_id: string | null
-          shop_path: string
-          site: string
-        }
-        Insert: {
-          created_at?: string
-          id?: never
-          mode: string
-          session_id?: string | null
-          shop_path: string
-          site: string
-        }
-        Update: {
-          created_at?: string
-          id?: never
-          mode?: string
-          session_id?: string | null
-          shop_path?: string
-          site?: string
-        }
-        Relationships: []
-      }
       admin_impersonations: {
         Row: {
           admin_user_id: string
@@ -523,6 +496,72 @@ export type Database = {
           },
         ]
       }
+      cast_activity_logs: {
+        Row: {
+          action_type: string
+          cast_id: string
+          created_at: string
+          id: string
+          reel_id: string | null
+          session_key: string
+          shop_id: string
+        }
+        Insert: {
+          action_type: string
+          cast_id: string
+          created_at?: string
+          id?: string
+          reel_id?: string | null
+          session_key: string
+          shop_id: string
+        }
+        Update: {
+          action_type?: string
+          cast_id?: string
+          created_at?: string
+          id?: string
+          reel_id?: string | null
+          session_key?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cast_activity_logs_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cast_activity_logs_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
+          },
+          {
+            foreignKeyName: "cast_activity_logs_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
+          },
+          {
+            foreignKeyName: "cast_activity_logs_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "reels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cast_activity_logs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cast_blocked_users: {
         Row: {
           blocked_user_id: string
@@ -546,6 +585,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cast_members"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cast_blocked_users_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
           },
         ]
       }
@@ -586,6 +632,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cast_diary_entries_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
+          },
+          {
             foreignKeyName: "cast_diary_entries_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
@@ -619,18 +672,27 @@ export type Database = {
         Row: {
           cast_id: string
           created_at: string
+          failed_attempts: number
+          locked_until: string | null
+          pin_hash: string | null
           shop_id: string
           token: string
         }
         Insert: {
           cast_id: string
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id: string
           token?: string
         }
         Update: {
           cast_id?: string
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id?: string
           token?: string
         }
@@ -641,6 +703,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "cast_members"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cast_login_tokens_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: true
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
           },
           {
             foreignKeyName: "cast_login_tokens_shop_id_fkey"
@@ -659,15 +728,18 @@ export type Database = {
           birth_date: string | null
           cast_code: string
           created_at: string
+          deleted_at: string | null
           id: string
           id_check_hit_count: number | null
           id_check_match_level: string | null
           id_checked_at: string | null
           id_document_path: string | null
+          issue_no: number
           legal_name: string | null
           legal_name_kana: string | null
           metadata: Json
           name: string
+          password_set_at: string | null
           phone: string | null
           pr_text: string | null
           shop_id: string
@@ -682,15 +754,18 @@ export type Database = {
           birth_date?: string | null
           cast_code?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           id_check_hit_count?: number | null
           id_check_match_level?: string | null
           id_checked_at?: string | null
           id_document_path?: string | null
+          issue_no?: number
           legal_name?: string | null
           legal_name_kana?: string | null
           metadata?: Json
           name: string
+          password_set_at?: string | null
           phone?: string | null
           pr_text?: string | null
           shop_id: string
@@ -705,15 +780,18 @@ export type Database = {
           birth_date?: string | null
           cast_code?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           id_check_hit_count?: number | null
           id_check_match_level?: string | null
           id_checked_at?: string | null
           id_document_path?: string | null
+          issue_no?: number
           legal_name?: string | null
           legal_name_kana?: string | null
           metadata?: Json
           name?: string
+          password_set_at?: string | null
           phone?: string | null
           pr_text?: string | null
           shop_id?: string
@@ -730,6 +808,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      concierge_link_clicks: {
+        Row: {
+          created_at: string
+          id: number
+          mode: string
+          session_id: string | null
+          shop_path: string
+          site: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          mode: string
+          session_id?: string | null
+          shop_path: string
+          site: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          mode?: string
+          session_id?: string | null
+          shop_path?: string
+          site?: string
+        }
+        Relationships: []
       }
       line_identities: {
         Row: {
@@ -1090,6 +1195,7 @@ export type Database = {
           birth_date: string | null
           cast_code: string
           created_at: string
+          deleted_at: string | null
           id: string
           id_check_hit_count: number | null
           id_check_match_level: string | null
@@ -1100,6 +1206,7 @@ export type Database = {
           legal_name_kana: string | null
           metadata: Json
           name: string
+          password_set_at: string | null
           phone: string | null
           pr_text: string | null
           shop_id: string
@@ -1114,6 +1221,7 @@ export type Database = {
           birth_date?: string | null
           cast_code?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           id_check_hit_count?: number | null
           id_check_match_level?: string | null
@@ -1124,6 +1232,7 @@ export type Database = {
           legal_name_kana?: string | null
           metadata?: Json
           name: string
+          password_set_at?: string | null
           phone?: string | null
           pr_text?: string | null
           shop_id: string
@@ -1138,6 +1247,7 @@ export type Database = {
           birth_date?: string | null
           cast_code?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           id_check_hit_count?: number | null
           id_check_match_level?: string | null
@@ -1148,6 +1258,7 @@ export type Database = {
           legal_name_kana?: string | null
           metadata?: Json
           name?: string
+          password_set_at?: string | null
           phone?: string | null
           pr_text?: string | null
           shop_id?: string
@@ -1479,21 +1590,21 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           description: string | null
-          hero_media_type: string
-          hero_media_url: string | null
-          hero_link_url: string | null
+          font_color: string
           header_color: string
           header_opacity: number
-          outer_background_color: string
-          font_color: string
+          hero_link_url: string | null
+          hero_media_type: string
+          hero_media_url: string | null
           home_url: string | null
           id: number
           name: string
           name_en: string | null
+          outer_background_color: string
           slug: string
-          theme: string | null
           status: string
           tagline: string | null
+          theme: string | null
           updated_at: string
           wp_blog_id: number | null
         }
@@ -1503,21 +1614,21 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
-          hero_media_type?: string
-          hero_media_url?: string | null
-          hero_link_url?: string | null
+          font_color?: string
           header_color?: string
           header_opacity?: number
-          outer_background_color?: string
-          font_color?: string
+          hero_link_url?: string | null
+          hero_media_type?: string
+          hero_media_url?: string | null
           home_url?: string | null
           id?: number
           name: string
           name_en?: string | null
+          outer_background_color?: string
           slug: string
-          theme?: string | null
           status?: string
           tagline?: string | null
+          theme?: string | null
           updated_at?: string
           wp_blog_id?: number | null
         }
@@ -1527,21 +1638,21 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
-          hero_media_type?: string
-          hero_media_url?: string | null
-          hero_link_url?: string | null
+          font_color?: string
           header_color?: string
           header_opacity?: number
-          outer_background_color?: string
-          font_color?: string
+          hero_link_url?: string | null
+          hero_media_type?: string
+          hero_media_url?: string | null
           home_url?: string | null
           id?: number
           name?: string
           name_en?: string | null
+          outer_background_color?: string
           slug?: string
-          theme?: string | null
           status?: string
           tagline?: string | null
+          theme?: string | null
           updated_at?: string
           wp_blog_id?: number | null
         }
@@ -1890,6 +2001,35 @@ export type Database = {
           },
         ]
       }
+      locapass_shop_contact_taps: {
+        Row: {
+          created_at: string
+          id: number
+          kind: string
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          kind: string
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          kind?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_shop_contact_taps_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locapass_shop_events: {
         Row: {
           body: string | null
@@ -1972,83 +2112,6 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "locapass_shops"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      locapass_staff_dm_threads: {
-        Row: {
-          created_at: string
-          id: string
-          last_message_at: string
-          shop_id: string
-          staff_id: string
-          user_id: string
-          user_nickname: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_message_at?: string
-          shop_id: string
-          staff_id: string
-          user_id: string
-          user_nickname?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_message_at?: string
-          shop_id?: string
-          staff_id?: string
-          user_id?: string
-          user_nickname?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "locapass_staff_dm_threads_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "locapass_shops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "locapass_staff_dm_threads_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "locapass_shop_staff_members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      locapass_staff_dm_messages: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          sender_type: string
-          thread_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          sender_type: string
-          thread_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          sender_type?: string
-          thread_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "locapass_staff_dm_messages_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "locapass_staff_dm_threads"
             referencedColumns: ["id"]
           },
         ]
@@ -2185,9 +2248,11 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           issue_no: number
           name: string
+          password_set_at: string | null
           shop_id: string
           user_id: string | null
         }
@@ -2195,9 +2260,11 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           issue_no?: number
           name: string
+          password_set_at?: string | null
           shop_id: string
           user_id?: string | null
         }
@@ -2205,9 +2272,11 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           issue_no?: number
           name?: string
+          password_set_at?: string | null
           shop_id?: string
           user_id?: string | null
         }
@@ -2261,26 +2330,35 @@ export type Database = {
           summary_reason?: string | null
           whisper_text?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "locapass_shop_street_investigations_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       locapass_shops: {
         Row: {
           address: string | null
-          cover_image_attribution: Json | null
-          google_photo_name: string | null
-          google_place_id: string | null
           address_en: string | null
           area: string | null
           business_hours: string | null
           category: string | null
+          cover_image_attribution: Json | null
           cover_url: string | null
           created_at: string
           description: string | null
           gallery_image_urls: string[]
+          google_photo_name: string | null
+          google_place_id: string | null
           hero_media_type: string
           hero_media_url: string | null
           icon_url: string | null
           id: string
+          is_temporarily_closed: boolean
           lat: number | null
           line_qr_image_url: string | null
           line_url: string | null
@@ -2288,21 +2366,20 @@ export type Database = {
           map_preview_reel_id: string | null
           map_video_enabled: boolean
           name: string
-          occupancy_status: Json | null
-          is_temporarily_closed: boolean
-          sns_whisper: string | null
-          sns_whisper_checked_at: string | null
-          sns_whisper_source: string | null
-          sns_whisper_sources: Json | null
-          sns_whisper_updated_at: string | null
-          plan: string
           next_cast_no: number
           next_staff_no: number
+          occupancy_status: Json | null
+          plan: string
           portal_id: number
           price_info: string | null
           shop_code: string
           slug: string
           sns_links: Json
+          sns_whisper: string | null
+          sns_whisper_checked_at: string | null
+          sns_whisper_source: string | null
+          sns_whisper_sources: Json | null
+          sns_whisper_updated_at: string | null
           status: string
           tagline: string | null
           tel: string | null
@@ -2315,21 +2392,22 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          cover_image_attribution?: Json | null
-          google_photo_name?: string | null
-          google_place_id?: string | null
           address_en?: string | null
           area?: string | null
           business_hours?: string | null
           category?: string | null
+          cover_image_attribution?: Json | null
           cover_url?: string | null
           created_at?: string
           description?: string | null
           gallery_image_urls?: string[]
+          google_photo_name?: string | null
+          google_place_id?: string | null
           hero_media_type?: string
           hero_media_url?: string | null
           icon_url?: string | null
           id?: string
+          is_temporarily_closed?: boolean
           lat?: number | null
           line_qr_image_url?: string | null
           line_url?: string | null
@@ -2337,21 +2415,20 @@ export type Database = {
           map_preview_reel_id?: string | null
           map_video_enabled?: boolean
           name: string
-          occupancy_status?: Json | null
-          is_temporarily_closed?: boolean
-          sns_whisper?: string | null
-          sns_whisper_checked_at?: string | null
-          sns_whisper_source?: string | null
-          sns_whisper_sources?: Json | null
-          sns_whisper_updated_at?: string | null
-          plan?: string
           next_cast_no?: number
           next_staff_no?: number
+          occupancy_status?: Json | null
+          plan?: string
           portal_id: number
           price_info?: string | null
           shop_code?: string
           slug: string
           sns_links?: Json
+          sns_whisper?: string | null
+          sns_whisper_checked_at?: string | null
+          sns_whisper_source?: string | null
+          sns_whisper_sources?: Json | null
+          sns_whisper_updated_at?: string | null
           status?: string
           tagline?: string | null
           tel?: string | null
@@ -2364,21 +2441,22 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          cover_image_attribution?: Json | null
-          google_photo_name?: string | null
-          google_place_id?: string | null
           address_en?: string | null
           area?: string | null
           business_hours?: string | null
           category?: string | null
+          cover_image_attribution?: Json | null
           cover_url?: string | null
           created_at?: string
           description?: string | null
           gallery_image_urls?: string[]
+          google_photo_name?: string | null
+          google_place_id?: string | null
           hero_media_type?: string
           hero_media_url?: string | null
           icon_url?: string | null
           id?: string
+          is_temporarily_closed?: boolean
           lat?: number | null
           line_qr_image_url?: string | null
           line_url?: string | null
@@ -2386,21 +2464,20 @@ export type Database = {
           map_preview_reel_id?: string | null
           map_video_enabled?: boolean
           name?: string
-          occupancy_status?: Json | null
-          is_temporarily_closed?: boolean
-          sns_whisper?: string | null
-          sns_whisper_checked_at?: string | null
-          sns_whisper_source?: string | null
-          sns_whisper_sources?: Json | null
-          sns_whisper_updated_at?: string | null
-          plan?: string
           next_cast_no?: number
           next_staff_no?: number
+          occupancy_status?: Json | null
+          plan?: string
           portal_id?: number
           price_info?: string | null
           shop_code?: string
           slug?: string
           sns_links?: Json
+          sns_whisper?: string | null
+          sns_whisper_checked_at?: string | null
+          sns_whisper_source?: string | null
+          sns_whisper_sources?: Json | null
+          sns_whisper_updated_at?: string | null
           status?: string
           tagline?: string | null
           tel?: string | null
@@ -2431,6 +2508,98 @@ export type Database = {
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "locapass_venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_shops_category_backup_20260924: {
+        Row: {
+          category: string | null
+          id: string | null
+        }
+        Insert: {
+          category?: string | null
+          id?: string | null
+        }
+        Update: {
+          category?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
+      locapass_staff_dm_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_type: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_type?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_staff_dm_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_staff_dm_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_staff_dm_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          shop_id: string
+          staff_id: string
+          user_id: string
+          user_nickname: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          shop_id: string
+          staff_id: string
+          user_id: string
+          user_nickname?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          shop_id?: string
+          staff_id?: string
+          user_id?: string
+          user_nickname?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_staff_dm_threads_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_staff_dm_threads_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shop_staff_members"
             referencedColumns: ["id"]
           },
         ]
@@ -2767,6 +2936,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "media_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
+          },
+          {
             foreignKeyName: "media_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
@@ -2900,23 +3076,29 @@ export type Database = {
       platform_settings: {
         Row: {
           featured_section_enabled: boolean
+          id: boolean
           locapass_machi_no_koe_beta_enabled: boolean
           locapass_site_theme: string | null
-          id: boolean
+          machi_no_koe_beta_enabled: boolean
+          site_theme: string | null
           updated_at: string
         }
         Insert: {
           featured_section_enabled?: boolean
+          id?: boolean
           locapass_machi_no_koe_beta_enabled?: boolean
           locapass_site_theme?: string | null
-          id?: boolean
+          machi_no_koe_beta_enabled?: boolean
+          site_theme?: string | null
           updated_at?: string
         }
         Update: {
           featured_section_enabled?: boolean
+          id?: boolean
           locapass_machi_no_koe_beta_enabled?: boolean
           locapass_site_theme?: string | null
-          id?: boolean
+          machi_no_koe_beta_enabled?: boolean
+          site_theme?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -3027,11 +3209,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reel_comments_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
+          },
+          {
             foreignKeyName: "reel_comments_parent_comment_id_fkey"
             columns: ["parent_comment_id"]
             isOneToOne: false
             referencedRelation: "reel_comments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reel_comments_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
           },
           {
             foreignKeyName: "reel_comments_reel_id_fkey"
@@ -3069,6 +3265,13 @@ export type Database = {
           viewer_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reel_likes_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
+          },
           {
             foreignKeyName: "reel_likes_reel_id_fkey"
             columns: ["reel_id"]
@@ -3139,6 +3342,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reels_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
+          },
+          {
             foreignKeyName: "reels_posted_by_staff_id_fkey"
             columns: ["posted_by_staff_id"]
             isOneToOne: false
@@ -3185,6 +3395,42 @@ export type Database = {
             columns: ["cast_id"]
             isOneToOne: false
             referencedRelation: "cast_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
+          },
+        ]
+      }
+      shop_contact_taps: {
+        Row: {
+          created_at: string
+          id: number
+          kind: string
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          kind: string
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          kind?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_contact_taps_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -3444,8 +3690,11 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          deleted_at: string | null
           id: string
+          issue_no: number
           name: string
+          password_set_at: string | null
           shop_id: string
           user_id: string | null
         }
@@ -3453,8 +3702,11 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          issue_no?: number
           name: string
+          password_set_at?: string | null
           shop_id: string
           user_id?: string | null
         }
@@ -3462,14 +3714,70 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          issue_no?: number
           name?: string
+          password_set_at?: string | null
           shop_id?: string
           user_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "shop_staff_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_street_investigations: {
+        Row: {
+          applied: boolean
+          created_at: string
+          id: string
+          is_closed: boolean | null
+          llm_result: Json | null
+          model: string | null
+          raw_text: string | null
+          search_queries: string[]
+          shop_id: string
+          sources: Json
+          summary_reason: string | null
+          whisper_text: string | null
+        }
+        Insert: {
+          applied?: boolean
+          created_at?: string
+          id?: string
+          is_closed?: boolean | null
+          llm_result?: Json | null
+          model?: string | null
+          raw_text?: string | null
+          search_queries?: string[]
+          shop_id: string
+          sources?: Json
+          summary_reason?: string | null
+          whisper_text?: string | null
+        }
+        Update: {
+          applied?: boolean
+          created_at?: string
+          id?: string
+          is_closed?: boolean | null
+          llm_result?: Json | null
+          model?: string | null
+          raw_text?: string | null
+          search_queries?: string[]
+          shop_id?: string
+          sources?: Json
+          summary_reason?: string | null
+          whisper_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_street_investigations_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -3484,6 +3792,7 @@ export type Database = {
           area: string | null
           building_name: string | null
           business_hours: string | null
+          cover_image_attribution: Json | null
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -3493,10 +3802,13 @@ export type Database = {
           genre: string | null
           geocode_source: string | null
           geocoded_at: string | null
+          google_photo_name: string | null
+          google_place_id: string | null
           hero_media_type: string
           hero_media_url: string | null
           id: string
           is_sponsored: boolean
+          is_temporarily_closed: boolean
           is_verified: boolean
           lat: number | null
           line_qr_image_url: string | null
@@ -3506,12 +3818,20 @@ export type Database = {
           map_video_enabled: boolean
           metadata: Json
           name: string
+          next_cast_no: number
+          next_staff_no: number
           occupancy_status: Json | null
           phone: string | null
           plan: string
           price_info: string | null
           shop_code: string
+          slug: string
           sns_links: Json
+          sns_whisper: string | null
+          sns_whisper_checked_at: string | null
+          sns_whisper_source: string | null
+          sns_whisper_sources: Json | null
+          sns_whisper_updated_at: string | null
           sponsored_rank: number | null
           status: string
           supports_english: boolean
@@ -3526,6 +3846,7 @@ export type Database = {
           area?: string | null
           building_name?: string | null
           business_hours?: string | null
+          cover_image_attribution?: Json | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -3535,10 +3856,13 @@ export type Database = {
           genre?: string | null
           geocode_source?: string | null
           geocoded_at?: string | null
+          google_photo_name?: string | null
+          google_place_id?: string | null
           hero_media_type?: string
           hero_media_url?: string | null
           id?: string
           is_sponsored?: boolean
+          is_temporarily_closed?: boolean
           is_verified?: boolean
           lat?: number | null
           line_qr_image_url?: string | null
@@ -3548,12 +3872,20 @@ export type Database = {
           map_video_enabled?: boolean
           metadata?: Json
           name: string
+          next_cast_no?: number
+          next_staff_no?: number
           occupancy_status?: Json | null
           phone?: string | null
           plan?: string
           price_info?: string | null
           shop_code: string
+          slug: string
           sns_links?: Json
+          sns_whisper?: string | null
+          sns_whisper_checked_at?: string | null
+          sns_whisper_source?: string | null
+          sns_whisper_sources?: Json | null
+          sns_whisper_updated_at?: string | null
           sponsored_rank?: number | null
           status?: string
           supports_english?: boolean
@@ -3568,6 +3900,7 @@ export type Database = {
           area?: string | null
           building_name?: string | null
           business_hours?: string | null
+          cover_image_attribution?: Json | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -3577,10 +3910,13 @@ export type Database = {
           genre?: string | null
           geocode_source?: string | null
           geocoded_at?: string | null
+          google_photo_name?: string | null
+          google_place_id?: string | null
           hero_media_type?: string
           hero_media_url?: string | null
           id?: string
           is_sponsored?: boolean
+          is_temporarily_closed?: boolean
           is_verified?: boolean
           lat?: number | null
           line_qr_image_url?: string | null
@@ -3590,12 +3926,20 @@ export type Database = {
           map_video_enabled?: boolean
           metadata?: Json
           name?: string
+          next_cast_no?: number
+          next_staff_no?: number
           occupancy_status?: Json | null
           phone?: string | null
           plan?: string
           price_info?: string | null
           shop_code?: string
+          slug?: string
           sns_links?: Json
+          sns_whisper?: string | null
+          sns_whisper_checked_at?: string | null
+          sns_whisper_source?: string | null
+          sns_whisper_sources?: Json | null
+          sns_whisper_updated_at?: string | null
           sponsored_rank?: number | null
           status?: string
           supports_english?: boolean
@@ -3605,6 +3949,13 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "shops_map_preview_reel_id_fkey"
+            columns: ["map_preview_reel_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
+          },
           {
             foreignKeyName: "shops_map_preview_reel_id_fkey"
             columns: ["map_preview_reel_id"]
@@ -3641,21 +3992,107 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_dm_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_type: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_type?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_dm_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "staff_dm_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_dm_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          shop_id: string
+          staff_id: string
+          user_id: string
+          user_nickname: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          shop_id: string
+          staff_id: string
+          user_id: string
+          user_nickname?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          shop_id?: string
+          staff_id?: string
+          user_id?: string
+          user_nickname?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_dm_threads_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_dm_threads_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "shop_staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_login_tokens: {
         Row: {
           created_at: string
+          failed_attempts: number
+          locked_until: string | null
+          pin_hash: string | null
           shop_id: string
           staff_member_id: string
           token: string
         }
         Insert: {
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id: string
           staff_member_id: string
           token?: string
         }
         Update: {
           created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string | null
           shop_id?: string
           staff_member_id?: string
           token?: string
@@ -3700,6 +4137,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cast_members"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_cast_follows_cast_id_fkey"
+            columns: ["cast_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["cast_id"]
           },
         ]
       }
@@ -3752,19 +4196,46 @@ export type Database = {
       }
     }
     Views: {
+      cast_ranking_scores: {
+        Row: {
+          address: string | null
+          area: string | null
+          avatar_url: string | null
+          cast_id: string | null
+          cast_name: string | null
+          genre: string | null
+          issue_no: number | null
+          latest_reel_id: string | null
+          latest_reel_media: Json | null
+          month_score: number | null
+          shop_id: string | null
+          shop_name: string | null
+          shop_slug: string | null
+          week_score: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cast_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locapass_public_casts: {
         Row: {
           age: number | null
           avatar_url: string | null
-          cast_code: string
-          created_at: string
-          id: string
-          issue_no: number
-          name: string
+          cast_code: string | null
+          created_at: string | null
+          id: string | null
+          issue_no: number | null
+          name: string | null
           pr_text: string | null
-          shop_id: string
+          shop_id: string | null
           sizes: Json | null
-          updated_at: string
+          updated_at: string | null
         }
         Relationships: [
           {
@@ -3787,26 +4258,6 @@ export type Database = {
       }
     }
     Functions: {
-      concierge_beta_metrics: {
-        Args: { p_site: string; p_days?: number }
-        Returns: {
-          avg_user_messages: number
-          clicks_per_conversation: number
-          conversations: number
-          link_clicks: number
-          mode: string
-          return_rate_pct: number
-          returning_conversations: number
-        }[]
-      }
-      locapass_set_machi_no_koe_beta: {
-        Args: { p_enabled: boolean }
-        Returns: undefined
-      }
-      locapass_set_site_theme: {
-        Args: { p_theme: string | null }
-        Returns: undefined
-      }
       add_inquiry_message: {
         Args: { p_body: string; p_inquiry_id: string; p_viewer_id: string }
         Returns: undefined
@@ -3890,6 +4341,18 @@ export type Database = {
           max_risk_level: number
         }[]
       }
+      concierge_beta_metrics: {
+        Args: { p_days?: number; p_site: string }
+        Returns: {
+          avg_user_messages: number
+          clicks_per_conversation: number
+          conversations: number
+          link_clicks: number
+          mode: string
+          return_rate_pct: number
+          returning_conversations: number
+        }[]
+      }
       count_cast_followers: { Args: { p_cast_id: string }; Returns: number }
       count_shop_favorites: { Args: { p_shop_id: string }; Returns: number }
       create_cast_invite: {
@@ -3950,6 +4413,10 @@ export type Database = {
           shop_name: string
           status: string
         }[]
+      }
+      get_or_create_staff_dm_thread: {
+        Args: { p_staff_id: string }
+        Returns: string
       }
       get_user_id_by_email: { Args: { p_email: string }; Returns: string }
       is_area_photo_admin: { Args: never; Returns: boolean }
@@ -4027,6 +4494,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      locapass_contact_tap_stats: {
+        Args: { p_shop_id: string }
+        Returns: {
+          kind: string
+          taps_30d: number
+          taps_7d: number
+        }[]
+      }
       locapass_count_cast_followers: {
         Args: { p_cast_id: string }
         Returns: number
@@ -4034,14 +4509,6 @@ export type Database = {
       locapass_count_shop_favorites: {
         Args: { p_shop_id: string }
         Returns: number
-      }
-      locapass_record_contact_tap: {
-        Args: { p_shop_id: string; p_kind: string }
-        Returns: undefined
-      }
-      locapass_contact_tap_stats: {
-        Args: { p_shop_id: string }
-        Returns: { kind: string; taps_7d: number; taps_30d: number }[]
       }
       locapass_create_cast_invite: {
         Args: { p_cast_id: string }
@@ -4089,7 +4556,6 @@ export type Database = {
       locapass_current_cast_id: { Args: never; Returns: string }
       locapass_current_cast_shop_id: { Args: never; Returns: string }
       locapass_current_staff_member_id: { Args: never; Returns: string }
-      locapass_get_or_create_staff_dm_thread: { Args: { p_staff_id: string }; Returns: string }
       locapass_customer_has_commented_on_reel: {
         Args: { p_reel_id: string; p_user_id: string }
         Returns: boolean
@@ -4105,6 +4571,10 @@ export type Database = {
           shop_name: string
           status: string
         }[]
+      }
+      locapass_get_or_create_staff_dm_thread: {
+        Args: { p_staff_id: string }
+        Returns: string
       }
       locapass_get_user_id_by_email: {
         Args: { p_email: string }
@@ -4173,6 +4643,10 @@ export type Database = {
         }[]
       }
       locapass_my_roles: { Args: never; Returns: Json }
+      locapass_record_contact_tap: {
+        Args: { p_kind: string; p_shop_id: string }
+        Returns: undefined
+      }
       locapass_redeem_cast_login_token: {
         Args: { p_pin: string; p_token: string }
         Returns: {
@@ -4181,10 +4655,6 @@ export type Database = {
           status: string
         }[]
       }
-      locapass_set_cast_login_pin: {
-        Args: { p_cast_id: string }
-        Returns: string
-      }
       locapass_redeem_staff_login_token: {
         Args: { p_pin: string; p_token: string }
         Returns: {
@@ -4192,10 +4662,6 @@ export type Database = {
           one_time_password: string
           status: string
         }[]
-      }
-      locapass_set_staff_login_pin: {
-        Args: { p_staff_member_id: string }
-        Returns: string
       }
       locapass_regenerate_cast_login_token: {
         Args: { p_cast_id: string }
@@ -4211,6 +4677,14 @@ export type Database = {
           login_email: string
           new_password: string
         }[]
+      }
+      locapass_restore_cast_member: {
+        Args: { p_cast_id: string }
+        Returns: undefined
+      }
+      locapass_restore_staff_member: {
+        Args: { p_staff_member_id: string }
+        Returns: undefined
       }
       locapass_revoke_portal_admin: {
         Args: { p_portal_id: number; p_user_id: string }
@@ -4228,12 +4702,49 @@ export type Database = {
         Args: { p_body: string; p_shop_id: string; p_target_user_id?: string }
         Returns: number
       }
+      locapass_set_cast_login_pin: {
+        Args: { p_cast_id: string }
+        Returns: string
+      }
+      locapass_set_machi_no_koe_beta: {
+        Args: { p_enabled: boolean }
+        Returns: undefined
+      }
+      locapass_set_site_theme: { Args: { p_theme: string }; Returns: undefined }
+      locapass_set_staff_login_pin: {
+        Args: { p_staff_member_id: string }
+        Returns: string
+      }
+      locapass_slugify: { Args: { input: string }; Returns: string }
+      locapass_soft_delete_cast_member: {
+        Args: { p_cast_id: string }
+        Returns: undefined
+      }
+      locapass_soft_delete_staff_member: {
+        Args: { p_staff_member_id: string }
+        Returns: undefined
+      }
       locapass_update_own_cast_profile: {
         Args: { p_avatar_url?: string; p_name: string; p_pr_text: string }
         Returns: undefined
       }
       locapass_update_own_staff_profile: {
         Args: { p_avatar_url?: string; p_bio: string; p_name: string }
+        Returns: undefined
+      }
+      luxela_slugify: { Args: { input: string }; Returns: string }
+      needs_password_setup: { Args: never; Returns: boolean }
+      record_cast_activity: {
+        Args: {
+          p_action_type: string
+          p_cast_id: string
+          p_reel_id?: string
+          p_session_key: string
+        }
+        Returns: boolean
+      }
+      record_shop_contact_tap: {
+        Args: { p_kind: string; p_shop_id: string }
         Returns: undefined
       }
       recover_cast_login: {
@@ -4251,17 +4762,19 @@ export type Database = {
         }[]
       }
       redeem_cast_login_token: {
-        Args: { p_token: string }
+        Args: { p_pin: string; p_token: string }
         Returns: {
           login_email: string
           one_time_password: string
+          status: string
         }[]
       }
       redeem_staff_login_token: {
-        Args: { p_token: string }
+        Args: { p_pin: string; p_token: string }
         Returns: {
           login_email: string
           one_time_password: string
+          status: string
         }[]
       }
       regenerate_cast_login_token: {
@@ -4271,6 +4784,33 @@ export type Database = {
       regenerate_staff_login_token: {
         Args: { p_staff_member_id: string }
         Returns: string
+      }
+      restore_cast_member: { Args: { p_cast_id: string }; Returns: undefined }
+      restore_staff_member: {
+        Args: { p_staff_member_id: string }
+        Returns: undefined
+      }
+      set_cast_login_pin: { Args: { p_cast_id: string }; Returns: string }
+      set_own_password: { Args: { p_password: string }; Returns: undefined }
+      set_staff_login_pin: {
+        Args: { p_staff_member_id: string }
+        Returns: string
+      }
+      shop_contact_tap_stats: {
+        Args: { p_shop_id: string }
+        Returns: {
+          kind: string
+          taps_30d: number
+          taps_7d: number
+        }[]
+      }
+      soft_delete_cast_member: {
+        Args: { p_cast_id: string }
+        Returns: undefined
+      }
+      soft_delete_staff_member: {
+        Args: { p_staff_member_id: string }
+        Returns: undefined
       }
       update_own_cast_profile: {
         Args: { p_avatar_url?: string; p_name: string; p_pr_text: string }

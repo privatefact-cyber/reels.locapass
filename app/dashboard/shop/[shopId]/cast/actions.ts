@@ -164,19 +164,26 @@ export async function regenerateCastLoginToken(shopId: string, castId: string) {
   revalidatePath(castPath(shopId, castId));
 }
 
-/** キャストの削除(本家には無いが、shop_admin が所属キャストを削除できるという権限仕様に対応)。 */
+/**
+ * パートナーの退店処理。即時削除ではなくソフト削除で、ログインは即座にできなくなるが、
+ * 30日以内なら同じアカウントを復帰できる(deleteCast名は維持、UI文言は「削除」のまま)。
+ */
 export async function deleteCast(shopId: string, castId: string) {
-  const supabase = await requireShopAdmin(shopId);
-  const { data, error } = await supabase
-    .from("locapass_cast_members")
-    .delete()
-    .eq("id", castId)
-    .eq("shop_id", shopId)
-    .select("id");
+  await requireShopAdmin(shopId);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("locapass_soft_delete_cast_member", { p_cast_id: castId });
   if (error) throw new Error(`パートナーの削除に失敗しました: ${error.message}`);
-  if (!data || data.length === 0) throw new Error("パートナーの削除に失敗しました(対象が見つからないか、権限がありません)");
   revalidatePath(castPath(shopId));
   redirect(castPath(shopId));
+}
+
+/** 退店から30日以内のパートナーを復帰させる(アカウント・ログイン情報・投稿履歴はそのまま)。 */
+export async function restoreCast(shopId: string, castId: string) {
+  await requireShopAdmin(shopId);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("locapass_restore_cast_member", { p_cast_id: castId });
+  if (error) throw new Error(`復帰に失敗しました: ${error.message}`);
+  revalidatePath(castPath(shopId));
 }
 
 // ---------- 身分証画像(本家 setIdDocument / deleteIdDocument。locapass-id-documents バケット) ----------
