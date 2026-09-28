@@ -8,6 +8,7 @@ import {
   type MyReel,
   type ShopEventRow,
   type InquiryRow,
+  type DmThreadRow,
 } from "@/components/locapass-mypage/StaffDashboardClient";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
@@ -131,10 +132,11 @@ export default async function StaffDetailPage({
 
   let shopEvents: ShopEventRow[] = [];
   let inquiryRows: InquiryRow[] = [];
+  let dmThreadRows: DmThreadRow[] = [];
   let qrDataUrl: string | null = null;
 
   if (isOwner) {
-    const [{ data: events }, { data: inquiries }] = await Promise.all([
+    const [{ data: events }, { data: inquiries }, { data: dmThreads }] = await Promise.all([
       supabase
         .from("locapass_shop_events")
         .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_by_staff_id, created_at")
@@ -145,7 +147,18 @@ export default async function StaffDetailPage({
         .select("id, customer_name, contact, status, updated_at")
         .eq("shop_id", staff.shop_id)
         .order("updated_at", { ascending: false }),
+      supabase
+        .from("locapass_staff_dm_threads")
+        .select("id, user_nickname, last_message_at")
+        .eq("staff_id", staff.id)
+        .order("last_message_at", { ascending: false }),
     ]);
+
+    dmThreadRows = (dmThreads ?? []).map((t) => ({
+      id: t.id,
+      userNickname: t.user_nickname,
+      lastMessageAt: t.last_message_at,
+    }));
 
     shopEvents = (events ?? []).map((e) => ({
       id: e.id,
@@ -218,6 +231,7 @@ export default async function StaffDetailPage({
         initialReels={myReels}
         initialEvents={shopEvents}
         initialInquiries={inquiryRows}
+        initialDmThreads={dmThreadRows}
       />
     </>
   );

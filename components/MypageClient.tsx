@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, LogOut, MessageCircle, Play, Settings, Trash2, X } from "lucide-react";
+import { Camera, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -213,6 +213,9 @@ export function MypageClient({
         </h1>
         <div className="flex items-center gap-3">
           <NotificationBell size={18} />
+          <Link href="/mypage/messages" aria-label="スタッフとのメッセージ" className="text-main/80">
+            <MessagesSquare size={18} />
+          </Link>
           <Link href="/inquiries" aria-label={t.mypage.inquiryHistory} className="text-main/80">
             <MessageCircle size={18} />
           </Link>

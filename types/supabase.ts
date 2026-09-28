@@ -1976,6 +1976,83 @@ export type Database = {
           },
         ]
       }
+      locapass_staff_dm_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          shop_id: string
+          staff_id: string
+          user_id: string
+          user_nickname: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          shop_id: string
+          staff_id: string
+          user_id: string
+          user_nickname?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          shop_id?: string
+          staff_id?: string
+          user_id?: string
+          user_nickname?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_staff_dm_threads_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locapass_staff_dm_threads_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_shop_staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locapass_staff_dm_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_type: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_type: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_type?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_staff_dm_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_staff_dm_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locapass_shop_inquiries: {
         Row: {
           contact: string | null
@@ -4012,6 +4089,7 @@ export type Database = {
       locapass_current_cast_id: { Args: never; Returns: string }
       locapass_current_cast_shop_id: { Args: never; Returns: string }
       locapass_current_staff_member_id: { Args: never; Returns: string }
+      locapass_get_or_create_staff_dm_thread: { Args: { p_staff_id: string }; Returns: string }
       locapass_customer_has_commented_on_reel: {
         Args: { p_reel_id: string; p_user_id: string }
         Returns: boolean

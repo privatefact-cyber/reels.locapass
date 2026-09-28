@@ -9,7 +9,7 @@ import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { SingleImageDropzone, EventGalleryDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
 import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
-import { InquiryButton } from "@/components/InquiryButton";
+import { StaffDmButton } from "@/components/StaffDmButton";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
@@ -46,7 +46,15 @@ export type InquiryRow = {
   updatedAt: string;
 };
 
+/** 登録ユーザー本人とのDMスレッド(locapass_staff_dm_threads)。匿名お問い合わせ(InquiryRow)とは別物。 */
+export type DmThreadRow = {
+  id: string;
+  userNickname: string;
+  lastMessageAt: string;
+};
+
 type ThreadMessage = { senderType: "customer" | "shop"; body: string; createdAt: string };
+type DmMessage = { id: string; senderType: "user" | "staff"; body: string; createdAt: string };
 type ReelComment = { id: string; authorType: "customer" | "staff"; body: string; createdAt: string };
 
 function parseTimeOfDay(value: string): string | null {
@@ -64,7 +72,7 @@ const STATUS_LABEL: Record<string, string> = {
   closed: "クローズ",
 };
 
-type Tab = "posts" | "events" | "inquiries";
+type Tab = "posts" | "events" | "inquiries" | "messages";
 
 /**
  * スタッフ本人の画面(/dashboard/staff)。LUXELA本家のスタッフマイページ(StaffMypageClient)と同じUI。
@@ -89,6 +97,7 @@ export function StaffDashboardClient({
   initialReels,
   initialEvents,
   initialInquiries,
+  initialDmThreads,
 }: {
   /** ログイン中の本人が見ている場合はtrue。falseなら一般の閲覧者向けの公開プロフィール表示になる
       (Instagramの自分のプロフィールと他人のプロフィールの違いと同じ)。 */
@@ -108,6 +117,7 @@ export function StaffDashboardClient({
   initialReels: MyReel[];
   initialEvents: ShopEventRow[];
   initialInquiries: InquiryRow[];
+  initialDmThreads: DmThreadRow[];
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("posts");
@@ -159,6 +169,14 @@ export function StaffDashboardClient({
   const [threadLoading, setThreadLoading] = useState(false);
   const [replyDraft, setReplyDraft] = useState("");
   const [replySending, setReplySending] = useState(false);
+
+  // メッセージ(登録ユーザーとのDM)
+  const [dmThreads] = useState(initialDmThreads);
+  const [openDmThreadId, setOpenDmThreadId] = useState<string | null>(null);
+  const [dmMessages, setDmMessages] = useState<DmMessage[]>([]);
+  const [dmLoading, setDmLoading] = useState(false);
+  const [dmDraft, setDmDraft] = useState("");
+  const [dmSending, setDmSending] = useState(false);
 
   const postCount = reels.length;
   const totalLikes = reels.reduce((sum, r) => sum + r.likesCount, 0);
@@ -576,6 +594,51 @@ export function StaffDashboardClient({
     setReplyDraft("");
   }
 
+  // ---------- メッセージ(登録ユーザーとのDM) ----------
+  async function openDmThread(threadId: string) {
+    if (openDmThreadId === threadId) {
+      setOpenDmThreadId(null);
+      return;
+    }
+    setOpenDmThreadId(threadId);
+    setDmLoading(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("locapass_staff_dm_messages")
+      .select("id, sender_type, body, created_at")
+      .eq("thread_id", threadId)
+      .order("created_at", { ascending: true });
+    setDmMessages(
+      (data ?? []).map((m) => ({
+        id: m.id,
+        senderType: m.sender_type as "user" | "staff",
+        body: m.body,
+        createdAt: m.created_at,
+      })),
+    );
+    setDmLoading(false);
+  }
+
+  async function handleSendDm(threadId: string) {
+    if (!dmDraft.trim()) return;
+    setDmSending(true);
+    const supabase = createClient();
+    const { data, error: insertError } = await supabase
+      .from("locapass_staff_dm_messages")
+      .insert({ thread_id: threadId, sender_type: "staff", body: dmDraft.trim() })
+      .select("id, sender_type, body, created_at")
+      .single();
+
+    setDmSending(false);
+    if (insertError || !data) return;
+
+    setDmMessages((prev) => [
+      ...prev,
+      { id: data.id, senderType: "staff", body: data.body, createdAt: data.created_at },
+    ]);
+    setDmDraft("");
+  }
+
   return (
     <div className="pb-8">
       {!isOwner && portalSlug && shopSlug && shopName && (
@@ -665,7 +728,7 @@ export function StaffDashboardClient({
           </button>
         ) : (
           <div className="mt-4 space-y-2">
-            <InquiryButton shopId={shopId} shopName={`${shopName ?? ""}(${name})`} />
+            <StaffDmButton staffId={staffId} staffName={name} />
             {portalSlug && shopSlug && (
               <Link
                 href={shopPath(portalSlug, shopSlug)}
@@ -685,6 +748,7 @@ export function StaffDashboardClient({
           [
             ["posts", "投稿"],
             ["events", "イベント"],
+            ["messages", "メッセージ"],
             ["inquiries", "お問い合わせ"],
           ] as [Tab, string][]
         ).map(([key, label]) => (
@@ -1011,6 +1075,68 @@ export function StaffDashboardClient({
             ))}
             {events.length === 0 && (
               <p className="py-8 text-center text-sm text-tone-500">まだイベントはありません。</p>
+            )}
+          </ul>
+        </div>
+      )}
+
+      {/* メッセージタブ(登録ユーザーとのDM。匿名お問い合わせとは別) */}
+      {tab === "messages" && (
+        <div className="px-4 pt-4">
+          <ul className="space-y-2">
+            {dmThreads.map((t) => (
+              <li key={t.id} className="rounded-xl border border-main/10 bg-surface">
+                <button
+                  type="button"
+                  onClick={() => openDmThread(t.id)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-3 text-left"
+                >
+                  <p className="text-sm font-semibold text-main">{t.userNickname}</p>
+                  <span className="text-xs text-tone-500">
+                    {new Date(t.lastMessageAt).toLocaleString("ja-JP")}
+                  </span>
+                </button>
+
+                {openDmThreadId === t.id && (
+                  <div className="space-y-2 border-t border-main/10 p-3">
+                    {dmLoading ? (
+                      <p className="text-xs text-tone-500">読み込み中...</p>
+                    ) : (
+                      dmMessages.map((m) => (
+                        <div
+                          key={m.id}
+                          className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-xs ${
+                            m.senderType === "staff"
+                              ? "ml-auto bg-brand text-main"
+                              : "mr-auto bg-main/10 text-tone-200"
+                          }`}
+                        >
+                          {m.body}
+                        </div>
+                      ))
+                    )}
+                    <div className="flex gap-2 pt-1">
+                      <input
+                        value={dmDraft}
+                        onChange={(e) => setDmDraft(e.target.value)}
+                        placeholder="返信を入力"
+                        className="flex-1 rounded border border-main/20 bg-main/5 px-2 py-1.5 text-[13px] text-main"
+                      />
+                      <button
+                        type="button"
+                        disabled={dmSending}
+                        onClick={() => handleSendDm(t.id)}
+                        className="rounded bg-brand px-3 py-1.5 text-xs font-semibold text-main disabled:opacity-50"
+                      >
+                        送信
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            ))}
+            {dmThreads.length === 0 && (
+              <p className="py-8 text-center text-sm text-tone-500">まだメッセージはありません。</p>
             )}
           </ul>
         </div>
