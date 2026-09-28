@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import QRCode from "qrcode";
 import type { Metadata } from "next";
 import {
   MapPin,
@@ -205,7 +206,11 @@ export default async function ShopDetailPage({
     },
     tagline: shopRow.tagline,
     lineContactUrl: shopRow.line_url,
-    lineQrImageUrl: shopRow.line_qr_image_url,
+    // 店舗が自前でQR画像をアップロードしていればそれを優先し(公式LINEのブランドQR等)、
+    // 無ければ連絡先URLからその場でQRコードを自動生成する(手動アップロードは必須ではない)。
+    lineQrImageUrl:
+      shopRow.line_qr_image_url ??
+      (shopRow.line_url ? await QRCode.toDataURL(shopRow.line_url, { margin: 1, width: 240 }) : null),
     galleryImageUrls: shopRow.gallery_image_urls ?? [],
   };
   // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。

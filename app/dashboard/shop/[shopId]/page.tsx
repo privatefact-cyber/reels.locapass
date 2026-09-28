@@ -402,8 +402,8 @@ export default async function LocapassShopSettingsPage({
             <SingleImageDropzone
               shopId={currentShop.id}
               name="line_qr_image_url"
-              label="連絡用LINEのQRコード画像(任意)"
-              hint="設定すると「連絡」モーダルにQRコードを表示できます"
+              label="QRコード画像(任意・通常は不要です)"
+              hint="上のURLから自動でQRコードを生成して「連絡」モーダルに表示します。公式LINEのブランドQR画像などを代わりに使いたい場合だけここにアップロードしてください"
               defaultUrl={shop.line_qr_image_url}
               boxClassName="aspect-square w-full max-w-[200px]"
             />
