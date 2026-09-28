@@ -1,20 +1,29 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import type { Metadata } from "next";
-import { Heart } from "lucide-react";
+import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
-import { InquiryButton } from "@/components/InquiryButton";
 import { JsonLd } from "@/components/JsonLd";
-import { StreamThumb } from "@/components/video/StreamThumb";
+import {
+  StaffDashboardClient,
+  type MyReel,
+  type ShopEventRow,
+  type InquiryRow,
+} from "@/components/locapass-mypage/StaffDashboardClient";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
-import { shopPath, staffPath, staffReelsPath, parseStaffSlug } from "@/lib/locapass/publicUrls";
+import { staffPath, parseStaffSlug } from "@/lib/locapass/publicUrls";
 
-// 他の公開ページ(店舗・パートナー)と同じ60秒キャッシュ。
+// 他の公開ページ(店舗・パートナー)と同じ60秒キャッシュ。本人が見ている場合はcookie読み取りが
+// 発生するため実際には毎回動的レンダリングされる。
 export const revalidate = 60;
 
 type PageParams = { prefecture: string; staffSlug: string };
 
+/**
+ * スタッフの公開プロフィールページ。Instagramの自分のプロフィールと同じ思想で、
+ * ログイン中の本人が見ている場合だけ投稿・イベント投稿・DM対応などの管理UIが出る
+ * (旧/dashboard/staffはこのページへのリダイレクトのみになった)。
+ */
 async function resolveStaff(params: PageParams) {
   const supabase = await createClient();
   const parsed = parseStaffSlug(params.staffSlug);
@@ -40,7 +49,7 @@ async function resolveStaff(params: PageParams) {
   const { data: staff, error: staffError } = await supabase
     .from("locapass_shop_staff_members")
     .select(
-      "id, name, bio, avatar_url, shop_id, issue_no, created_at, shops:locapass_shops ( id, slug, name, area:category )",
+      "id, name, bio, avatar_url, shop_id, issue_no, created_at, shops:locapass_shops ( id, slug, name, area:category, portal_id )",
     )
     .eq("shop_id", shop.id)
     .eq("issue_no", parsed.issueNo)
@@ -92,24 +101,82 @@ export default async function StaffDetailPage({
     notFound();
   }
 
+  const shop = Array.isArray(staff.shops) ? staff.shops[0] : staff.shops;
+
+  // ログイン中の本人がこのスタッフ自身かどうか(Instagramの「自分のプロフィール」判定と同じ)。
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let isOwner = false;
+  if (user) {
+    const { data: viewerStaffId } = await supabase.rpc("locapass_current_staff_member_id");
+    isOwner = viewerStaffId === staff.id;
+  }
+
   const { data: reels } = await supabase
     .from("locapass_reels")
-    .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count`)
+    .select(`id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, published_at, updated_at`)
     .eq("posted_by_staff_id", staff.id)
     .eq("status", "publish")
     .eq("reel_type", "permanent")
     .order("published_at", { ascending: false });
 
-  const shop = Array.isArray(staff.shops) ? staff.shops[0] : staff.shops;
-  const reelItems = (reels ?? []).map((r) => ({ ...r, media: toReelMedia(r) }));
-  const postCount = reelItems.length;
-  const totalLikes = reelItems.reduce((sum, r) => sum + r.like_count, 0);
+  const myReels: MyReel[] = (reels ?? []).map((r) => ({
+    id: r.id,
+    caption: r.caption,
+    media: toReelMedia(r),
+    likesCount: r.like_count,
+    createdAt: r.published_at ?? r.updated_at,
+  }));
 
-  const shopUrl = shop ? `https://locapass.net${shopPath(portal.slug, shop.slug)}` : null;
+  let shopEvents: ShopEventRow[] = [];
+  let inquiryRows: InquiryRow[] = [];
+  let qrDataUrl: string | null = null;
+
+  if (isOwner) {
+    const [{ data: events }, { data: inquiries }] = await Promise.all([
+      supabase
+        .from("locapass_shop_events")
+        .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_by_staff_id, created_at")
+        .eq("shop_id", staff.shop_id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("locapass_shop_inquiries")
+        .select("id, customer_name, contact, status, updated_at")
+        .eq("shop_id", staff.shop_id)
+        .order("updated_at", { ascending: false }),
+    ]);
+
+    shopEvents = (events ?? []).map((e) => ({
+      id: e.id,
+      title: e.title,
+      body: e.body,
+      startsAt: e.starts_at,
+      endsAt: e.ends_at,
+      imageUrl: e.image_url,
+      galleryImageUrls: e.gallery_image_urls ?? [],
+      isOwn: e.created_by_staff_id === staff.id,
+      isEnded: !!e.ends_at && new Date(e.ends_at).getTime() < Date.now(),
+    }));
+
+    inquiryRows = (inquiries ?? []).map((i) => ({
+      id: i.id,
+      customerName: i.customer_name,
+      contact: i.contact,
+      status: i.status,
+      updatedAt: i.updated_at,
+    }));
+
+    if (shop?.slug) {
+      const staffUrl = `https://locapass.net${staffPath(portal.slug, shop.slug, staff.issue_no)}`;
+      qrDataUrl = await QRCode.toDataURL(staffUrl, { margin: 1, width: 220 });
+    }
+  }
+
   const staffUrl = `https://locapass.net${staffPath(portal.slug, shop!.slug, staff.issue_no)}`;
 
   return (
-    <div className="space-y-8 pb-8">
+    <>
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -124,107 +191,34 @@ export default async function StaffDetailPage({
             description: staff.bio?.slice(0, 200) || `${shop?.name ?? "LOCAPASS"}のスタッフ「${staff.name}」のプロフィール`,
             jobTitle: "スタッフ",
             url: staffUrl,
-            worksFor:
-              shop && shopUrl
-                ? {
-                    "@type": "Organization",
-                    name: shop.name,
-                    url: shopUrl,
-                  }
-                : undefined,
+            worksFor: shop
+              ? {
+                  "@type": "Organization",
+                  name: shop.name,
+                  url: `https://locapass.net/${portal.slug}/shops/${shop.slug}`,
+                }
+              : undefined,
           },
         }}
       />
-
-      {shop && shopUrl && (
-        <Link href={shopPath(portal.slug, shop.slug)} className="text-sm text-brand hover:underline">
-          ← {shop.name} の一覧に戻る
-        </Link>
-      )}
-
-      {/* プロフィールヘッダー(パートナー公開ページと同じ構成、閲覧専用) */}
-      <section className="px-1">
-        <div className="flex items-center gap-4">
-          <div className="relative shrink-0">
-            {staff.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={sanitizeImageUrl(staff.avatar_url)}
-                alt=""
-                className="h-20 w-20 rounded-full border border-main/10 object-cover"
-              />
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
-                {staff.name.slice(0, 1)}
-              </div>
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-bold">{staff.name}</h1>
-            {shop && (
-              <p className="truncate text-xs text-muted">
-                {shop.name} スタッフ ・ {shop.area}
-              </p>
-            )}
-
-            <div className="mt-2 flex gap-6">
-              <div>
-                <p className="text-base font-bold">{postCount}</p>
-                <p className="text-[11px] text-muted">投稿</p>
-              </div>
-              <div>
-                <p className="text-base font-bold">{totalLikes}</p>
-                <p className="text-[11px] text-muted">いいね</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {staff.bio && (
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">{staff.bio}</p>
-        )}
-
-        {/* DM: 一般ユーザーがログイン不要でこのスタッフの店舗宛にメッセージを送れる(店舗のお問い合わせと同じ仕組み)。 */}
-        {shop && <InquiryButton shopId={shop.id} shopName={`${shop.name}(${staff.name})`} />}
-
-        {shop && shopUrl && (
-          <Link
-            href={shopPath(portal.slug, shop.slug)}
-            className="mt-3 block w-full rounded-lg bg-brand px-6 py-2 text-center text-sm font-semibold text-main hover:bg-brand-dark"
-          >
-            店舗ページを見る
-          </Link>
-        )}
-      </section>
-
-      {/* 投稿グリッド(リール) */}
-      {reelItems.length > 0 && (
-        <section>
-          <div className="grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
-            {reelItems.map((r) => {
-              const item = (r.media as { type: "video" | "image"; url: string }[])[0];
-              return (
-                <Link
-                  key={r.id}
-                  href={`${staffReelsPath(portal.slug, shop!.slug, staff.issue_no)}?start=${r.id}`}
-                  className="relative block aspect-[9/16] overflow-hidden bg-surface"
-                >
-                  {item?.type === "video" ? (
-                    <StreamThumb url={item.url} className="h-full w-full object-cover" />
-                  ) : item ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.url} alt="" loading="lazy" className="h-full w-full object-cover" />
-                  ) : null}
-                  <span data-surface="media" className="absolute bottom-1 left-1 flex items-center gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
-                    <Heart size={10} className="fill-main" /> {r.like_count}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
-    </div>
+      <StaffDashboardClient
+        isOwner={isOwner}
+        userId={user?.id ?? ""}
+        portalId={shop?.portal_id ?? 0}
+        portalSlug={portal.slug}
+        staffId={staff.id}
+        shopId={staff.shop_id}
+        shopSlug={shop?.slug ?? null}
+        issueNo={staff.issue_no}
+        shopName={shop?.name ?? null}
+        qrDataUrl={qrDataUrl}
+        initialName={staff.name}
+        initialBio={staff.bio}
+        initialAvatarUrl={staff.avatar_url}
+        initialReels={myReels}
+        initialEvents={shopEvents}
+        initialInquiries={inquiryRows}
+      />
+    </>
   );
 }

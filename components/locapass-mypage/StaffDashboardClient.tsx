@@ -9,13 +9,14 @@ import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { SingleImageDropzone, EventGalleryDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
 import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
+import { InquiryButton } from "@/components/InquiryButton";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
-import { staffPath, staffReelsPath } from "@/lib/locapass/publicUrls";
+import { shopPath, staffPath, staffReelsPath } from "@/lib/locapass/publicUrls";
 
 export type MyReel = {
   id: string;
@@ -72,6 +73,7 @@ type Tab = "posts" | "events" | "inquiries";
  * つないである。
  */
 export function StaffDashboardClient({
+  isOwner,
   userId,
   portalId,
   portalSlug,
@@ -88,6 +90,9 @@ export function StaffDashboardClient({
   initialEvents,
   initialInquiries,
 }: {
+  /** ログイン中の本人が見ている場合はtrue。falseなら一般の閲覧者向けの公開プロフィール表示になる
+      (Instagramの自分のプロフィールと他人のプロフィールの違いと同じ)。 */
+  isOwner: boolean;
   userId: string;
   portalId: number;
   portalSlug: string | null;
@@ -573,34 +578,53 @@ export function StaffDashboardClient({
 
   return (
     <div className="pb-8">
+      {!isOwner && portalSlug && shopSlug && shopName && (
+        <div className="px-4 pt-4">
+          <Link href={shopPath(portalSlug, shopSlug)} className="text-sm text-brand hover:underline">
+            ← {shopName} の一覧に戻る
+          </Link>
+        </div>
+      )}
+
       {/* プロフィールヘッダー(Instagramのプロフィール画面と同じ構成) */}
       <section className="px-4 pt-6 text-center">
-        <input
-          ref={avatarInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleAvatarFileChange}
-          className="hidden"
-        />
-        <button
-          type="button"
-          onClick={() => avatarInputRef.current?.click()}
-          disabled={avatarUploading}
-          aria-label="アイコン画像を変更"
-          className="relative mx-auto block h-20 w-20 rounded-full disabled:opacity-60"
-        >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full border border-main/10 object-cover" />
-          ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
-              {name.slice(0, 1)}
-            </div>
-          )}
-          <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-page bg-brand text-main">
-            <Camera size={12} />
-          </span>
-        </button>
+        {isOwner && (
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleAvatarFileChange}
+            className="hidden"
+          />
+        )}
+        {isOwner ? (
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarUploading}
+            aria-label="アイコン画像を変更"
+            className="relative mx-auto block h-20 w-20 rounded-full disabled:opacity-60"
+          >
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full border border-main/10 object-cover" />
+            ) : (
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
+                {name.slice(0, 1)}
+              </div>
+            )}
+            <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-page bg-brand text-main">
+              <Camera size={12} />
+            </span>
+          </button>
+        ) : avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={avatarUrl} alt="" className="mx-auto h-20 w-20 rounded-full border border-main/10 object-cover" />
+        ) : (
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-main/10 bg-tone-800 text-2xl font-semibold text-tone-500">
+            {name.slice(0, 1)}
+          </div>
+        )}
 
         <h1 className="mt-3 text-lg font-bold">{name}</h1>
         {shopName && <p className="text-xs text-muted">{shopName} スタッフ</p>}
@@ -614,7 +638,7 @@ export function StaffDashboardClient({
             <p className="text-base font-bold">{totalLikes}</p>
             <p className="text-[11px] text-muted">いいね</p>
           </div>
-          {qrDataUrl && portalSlug && shopSlug && (
+          {isOwner && qrDataUrl && portalSlug && shopSlug && (
             <QrCodeIconButton
               qrDataUrl={qrDataUrl}
               profileUrl={`https://locapass.net${staffPath(portalSlug, shopSlug, issueNo)}`}
@@ -622,15 +646,6 @@ export function StaffDashboardClient({
             />
           )}
         </div>
-
-        {portalSlug && shopSlug && (
-          <Link
-            href={staffPath(portalSlug, shopSlug, issueNo)}
-            className="mt-2 inline-block text-xs text-brand underline"
-          >
-            公開プロフィールを見る
-          </Link>
-        )}
 
         {bio && (
           <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
@@ -640,16 +655,31 @@ export function StaffDashboardClient({
 
         {profileError && <p className="mt-2 text-sm text-red-400">{profileError}</p>}
 
-        <button
-          type="button"
-          onClick={openEditSheet}
-          className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-main/20 py-2 text-sm text-tone-200"
-        >
-          <Pencil size={13} /> プロフィール編集
-        </button>
+        {isOwner ? (
+          <button
+            type="button"
+            onClick={openEditSheet}
+            className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-main/20 py-2 text-sm text-tone-200"
+          >
+            <Pencil size={13} /> プロフィール編集
+          </button>
+        ) : (
+          <div className="mt-4 space-y-2">
+            <InquiryButton shopId={shopId} shopName={`${shopName ?? ""}(${name})`} />
+            {portalSlug && shopSlug && (
+              <Link
+                href={shopPath(portalSlug, shopSlug)}
+                className="block w-full rounded-lg bg-brand px-6 py-2 text-center text-sm font-semibold text-main hover:bg-brand-dark"
+              >
+                店舗ページを見る
+              </Link>
+            )}
+          </div>
+        )}
       </section>
 
-      {/* タブ */}
+      {/* タブ(本人のみ。閲覧者には投稿グリッドだけを見せる) */}
+      {isOwner && (
       <div className="mt-6 flex border-t border-b border-main/10 text-sm">
         {(
           [
@@ -673,10 +703,12 @@ export function StaffDashboardClient({
           </button>
         ))}
       </div>
+      )}
 
-      {/* 投稿タブ */}
+      {/* 投稿タブ(閲覧者には常にこのグリッドだけが出る) */}
       {tab === "posts" && (
         <div>
+          {isOwner && (
           <div className="px-4 pt-4">
             <button
               type="button"
@@ -686,8 +718,9 @@ export function StaffDashboardClient({
               ＋ 新規投稿
             </button>
           </div>
+          )}
 
-          {formOpen && (
+          {isOwner && formOpen && (
             <form
               onSubmit={handleSubmitReel}
               className="mx-4 mt-4 space-y-3 rounded-xl border border-main/10 bg-surface p-4"
@@ -772,6 +805,7 @@ export function StaffDashboardClient({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={r.media[0]?.url} alt="" className="h-full w-full object-cover" />
                 )}
+                {isOwner && (
                 <div className="absolute right-1 top-1 flex flex-col items-end gap-1">
                   <button
                     type="button"
@@ -796,6 +830,7 @@ export function StaffDashboardClient({
                     コメント
                   </button>
                 </div>
+                )}
                 <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
                   ♥ {r.likesCount}
                 </span>
@@ -804,7 +839,7 @@ export function StaffDashboardClient({
           </div>
           {reels.length === 0 && (
             <p className="px-4 py-8 text-center text-sm text-tone-500">
-              まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。
+              {isOwner ? "まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。" : "まだ投稿がありません。"}
             </p>
           )}
 
@@ -1054,6 +1089,7 @@ export function StaffDashboardClient({
         </div>
       )}
 
+      {isOwner && (
       <button
         type="button"
         onClick={handleLogout}
@@ -1061,6 +1097,7 @@ export function StaffDashboardClient({
       >
         ログアウト
       </button>
+      )}
 
       {/* プロフィール編集シート */}
       {editOpen && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -8,13 +8,28 @@ import { createClient } from "@/lib/supabase/client";
  * 店舗が発行したリンク+6桁PINでマイページへログインする。
  * URLだけでは入れない(漏洩対策)。PINは店舗ダッシュボードで発行され、5回間違えると30分ロックされる。
  * 成功のたびにパスワードが更新される(リンクとPINが有効な限り何度でも使える)。
+ *
+ * このリンクをブックマークして再訪した時、既にログイン済みならPIN再入力なしで
+ * そのままマイページへ通す(マイページへの入口がこのリンク以外に無いため)。
  */
 export default function StaffLoginLinkPage() {
   const router = useRouter();
   const params = useParams<{ token: string }>();
+  const [checkingSession, setCheckingSession] = useState(true);
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.rpc("locapass_current_staff_member_id").then(({ data }) => {
+      if (data) {
+        router.replace("/staff/mypage");
+        return;
+      }
+      setCheckingSession(false);
+    });
+  }, [router]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,6 +76,10 @@ export default function StaffLoginLinkPage() {
 
     router.push("/staff/mypage");
     router.refresh();
+  }
+
+  if (checkingSession) {
+    return <div className="mx-auto max-w-sm px-4 py-10 text-center text-sm text-muted">確認中...</div>;
   }
 
   return (
