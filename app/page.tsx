@@ -1,5 +1,6 @@
 import { ReelFeed, type ReelItem } from "@/components/ReelFeed";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
+import { BetaLaunchModal } from "@/components/BetaLaunchModal";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
@@ -19,6 +20,9 @@ export default async function TopPage() {
 
   return (
     <div className="space-y-4">
+      {/* 公開ローンチ告知。合言葉ゲート解除にあわせて、トップ初回訪問時にだけ出す。 */}
+      <BetaLaunchModal />
+
       {/* トップの提携店舗特集(FEATURED)。運営がshops.featured_rankで選んだ店舗だけを、
           黒×ゴールドのコンパクトな見せ方で出す。1件も無ければ/×で閉じたら何も表示しない。 */}
       <FeaturedSection shops={featuredShops} />
