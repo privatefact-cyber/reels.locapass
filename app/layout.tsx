@@ -83,38 +83,39 @@ export default async function RootLayout({
   let myPageAvatarUrl: string | null = null;
   let myPageInitial: string | null = null;
   if (user) {
-    const { data: profile } = await supabase
-      .from("locapass_members")
-      .select("nickname, avatar_url")
-      .eq("id", user.id)
-      .maybeSingle();
-    myPageAvatarUrl = profile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined) ?? null;
-    myPageInitial = profile?.nickname?.slice(0, 1) ?? null;
+    // スタッフ/パートナー本人としてログインしている場合は、それを最優先で表示する。
+    // 一般会員(locapass_members)は`/mypage`初回アクセス時に「ゲスト」の行が自動作成されるため、
+    // 後からlocapass_membersだけ見ると本人のスタッフ/パートナー情報より先にヒットしてしまい、
+    // ヘッダーのアカウントアイコンがゲスト表示のままになる不具合があった。
+    const [{ data: staffId }, { data: castId }] = await Promise.all([
+      supabase.rpc("locapass_current_staff_member_id"),
+      supabase.rpc("locapass_current_cast_id"),
+    ]);
 
-    // 一般会員(locapass_members)にプロフィールが無い場合、スタッフ/パートナー本人としてログイン
-    // している可能性がある。ヘッダーのアカウントアイコンが常にゲスト表示のままになる不具合の修正。
-    if (!myPageAvatarUrl && !myPageInitial) {
-      const [{ data: staffId }, { data: castId }] = await Promise.all([
-        supabase.rpc("locapass_current_staff_member_id"),
-        supabase.rpc("locapass_current_cast_id"),
-      ]);
-      if (staffId) {
-        const { data: staff } = await supabase
-          .from("locapass_shop_staff_members")
-          .select("name, avatar_url")
-          .eq("id", staffId)
-          .maybeSingle();
-        myPageAvatarUrl = staff?.avatar_url ?? null;
-        myPageInitial = staff?.name?.slice(0, 1) ?? null;
-      } else if (castId) {
-        const { data: cast } = await supabase
-          .from("locapass_cast_members")
-          .select("name, avatar_url")
-          .eq("id", castId)
-          .maybeSingle();
-        myPageAvatarUrl = cast?.avatar_url ?? null;
-        myPageInitial = cast?.name?.slice(0, 1) ?? null;
-      }
+    if (staffId) {
+      const { data: staff } = await supabase
+        .from("locapass_shop_staff_members")
+        .select("name, avatar_url")
+        .eq("id", staffId)
+        .maybeSingle();
+      myPageAvatarUrl = staff?.avatar_url ?? null;
+      myPageInitial = staff?.name?.slice(0, 1) ?? null;
+    } else if (castId) {
+      const { data: cast } = await supabase
+        .from("locapass_cast_members")
+        .select("name, avatar_url")
+        .eq("id", castId)
+        .maybeSingle();
+      myPageAvatarUrl = cast?.avatar_url ?? null;
+      myPageInitial = cast?.name?.slice(0, 1) ?? null;
+    } else {
+      const { data: profile } = await supabase
+        .from("locapass_members")
+        .select("nickname, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      myPageAvatarUrl = profile?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined) ?? null;
+      myPageInitial = profile?.nickname?.slice(0, 1) ?? null;
     }
   }
 
