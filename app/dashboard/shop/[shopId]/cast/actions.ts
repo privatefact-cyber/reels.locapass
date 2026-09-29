@@ -42,7 +42,7 @@ async function requireShopAdmin(shopId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("ログインが必要です");
   const { data: ok } = await supabase.rpc("locapass_is_shop_admin", { p_shop_id: shopId });
-  if (!ok) throw new Error("この店舗のパートナーを管理する権限がありません");
+  if (!ok) throw new Error("この店舗のFACESを管理する権限がありません");
   return supabase;
 }
 
@@ -83,7 +83,7 @@ export async function addCast(shopId: string, formData: FormData) {
     .select("id")
     .single();
 
-  if (error) throw new Error(`パートナー登録に失敗しました: ${error.message}`);
+  if (error) throw new Error(`FACES登録に失敗しました: ${error.message}`);
 
   revalidatePath(castPath(shopId));
   redirect(castPath(shopId, data.id));
@@ -172,7 +172,7 @@ export async function deleteCast(shopId: string, castId: string) {
   await requireShopAdmin(shopId);
   const supabase = await createClient();
   const { error } = await supabase.rpc("locapass_soft_delete_cast_member", { p_cast_id: castId });
-  if (error) throw new Error(`パートナーの削除に失敗しました: ${error.message}`);
+  if (error) throw new Error(`FACESの削除に失敗しました: ${error.message}`);
   revalidatePath(castPath(shopId));
   redirect(castPath(shopId));
 }
@@ -269,7 +269,7 @@ export async function addSchedule(shopId: string, castId: string, formData: Form
     .eq("id", castId)
     .eq("shop_id", shopId)
     .maybeSingle();
-  if (!cast) throw new Error("対象のパートナーが見つかりません");
+  if (!cast) throw new Error("対象のFACESが見つかりません");
 
   const { error } = await supabase.from("locapass_schedules").insert({
     cast_id: castId,

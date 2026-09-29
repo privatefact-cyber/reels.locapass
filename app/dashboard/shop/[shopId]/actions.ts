@@ -436,7 +436,7 @@ export async function upsertTodaySchedule(
     .eq("id", castId)
     .eq("shop_id", shopId)
     .maybeSingle();
-  if (!cast) throw new Error("対象のパートナーが見つかりません");
+  if (!cast) throw new Error("対象のFACESが見つかりません");
 
   const payload = {
     cast_id: castId,

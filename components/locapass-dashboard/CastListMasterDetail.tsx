@@ -110,7 +110,7 @@ export function CastListMasterDetail({ castMembers, detailBasePath }: CastListMa
             onClick={() => setSelectedCastId(null)}
             className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold text-sm"
           >
-            ← パートナー一覧に戻る
+            ← FACES一覧に戻る
           </button>
 
           <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-120px)]">

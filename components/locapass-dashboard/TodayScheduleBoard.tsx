@@ -62,13 +62,13 @@ export function TodayScheduleBoard({
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="パートナー名で検索"
+        placeholder="FACES名で検索"
         className="mb-3 w-64 max-w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
       />
 
       {visibleRows.length === 0 ? (
         <p className="text-sm text-slate-500">
-          {rows.length === 0 ? "パートナーがいません。" : "該当するパートナーがいません。"}
+          {rows.length === 0 ? "FACESがいません。" : "該当するFACESがいません。"}
         </p>
       ) : (
         <ul className="max-h-[32rem] divide-y divide-black/10 overflow-y-auto pr-1">

@@ -19,7 +19,7 @@ export default function AdminMessagesPage() {
             required
             maxLength={100}
             placeholder="メンテナンスのお知らせ"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-500"
           />
         </div>
 
@@ -30,7 +30,7 @@ export default function AdminMessagesPage() {
             rows={4}
             maxLength={500}
             placeholder="9/15 2:00〜4:00にメンテナンスを実施します。"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-500"
           />
         </div>
 
@@ -40,7 +40,7 @@ export default function AdminMessagesPage() {
             type="text"
             name="url"
             placeholder="/events"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-500"
           />
         </div>
 

@@ -7,10 +7,10 @@ import { ToggleSwitch } from "@/components/ToggleSwitch";
 type PreferenceKey = "new_cast" | "new_event" | "new_shop_reel" | "new_cast_reel" | "shop_message";
 
 const ITEMS: { key: PreferenceKey; label: string; description: string }[] = [
-  { key: "new_cast", label: "新規パートナー", description: "お気に入り店舗に新しいパートナーが入ったとき" },
+  { key: "new_cast", label: "新規FACES", description: "お気に入り店舗に新しいFACESが入ったとき" },
   { key: "new_event", label: "新規イベント", description: "お気に入り店舗の新着イベント" },
   { key: "new_shop_reel", label: "店舗の新着リール", description: "お気に入り店舗が新しいリールを投稿したとき" },
-  { key: "new_cast_reel", label: "パートナーの新着リール", description: "フォロー中パートナーが新しいリールを投稿したとき" },
+  { key: "new_cast_reel", label: "FACESの新着リール", description: "フォロー中FACESが新しいリールを投稿したとき" },
   { key: "shop_message", label: "店舗からのメッセージ", description: "お気に入り店舗からのお知らせ・DM" },
 ];
 

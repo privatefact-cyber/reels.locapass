@@ -35,8 +35,8 @@ export async function generateMetadata({
   if (!resolved) return { title: "ページが見つかりません | LOCAPASS" };
   const { area, genre } = resolved;
 
-  const title = `${area}の${genre}｜本日の出勤・パートナー一覧 - LOCAPASS`;
-  const description = `${area}エリアの${genre}求人・出勤情報をリールでチェック。${area} ${genre} 出勤中のパートナーを今すぐ探せる。`;
+  const title = `${area}の${genre}｜本日の出勤・FACES一覧 - LOCAPASS`;
+  const description = `${area}エリアの${genre}求人・出勤情報をリールでチェック。${area} ${genre} 出勤中のFACESを今すぐ探せる。`;
   const url = `https://locapass.net/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`;
 
   return {
@@ -129,7 +129,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
         </h1>
         <p className="text-sm leading-relaxed text-muted">
           {area}エリアの{genre}
-          {shops.length}店舗を掲載中。本日出勤中のパートナーや店舗の雰囲気をリールで確認して、気になるお店をチェックしてください。
+          {shops.length}店舗を掲載中。本日出勤中のFACESや店舗の雰囲気をリールで確認して、気になるお店をチェックしてください。
         </p>
       </header>
 
@@ -192,7 +192,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
         </h2>
         <p className="text-sm leading-relaxed text-muted">
           LOCAPASSでは{area}エリアの{genre}
-          の出勤情報・パートナーのリールをまとめてチェックできます。他のエリア・業態から探したい場合は
+          の出勤情報・FACESのリールをまとめてチェックできます。他のエリア・業態から探したい場合は
           <Link href="/" className="text-hl-300 underline underline-offset-2">
             トップページ
           </Link>

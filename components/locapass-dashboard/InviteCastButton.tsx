@@ -23,7 +23,7 @@ export function InviteCastButton({ shopId, castId, hasLogin }: { shopId: string;
       {state.status === "success" && (
         <div className="rounded border border-hl-400 bg-hl-50 p-3 text-sm">
           <p className="font-semibold text-hl-800">
-            この情報は今だけ表示されます。必ずパートナー本人に伝えてください。
+            この情報は今だけ表示されます。必ずFACES本人に伝えてください。
           </p>
           <dl className="mt-2 space-y-1">
             <div>

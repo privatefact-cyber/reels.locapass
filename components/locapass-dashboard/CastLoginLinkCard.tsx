@@ -24,7 +24,7 @@ export async function CastLoginLinkCard({
     <section className="rounded-lg border border-black/10 bg-white p-4">
       <h2 className="mb-2 text-sm font-bold">投稿用リンク(マイページ)</h2>
       <p className="mb-3 text-xs text-black/50">
-        このリンクを開き、6桁の暗証番号を入力するとパートナー本人が投稿用マイページにログインできます。URLだけでは入れません。暗証番号はリンクとは別の方法で伝えてください(LINE送信には含まれません)。
+        このリンクを開き、6桁の暗証番号を入力するとFACES本人が投稿用マイページにログインできます。URLだけでは入れません。暗証番号はリンクとは別の方法で伝えてください(LINE送信には含まれません)。
       </p>
 
       <div className="flex flex-col gap-4 sm:flex-row">

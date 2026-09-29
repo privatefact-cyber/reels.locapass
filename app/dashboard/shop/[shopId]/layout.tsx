@@ -11,7 +11,7 @@ import { RecoveryInfoGateModal } from "@/components/locapass-dashboard/RecoveryI
  */
 const NAV_ITEMS = [
   { path: "", label: "店舗情報" },
-  { path: "/cast", label: "パートナー管理" },
+  { path: "/cast", label: "FACES管理" },
   { path: "/staff", label: "スタッフ管理" },
   { path: "/reels", label: "リール投稿" },
   { path: "/messages", label: "お客様へのメッセージ" },

@@ -180,7 +180,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
         onClick={() => setOpen(true)}
         className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-main transition-colors hover:bg-slate-800"
       >
-        パートナーリールを投稿する
+        FACESリールを投稿する
       </button>
     );
   }
@@ -232,7 +232,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
           placeholder="リンク先URL(任意)"
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
         />
-        <p className="mt-1 text-[11px] text-slate-500">空欄ならパートナーのプロフィールページへのリンクになります。</p>
+        <p className="mt-1 text-[11px] text-slate-500">空欄ならFACESのプロフィールページへのリンクになります。</p>
       </div>
       {optimizing && (
         <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2">

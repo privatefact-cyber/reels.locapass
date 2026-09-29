@@ -91,7 +91,7 @@ export default function LoginPage() {
         </a>
       </p>
       <p className="mt-2 text-center text-xs text-slate-500">
-        スタッフ・パートナーの方は、所属店舗の管理者に再発行を依頼してください。
+        スタッフ・FACESの方は、所属店舗の管理者に再発行を依頼してください。
       </p>
     </div>
   );

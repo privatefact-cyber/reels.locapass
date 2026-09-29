@@ -65,14 +65,14 @@ export async function generateMetadata({
   const { portal, cast } = await resolveCast(resolvedParams);
 
   if (!portal || !cast) {
-    return { title: "パートナーが見つかりません | LOCAPASS" };
+    return { title: "FACESが見つかりません | LOCAPASS" };
   }
   const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
 
-  const title = `${cast.name}${cast.age ? `(${cast.age})` : ""}｜${shop?.name ?? "LOCAPASS"}のパートナー`;
+  const title = `${cast.name}${cast.age ? `(${cast.age})` : ""}｜${shop?.name ?? "LOCAPASS"}のFACES`;
   const description =
     cast.pr_text?.slice(0, 120) ||
-    `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」のパートナー、${cast.name}のプロフィール・出勤情報・投稿リール。`;
+    `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」のFACES、${cast.name}のプロフィール・出勤情報・投稿リール。`;
   const url = `https://locapass.net${castPath(portal.slug, shop!.slug, cast.issue_no!)}`;
   const image = sanitizeImageUrl(cast.avatar_url);
 
@@ -184,8 +184,8 @@ export default async function CastDetailPage({
             image: sanitizeImageUrl(cast.avatar_url),
             description:
               cast.pr_text?.slice(0, 200) ||
-              `${shop?.name ?? "LOCAPASS"}所属のパートナー「${cast.name}」のプロフィール`,
-            jobTitle: "パートナー",
+              `${shop?.name ?? "LOCAPASS"}所属のFACES「${cast.name}」のプロフィール`,
+            jobTitle: "FACES",
             url: castUrl,
             worksFor:
               shop && shopUrl

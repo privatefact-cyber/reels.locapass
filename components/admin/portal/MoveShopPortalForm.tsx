@@ -33,7 +33,7 @@ export function MoveShopPortalForm({
   function submit() {
     if (!target) return;
     const categoryLabel = category || currentCategory || "未設定";
-    if (!window.confirm(`「${shopName}」を「${target.name}」へ移動します。\n業種: ${categoryLabel}\n\n店舗情報・写真・パートナー・リールはそのまま引き継がれます。よろしいですか？`)) return;
+    if (!window.confirm(`「${shopName}」を「${target.name}」へ移動します。\n業種: ${categoryLabel}\n\n店舗情報・写真・FACES・リールはそのまま引き継がれます。よろしいですか？`)) return;
     setError(null);
     startTransition(async () => {
       try {

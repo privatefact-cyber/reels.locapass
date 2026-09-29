@@ -456,7 +456,7 @@ export default async function ShopDetailPage({
         {todayCasts.length > 0 && (
         <section id="today" className="scroll-mt-24 space-y-6">
           <SectionHeading
-            eyebrow="TODAY'S PARTNERS"
+            eyebrow="TODAY'S FACES"
             title={t.shop.todaySchedule}
             subtitle={t.shop.todaySubtitle}
           />
@@ -488,9 +488,9 @@ export default async function ShopDetailPage({
 
         {casts.length > 0 && (
         <section id="cast" className="scroll-mt-24 space-y-6">
-          <SectionHeading eyebrow="ALL PARTNERS" title={t.shop.allCast} icon={<Users size={14} />} />
-            {/* パートナー(宣伝してくれるインフルエンサー)は人数が多くなりがちなので、キャストのような
-                大きいカードではなく丸型アイコンを1列に並べ、横スライドで流す(TODAY'S PARTNERSと同じ見せ方)。 */}
+          <SectionHeading eyebrow="ALL FACES" title={t.shop.allCast} icon={<Users size={14} />} />
+            {/* FACES(宣伝してくれるインフルエンサー)は人数が多くなりがちなので、キャストのような
+                大きいカードではなく丸型アイコンを1列に並べ、横スライドで流す(TODAY'S FACESと同じ見せ方)。 */}
             <div className="flex items-start gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-1">
               {casts.map((cast) => (
                 <Link

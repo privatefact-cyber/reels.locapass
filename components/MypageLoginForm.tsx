@@ -95,7 +95,7 @@ export function MypageLoginForm() {
         MY PAGE
       </h1>
       <p className="mt-2 text-sm text-muted">
-        ログインすると、保存した動画・推しパートナー・店舗ストックがいつでも見られます。
+        ログインすると、保存した動画・推しFACES・店舗ストックがいつでも見られます。
       </p>
 
       <div className="mt-8 space-y-3">

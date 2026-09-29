@@ -17,7 +17,7 @@ export default async function AdminAdsPage() {
       <div>
         <h1 className="text-3xl font-bold text-slate-900">広告(PR)投稿</h1>
         <p className="mt-1 text-sm text-slate-600">
-          サイト管理者のみが投稿できるPRカードです。店舗・パートナーのリールと同じフィードに、
+          サイト管理者のみが投稿できるPRカードです。店舗・FACESのリールと同じフィードに、
           指定した頻度で紛れ込ませて表示します。マネタイズ方法は未定のため、現状は表示のON/OFFと
           頻度の調整のみ行えます。
         </p>
@@ -35,7 +35,7 @@ export default async function AdminAdsPage() {
             required
             maxLength={100}
             placeholder="〇〇社 秋のキャンペーン"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-500"
           />
         </div>
 
@@ -53,7 +53,7 @@ export default async function AdminAdsPage() {
             name="linkUrl"
             required
             placeholder="https://example.com/campaign"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-500"
           />
           <p className="mt-1 text-[11px] text-slate-500">
             タップ・クリックで飛ばす先を自由に設定できます(外部サイトでも可)。
