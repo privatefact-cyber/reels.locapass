@@ -14,6 +14,7 @@ import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupMo
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
+import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
@@ -416,6 +417,9 @@ export function StaffDashboardClient({
       setError(`投稿の保存に失敗しました: ${insertError?.message ?? ""}`);
       return;
     }
+
+    // 動画なら、裏で字幕(文字起こし+英語・中国語)の生成を頼む。
+    if (isVideo) requestReelCaptions(inserted.id);
 
     setReels((prev) => [
       {

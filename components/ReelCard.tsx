@@ -11,6 +11,7 @@ import { useReelMutedPreference } from "@/lib/reels/useReelMutedPreference";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { StreamVideo } from "@/components/video/StreamVideo";
+import { ReelCaptionOverlay } from "@/components/reels/ReelCaptionOverlay";
 import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 
@@ -339,6 +340,9 @@ export function ReelCard({
           PR
         </span>
       )}
+
+      {/* 多言語テロップ(字幕)。字幕が無いリールでは何も出ない。動画のリールだけ。 */}
+      {reelId && videoUrl && !isAd && <ReelCaptionOverlay reelId={reelId} videoRef={videoRef} active={isActive} />}
       </div>
 
       {/* 右下: アイコン(プロフィールへ)・いいね・コメント・シェア (TikTok同様の並び)。

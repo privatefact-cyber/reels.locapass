@@ -11,6 +11,7 @@ import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
+import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 import { uploadPosterToR2, uploadVideoToR2 } from "@/lib/storage/uploadToR2";
@@ -285,6 +286,9 @@ export function CastDashboardClient({
         setError(`投稿の保存に失敗しました: ${insertError?.message ?? ""}`);
         return;
       }
+
+      // 動画なら、裏で字幕(文字起こし+英語・中国語)の生成を頼む。
+      if (isVideo) requestReelCaptions(inserted.id);
 
       setReels((prev) => [
         {

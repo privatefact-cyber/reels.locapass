@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
+import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { generateTextCardImage, BIG_TEXT_MAX_LENGTH } from "@/lib/reels/generateTextCard";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
@@ -143,7 +144,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
     }
 
     // portal_idはDBトリガーが店舗から強制上書きするが、型上必須なので店舗のportal_idを渡す。
-    const { error: insertError } = await supabase.from("locapass_reels").insert({
+    const { data: insertedReel, error: insertError } = await supabase.from("locapass_reels").insert({
       cast_id: castId,
       shop_id: shopId,
       portal_id: portalId,
@@ -155,7 +156,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
       status: "publish",
       preview_url: previewUrl,
       poster_url: posterUrl,
-    });
+    }).select("id").single();
 
     setUploading(false);
 
@@ -163,6 +164,9 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
       setError(`投稿の保存に失敗しました: ${insertError.message}`);
       return;
     }
+
+    // 動画なら、裏で字幕(文字起こし+英語・中国語)の生成を頼む。
+    if (isVideo) requestReelCaptions(insertedReel?.id);
 
     setFile(null);
     setPreview(null);
