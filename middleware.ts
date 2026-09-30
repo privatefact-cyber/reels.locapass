@@ -34,31 +34,43 @@ async function rewriteHandle(request: NextRequest): Promise<NextResponse | null>
   return NextResponse.rewrite(url);
 }
 
-// 緊急対応のベーシック認証(2026-09-30)。ユーザー名は何でもよく、パスワードだけ照合する。
-// 解除するときはこの関数と下のmiddleware内の呼び出しを削除する。
-function basicAuthChallenge(request: NextRequest): NextResponse | null {
-  const expected = process.env.PREVIEW_PASSCODE ?? "777";
-  const header = request.headers.get("authorization");
-  if (header?.startsWith("Basic ")) {
-    try {
-      const decoded = atob(header.slice(6));
-      const password = decoded.slice(decoded.indexOf(":") + 1);
-      if (password === expected) return null;
-    } catch {
-      // 不正なヘッダーは認証失敗として扱う。
-    }
-  }
-  return new NextResponse("Authentication required", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="locapass", charset="UTF-8"' },
-  });
-}
+// 合言葉ゲート(2026-09-30再導入)。パスワードは /gate で入力し、通るとCookieが付く。
+// /api(cron・LINEコールバック等)と静的アセット、ゲート自身は対象外にして壊さない。
+// ただし /api/place-photo は課金APIに繋がるため、ゲートの内側に置く。
+// 解除するときは下のmiddlewareを「rewriteHandleだけ返す」形に戻す。
+const COOKIE_NAME = "luxela_preview_auth";
 
 export async function middleware(request: NextRequest) {
-  const denied = basicAuthChallenge(request);
-  if (denied) return denied;
-  const handleRewrite = await rewriteHandle(request);
-  return handleRewrite ?? NextResponse.next();
+  const { pathname } = request.nextUrl;
+
+  if (
+    pathname.startsWith("/gate") ||
+    (pathname.startsWith("/api") && !pathname.startsWith("/api/place-photo")) ||
+    // OAuth/PKCEのcode交換とLINEの認証完了処理は、
+    // セッションCookieを確立する前にゲートへ戻してはいけない。
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/embed") ||
+    pathname === "/favicon.ico" ||
+    // ブラウザのタブ・ホーム画面用アイコン(app/icon.png, app/apple-icon.png)。
+    pathname === "/icon.png" ||
+    pathname === "/apple-icon.png" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/webauth.html"
+  ) {
+    return NextResponse.next();
+  }
+
+  const authed = request.cookies.get(COOKIE_NAME)?.value === "1";
+  if (authed) {
+    const handleRewrite = await rewriteHandle(request);
+    return handleRewrite ?? NextResponse.next();
+  }
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/gate";
+  url.search = `?next=${encodeURIComponent(pathname + request.nextUrl.search)}`;
+  return NextResponse.redirect(url);
 }
 
 export const config = {
