@@ -34,9 +34,29 @@ async function rewriteHandle(request: NextRequest): Promise<NextResponse | null>
   return NextResponse.rewrite(url);
 }
 
-// 公開ローンチに伴い、合言葉での入口ゲートは解除済み(旧/gateページは未リンクのまま残置)。
-// ここでは短縮ハンドル(/@AB12CD)のrewriteのみ行う。
+// 緊急対応のベーシック認証(2026-09-30)。ユーザー名は何でもよく、パスワードだけ照合する。
+// 解除するときはこの関数と下のmiddleware内の呼び出しを削除する。
+function basicAuthChallenge(request: NextRequest): NextResponse | null {
+  const expected = process.env.PREVIEW_PASSCODE ?? "777";
+  const header = request.headers.get("authorization");
+  if (header?.startsWith("Basic ")) {
+    try {
+      const decoded = atob(header.slice(6));
+      const password = decoded.slice(decoded.indexOf(":") + 1);
+      if (password === expected) return null;
+    } catch {
+      // 不正なヘッダーは認証失敗として扱う。
+    }
+  }
+  return new NextResponse("Authentication required", {
+    status: 401,
+    headers: { "WWW-Authenticate": 'Basic realm="locapass", charset="UTF-8"' },
+  });
+}
+
 export async function middleware(request: NextRequest) {
+  const denied = basicAuthChallenge(request);
+  if (denied) return denied;
   const handleRewrite = await rewriteHandle(request);
   return handleRewrite ?? NextResponse.next();
 }
