@@ -108,12 +108,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     db.from("locapass_reels").select("caption_avoid_zone").eq("id", id).maybeSingle(),
   ]);
 
+  const cues = Array.isArray(captions.data?.cues) ? captions.data.cues : [];
   return NextResponse.json(
     {
-      cues: Array.isArray(captions.data?.cues) ? captions.data.cues : [],
+      cues,
       // 動画に焼き込み字幕がある位置(none/top/middle/bottom)。テロップはこれを避けて置く。
       zone: reel.data?.caption_avoid_zone ?? "none",
     },
-    { headers: { "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600" } },
+    {
+      headers: {
+        // 字幕ができるまでの間に「まだ無い」を長くキャッシュすると、できた後も出なくなる。空の応答はすぐ切れるようにする。
+        "Cache-Control":
+          cues.length > 0
+            ? "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
+            : "public, max-age=0, s-maxage=15",
+      },
+    },
   );
 }

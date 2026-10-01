@@ -56,7 +56,8 @@ export function ReelCaptionOverlay({
       .then((json: { cues?: Cue[]; zone?: Zone } | null) => {
         if (cancelled || !json) return;
         const value: CaptionData = { cues: Array.isArray(json.cues) ? json.cues : [], zone: json.zone ?? "none" };
-        cache.set(key, value);
+        // 字幕がまだ無い(生成中)結果は覚えない。次に表示されたときに取り直す。
+        if (value.cues.length > 0) cache.set(key, value);
         setData(value);
       })
       .catch(() => undefined);
