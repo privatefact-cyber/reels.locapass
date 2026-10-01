@@ -4,6 +4,7 @@ import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { ShopReelPostForm } from "@/components/locapass-dashboard/ShopReelPostForm";
 import { deleteReel, setMapPreviewReel } from "../actions";
 import { StreamThumb } from "@/components/video/StreamThumb";
+import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 
 /**
  * LUXELA本家のリール投稿画面(app/dashboard/reels/page.tsx)と同じ画面。一覧・投稿・削除は
@@ -149,6 +150,11 @@ export default async function LocapassShopReelsPage({
                     削除
                   </button>
                 </form>
+                {media?.type === "video" && (
+                  <div className="absolute right-1 top-7">
+                    <ReelCaptionEditButton reelId={r.id} />
+                  </div>
+                )}
               </div>
             );
           })}

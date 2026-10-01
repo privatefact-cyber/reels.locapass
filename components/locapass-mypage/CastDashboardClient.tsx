@@ -12,6 +12,7 @@ import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupMo
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
+import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 import { uploadPosterToR2, uploadVideoToR2 } from "@/lib/storage/uploadToR2";
@@ -759,6 +760,12 @@ export function CastDashboardClient({
                 >
                   {r.isCommentsEnabled ? "コメント:許可" : "コメント:停止中"}
                 </button>
+                {r.media[0]?.type === "video" && (
+                  <ReelCaptionEditButton
+                    reelId={r.id}
+                    className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
+                  />
+                )}
               </div>
               <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
                 ♥ {r.likesCount}

@@ -15,6 +15,7 @@ import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
+import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
@@ -946,6 +947,12 @@ export function StaffDashboardClient({
                   >
                     コメント
                   </button>
+                  {r.media[0]?.type === "video" && (
+                    <ReelCaptionEditButton
+                      reelId={r.id}
+                      className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
+                    />
+                  )}
                 </div>
                 )}
                 <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">

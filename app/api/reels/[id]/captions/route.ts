@@ -13,6 +13,83 @@ const DAILY_LIMIT = Number(process.env.CAPTION_DAILY_LIMIT ?? 300);
 /** 処理中のまま固まったリールを再処理してよいとみなす時間。 */
 const STALE_PENDING_MS = 10 * 60 * 1000;
 
+/** そのリールを投稿/管理できる人か(本人のキャスト、または店舗のスタッフ/管理者)。RLSの書き込み条件と同じ判定。 */
+async function canManageReel(
+  db: SupabaseClient,
+  reel: { cast_id: string | null; shop_id: string | null },
+): Promise<boolean> {
+  if (reel.cast_id) {
+    const { data: myCastId } = await db.rpc("locapass_current_cast_id");
+    if (myCastId === reel.cast_id) return true;
+  }
+  if (reel.shop_id) {
+    const { data: isStaff } = await db.rpc("locapass_is_shop_staff", { p_shop_id: reel.shop_id });
+    if (isStaff === true) return true;
+  }
+  return false;
+}
+
+/** ログイン済みのユーザー+管理できるリールを取り出す(PATCH/DELETE共通)。 */
+async function loadManagedReel(id: string) {
+  if (!UUID_RE.test(id)) return { error: NextResponse.json({ error: "invalid id" }, { status: 400 }) } as const;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) } as const;
+  const db = supabase as unknown as SupabaseClient;
+  const { data: reel } = await db.from("locapass_reels").select("id, cast_id, shop_id").eq("id", id).maybeSingle();
+  if (!reel) return { error: NextResponse.json({ error: "not found" }, { status: 404 }) } as const;
+  if (!(await canManageReel(db, reel))) return { error: NextResponse.json({ error: "forbidden" }, { status: 403 }) } as const;
+  return { db } as const;
+}
+
+const MAX_CUE_CHARS = 120;
+
+/**
+ * 字幕の文言を直す(投稿者本人/店舗スタッフ)。時刻は変えられず、台詞の件数も変えられない(同じ件数で文言だけ差し替える)。
+ * body: { lang: "ja"|"en"|"zh", texts: string[] }
+ */
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const managed = await loadManagedReel(id);
+  if ("error" in managed) return managed.error;
+  const { db } = managed;
+
+  const body = (await req.json().catch(() => null)) as { lang?: string; texts?: unknown } | null;
+  const lang = body?.lang;
+  if (lang !== "ja" && lang !== "en" && lang !== "zh") return NextResponse.json({ error: "invalid lang" }, { status: 400 });
+  if (!Array.isArray(body?.texts) || !body.texts.every((t) => typeof t === "string")) {
+    return NextResponse.json({ error: "invalid texts" }, { status: 400 });
+  }
+  const texts = (body.texts as string[]).map((t) => t.trim().slice(0, MAX_CUE_CHARS));
+
+  const { data: row } = await db.from("locapass_reel_captions").select("cues").eq("reel_id", id).eq("lang", lang).maybeSingle();
+  const current = Array.isArray(row?.cues) ? (row.cues as { s: number; e: number; t: string }[]) : null;
+  if (!current) return NextResponse.json({ error: "no captions" }, { status: 404 });
+  if (texts.length !== current.length || texts.some((t) => !t)) {
+    return NextResponse.json({ error: "台詞の件数は変えられません。空にもできません" }, { status: 400 });
+  }
+
+  const cues = current.map((c, i) => ({ s: c.s, e: c.e, t: texts[i] }));
+  const { error } = await db.from("locapass_reel_captions").update({ cues }).eq("reel_id", id).eq("lang", lang);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
+/** 字幕をすべて消す(間違いが多いとき等)。消した後は「声なし」扱いにして、自動では作り直さない。 */
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const managed = await loadManagedReel(id);
+  if ("error" in managed) return managed.error;
+  const { db } = managed;
+
+  const { error } = await db.from("locapass_reel_captions").delete().eq("reel_id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await db.from("locapass_reels").update({ caption_status: "no_speech", caption_avoid_zone: "none" }).eq("id", id);
+  return NextResponse.json({ ok: true });
+}
+
 /**
  * 字幕の生成を依頼する(投稿直後に投稿フォームから呼ぶ)。
  *   - 投稿者本人(キャスト)か、その店舗のスタッフ/管理者だけが呼べる。誰でも叩ける公開APIにはしない。
@@ -41,16 +118,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!reel.video_url || reel.reel_type === "story") return NextResponse.json({ status: "skipped" });
 
   // 投稿者本人か店舗スタッフか(RLSの書き込み条件と同じ判定を、Groqを呼ぶ前にやる)。
-  let allowed = false;
-  if (reel.cast_id) {
-    const { data: myCastId } = await db.rpc("locapass_current_cast_id");
-    allowed = myCastId === reel.cast_id;
-  }
-  if (!allowed && reel.shop_id) {
-    const { data: isStaff } = await db.rpc("locapass_is_shop_staff", { p_shop_id: reel.shop_id });
-    allowed = isStaff === true;
-  }
-  if (!allowed) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await canManageReel(db, reel))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   if (reel.caption_status === "ready" || reel.caption_status === "no_speech") {
     return NextResponse.json({ status: reel.caption_status });
