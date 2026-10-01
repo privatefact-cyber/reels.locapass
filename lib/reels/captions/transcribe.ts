@@ -91,7 +91,12 @@ export async function transcribeVideo(videoBytes: Blob, fileName: string): Promi
     headers: { Authorization: `Bearer ${apiKey}` },
     body: form,
   });
-  if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 300);
+    // 音声トラックそのものが無い動画(無音で撮った動画等)は、失敗ではなく「声なし」として扱う。
+    if (res.status === 400 && detail.includes("no_audio_stream")) return { language: "", cues: [] };
+    throw new Error(`Groq ${res.status}: ${detail}`);
+  }
 
   const json = (await res.json()) as { language?: string; segments?: WhisperSegment[] };
   return { language: (json.language ?? "").toLowerCase(), cues: segmentsToCues(json.segments ?? []) };
