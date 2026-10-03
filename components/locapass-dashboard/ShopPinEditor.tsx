@@ -138,7 +138,7 @@ export function ShopPinEditor({ shopId, shopName, address, lat, lng, geocodeSour
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="住所を入力して検索"
-            className="min-w-0 flex-1 text-sm outline-none"
+            className="min-w-0 flex-1 bg-white text-sm text-slate-900 placeholder-slate-500 outline-none"
           />
         </div>
         <button
