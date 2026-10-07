@@ -4,6 +4,7 @@ import { memo, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { CalendarSearch, ChevronLeft, ChevronRight, Film, LayoutGrid, CalendarDays, Play, X } from "lucide-react";
+import { PageDots } from "@/components/shop/PageDots";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export type ArchiveItem = {
@@ -85,11 +86,13 @@ export function ShopReelArchive({
   shopName,
   shopHref,
   reelsHref,
+  archiveHref,
 }: {
   items: ArchiveItem[];
   shopName: string;
   shopHref: string;
   reelsHref: string;
+  archiveHref: string;
 }) {
   const { locale, t } = useLocale();
   const loc = intlLocale(locale);
@@ -186,6 +189,8 @@ export function ShopReelArchive({
           <CalendarSearch size={20} />
         </button>
       </div>
+
+      <PageDots current={1} shopHref={shopHref} archiveHref={archiveHref} />
 
       <div className="px-3 text-center">
         <p className="flex items-center justify-center gap-2 text-[11px] tracking-[0.3em] text-hl-400/60">

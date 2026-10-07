@@ -17,7 +17,6 @@ import {
   Star,
   Navigation,
   ChevronLeft,
-  CalendarSearch,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
@@ -40,6 +39,7 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
+import { PageDots } from "@/components/shop/PageDots";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
 import { shopPath, shopReelsPath, shopArchivePath, castPath } from "@/lib/locapass/publicUrls";
@@ -455,32 +455,19 @@ export default async function ShopDetailPage({
               </span>
             </Link>
           ))}
+          <Link
+            href={archiveHref}
+            className="flex aspect-[9/16] w-24 shrink-0 items-end justify-center pb-2"
+          >
+            <span className="border-b border-hl-300/50 pb-0.5 text-[11px] tracking-wider text-tone-300 transition hover:text-hl-300">
+              {t.shop.archiveAllReels}
+            </span>
+          </Link>
         </div>
       )}
 
-      {/* 過去動画へ: 全リールの時系列/カレンダー検索ページ。ページ全体を左へ横スワイプしても行ける。 */}
-      {totalReels > 0 && (
-        <div className="px-4 sm:px-6">
-          <Link
-            href={archiveHref}
-            className="group flex items-center justify-between gap-3 rounded-2xl border border-hl-400/25 bg-panel-900/60 px-4 py-3 shadow-[0_0_20px_rgb(var(--hl-500)/0.1)] backdrop-blur-xl transition hover:border-hl-400/50"
-          >
-            <span className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cta-light to-cta text-on-cta shadow-[0_0_14px_rgb(var(--cta-500)/0.4)]">
-                <CalendarSearch size={18} />
-              </span>
-              <span>
-                <span className="block text-sm font-bold text-tone-100">{t.shop.archiveEntry}</span>
-                <span className="block text-[11px] text-muted">
-                  {t.shop.archiveEntryHint} ・ {t.shop.archiveCount(totalReels)}
-                </span>
-              </span>
-            </span>
-            <ChevronLeft size={18} className="rotate-180 text-hl-300 transition group-hover:translate-x-0.5 rtl:rotate-0" />
-          </Link>
-          <p className="mt-1.5 text-center text-[10px] text-tone-500 md:hidden">{t.shop.archiveSwipeHint}</p>
-        </div>
-      )}
+      {/* 2ページ構成(店舗ページ / 動画ストック)を示すドット。左スワイプでも2ページ目へ行ける。 */}
+      {totalReels > 0 && <PageDots current={0} shopHref={shopPath(site.slug, shopRow.slug)} archiveHref={archiveHref} />}
 
       <div className="space-y-10 px-4 sm:px-6">
         {/* 2. 在籍キャスト/本日の出勤ギャラリー(最優先配置)。 */}

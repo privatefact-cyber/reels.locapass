@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
-import { shopPath, shopReelsPath } from "@/lib/locapass/publicUrls";
+import { shopPath, shopReelsPath, shopArchivePath } from "@/lib/locapass/publicUrls";
 import { ShopReelArchive, type ArchiveItem } from "@/components/shop/ShopReelArchive";
 import { PortalThemeScope } from "@/components/portal/PortalThemeScope";
 import { isSiteTheme } from "@/lib/theme";
@@ -97,6 +97,7 @@ export default async function ShopReelArchivePage({
         shopName={shop.name}
         shopHref={shopPath(portal.slug, shop.slug)}
         reelsHref={shopReelsPath(portal.slug, shop.slug)}
+        archiveHref={shopArchivePath(portal.slug, shop.slug)}
       />
     </div>
   );

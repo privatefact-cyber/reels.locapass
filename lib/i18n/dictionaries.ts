@@ -89,9 +89,8 @@ export type Dictionary = {
     autoTranslated: string;
     areaNotSet: string;
     genreNotSet: string;
-    archiveEntry: string;
-    archiveEntryHint: string;
     archiveTitle: string;
+    archiveAllReels: string;
     archiveTimeline: string;
     archiveCalendar: string;
     archiveSearch: string;
@@ -102,7 +101,6 @@ export type Dictionary = {
     archiveJumpTo: string;
     archiveWho: string;
     archivePickDay: string;
-    archiveSwipeHint: string;
     backToSite: (name: string) => string;
   };
   featured: {
@@ -343,9 +341,8 @@ const ja: Dictionary = {
     autoTranslated: "店舗情報は自動翻訳です",
     areaNotSet: "エリア未設定",
     genreNotSet: "ジャンル未設定",
-    archiveEntry: "過去の動画をさがす",
-    archiveEntryHint: "日付・カレンダーからさかのぼる",
     archiveTitle: "動画ストック",
+    archiveAllReels: "すべてのリールを見る →",
     archiveTimeline: "タイムライン",
     archiveCalendar: "カレンダー",
     archiveSearch: "過去動画を検索",
@@ -356,7 +353,6 @@ const ja: Dictionary = {
     archiveJumpTo: "月へジャンプ",
     archiveWho: "投稿者",
     archivePickDay: "日付を選ぶと動画が出ます",
-    archiveSwipeHint: "← スワイプで過去の動画へ",
     backToSite: (name) => `← ${name} に戻る`,
   },
   featured: {
@@ -596,9 +592,8 @@ const en: Dictionary = {
     autoTranslated: "Shop details are machine-translated from Japanese.",
     areaNotSet: "Area not set",
     genreNotSet: "Genre not set",
-    archiveEntry: "Browse past videos",
-    archiveEntryHint: "Look back by date or calendar",
     archiveTitle: "Video archive",
+    archiveAllReels: "All reels →",
     archiveTimeline: "Timeline",
     archiveCalendar: "Calendar",
     archiveSearch: "Search past videos",
@@ -609,7 +604,6 @@ const en: Dictionary = {
     archiveJumpTo: "Jump to month",
     archiveWho: "Posted by",
     archivePickDay: "Pick a day to see its videos",
-    archiveSwipeHint: "← Swipe for past videos",
     backToSite: (name) => `← Back to ${name}`,
   },
   featured: {
@@ -849,9 +843,8 @@ const zh: Dictionary = {
     autoTranslated: "店铺信息由日语自动翻译。",
     areaNotSet: "地区未设置",
     genreNotSet: "类型未设置",
-    archiveEntry: "浏览往期视频",
-    archiveEntryHint: "按日期或日历回顾",
     archiveTitle: "视频库",
+    archiveAllReels: "查看全部视频 →",
     archiveTimeline: "时间线",
     archiveCalendar: "日历",
     archiveSearch: "搜索往期视频",
@@ -862,7 +855,6 @@ const zh: Dictionary = {
     archiveJumpTo: "跳转到月份",
     archiveWho: "发布者",
     archivePickDay: "选择日期查看视频",
-    archiveSwipeHint: "← 滑动查看往期视频",
     backToSite: (name) => `← 返回${name}`,
   },
   featured: {
@@ -1104,9 +1096,8 @@ const ar: Dictionary = {
     "autoTranslated": "تفاصيل المتجر مترجمة آليًا من اليابانية.",
     "areaNotSet": "المنطقة غير محددة",
     "genreNotSet": "الفئة غير محددة",
-    "archiveEntry": "تصفّح الفيديوهات السابقة",
-    "archiveEntryHint": "استعرض حسب التاريخ أو التقويم",
     "archiveTitle": "أرشيف الفيديو",
+    "archiveAllReels": "كل الريلز ←",
     "archiveTimeline": "الجدول الزمني",
     "archiveCalendar": "التقويم",
     "archiveSearch": "ابحث في الفيديوهات السابقة",
@@ -1117,7 +1108,6 @@ const ar: Dictionary = {
     "archiveJumpTo": "الانتقال إلى شهر",
     "archiveWho": "الناشر",
     "archivePickDay": "اختر يومًا لعرض فيديوهاته",
-    "archiveSwipeHint": "← اسحب لعرض الفيديوهات السابقة"
   },
   "featured": {
     "setFrom": (price: string) => `ابتداءً من ¥${price}`,
