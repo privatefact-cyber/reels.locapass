@@ -5,6 +5,7 @@
  */
 import manifest from "./manifest.json";
 import assignments from "./assignments.json";
+import labels from "./labels.json";
 import { groupOfCategory } from "@/lib/reels/tags/vocabulary";
 
 export type PlaceholderPick =
@@ -14,6 +15,11 @@ export type PlaceholderPick =
 export type PlaceholderEntry = { url: string; poster?: string | null; credit: string; creditUrl: string; source?: string };
 type Entry = PlaceholderEntry;
 type Group = { photos: Entry[]; videos: Entry[] };
+
+/** 街の風景として分類された写真(food/other グループから)。 */
+const CITY_PHOTOS: Entry[] = ["food", "other"].flatMap((g) =>
+  ((manifest as Record<string, Group>)[g]?.photos ?? []).filter((p) => (labels as Record<string, string>)[p.url] === "city"),
+);
 
 function hash(seed: string): number {
   let h = 0;
@@ -47,9 +53,10 @@ export function pickPlaceholder(
     const p = assigned.photo;
     return { kind: "photo", url: p.url, credit: p.credit, creditUrl: p.creditUrl, source: p.source ?? "Pixabay" };
   }
-  const group = (manifest as Record<string, Group>)[groupKeyOf(category)];
-  const fallbackGroup = (manifest as Record<string, Group>).other;
-  const photos = group.photos.length ? group.photos : fallbackGroup.photos;
+  // 割り当てが無い新しい店舗: 宿泊/観光/買い物/ペット/美容は、そのジャンルの写真。飲食などは、店に合わない写真が出ないよう街の風景だけを使う。
+  const key = groupKeyOf(category);
+  const byGenre = key === "stay" || key === "tour" || key === "shop" || key === "pet" || key === "beauty";
+  const photos = byGenre ? (manifest as Record<string, Group>)[key].photos : CITY_PHOTOS;
   if (photos.length) {
     const p = photos[hash(seed) % photos.length];
     return { kind: "photo", url: p.url, credit: p.credit, creditUrl: p.creditUrl, source: p.source ?? "Pixabay" };

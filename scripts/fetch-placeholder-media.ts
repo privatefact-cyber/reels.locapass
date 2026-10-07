@@ -30,7 +30,16 @@ function arg(name: string, fallback: number) {
   return i >= 0 ? Number(process.argv[i + 1]) : fallback;
 }
 const VIDEOS = arg("--videos", 0);
-const APPEND = process.argv.includes("--append");
+const APPEND = process.argv.includes("--append") || process.argv.includes("--queries");
+function strArg(name: string): string | undefined {
+  const i = process.argv.indexOf(name);
+  return i >= 0 ? process.argv[i + 1] : undefined;
+}
+// --queries "a,b,c" --group food --add 80 --page 2 : 指定の検索語で、そのグループに写真を追加する(例: カフェ向けを足す)。
+const ONLY_QUERIES = strArg("--queries")?.split(",").map((q) => q.trim()).filter(Boolean);
+const ONLY_GROUP = strArg("--group");
+const ADD = Number(strArg("--add") ?? 0);
+const PAGE = Number(strArg("--page") ?? 1);
 const MAX_VIDEO_SECONDS = 20;
 const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
 
@@ -95,7 +104,11 @@ async function main() {
   const blockedVideos = new Set(list.videoIds);
 
   const next: Record<string, { photos: Entry[]; videos: Entry[] }> = {};
-  for (const [group, { target, queries }] of Object.entries(GROUPS)) {
+  for (const [group, def] of Object.entries(GROUPS)) {
+    if (ONLY_QUERIES && group !== (ONLY_GROUP ?? "food")) continue;
+    const queries = ONLY_QUERIES ?? def.queries;
+    const existingCount = APPEND ? ((current as Record<string, { photos: Entry[] }>)[group]?.photos.length ?? 0) : 0;
+    const target = ONLY_QUERIES ? existingCount + ADD : def.target;
     const dir = join(process.cwd(), "public/placeholders", group);
     const existing = APPEND ? ((current as Record<string, { photos: Entry[] }>)[group]?.photos ?? []) : [];
     const seen = new Set<number>(existing.map((e) => Number(e.url.match(/p-(\d+)\.jpg/)?.[1])).filter(Boolean));
@@ -105,7 +118,7 @@ async function main() {
 
     for (const q of queries) {
       if (photos.length >= goal) break;
-      const r = await api<{ hits: Hit[] }>(`?q=${encodeURIComponent(q)}&image_type=photo&orientation=horizontal&per_page=${Math.min(200, perQuery * 2)}`);
+      const r = await api<{ hits: Hit[] }>(`?q=${encodeURIComponent(q)}&image_type=photo&orientation=horizontal&page=${PAGE}&per_page=${Math.min(200, perQuery * 2)}`);
       let taken = 0;
       for (const hit of r.hits) {
         if (taken >= perQuery || photos.length >= goal) break;
