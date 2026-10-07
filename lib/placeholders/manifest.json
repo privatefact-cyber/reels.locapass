@@ -1,9 +1,285 @@
 {
-  "food": { "photos": [], "videos": [] },
-  "shop": { "photos": [], "videos": [] },
-  "tour": { "photos": [], "videos": [] },
-  "stay": { "photos": [], "videos": [] },
-  "pet": { "photos": [], "videos": [] },
-  "beauty": { "photos": [], "videos": [] },
-  "other": { "photos": [], "videos": [] }
+  "food": {
+    "photos": [
+      {
+        "url": "/placeholders/food/photo-2.jpg",
+        "credit": "Qogwarp",
+        "creditUrl": "https://pixabay.com/photos/women-tea-cafe-drink-tea-japan-2708034/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/food/photo-3.jpg",
+        "credit": "Pexels",
+        "creditUrl": "https://pixabay.com/photos/brick-wall-chairs-furniture-1834784/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/food/photo-4.jpg",
+        "credit": "wal_172619",
+        "creditUrl": "https://pixabay.com/photos/chinese-lanterns-restaurant-lamps-7591296/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/food/photo-5.jpg",
+        "credit": "Wow_Pho",
+        "creditUrl": "https://pixabay.com/photos/food-japanese-asian-bowl-dish-eat-715542/",
+        "source": "Pixabay"
+      }
+    ],
+    "videos": [
+      {
+        "url": "/placeholders/food/video-2.mp4",
+        "poster": "/placeholders/food/video-2.jpg",
+        "credit": "NickyPe",
+        "creditUrl": "https://pixabay.com/videos/id-45358/",
+        "source": "Pixabay"
+      }
+    ]
+  },
+  "shop": {
+    "photos": [
+      {
+        "url": "/placeholders/shop/photo-1.jpg",
+        "credit": "Pexels",
+        "creditUrl": "https://pixabay.com/photos/apparel-boutique-bags-shoes-shop-1850804/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/shop/photo-2.jpg",
+        "credit": "Pexels",
+        "creditUrl": "https://pixabay.com/photos/hangers-clothing-shopping-market-1850082/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/shop/photo-3.jpg",
+        "credit": "pen_ash",
+        "creditUrl": "https://pixabay.com/photos/bike-bicycle-street-urban-pavement-8337261/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/shop/photo-4.jpg",
+        "credit": "Tama66",
+        "creditUrl": "https://pixabay.com/photos/carousel-old-town-urban-dijon-6402074/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/shop/photo-5.jpg",
+        "credit": "gonghuimin468",
+        "creditUrl": "https://pixabay.com/photos/happy-holidays-woman-shopping-3040029/",
+        "source": "Pixabay"
+      }
+    ],
+    "videos": [
+      {
+        "url": "/placeholders/shop/video-1.mp4",
+        "poster": "/placeholders/shop/video-1.jpg",
+        "credit": "Coverr-Free-Footage",
+        "creditUrl": "https://pixabay.com/videos/id-1006/",
+        "source": "Pixabay"
+      }
+    ]
+  },
+  "tour": {
+    "photos": [
+      {
+        "url": "/placeholders/tour/photo-1.jpg",
+        "credit": "pen_ash",
+        "creditUrl": "https://pixabay.com/photos/snow-winter-nature-landscape-frost-10476274/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/tour/photo-2.jpg",
+        "credit": "DeltaWorks",
+        "creditUrl": "https://pixabay.com/photos/mountain-sunset-countryside-natural-8602437/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/tour/photo-3.jpg",
+        "credit": "kimura2",
+        "creditUrl": "https://pixabay.com/photos/mountain-volcano-peak-summit-477832/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/tour/photo-4.jpg",
+        "credit": "Kanenori",
+        "creditUrl": "https://pixabay.com/photos/temple-night-view-yakushiji-temple-6963458/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/tour/photo-5.jpg",
+        "credit": "yamabon",
+        "creditUrl": "https://pixabay.com/photos/sun-rays-forest-koyasan-temple-fog-7387131/",
+        "source": "Pixabay"
+      }
+    ],
+    "videos": [
+      {
+        "url": "/placeholders/tour/video-1.mp4",
+        "poster": "/placeholders/tour/video-1.jpg",
+        "credit": "Mohamed_hassan",
+        "creditUrl": "https://pixabay.com/videos/id-188287/",
+        "source": "Pixabay"
+      }
+    ]
+  },
+  "stay": {
+    "photos": [
+      {
+        "url": "/placeholders/stay/photo-1.jpg",
+        "credit": "ManuelaJaeger",
+        "creditUrl": "https://pixabay.com/photos/hotel-hotel-rooms-home-decoration-1749602/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/stay/photo-2.jpg",
+        "credit": "peterweideman",
+        "creditUrl": "https://pixabay.com/photos/bedroom-interior-design-bed-room-5664221/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/stay/photo-3.jpg",
+        "credit": "Engin_Akyurt",
+        "creditUrl": "https://pixabay.com/photos/bed-hotel-luxurious-bedroom-4416515/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/stay/photo-4.jpg",
+        "credit": "HarpazoChannel",
+        "creditUrl": "https://pixabay.com/photos/hakone-ryokan-japanese-style-inn-6825389/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/stay/photo-5.jpg",
+        "credit": "miiya",
+        "creditUrl": "https://pixabay.com/photos/japanese-style-illumination-ryokan-2720301/",
+        "source": "Pixabay"
+      }
+    ],
+    "videos": [
+      {
+        "url": "/placeholders/stay/video-1.mp4",
+        "poster": "/placeholders/stay/video-1.jpg",
+        "credit": "blackmarketmusic",
+        "creditUrl": "https://pixabay.com/videos/id-135141/",
+        "source": "Pixabay"
+      }
+    ]
+  },
+  "pet": {
+    "photos": [
+      {
+        "url": "/placeholders/pet/photo-1.jpg",
+        "credit": "rzierik",
+        "creditUrl": "https://pixabay.com/photos/dog-puppy-pet-bichon-frise-animal-5671778/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/pet/photo-2.jpg",
+        "credit": "ValterM",
+        "creditUrl": "https://pixabay.com/photos/dog-park-puppy-animal-running-8637542/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/pet/photo-3.jpg",
+        "credit": "Andre-H",
+        "creditUrl": "https://pixabay.com/photos/dog-puppy-pet-golden-retriever-5632005/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/pet/photo-4.jpg",
+        "credit": "Briam-Cute",
+        "creditUrl": "https://pixabay.com/photos/dog-pet-animal-black-dog-mammal-5519360/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/pet/photo-5.jpg",
+        "credit": "lucioliu",
+        "creditUrl": "https://pixabay.com/photos/dog-corgi-cute-animal-4988985/",
+        "source": "Pixabay"
+      }
+    ],
+    "videos": [
+      {
+        "url": "/placeholders/pet/video-2.mp4",
+        "poster": "/placeholders/pet/video-2.jpg",
+        "credit": "gammeholton84",
+        "creditUrl": "https://pixabay.com/videos/id-77626/",
+        "source": "Pixabay"
+      }
+    ]
+  },
+  "beauty": {
+    "photos": [
+      {
+        "url": "/placeholders/beauty/photo-1.jpg",
+        "credit": "mostafa_meraji",
+        "creditUrl": "https://pixabay.com/photos/barber-shop-iran-cosmetology-5212059/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/beauty/photo-2.jpg",
+        "credit": "Starkvisuals",
+        "creditUrl": "https://pixabay.com/photos/woman-model-hairstyle-makeup-2537564/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/beauty/photo-3.jpg",
+        "credit": "jackmac34",
+        "creditUrl": "https://pixabay.com/photos/hair-salon-barber-beard-3173422/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/beauty/photo-5.jpg",
+        "credit": "silviarita",
+        "creditUrl": "https://pixabay.com/photos/woman-beauty-spa-wellness-portrait-3141766/",
+        "source": "Pixabay"
+      }
+    ],
+    "videos": [
+      {
+        "url": "/placeholders/beauty/video-1.mp4",
+        "poster": "/placeholders/beauty/video-1.jpg",
+        "credit": "Art-Production",
+        "creditUrl": "https://pixabay.com/videos/id-21147/",
+        "source": "Pixabay"
+      }
+    ]
+  },
+  "other": {
+    "photos": [
+      {
+        "url": "/placeholders/other/photo-1.jpg",
+        "credit": "MasashiWakui",
+        "creditUrl": "https://pixabay.com/photos/japan-osaka-night-asia-landmark-2014619/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/other/photo-2.jpg",
+        "credit": "MasashiWakui",
+        "creditUrl": "https://pixabay.com/photos/japan-osaka-pedestrians-crossing-2014616/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/other/photo-3.jpg",
+        "credit": "Michael_Pointner",
+        "creditUrl": "https://pixabay.com/photos/bridge-city-dark-japan-japanese-9620082/",
+        "source": "Pixabay"
+      },
+      {
+        "url": "/placeholders/other/photo-4.jpg",
+        "credit": "olivergotting",
+        "creditUrl": "https://pixabay.com/photos/library-architecture-books-interior-5641389/",
+        "source": "Pixabay"
+      }
+    ],
+    "videos": [
+      {
+        "url": "/placeholders/other/video-1.mp4",
+        "poster": "/placeholders/other/video-1.jpg",
+        "credit": "carl_watermark",
+        "creditUrl": "https://pixabay.com/videos/id-41957/",
+        "source": "Pixabay"
+      }
+    ]
+  }
 }
