@@ -14,7 +14,9 @@ import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
-import { parseCastSlug, shopPath, castPath, castReelsPath } from "@/lib/locapass/publicUrls";
+import { PageDots } from "@/components/shop/PageDots";
+import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
+import { parseCastSlug, shopPath, castPath, castReelsPath, castArchivePath } from "@/lib/locapass/publicUrls";
 
 // トップページと同じ60秒キャッシュ。長押しプレビュー(iframe埋め込み)で毎回フルSSRを
 // 待たされる体感の遅さを緩和する(初回以外はキャッシュから即座に返る)。
@@ -168,7 +170,10 @@ export default async function CastDetailPage({
   // sizes.t は「身長(cm)」の自由入力欄のため、数値として読み取れる場合だけ構造化データに含める。
   const heightCm = sizes?.t ? Number(sizes.t.replace(/[^0-9.]/g, "")) : NaN;
 
+  const archiveHref = castArchivePath(portal.slug, shop!.slug, cast.issue_no!);
+
   return (
+    <ShopSwipeToArchive href={archiveHref}>
     <div className="space-y-8 pb-8">
       <JsonLd
         data={{
@@ -300,6 +305,8 @@ export default async function CastDetailPage({
           投稿・出勤・日記は未入力なら見出しごと出さない(「まだありません」が並ぶとサボっているように見えるため)。 */}
       {reelItems.length > 0 && (
       <section>
+        {/* 2ページ構成(個人ページ / 動画ストック)を示すドット。左スワイプでも2ページ目へ行ける。 */}
+        <PageDots current={0} shopHref={castPath(portal.slug, shop!.slug, cast.issue_no!)} archiveHref={archiveHref} />
         <div className="grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
           {reelItems.map((r) => {
             const item = (r.media as { type: "video" | "image"; url: string }[])[0];
@@ -372,5 +379,6 @@ export default async function CastDetailPage({
       </section>
       )}
     </div>
+    </ShopSwipeToArchive>
   );
 }

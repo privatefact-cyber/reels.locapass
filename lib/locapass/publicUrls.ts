@@ -31,6 +31,11 @@ export function castReelsPath(portalSlug: string, shopSlug: string, issueNo: num
   return `${castPath(portalSlug, shopSlug, issueNo)}/reels`;
 }
 
+/** キャスト(FACES)個人の過去動画ストック(時系列/カレンダー/タグ検索)ページ。 */
+export function castArchivePath(portalSlug: string, shopSlug: string, issueNo: number): string {
+  return `${castPath(portalSlug, shopSlug, issueNo)}/archive`;
+}
+
 export function staffSlugOf(shopSlug: string, issueNo: number): string {
   return `${shopSlug}-${issueNo}`;
 }
