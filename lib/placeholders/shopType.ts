@@ -9,7 +9,7 @@ export type PhotoLabel = (typeof PHOTO_LABELS)[number];
 
 export type ShopType =
   | "cafe" | "bar" | "izakaya" | "noodle" | "japanese" | "seafood" | "grill" | "western" | "restaurant"
-  | "stay" | "tour" | "shopping" | "hair" | "pet" | "other";
+  | "stay" | "tour" | "shopping" | "hair" | "florist" | "pet" | "other";
 
 const has = (s: string, re: RegExp) => re.test(s);
 
@@ -24,7 +24,7 @@ export function shopTypeOf(name: string, category: string | null | undefined): S
   if (/観光|体験/.test(c)) return "tour";
   if (/ショッピング|お土産/.test(c)) return "shopping";
   if (/美容|暮らし/.test(c)) {
-    if (/花|フラワー|ブーケ|FLOWER/i.test(n)) return "other"; // 花屋に合う写真が無いので街の風景
+    if (/花|フラワー|ブーケ|FLOWER/i.test(n)) return "florist";
     if (/pilates|ピラティス/i.test(n)) return "other";
     return "hair";
   }

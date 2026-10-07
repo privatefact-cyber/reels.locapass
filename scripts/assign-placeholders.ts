@@ -33,7 +33,7 @@ const groups = manifest as Record<string, Group>;
 const labelOf = labels as Record<string, string>;
 
 /** 飲食以外の店の種類 → 写真グループ。 */
-const GROUP_OF_TYPE: Partial<Record<ShopType, string>> = { stay: "stay", tour: "tour", shopping: "shop", pet: "pet", hair: "beauty" };
+const GROUP_OF_TYPE: Partial<Record<ShopType, string>> = { stay: "stay", tour: "tour", shopping: "shop", pet: "pet", hair: "beauty", florist: "flower" };
 /**
  * 店の種類によっては、分類(ラベル)だけでは粗いので、特に合う写真(PixabayのID)を先に使う。
  * 例: 焼肉店には肉の写真、美容室には美容室・理容室の写真(マッサージやネイルではなく)。

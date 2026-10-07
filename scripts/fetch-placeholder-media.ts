@@ -62,6 +62,7 @@ const GROUPS: Record<string, { target: number; queries: string[] }> = {
   beauty: { target: 22, queries: ["hair salon", "barber", "spa", "nail art", "massage", "flower shop", "bouquet", "florist"] },
   pet: { target: 22, queries: ["dog", "puppy", "cat", "pet cafe", "dog park"] },
   shop: { target: 10, queries: ["boutique shop", "shopping street", "market stall", "souvenir shop"] },
+  flower: { target: 24, queries: ["flower bouquet", "flower shop", "roses", "tulips", "florist", "colorful flowers", "flower arrangement"] },
   stay: { target: 10, queries: ["hotel room", "hotel lobby", "ryokan", "onsen"] },
   tour: { target: 22, queries: ["japan scenery", "japan temple", "mountain landscape", "castle japan", "garden japan", "waterfall"] },
 };
