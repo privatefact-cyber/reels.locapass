@@ -37,7 +37,7 @@ export function ShopMediaFallback({
           <span className="font-display select-none text-[8rem] font-bold leading-none text-main/[0.06]">{initial}</span>
         </div>
       )}
-      {pick && showCredit && <ImageNotice credit={pick.credit} creditUrl={pick.creditUrl} source={pick.source} />}
+      {pick && showCredit && <ImageNotice credit={pick.credit} creditUrl={pick.creditUrl} />}
     </>
   );
 }
@@ -46,7 +46,7 @@ export function ShopMediaFallback({
  * 「これはイメージ画像です」の控えめな表示。普段は小さな丸い「i」だけで、タップすると説明(撮影者と出所)が出る。
  * 実際の店舗の写真だと誤解されないための表記なので、消さずに目立たなくしている。
  */
-function ImageNotice({ credit, creditUrl, source }: { credit: string; creditUrl: string; source: string }) {
+function ImageNotice({ credit, creditUrl }: { credit: string; creditUrl: string }) {
   const [open, setOpen] = useState(false);
   // 開いたまま放置されないよう、数秒で閉じる。
   useEffect(() => {
@@ -73,7 +73,7 @@ function ImageNotice({ credit, creditUrl, source }: { credit: string; creditUrl:
           rel="noopener noreferrer"
           className="whitespace-nowrap rounded bg-black/70 px-2 py-1 text-[10px] leading-none text-main/90 backdrop-blur-sm"
         >
-          イメージ画像です ・ 撮影: {credit} / {source}
+          撮影: {credit}
         </a>
       )}
     </div>

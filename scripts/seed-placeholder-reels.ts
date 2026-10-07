@@ -1,7 +1,8 @@
 /**
- * リールが1本も無い店舗に、Pixabayの無料動画を「イメージ映像」のダミーリールとして入れる(フィードの見た目を整える用)。
+ * リールが1本も無い店舗に、Pixabayの無料写真(一部は動画)を「イメージ映像」のダミーリールとして入れる(フィードの見た目を整える用)。
+ * 店舗ごとに別々の写真を使う(scripts/assign-placeholders.ts の割り当て)。動画は各グループで1店舗だけ。
  * 本物の投稿が入ったら --remove でまとめて消せる。ダミーは is_placeholder=true で見分け、キャプションにも
- * 「【イメージ映像】」と明記する。閲覧はインサイトに数えない。
+ * 投稿者名を「イメージ映像」にし、キャプションには撮影者名を入れる。閲覧はインサイトに数えない。
  *
  * 使い方(先に scripts/fetch-placeholder-media.ts で動画を集め、public/placeholders/ をコミット・デプロイしておく。
  *       動画ファイルが本番に無いうちに入れると、再生できないリールになる):
@@ -17,7 +18,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
 import { join } from "node:path";
-import { pickPlaceholder } from "../lib/placeholders/pick";
+import { assignedPlaceholder } from "../lib/placeholders/pick";
 
 config({ path: join(process.cwd(), ".env.local"), quiet: true });
 
@@ -94,21 +95,24 @@ async function main() {
   let skipped = 0;
   const now = Date.now();
   for (const [i, shop] of targets.entries()) {
-    const pick = pickPlaceholder(shop.category, shop.id, { allowVideo: true });
-    if (!pick || pick.kind !== "video") {
+    // 店舗ごとに割り当て済みの別々の写真(動画が割り当てられた店舗だけ動画)。割り当てが無ければスキップ。
+    const assigned = assignedPlaceholder(shop.id);
+    if (!assigned) {
       skipped++;
       continue;
     }
+    const media = assigned.video ?? assigned.photo;
     if (dryRun) {
-      console.log(`- ${shop.name}: ${pick.credit} / ${pick.source}`);
+      console.log(`- ${shop.name}: ${assigned.video ? "動画" : "写真"} ${media.credit}`);
       continue;
     }
     const { error: insertError } = await db.from("locapass_reels").insert({
       portal_id: shop.portal_id,
       shop_id: shop.id,
-      video_url: abs(pick.url),
-      poster_url: abs(pick.poster),
-      caption: `【イメージ映像】${shop.name}の雰囲気イメージです(ダミー映像・撮影: ${pick.credit} / ${pick.source})`,
+      video_url: assigned.video ? abs(assigned.video.url) : null,
+      poster_url: abs(assigned.video ? (assigned.video.poster ?? assigned.photo.url) : assigned.photo.url),
+      images: assigned.video ? [] : [{ url: abs(assigned.photo.url) }],
+      caption: `撮影: ${media.credit}`,
       author_name: "イメージ映像",
       reel_type: "permanent",
       status: "publish",
@@ -124,8 +128,8 @@ async function main() {
     created++;
   }
 
-  console.log(`\n完了: 作成 ${created} / 動画が無くスキップ ${skipped}`);
-  if (skipped > 0) console.log("→ 先に scripts/fetch-placeholder-media.ts で動画を集めてください");
+  console.log(`\n完了: 作成 ${created} / 割り当て無しでスキップ ${skipped}`);
+  if (skipped > 0) console.log("→ 先に scripts/assign-placeholders.ts を実行してください");
 }
 
 main().catch((cause) => {
