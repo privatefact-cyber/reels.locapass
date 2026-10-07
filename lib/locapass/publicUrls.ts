@@ -14,6 +14,11 @@ export function shopReelsPath(portalSlug: string, shopSlug: string): string {
   return `${shopPath(portalSlug, shopSlug)}/reels`;
 }
 
+/** 過去動画のストック(時系列/カレンダー検索)ページ。 */
+export function shopArchivePath(portalSlug: string, shopSlug: string): string {
+  return `${shopPath(portalSlug, shopSlug)}/archive`;
+}
+
 export function castSlugOf(shopSlug: string, issueNo: number): string {
   return `${shopSlug}-${issueNo}`;
 }

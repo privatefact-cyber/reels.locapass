@@ -17,6 +17,7 @@ import {
   Star,
   Navigation,
   ChevronLeft,
+  CalendarSearch,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
@@ -39,8 +40,9 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
+import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
-import { shopPath, shopReelsPath, castPath } from "@/lib/locapass/publicUrls";
+import { shopPath, shopReelsPath, shopArchivePath, castPath } from "@/lib/locapass/publicUrls";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
@@ -249,7 +251,8 @@ export default async function ShopDetailPage({
   // (以前はcast_id無しの投稿を全部"shop"という1つの投稿者に丸めてしまい、店舗直接投稿や
   // スタッフ投稿が複数あっても最初の1件しか出ない不具合があった)。
   const castReelPreviews: CastReelPreview[] = [];
-  for (const row of allReelRows ?? []) {
+  const PREVIEW_LIMIT = 12; // これ以前の動画は動画ストック(archive)ページで探す
+  for (const row of (allReelRows ?? []).slice(0, PREVIEW_LIMIT)) {
     const media = toReelMedia(row)[0] as { type: "image" | "video"; url: string; poster?: string } | undefined;
     if (!media) continue;
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
@@ -318,7 +321,11 @@ export default async function ShopDetailPage({
     { name: store.name, item: shopUrl },
   ];
 
+  const archiveHref = shopArchivePath(site.slug, shopRow.slug);
+  const totalReels = allReelRows?.length ?? 0;
+
   return (
+    <ShopSwipeToArchive href={archiveHref}>
     <div className="space-y-10 pb-44 md:pb-24">
       {/* 所属する子ポータルで選んだ配色テーマ(未設定ならサイト全体の配色) */}
       <PortalThemeScope theme={isSiteTheme(site.theme) ? site.theme : null} />
@@ -448,6 +455,30 @@ export default async function ShopDetailPage({
               </span>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* 過去動画へ: 全リールの時系列/カレンダー検索ページ。ページ全体を左へ横スワイプしても行ける。 */}
+      {totalReels > 0 && (
+        <div className="px-4 sm:px-6">
+          <Link
+            href={archiveHref}
+            className="group flex items-center justify-between gap-3 rounded-2xl border border-hl-400/25 bg-panel-900/60 px-4 py-3 shadow-[0_0_20px_rgb(var(--hl-500)/0.1)] backdrop-blur-xl transition hover:border-hl-400/50"
+          >
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cta-light to-cta text-on-cta shadow-[0_0_14px_rgb(var(--cta-500)/0.4)]">
+                <CalendarSearch size={18} />
+              </span>
+              <span>
+                <span className="block text-sm font-bold text-tone-100">{t.shop.archiveEntry}</span>
+                <span className="block text-[11px] text-muted">
+                  {t.shop.archiveEntryHint} ・ {t.shop.archiveCount(totalReels)}
+                </span>
+              </span>
+            </span>
+            <ChevronLeft size={18} className="rotate-180 text-hl-300 transition group-hover:translate-x-0.5 rtl:rotate-0" />
+          </Link>
+          <p className="mt-1.5 text-center text-[10px] text-tone-500 md:hidden">{t.shop.archiveSwipeHint}</p>
         </div>
       )}
 
@@ -691,6 +722,7 @@ export default async function ShopDetailPage({
         ]}
       />
     </div>
+    </ShopSwipeToArchive>
   );
 }
 
