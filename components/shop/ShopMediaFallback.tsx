@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 import { pickPlaceholder } from "@/lib/placeholders/pick";
 
@@ -36,17 +37,45 @@ export function ShopMediaFallback({
           <span className="font-display select-none text-[8rem] font-bold leading-none text-main/[0.06]">{initial}</span>
         </div>
       )}
-      {pick && showCredit && (
+      {pick && showCredit && <ImageNotice credit={pick.credit} creditUrl={pick.creditUrl} source={pick.source} />}
+    </>
+  );
+}
+
+/**
+ * 「これはイメージ画像です」の控えめな表示。普段は小さな丸い「i」だけで、タップすると説明(撮影者と出所)が出る。
+ * 実際の店舗の写真だと誤解されないための表記なので、消さずに目立たなくしている。
+ */
+function ImageNotice({ credit, creditUrl, source }: { credit: string; creditUrl: string; source: string }) {
+  const [open, setOpen] = useState(false);
+  // 開いたまま放置されないよう、数秒で閉じる。
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => setOpen(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [open]);
+
+  return (
+    <div data-surface="media" className="absolute right-3 top-3 z-20 flex flex-col items-end gap-1 sm:right-6 sm:top-6">
+      <button
+        type="button"
+        aria-label="イメージ画像について"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-5 w-5 items-center justify-center rounded-full border border-main/30 bg-black/35 font-serif text-[11px] italic leading-none text-main/70 backdrop-blur-sm transition hover:text-main"
+      >
+        i
+      </button>
+      {open && (
         <a
-          data-surface="media"
-          href={pick.creditUrl}
+          href={creditUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute right-3 top-3 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] leading-none text-main/80 backdrop-blur-sm hover:text-main sm:right-6 sm:top-6"
+          className="whitespace-nowrap rounded bg-black/70 px-2 py-1 text-[10px] leading-none text-main/90 backdrop-blur-sm"
         >
-          イメージ ・ {pick.credit} / {pick.source}
+          イメージ画像です ・ 撮影: {credit} / {source}
         </a>
       )}
-    </>
+    </div>
   );
 }
