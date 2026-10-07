@@ -34,14 +34,19 @@ async function rewriteHandle(request: NextRequest): Promise<NextResponse | null>
   return NextResponse.rewrite(url);
 }
 
-// 合言葉ゲート(2026-09-30再導入)。パスワードは /gate で入力し、通るとCookieが付く。
-// /api(cron・LINEコールバック等)と静的アセット、ゲート自身は対象外にして壊さない。
-// ただし /api/place-photo は課金APIに繋がるため、ゲートの内側に置く。
-// 解除するときは下のmiddlewareを「rewriteHandleだけ返す」形に戻す。
+// 合言葉ゲート(2026-09-30再導入、2026-10-07に既定でオフ)。パスワードは /gate で入力し、通るとCookieが付く。
+// 環境変数 PREVIEW_GATE=on を設定して再デプロイすると、またゲートが有効になる(コードはそのまま残してある)。
+// ゲートが有効なとき、/api(cron・LINEコールバック等)と静的アセット、ゲート自身は対象外にして壊さない。
+// ただし /api/place-photo は課金APIに繋がるため、ゲートの内側に置く(公開中は、API側の1日上限とCDNキャッシュで抑える)。
 const COOKIE_NAME = "luxela_preview_auth";
+const GATE_ENABLED = process.env.PREVIEW_GATE === "on";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (!GATE_ENABLED) {
+    return (await rewriteHandle(request)) ?? NextResponse.next();
+  }
 
   if (
     pathname.startsWith("/gate") ||
