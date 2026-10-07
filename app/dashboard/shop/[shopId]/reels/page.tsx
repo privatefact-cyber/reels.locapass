@@ -7,6 +7,7 @@ import { StreamThumb } from "@/components/video/StreamThumb";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges } from "@/components/reels/ReelOrganizer";
+import { ReelInsights } from "@/components/reels/ReelInsights";
 import { ConfirmSubmitButton } from "@/components/reels/ConfirmSubmitButton";
 
 /**
@@ -107,6 +108,17 @@ export default async function LocapassShopReelsPage({
 
       {reels && reels.length > 0 ? (
         <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>
+        <ReelInsights
+          variant="light"
+          shopId={shop.id}
+          reels={reels.map((r) => ({
+            id: r.id,
+            createdAt: r.createdAt,
+            tags: r.tags,
+            likesCount: r.likes_count,
+            label: r.caption?.trim().slice(0, 18) || new Date(r.createdAt).toLocaleDateString("ja-JP"),
+          }))}
+        />
         <ReelOrganizerBar variant="light" />
         <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {reels.map((r) => {

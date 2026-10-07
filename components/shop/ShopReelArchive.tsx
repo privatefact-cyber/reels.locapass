@@ -7,6 +7,7 @@ import { CalendarSearch, ChevronLeft, ChevronRight, Film, LayoutGrid, CalendarDa
 import { PageDots } from "@/components/shop/PageDots";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { tagLabel } from "@/lib/reels/tags/vocabulary";
+import { recordReelEvent } from "@/lib/reels/trackReelEvent";
 
 export type ArchiveItem = {
   id: string;
@@ -90,12 +91,17 @@ export function ShopReelArchive({
   shopHref,
   reelsHref,
   archiveHref,
+  trackShopId,
+  trackCastId,
 }: {
   items: ArchiveItem[];
   shopName: string;
   shopHref: string;
   reelsHref: string;
   archiveHref: string;
+  /** タグ検索の記録先(投稿者向けインサイト用)。店舗ページなら店舗、個人ページならキャスト。 */
+  trackShopId?: string;
+  trackCastId?: string;
 }) {
   const { locale, t } = useLocale();
   const loc = intlLocale(locale);
@@ -254,6 +260,7 @@ export function ShopReelArchive({
               onClick={() => {
                 setTag(id);
                 setSelectedDay(null);
+                if (id) recordReelEvent("tag_search", { shopId: trackCastId ? undefined : trackShopId, castId: trackCastId, tag: id });
               }}
               className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs transition active:scale-95 ${
                 tag === id

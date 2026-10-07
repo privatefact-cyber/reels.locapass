@@ -16,6 +16,7 @@ import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges } from "@/components/reels/ReelOrganizer";
+import { ReelInsights } from "@/components/reels/ReelInsights";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 import { uploadPosterToR2, uploadVideoToR2 } from "@/lib/storage/uploadToR2";
@@ -699,6 +700,16 @@ export function CastDashboardClient({
 
       {/* 投稿グリッド(ピン留めした投稿を先頭に固定表示) */}
       <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>
+      <ReelInsights
+        castId={castId}
+        reels={reels.map((r) => ({
+          id: r.id,
+          createdAt: r.createdAt,
+          tags: r.tags,
+          likesCount: r.likesCount,
+          label: r.caption?.trim().slice(0, 18) || new Date(r.createdAt).toLocaleDateString("ja-JP"),
+        }))}
+      />
       <ReelOrganizerBar />
       <div className="mt-2 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
         {[...reels]

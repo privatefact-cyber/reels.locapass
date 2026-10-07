@@ -1792,6 +1792,53 @@ export type Database = {
           },
         ]
       }
+      locapass_reel_events: {
+        Row: {
+          cast_id: string | null
+          created_at: string
+          day: string
+          event_type: string
+          id: number
+          reel_id: string | null
+          shop_id: string | null
+          staff_id: string | null
+          tag: string | null
+          viewer_id: string
+        }
+        Insert: {
+          cast_id?: string | null
+          created_at?: string
+          day?: string
+          event_type: string
+          id?: never
+          reel_id?: string | null
+          shop_id?: string | null
+          staff_id?: string | null
+          tag?: string | null
+          viewer_id: string
+        }
+        Update: {
+          cast_id?: string | null
+          created_at?: string
+          day?: string
+          event_type?: string
+          id?: never
+          reel_id?: string | null
+          shop_id?: string | null
+          staff_id?: string | null
+          tag?: string | null
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_reel_events_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locapass_reel_likes: {
         Row: {
           created_at: string
@@ -3397,6 +3444,60 @@ export type Database = {
           },
         ]
       }
+      reel_events: {
+        Row: {
+          cast_id: string | null
+          created_at: string
+          day: string
+          event_type: string
+          id: number
+          reel_id: string | null
+          shop_id: string | null
+          staff_id: string | null
+          tag: string | null
+          viewer_id: string
+        }
+        Insert: {
+          cast_id?: string | null
+          created_at?: string
+          day?: string
+          event_type: string
+          id?: never
+          reel_id?: string | null
+          shop_id?: string | null
+          staff_id?: string | null
+          tag?: string | null
+          viewer_id: string
+        }
+        Update: {
+          cast_id?: string | null
+          created_at?: string
+          day?: string
+          event_type?: string
+          id?: never
+          reel_id?: string | null
+          shop_id?: string | null
+          staff_id?: string | null
+          tag?: string | null
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reel_events_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
+          },
+          {
+            foreignKeyName: "reel_events_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reel_likes: {
         Row: {
           created_at: string
@@ -4869,6 +4970,17 @@ export type Database = {
         Args: { p_kind: string; p_shop_id: string }
         Returns: undefined
       }
+      locapass_record_event: {
+        Args: {
+          p_cast_id: string
+          p_reel_id: string
+          p_shop_id: string
+          p_tag: string
+          p_type: string
+          p_viewer: string
+        }
+        Returns: undefined
+      }
       locapass_redeem_cast_login_token: {
         Args: { p_pin: string; p_token: string }
         Returns: {
@@ -4883,6 +4995,14 @@ export type Database = {
           login_email: string
           one_time_password: string
           status: string
+        }[]
+      }
+      locapass_reel_stats: {
+        Args: { p_reel_ids: string[] }
+        Returns: {
+          engaged: number
+          reel_id: string
+          viewers: number
         }[]
       }
       locapass_regenerate_cast_login_token: {
@@ -4950,6 +5070,15 @@ export type Database = {
         Args: { p_staff_member_id: string }
         Returns: undefined
       }
+      locapass_tag_search_stats: {
+        Args: { p_cast_id?: string; p_shop_id?: string }
+        Returns: {
+          searches: number
+          tag: string
+          viewers: number
+        }[]
+      }
+      locapass_tracking_started_at: { Args: never; Returns: string }
       locapass_update_own_cast_profile: {
         Args: { p_avatar_url?: string; p_name: string; p_pr_text: string }
         Returns: undefined
@@ -4969,6 +5098,17 @@ export type Database = {
           p_session_key: string
         }
         Returns: boolean
+      }
+      record_reel_event: {
+        Args: {
+          p_cast_id: string
+          p_reel_id: string
+          p_shop_id: string
+          p_tag: string
+          p_type: string
+          p_viewer: string
+        }
+        Returns: undefined
       }
       record_shop_contact_tap: {
         Args: { p_kind: string; p_shop_id: string }
@@ -5019,6 +5159,23 @@ export type Database = {
         }[]
       }
       reel_caption_can_manage: { Args: { p_reel_id: string }; Returns: boolean }
+      reel_stats: {
+        Args: { p_reel_ids: string[] }
+        Returns: {
+          engaged: number
+          reel_id: string
+          viewers: number
+        }[]
+      }
+      reel_tag_search_stats: {
+        Args: { p_cast_id?: string; p_shop_id?: string }
+        Returns: {
+          searches: number
+          tag: string
+          viewers: number
+        }[]
+      }
+      reel_tracking_started_at: { Args: never; Returns: string }
       regenerate_cast_login_token: {
         Args: { p_cast_id: string }
         Returns: string

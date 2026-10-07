@@ -93,6 +93,7 @@ export default async function CastReelArchivePage({
         shopHref={castPath(portal.slug, shopRow.slug, cast.issue_no!)}
         reelsHref={castReelsPath(portal.slug, shopRow.slug, cast.issue_no!)}
         archiveHref={castArchivePath(portal.slug, shopRow.slug, cast.issue_no!)}
+        trackCastId={cast.id!}
       />
     </div>
   );

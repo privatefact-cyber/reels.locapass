@@ -19,6 +19,7 @@ import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges } from "@/components/reels/ReelOrganizer";
+import { ReelInsights } from "@/components/reels/ReelInsights";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
@@ -920,6 +921,17 @@ export function StaffDashboardClient({
           {/* 投稿グリッド(キャストマイページと同じサムネイル3列表示)。
               タップすると、このスタッフの投稿だけを対象にした公開リール再生ページへ飛ぶ。 */}
           <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>
+          {isOwner && (
+            <ReelInsights
+              reels={reels.map((r) => ({
+                id: r.id,
+                createdAt: r.createdAt,
+                tags: r.tags,
+                likesCount: r.likesCount,
+                label: r.caption?.trim().slice(0, 18) || new Date(r.createdAt).toLocaleDateString("ja-JP"),
+              }))}
+            />
+          )}
           {isOwner && <ReelOrganizerBar />}
           <div className="mt-2 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
             {reels.map((r) => (

@@ -14,6 +14,7 @@ import { StreamVideo } from "@/components/video/StreamVideo";
 import { ReelCaptionOverlay } from "@/components/reels/ReelCaptionOverlay";
 import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
+import { useReelViewTracking } from "@/lib/reels/useReelViewTracking";
 
 export type ReelCardProps = {
   /** コメント欄を開くのに必要なリールID。店舗タイルなど、コメント対象のリールが無いカードでは省略する(コメントアイコン自体を出さない)。 */
@@ -95,6 +96,8 @@ export function ReelCard({
   isAd = false,
 }: ReelCardProps) {
   const { t } = useLocale();
+  // 投稿者向けインサイト用の閲覧記録(広告は対象外)。
+  useReelViewTracking(isAd ? undefined : reelId, isActive);
   const resolvedCtaText = ctaText ?? t.common.learnMore;
   const videoRef = useRef<HTMLVideoElement>(null);
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);

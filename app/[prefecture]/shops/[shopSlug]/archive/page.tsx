@@ -89,6 +89,7 @@ export default async function ShopReelArchivePage({
         shopHref={shopPath(portal.slug, shop.slug)}
         reelsHref={shopReelsPath(portal.slug, shop.slug)}
         archiveHref={shopArchivePath(portal.slug, shop.slug)}
+        trackShopId={shop.id}
       />
     </div>
   );
