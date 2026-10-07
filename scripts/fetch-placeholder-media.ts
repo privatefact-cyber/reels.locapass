@@ -8,6 +8,7 @@
  *   .env.local に  PIXABAY_API_KEY=xxxxxxxx  を追加してから
  *   npx tsx scripts/fetch-placeholder-media.ts --dry-run   # 取得内容を表示だけ(保存・manifest更新なし)
  *   npx tsx scripts/fetch-placeholder-media.ts             # 写真をダウンロードして manifest.json の photos を更新(動画は既存のまま)
+ *   npx tsx scripts/fetch-placeholder-media.ts --append    # 既存の写真は残し、目標枚数に足りない分だけ追加する(選別済みの写真と割り当てを変えない)
  *   npx tsx scripts/fetch-placeholder-media.ts --videos 1  # 動画も取り直す(1グループあたりの本数)
  *
  * 不要な素材は lib/placeholders/blocklist.json にPixabayのIDを書くと、次回から取得しない。
@@ -29,29 +30,31 @@ function arg(name: string, fallback: number) {
   return i >= 0 ? Number(process.argv[i + 1]) : fallback;
 }
 const VIDEOS = arg("--videos", 0);
+const APPEND = process.argv.includes("--append");
 const MAX_VIDEO_SECONDS = 20;
 const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
 
 /** グループごとの目標枚数(店舗数より多め。目視で選別して減らす)と検索語(英語のほうが当たりが良い)。 */
 const GROUPS: Record<string, { target: number; queries: string[] }> = {
   food: {
-    target: 100,
+    target: 170,
     queries: [
       "cafe interior", "coffee shop", "restaurant interior", "japanese restaurant", "ramen", "sushi", "izakaya",
       "bar counter", "pasta", "cake dessert", "bakery bread", "yakiniku", "tempura", "udon", "japanese tea", "pizza",
       "steak", "salad", "curry", "hamburger", "breakfast", "cocktail", "beer glass", "sandwich", "fried chicken",
-      "tonkatsu", "seafood", "bento", "pancake", "ice cream",
+      "tonkatsu", "seafood", "bento", "pancake", "ice cream", "dumplings", "okonomiyaki", "soba noodles", "wine glass",
+      "whisky", "japanese sweets", "donut", "latte art", "rice bowl", "soup", "grilled fish", "brunch", "hot pot", "cheese board",
     ],
   },
   other: {
-    target: 36,
+    target: 60,
     queries: ["japan city street", "night street japan", "modern building", "train station", "street market", "city park", "old town street", "architecture interior", "urban skyline", "shrine town"],
   },
-  beauty: { target: 14, queries: ["hair salon", "barber", "spa", "nail art", "massage", "flower shop", "bouquet", "florist"] },
-  pet: { target: 14, queries: ["dog", "puppy", "cat", "pet cafe", "dog park"] },
+  beauty: { target: 22, queries: ["hair salon", "barber", "spa", "nail art", "massage", "flower shop", "bouquet", "florist"] },
+  pet: { target: 22, queries: ["dog", "puppy", "cat", "pet cafe", "dog park"] },
   shop: { target: 10, queries: ["boutique shop", "shopping street", "market stall", "souvenir shop"] },
   stay: { target: 10, queries: ["hotel room", "hotel lobby", "ryokan", "onsen"] },
-  tour: { target: 14, queries: ["japan scenery", "japan temple", "mountain landscape", "castle japan", "garden japan", "waterfall"] },
+  tour: { target: 22, queries: ["japan scenery", "japan temple", "mountain landscape", "castle japan", "garden japan", "waterfall"] },
 };
 
 const VIDEO_QUERIES: Record<string, string[]> = {
@@ -94,16 +97,18 @@ async function main() {
   const next: Record<string, { photos: Entry[]; videos: Entry[] }> = {};
   for (const [group, { target, queries }] of Object.entries(GROUPS)) {
     const dir = join(process.cwd(), "public/placeholders", group);
-    const seen = new Set<number>();
+    const existing = APPEND ? ((current as Record<string, { photos: Entry[] }>)[group]?.photos ?? []) : [];
+    const seen = new Set<number>(existing.map((e) => Number(e.url.match(/p-(\d+)\.jpg/)?.[1])).filter(Boolean));
     const photos: Found[] = [];
-    const perQuery = Math.max(3, Math.ceil((target / queries.length) * 1.3));
+    const goal = Math.max(0, target - existing.length);
+    const perQuery = Math.max(3, Math.ceil((goal / queries.length) * 1.3));
 
     for (const q of queries) {
-      if (photos.length >= target) break;
+      if (photos.length >= goal) break;
       const r = await api<{ hits: Hit[] }>(`?q=${encodeURIComponent(q)}&image_type=photo&orientation=horizontal&per_page=${Math.min(200, perQuery * 2)}`);
       let taken = 0;
       for (const hit of r.hits) {
-        if (taken >= perQuery || photos.length >= target) break;
+        if (taken >= perQuery || photos.length >= goal) break;
         if (seen.has(hit.id) || blockedPhotos.has(hit.id)) continue;
         seen.add(hit.id);
         taken++;
@@ -115,8 +120,11 @@ async function main() {
     if (!dryRun) {
       mkdirSync(dir, { recursive: true });
       // 今回の一覧に無い古い写真(photo-N.jpg など)は消す。動画ファイル(video-*)は触らない。
-      const keep = new Set(photos.map((p) => `p-${p.id}.jpg`));
-      for (const f of readdirSync(dir)) if (!f.startsWith("video-") && !keep.has(f)) rmSync(join(dir, f));
+      // 追加モードでは既存の写真を消さない。通常モードでは、今回の一覧に無い古い写真を消す。
+      if (!APPEND) {
+        const keep = new Set(photos.map((p) => `p-${p.id}.jpg`));
+        for (const f of readdirSync(dir)) if (!f.startsWith("video-") && !keep.has(f)) rmSync(join(dir, f));
+      }
       for (const p of photos) {
         try {
           const buf = await getBuffer(p.large);
@@ -150,8 +158,11 @@ async function main() {
       }
     }
 
-    next[group] = { photos: photos.map((p) => ({ url: p.url, credit: p.credit, creditUrl: p.creditUrl, source: p.source })), videos };
-    console.log(`${group}: 写真${photos.length}枚 / 動画${videos.length}本`);
+    next[group] = {
+      photos: [...existing, ...photos.map((p) => ({ url: p.url, credit: p.credit, creditUrl: p.creditUrl, source: p.source }))],
+      videos,
+    };
+    console.log(`${group}: 写真${next[group].photos.length}枚(今回追加${photos.length}) / 動画${videos.length}本`);
   }
 
   if (dryRun) {

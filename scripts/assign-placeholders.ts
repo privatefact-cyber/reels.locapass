@@ -2,6 +2,7 @@
  * 店舗ごとに「別々の」イメージ写真を割り当てる(複数店舗で同じ写真を使い回さない)。
  * 結果は lib/placeholders/assignments.json に {店舗ID: {photo, video?}} で保存する。
  * すでに割り当て済みの店舗は変えない(見た目が毎回変わらないように)。新しい店舗だけ、余っている写真から割り当てる。
+ * ダミーリール用の写真(reelPhoto)も、店舗の写真とは別の写真を割り当てる(同じ店のICONタイルとSHOPタイルが同じ写真にならないように)。
  * 動画は、各グループで1店舗だけに割り当てる(同じ動画を複数店舗で使わないため)。
  *
  * 使い方(先に scripts/fetch-placeholder-media.ts と目視の選別を済ませる):
@@ -22,7 +23,7 @@ import { groupKeyOf, type PlaceholderEntry } from "../lib/placeholders/pick";
 config({ path: join(process.cwd(), ".env.local"), quiet: true });
 const dryRun = process.argv.includes("--dry-run");
 
-type Assignment = { photo: PlaceholderEntry; video?: PlaceholderEntry };
+type Assignment = { photo: PlaceholderEntry; reelPhoto?: PlaceholderEntry; video?: PlaceholderEntry };
 type Group = { photos: PlaceholderEntry[]; videos: PlaceholderEntry[] };
 
 async function main() {
@@ -68,6 +69,22 @@ async function main() {
       const photo = free.shift() ?? pool.photos[reused++ % Math.max(1, pool.photos.length)];
       if (photo) next[s.id] = { photo };
     }
+    // ダミーリール用の写真: 店舗の写真とは別の、まだ使われていない写真。既存の割り当てはそのまま残す。
+    const usedAll = new Set<string>(list.map((s) => next[s.id]?.photo.url).filter(Boolean) as string[]);
+    for (const s of list) {
+      const rp = next[s.id]?.reelPhoto;
+      if (rp && validUrls.has(rp.url) && !usedAll.has(rp.url)) usedAll.add(rp.url);
+      else if (next[s.id]) delete next[s.id].reelPhoto;
+    }
+    const freeForReels = pool.photos.filter((p) => !usedAll.has(p.url));
+    let reelShort = 0;
+    for (const s of list) {
+      if (!next[s.id] || next[s.id].reelPhoto) continue;
+      const p = freeForReels.shift();
+      if (p) next[s.id] = { ...next[s.id], reelPhoto: p };
+      else reelShort++;
+    }
+    if (reelShort > 0) console.log(`  ⚠ ${key}: リール用の写真が足りず ${reelShort} 店舗は店舗と同じ写真になる`);
     // 動画は、そのグループで最初の1店舗だけ(既に誰かが持っていればそのまま)。
     const videoOwner = list.find((s) => next[s.id]?.video) ?? list[0];
     if (videoOwner && pool.videos[0] && !next[videoOwner.id].video) next[videoOwner.id] = { ...next[videoOwner.id], video: pool.videos[0] };

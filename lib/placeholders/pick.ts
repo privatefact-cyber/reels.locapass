@@ -38,7 +38,7 @@ export function pickPlaceholder(
   seed: string,
   opts: { allowVideo?: boolean } = {},
 ): PlaceholderPick | null {
-  const assigned = (assignments as Record<string, { photo: Entry; video?: Entry }>)[seed];
+  const assigned = (assignments as Record<string, { photo: Entry; reelPhoto?: Entry; video?: Entry }>)[seed];
   if (assigned) {
     if (opts.allowVideo && assigned.video) {
       const v = assigned.video;
@@ -58,6 +58,6 @@ export function pickPlaceholder(
 }
 
 /** 店舗に割り当て済みの写真/動画(ダミーリール用)。無ければnull。 */
-export function assignedPlaceholder(shopId: string): { photo: Entry; video?: Entry } | null {
-  return (assignments as Record<string, { photo: Entry; video?: Entry }>)[shopId] ?? null;
+export function assignedPlaceholder(shopId: string): { photo: Entry; reelPhoto?: Entry; video?: Entry } | null {
+  return (assignments as Record<string, { photo: Entry; reelPhoto?: Entry; video?: Entry }>)[shopId] ?? null;
 }

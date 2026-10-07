@@ -101,7 +101,9 @@ async function main() {
       skipped++;
       continue;
     }
-    const media = assigned.video ?? assigned.photo;
+    // ダミーリールの写真は、店舗タイルとは別の写真(reelPhoto)。無ければ店舗の写真。
+    const reelPhoto = assigned.reelPhoto ?? assigned.photo;
+    const media = assigned.video ?? reelPhoto;
     if (dryRun) {
       console.log(`- ${shop.name}: ${assigned.video ? "動画" : "写真"} ${media.credit}`);
       continue;
@@ -110,8 +112,8 @@ async function main() {
       portal_id: shop.portal_id,
       shop_id: shop.id,
       video_url: assigned.video ? abs(assigned.video.url) : null,
-      poster_url: abs(assigned.video ? (assigned.video.poster ?? assigned.photo.url) : assigned.photo.url),
-      images: assigned.video ? [] : [{ url: abs(assigned.photo.url) }],
+      poster_url: abs(assigned.video ? (assigned.video.poster ?? reelPhoto.url) : reelPhoto.url),
+      images: assigned.video ? [] : [{ url: abs(reelPhoto.url) }],
       caption: `撮影: ${media.credit}`,
       // 投稿者名は空(店名で表示される)。ダミーかどうかは is_placeholder で見分け、キャプションには撮影者名だけを入れる。
       author_name: null,
