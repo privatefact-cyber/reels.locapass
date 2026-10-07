@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
+import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadVideoToR2, uploadPosterToR2 } from "@/lib/storage/uploadToR2";
@@ -130,7 +131,9 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
     }
 
     // 動画なら、裏で字幕(文字起こし+英語・中国語)の生成を頼む。
+    // 動画は字幕の後ろで、画像だけの投稿はここで、裏でタグ付け(AI)を頼む。
     if (isVideo) requestReelCaptions(insertedReel?.id);
+    else requestReelTags(insertedReel?.id);
 
     setFile(null);
     setPreview(null);

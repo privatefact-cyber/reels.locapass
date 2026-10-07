@@ -15,7 +15,9 @@ import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
 import { transcodeReelVideo } from "@/lib/reels/transcodeReelVideo";
 import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
+import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
+import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
@@ -420,7 +422,9 @@ export function StaffDashboardClient({
     }
 
     // 動画なら、裏で字幕(文字起こし+英語・中国語)の生成を頼む。
+    // 動画は字幕の後ろで、画像だけの投稿はここで、裏でタグ付け(AI)を頼む。
     if (isVideo) requestReelCaptions(inserted.id);
+    else requestReelTags(inserted.id);
 
     setReels((prev) => [
       {
@@ -953,6 +957,10 @@ export function StaffDashboardClient({
                       className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
                     />
                   )}
+                  <ReelTagEditButton
+                    reelId={r.id}
+                    className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
+                  />
                 </div>
                 )}
                 <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">

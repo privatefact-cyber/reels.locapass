@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { CalendarSearch, ChevronLeft, ChevronRight, Film, LayoutGrid, CalendarDays, Play, X } from "lucide-react";
 import { PageDots } from "@/components/shop/PageDots";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { tagLabel } from "@/lib/reels/tags/vocabulary";
 
 export type ArchiveItem = {
   id: string;
@@ -16,6 +17,8 @@ export type ArchiveItem = {
   videoUrl: string | null;
   isVideo: boolean;
   author: string;
+  /** AIが付けたタグのID(辞書: lib/reels/tags/vocabulary.ts)。未処理なら空。 */
+  tags: string[];
 };
 
 const JST = "Asia/Tokyo";
@@ -98,6 +101,7 @@ export function ShopReelArchive({
   const loc = intlLocale(locale);
   const [view, setView] = useState<"timeline" | "calendar">("timeline");
   const [author, setAuthor] = useState<string | null>(null);
+  const [tag, setTag] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -121,7 +125,16 @@ export function ShopReelArchive({
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name);
   }, [items]);
 
-  const filtered = useMemo(() => (author ? items.filter((i) => i.author === author) : items), [items, author]);
+  const byAuthor = useMemo(() => (author ? items.filter((i) => i.author === author) : items), [items, author]);
+
+  // 絞り込みチップ: 実際に付いているタグだけを、多い順に出す(件数は投稿者で絞った範囲で数える)。
+  const tagCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const it of byAuthor) for (const id of it.tags) counts.set(id, (counts.get(id) ?? 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [byAuthor]);
+
+  const filtered = useMemo(() => (tag ? byAuthor.filter((i) => i.tags.includes(tag)) : byAuthor), [byAuthor, tag]);
 
   const { months, byMonth, byDay } = useMemo(() => {
     const byMonth = new Map<string, ArchiveItem[]>();
@@ -201,8 +214,9 @@ export function ShopReelArchive({
           {t.shop.archiveTitle}
         </h1>
         <p className="mt-1 text-xs text-muted">
-          {t.shop.archiveCount(items.length)}
+          {t.shop.archiveCount(filtered.length)}
           {author && <span dir="auto"> ・ {author}</span>}
+          {tag && <span> ・ {tagLabel(locale, tag)}</span>}
         </p>
       </div>
 
@@ -229,6 +243,30 @@ export function ShopReelArchive({
           </button>
         ))}
       </div>
+
+      {/* タグ絞り込み(AIが投稿時に付けた「料理」「店内」など)。付いているタグがある店舗だけ出る。 */}
+      {(tagCounts.length > 0 || tag) && (
+        <div className="no-scrollbar -mx-1 mt-4 flex gap-2 overflow-x-auto px-4 pb-1" data-no-swipe>
+          {[null, ...tagCounts.map(([id]) => id), ...(tag && !tagCounts.some(([id]) => id === tag) ? [tag] : [])].map((id) => (
+            <button
+              key={id ?? "__all"}
+              type="button"
+              onClick={() => {
+                setTag(id);
+                setSelectedDay(null);
+              }}
+              className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs transition active:scale-95 ${
+                tag === id
+                  ? "bg-gradient-to-r from-cta-light to-cta font-bold text-on-cta shadow-[0_0_12px_rgb(var(--cta-500)/0.35)]"
+                  : "border border-line/30 text-tone-300 hover:text-hl-300"
+              }`}
+            >
+              {id ? `#${tagLabel(locale, id)}` : t.shop.archiveAll}
+              {id && <span className="text-[10px] opacity-60">{tagCounts.find(([x]) => x === id)?.[1] ?? 0}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="mt-5">
         {filtered.length === 0 ? (

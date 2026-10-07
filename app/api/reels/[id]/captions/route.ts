@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import { ALLOWED_VIDEO_PREFIX, runCaptionPipeline } from "@/lib/reels/captions/pipeline";
+import { claimAndRunTags } from "@/lib/reels/tags/pipeline";
 
 // 文字起こし+翻訳は1本10〜20秒ほど。レスポンスを返した後に裏で走らせる(after)。
 export const maxDuration = 60;
@@ -155,6 +156,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       poster_url: reel.poster_url,
       shopName: (shop as { name?: string } | null)?.name ?? null,
     });
+    // 字幕(文字起こし)ができた後にタグ付けする。文字起こしを手がかりにできるため。声なし・字幕失敗でも画像+キャプションで付ける。
+    if (process.env.GEMINI_API_KEY) await claimAndRunTags(db, id);
   });
 
   return NextResponse.json({ status: "pending" }, { status: 202 });

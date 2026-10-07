@@ -1688,6 +1688,35 @@ export type Database = {
         }
         Relationships: []
       }
+      locapass_reel_captions: {
+        Row: {
+          created_at: string
+          cues: Json
+          lang: string
+          reel_id: string
+        }
+        Insert: {
+          created_at?: string
+          cues: Json
+          lang: string
+          reel_id: string
+        }
+        Update: {
+          created_at?: string
+          cues?: Json
+          lang?: string
+          reel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locapass_reel_captions_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "locapass_reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locapass_reel_comments: {
         Row: {
           author_type: string
@@ -1800,7 +1829,10 @@ export type Database = {
           author_name: string | null
           author_url: string | null
           caption: string | null
+          caption_avoid_zone: string
           caption_en: string | null
+          caption_status: string | null
+          captions_generated_at: string | null
           cast_id: string | null
           created_by: string | null
           expires_at: string | null
@@ -1818,6 +1850,9 @@ export type Database = {
           reel_type: string
           shop_id: string | null
           status: string
+          tags: string[]
+          tags_generated_at: string | null
+          tags_status: string | null
           title: string | null
           title_en: string | null
           updated_at: string
@@ -1832,7 +1867,10 @@ export type Database = {
           author_name?: string | null
           author_url?: string | null
           caption?: string | null
+          caption_avoid_zone?: string
           caption_en?: string | null
+          caption_status?: string | null
+          captions_generated_at?: string | null
           cast_id?: string | null
           created_by?: string | null
           expires_at?: string | null
@@ -1850,6 +1888,9 @@ export type Database = {
           reel_type?: string
           shop_id?: string | null
           status?: string
+          tags?: string[]
+          tags_generated_at?: string | null
+          tags_status?: string | null
           title?: string | null
           title_en?: string | null
           updated_at?: string
@@ -1864,7 +1905,10 @@ export type Database = {
           author_name?: string | null
           author_url?: string | null
           caption?: string | null
+          caption_avoid_zone?: string
           caption_en?: string | null
+          caption_status?: string | null
+          captions_generated_at?: string | null
           cast_id?: string | null
           created_by?: string | null
           expires_at?: string | null
@@ -1882,6 +1926,9 @@ export type Database = {
           reel_type?: string
           shop_id?: string | null
           status?: string
+          tags?: string[]
+          tags_generated_at?: string | null
+          tags_status?: string | null
           title?: string | null
           title_en?: string | null
           updated_at?: string
@@ -1969,25 +2016,58 @@ export type Database = {
           },
         ]
       }
+      locapass_shop_admin_recovery_attempts: {
+        Row: {
+          attempt_key: string
+          attempted_at: string
+          id: number
+          succeeded: boolean
+        }
+        Insert: {
+          attempt_key: string
+          attempted_at?: string
+          id?: never
+          succeeded: boolean
+        }
+        Update: {
+          attempt_key?: string
+          attempted_at?: string
+          id?: never
+          succeeded?: boolean
+        }
+        Relationships: []
+      }
       locapass_shop_admins: {
         Row: {
+          birth_date: string | null
           created_at: string
           id: string
           login_email: string | null
+          password_set_at: string | null
+          phone: string | null
+          pin_hash: string | null
           shop_id: string
           user_id: string
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           login_email?: string | null
+          password_set_at?: string | null
+          phone?: string | null
+          pin_hash?: string | null
           shop_id: string
           user_id: string
         }
         Update: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           login_email?: string | null
+          password_set_at?: string | null
+          phone?: string | null
+          pin_hash?: string | null
           shop_id?: string
           user_id?: string
         }
@@ -3160,6 +3240,78 @@ export type Database = {
         }
         Relationships: []
       }
+      reel_caption_jobs: {
+        Row: {
+          avoid_zone: string
+          generated_at: string
+          reel_id: string
+          status: string
+        }
+        Insert: {
+          avoid_zone?: string
+          generated_at?: string
+          reel_id: string
+          status: string
+        }
+        Update: {
+          avoid_zone?: string
+          generated_at?: string
+          reel_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reel_caption_jobs_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: true
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
+          },
+          {
+            foreignKeyName: "reel_caption_jobs_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: true
+            referencedRelation: "reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reel_captions: {
+        Row: {
+          created_at: string
+          cues: Json
+          lang: string
+          reel_id: string
+        }
+        Insert: {
+          created_at?: string
+          cues: Json
+          lang: string
+          reel_id: string
+        }
+        Update: {
+          created_at?: string
+          cues?: Json
+          lang?: string
+          reel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reel_captions_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
+          },
+          {
+            foreignKeyName: "reel_captions_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reel_comments: {
         Row: {
           author_type: string
@@ -3276,6 +3428,42 @@ export type Database = {
             foreignKeyName: "reel_likes_reel_id_fkey"
             columns: ["reel_id"]
             isOneToOne: false
+            referencedRelation: "reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reel_tags: {
+        Row: {
+          generated_at: string
+          reel_id: string
+          status: string
+          tags: string[]
+        }
+        Insert: {
+          generated_at?: string
+          reel_id: string
+          status: string
+          tags?: string[]
+        }
+        Update: {
+          generated_at?: string
+          reel_id?: string
+          status?: string
+          tags?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reel_tags_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: true
+            referencedRelation: "cast_ranking_scores"
+            referencedColumns: ["latest_reel_id"]
+          },
+          {
+            foreignKeyName: "reel_tags_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: true
             referencedRelation: "reels"
             referencedColumns: ["id"]
           },
@@ -3609,6 +3797,27 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_owner_recovery_attempts: {
+        Row: {
+          attempt_key: string
+          attempted_at: string
+          id: number
+          succeeded: boolean
+        }
+        Insert: {
+          attempt_key: string
+          attempted_at?: string
+          id?: never
+          succeeded: boolean
+        }
+        Update: {
+          attempt_key?: string
+          attempted_at?: string
+          id?: never
+          succeeded?: boolean
+        }
+        Relationships: []
+      }
       shop_price_items: {
         Row: {
           created_at: string
@@ -3652,25 +3861,37 @@ export type Database = {
       }
       shop_staff: {
         Row: {
+          birth_date: string | null
           created_at: string
           id: string
           login_email: string | null
+          password_set_at: string | null
+          phone: string | null
+          pin_hash: string | null
           role: string
           shop_id: string
           user_id: string
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           login_email?: string | null
+          password_set_at?: string | null
+          phone?: string | null
+          pin_hash?: string | null
           role?: string
           shop_id: string
           user_id: string
         }
         Update: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           login_email?: string | null
+          password_set_at?: string | null
+          phone?: string | null
+          pin_hash?: string | null
           role?: string
           shop_id?: string
           user_id?: string
@@ -4227,15 +4448,15 @@ export type Database = {
         Row: {
           age: number | null
           avatar_url: string | null
-          cast_code: string | null
-          created_at: string | null
-          id: string | null
+          cast_code: string
+          created_at: string
+          id: string
           issue_no: number | null
-          name: string | null
+          name: string
           pr_text: string | null
-          shop_id: string | null
+          shop_id: string
           sizes: Json | null
-          updated_at: string | null
+          updated_at: string
         }
         Relationships: [
           {
@@ -4643,6 +4864,7 @@ export type Database = {
         }[]
       }
       locapass_my_roles: { Args: never; Returns: Json }
+      locapass_my_shop_admin_login_email: { Args: never; Returns: string }
       locapass_record_contact_tap: {
         Args: { p_kind: string; p_shop_id: string }
         Returns: undefined
@@ -4715,6 +4937,10 @@ export type Database = {
         Args: { p_staff_member_id: string }
         Returns: string
       }
+      locapass_shop_admin_needs_recovery_setup: {
+        Args: never
+        Returns: boolean
+      }
       locapass_slugify: { Args: { input: string }; Returns: string }
       locapass_soft_delete_cast_member: {
         Args: { p_cast_id: string }
@@ -4733,6 +4959,7 @@ export type Database = {
         Returns: undefined
       }
       luxela_slugify: { Args: { input: string }; Returns: string }
+      my_shop_staff_login_email: { Args: never; Returns: string }
       needs_password_setup: { Args: never; Returns: boolean }
       record_cast_activity: {
         Args: {
@@ -4754,8 +4981,22 @@ export type Database = {
           one_time_password: string
         }[]
       }
+      recover_locapass_shop_admin_login: {
+        Args: { p_birth_date: string; p_phone: string; p_pin: string }
+        Returns: {
+          login_email: string
+          one_time_password: string
+        }[]
+      }
       recover_shop_login: {
         Args: { p_phone: string; p_shop_code: string }
+        Returns: {
+          login_email: string
+          one_time_password: string
+        }[]
+      }
+      recover_shop_owner_login: {
+        Args: { p_birth_date: string; p_phone: string; p_pin: string }
         Returns: {
           login_email: string
           one_time_password: string
@@ -4777,6 +5018,7 @@ export type Database = {
           status: string
         }[]
       }
+      reel_caption_can_manage: { Args: { p_reel_id: string }; Returns: boolean }
       regenerate_cast_login_token: {
         Args: { p_cast_id: string }
         Returns: string
@@ -4791,7 +5033,15 @@ export type Database = {
         Returns: undefined
       }
       set_cast_login_pin: { Args: { p_cast_id: string }; Returns: string }
+      set_locapass_shop_admin_recovery_info: {
+        Args: { p_birth_date: string; p_phone: string; p_pin: string }
+        Returns: undefined
+      }
       set_own_password: { Args: { p_password: string }; Returns: undefined }
+      set_shop_owner_recovery_info: {
+        Args: { p_birth_date: string; p_phone: string; p_pin: string }
+        Returns: undefined
+      }
       set_staff_login_pin: {
         Args: { p_staff_member_id: string }
         Returns: string
@@ -4804,6 +5054,7 @@ export type Database = {
           taps_7d: number
         }[]
       }
+      shop_owner_needs_recovery_setup: { Args: never; Returns: boolean }
       soft_delete_cast_member: {
         Args: { p_cast_id: string }
         Returns: undefined
