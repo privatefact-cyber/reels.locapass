@@ -5,7 +5,7 @@ import { pickPlaceholder } from "@/lib/placeholders/pick";
 
 /**
  * 店舗の写真/動画が無い・読み込めないときに、親要素いっぱい(absolute inset-0)に敷くダミー。
- * Pexelsのイメージ写真/動画があればそれを、無ければ店名の頭文字入りのグラデーションを出す(真っ黒にしない)。
+ * Pixabayのイメージ写真/動画があればそれを、無ければ店名の頭文字入りのグラデーションを出す(真っ黒にしない)。
  * 店舗が自前の写真を設定すれば使われなくなる。イメージであることは小さく明記する。
  */
 export function ShopMediaFallback({
@@ -44,7 +44,7 @@ export function ShopMediaFallback({
           rel="noopener noreferrer"
           className="absolute right-3 top-3 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] leading-none text-main/80 backdrop-blur-sm hover:text-main sm:right-6 sm:top-6"
         >
-          イメージ ・ {pick.credit} / Pexels
+          イメージ ・ {pick.credit} / {pick.source}
         </a>
       )}
     </>

@@ -1,16 +1,16 @@
 /**
  * 店舗の写真が無い/壊れているときに出す「イメージ写真・動画」を選ぶ。
- * 中身は scripts/fetch-placeholder-media.ts がPexels(無料)から集めた manifest.json。
+ * 中身は scripts/fetch-placeholder-media.ts がPixabay(無料)から集めた manifest.json(ファイルは public/placeholders/)。
  * あくまで見た目を整えるためのダミー。店舗が自分の写真/動画を入れたら、そちらが優先される(これは使われない)。
  */
 import manifest from "./manifest.json";
 import { groupOfCategory } from "@/lib/reels/tags/vocabulary";
 
 export type PlaceholderPick =
-  | { kind: "photo"; url: string; credit: string; creditUrl: string }
-  | { kind: "video"; url: string; poster: string | null; credit: string; creditUrl: string };
+  | { kind: "photo"; url: string; credit: string; creditUrl: string; source: string }
+  | { kind: "video"; url: string; poster: string | null; credit: string; creditUrl: string; source: string };
 
-type Entry = { url: string; poster?: string | null; credit: string; creditUrl: string };
+type Entry = { url: string; poster?: string | null; credit: string; creditUrl: string; source?: string };
 type Group = { photos: Entry[]; videos: Entry[] };
 
 function hash(seed: string): number {
@@ -38,13 +38,13 @@ export function pickPlaceholder(
     const videos = group.videos.length ? group.videos : fallbackGroup.videos;
     if (videos.length) {
       const v = videos[h % videos.length];
-      return { kind: "video", url: v.url, poster: v.poster ?? null, credit: v.credit, creditUrl: v.creditUrl };
+      return { kind: "video", url: v.url, poster: v.poster ?? null, credit: v.credit, creditUrl: v.creditUrl, source: v.source ?? "Pixabay" };
     }
   }
   const photos = group.photos.length ? group.photos : fallbackGroup.photos;
   if (photos.length) {
     const p = photos[h % photos.length];
-    return { kind: "photo", url: p.url, credit: p.credit, creditUrl: p.creditUrl };
+    return { kind: "photo", url: p.url, credit: p.credit, creditUrl: p.creditUrl, source: p.source ?? "Pixabay" };
   }
   return null;
 }

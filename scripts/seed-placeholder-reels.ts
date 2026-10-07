@@ -1,9 +1,10 @@
 /**
- * リールが1本も無い店舗に、Pexelsの無料動画を「イメージ映像」のダミーリールとして入れる(フィードの見た目を整える用)。
+ * リールが1本も無い店舗に、Pixabayの無料動画を「イメージ映像」のダミーリールとして入れる(フィードの見た目を整える用)。
  * 本物の投稿が入ったら --remove でまとめて消せる。ダミーは is_placeholder=true で見分け、キャプションにも
  * 「【イメージ映像】」と明記する。閲覧はインサイトに数えない。
  *
- * 使い方(先に scripts/fetch-placeholder-media.ts で manifest.json に動画を集めておく):
+ * 使い方(先に scripts/fetch-placeholder-media.ts で動画を集め、public/placeholders/ をコミット・デプロイしておく。
+ *       動画ファイルが本番に無いうちに入れると、再生できないリールになる):
  *   npx tsx scripts/seed-placeholder-reels.ts --dry-run             # 対象の店舗を表示するだけ
  *   npx tsx scripts/seed-placeholder-reels.ts --portal mito         # 指定ポータルの店舗だけ
  *   npx tsx scripts/seed-placeholder-reels.ts                       # リールが無い全店舗(上限 --limit 既定100)
@@ -28,6 +29,9 @@ const has = (f: string) => process.argv.includes(f);
 const dryRun = has("--dry-run");
 const onlyPortal = arg("--portal");
 const limit = Number(arg("--limit") ?? 100);
+// manifestのURLは /placeholders/... の相対パス(public/ に置いたファイル)。DBには本番ドメインの絶対URLで保存する。
+const BASE_URL = (arg("--base-url") ?? "https://locapass.net").replace(/\/$/, "");
+const abs = (u: string | null) => (u && u.startsWith("/") ? `${BASE_URL}${u}` : u);
 
 async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -96,15 +100,15 @@ async function main() {
       continue;
     }
     if (dryRun) {
-      console.log(`- ${shop.name}: ${pick.credit} / Pexels`);
+      console.log(`- ${shop.name}: ${pick.credit} / ${pick.source}`);
       continue;
     }
     const { error: insertError } = await db.from("locapass_reels").insert({
       portal_id: shop.portal_id,
       shop_id: shop.id,
-      video_url: pick.url,
-      poster_url: pick.poster,
-      caption: `【イメージ映像】${shop.name}の雰囲気イメージです(ダミー映像・撮影: ${pick.credit} / Pexels)`,
+      video_url: abs(pick.url),
+      poster_url: abs(pick.poster),
+      caption: `【イメージ映像】${shop.name}の雰囲気イメージです(ダミー映像・撮影: ${pick.credit} / ${pick.source})`,
       author_name: "イメージ映像",
       reel_type: "permanent",
       status: "publish",
