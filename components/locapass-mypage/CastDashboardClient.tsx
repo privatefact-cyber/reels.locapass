@@ -15,7 +15,7 @@ import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
 import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
-import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges } from "@/components/reels/ReelOrganizer";
+import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges, ReelRatingBadge } from "@/components/reels/ReelOrganizer";
 import { ReelInsights } from "@/components/reels/ReelInsights";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
@@ -797,6 +797,7 @@ export function CastDashboardClient({
                 ♥ {r.likesCount}
               </span>
               <ReelTagBadges id={r.id} className="pointer-events-none absolute bottom-6 left-1 flex max-w-[90%] flex-wrap gap-0.5" />
+              <ReelRatingBadge id={r.id} />
             </Link>
             </ReelOrganizerItem>
           ))}

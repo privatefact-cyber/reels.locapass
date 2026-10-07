@@ -13,6 +13,9 @@ import { TAG_DEFS } from "@/lib/reels/tags/vocabulary";
 
 export type OrganizerItem = { id: string; createdAt: string; tags: string[] };
 
+/** 自分の他の動画と比べた見られ方(インサイトが計算して渡す)。hot=好調 / good=いい感じ / seed=これから。 */
+export type Rating = { tier: "hot" | "good" | "seed"; ratio: number };
+
 const UNTAGGED = "__untagged";
 const JST = "Asia/Tokyo";
 const dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: JST, year: "numeric", month: "2-digit", day: "2-digit" });
@@ -26,6 +29,8 @@ type Ctx = {
   items: OrganizerItem[];
   tagsOf: (id: string) => string[];
   setTags: (id: string, tags: string[]) => void;
+  ratings: Record<string, Rating>;
+  setRatings: (r: Record<string, Rating>) => void;
   isVisible: (id: string) => boolean;
   tag: string | null;
   setTag: (t: string | null) => void;
@@ -44,6 +49,7 @@ export function ReelOrganizerProvider({ items, children }: { items: OrganizerIte
   const [overrides, setOverrides] = useState<Record<string, string[]>>({});
   const [tag, setTag] = useState<string | null>(null);
   const [month, setMonth] = useState<string | null>(null);
+  const [ratings, setRatings] = useState<Record<string, Rating>>({});
 
   const value = useMemo<Ctx>(() => {
     const byId = new Map(items.map((i) => [i.id, i]));
@@ -60,13 +66,15 @@ export function ReelOrganizerProvider({ items, children }: { items: OrganizerIte
       items,
       tagsOf,
       setTags: (id, tags) => setOverrides((prev) => ({ ...prev, [id]: tags })),
+      ratings,
+      setRatings,
       isVisible,
       tag,
       setTag,
       month,
       setMonth,
     };
-  }, [items, overrides, tag, month]);
+  }, [items, overrides, tag, month, ratings]);
 
   return <OrganizerContext.Provider value={value}>{children}</OrganizerContext.Provider>;
 }
@@ -160,5 +168,27 @@ export function ReelOrganizerBar({ variant = "dark" }: { variant?: "dark" | "lig
         )}
       </div>
     </div>
+  );
+}
+
+const RATING_UI: Record<Rating["tier"], { label: string; cls: string }> = {
+  hot: { label: "🔥 好調", cls: "bg-orange-500/90 text-white" },
+  good: { label: "👍 いい感じ", cls: "bg-emerald-600/90 text-white" },
+  seed: { label: "🌱 これから", cls: "bg-black/70 text-main" },
+};
+
+/** タイルの上に重ねる評価バッジ(タップは下のリンクに通す)。評価が無い動画(データ不足・投稿直後)には出さない。 */
+export function ReelRatingBadge({ id, className }: { id: string; className?: string }) {
+  const ctx = useContext(OrganizerContext);
+  const rating = ctx?.ratings[id];
+  if (!rating) return null;
+  const ui = RATING_UI[rating.tier];
+  return (
+    <span
+      className={`pointer-events-none ${className ?? "absolute bottom-1 right-1"} rounded px-1.5 py-0.5 text-[10px] font-semibold ${ui.cls}`}
+      title={rating.tier === "seed" ? "あなたの他の動画より、見られ方がこれから" : `あなたの動画の平均の約${Math.round(rating.ratio * 10) / 10}倍見られています`}
+    >
+      {ui.label}
+    </span>
   );
 }

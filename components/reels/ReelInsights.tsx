@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useOptionalReelOrganizer } from "@/components/reels/ReelOrganizer";
+import { useOptionalReelOrganizer, type Rating } from "@/components/reels/ReelOrganizer";
 import { TAG_DEFS } from "@/lib/reels/tags/vocabulary";
 
 /**
@@ -48,6 +48,7 @@ export function ReelInsights({
 }) {
   const organizer = useOptionalReelOrganizer();
   const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [stats, setStats] = useState<Record<string, Stat>>({});
@@ -67,7 +68,7 @@ export function ReelInsights({
   };
 
   useEffect(() => {
-    if (!open || loaded) return;
+    if (loaded) return;
     let cancelled = false;
     const supabase = createClient();
     (async () => {
@@ -103,7 +104,7 @@ export function ReelInsights({
     return () => {
       cancelled = true;
     };
-  }, [open, loaded, reels, shopId, castId]);
+  }, [loaded, reels, shopId, castId]);
 
   const view = useMemo(() => {
     const tagsOf = (r: InsightReel) => organizer?.tagsOf(r.id) ?? r.tags;
@@ -142,32 +143,75 @@ export function ReelInsights({
     const untagged = rows.filter((r) => r.tags.length === 0).length;
     const countByTag = new Map([...tagMap.entries()].map(([t, l]) => [t, l.length]));
 
-    // 気づきは「数字から機械的に言えること」だけを、断定を避けて出す(AIの推測は入れない)。
-    const hints: string[] = [];
-    if (totalViewers < 20) {
-      hints.push("まだ閲覧データが少ないため、下の傾向は目安です。数日〜数週間たまってから見ると、はっきりしてきます。");
+    // 動画ごとの評価: 自分の他の動画との比較(1日あたりの閲覧)。データが少ないうちは出さない。
+    const ratings: Record<string, Rating> = {};
+    if (totalViewers >= 10 && rows.length >= 2 && avgPerDay > 0) {
+      for (const r of rows) {
+        const ratio = r.perDay / avgPerDay;
+        if (r.viewers >= 3 && ratio >= 1.5) ratings[r.id] = { tier: "hot", ratio };
+        else if (r.viewers >= 2 && ratio >= 1) ratings[r.id] = { tier: "good", ratio };
+        else if (r.viewers > 0 || Date.now() - new Date(r.createdAt).getTime() >= 3 * DAY_MS) ratings[r.id] = { tier: "seed", ratio };
+      }
+    }
+
+    // ひとことアドバイス: 数字から機械的に言えることだけを、断定を避けて出す(AIの推測は入れない)。
+    const advice: string[] = [];
+    if (totalViewers < 10) {
+      advice.push("まだ見てくれた人が少ないので、見られ方のアドバイスはもう少し先です。まずは投稿を続けてみましょう!");
     } else {
       const best = byTag.find((t) => t.n >= MIN_REELS_PER_TAG && avgPerDay > 0 && t.avgPerDay >= avgPerDay * 1.3);
       if (best) {
-        hints.push(
-          `「#${LABEL[best.tag] ?? best.tag}」の動画は、全体の平均より約${fix1(best.avgPerDay / avgPerDay)}倍見られています(${best.n}本の平均)。`,
+        advice.push(
+          `「#${LABEL[best.tag] ?? best.tag}」の動画がよく見られています(平均の約${fix1(best.avgPerDay / avgPerDay)}倍)。次も同じ系統を作ってみましょう。`,
         );
+      }
+      const engagedRate = totalViewers > 0 ? totalEngaged / totalViewers : 0;
+      if (totalViewers >= 20 && engagedRate < 0.3) {
+        advice.push("最初の数秒で離れる人が多めです。冒頭に一番見せたいシーンを置くと、最後まで見てもらいやすくなります。");
+      } else if (totalViewers >= 20 && engagedRate >= 0.6) {
+        advice.push(`見た人の${Math.round(engagedRate * 100)}%がしっかり見てくれています。この調子で続けましょう。`);
       }
     }
     const wanted = [...searches]
       .sort((a, b) => b.searches - a.searches)
       .find((s) => s.searches >= 3 && (countByTag.get(s.tag) ?? 0) <= 2);
     if (wanted) {
-      hints.push(
+      advice.push(
         `訪問者は「#${LABEL[wanted.tag] ?? wanted.tag}」で探していますが、その動画は${countByTag.get(wanted.tag) ?? 0}本です。足すと見つけてもらいやすくなります。`,
       );
     }
+    const latest = rows.reduce((m, r) => Math.max(m, new Date(r.createdAt).getTime()), 0);
+    const idleDays = latest ? Math.floor((Date.now() - latest) / DAY_MS) : 0;
+    if (idleDays >= 14) {
+      advice.push(`最後の投稿から${idleDays}日たっています。新しい動画があると、見つけてもらいやすくなります。`);
+    }
     if (rows.length >= 5 && untagged / rows.length >= 0.3) {
-      hints.push(`タグが付いていない動画が${untagged}本あります。タグを付けると、訪問者が絞り込みで見つけやすくなります。`);
+      advice.push(`タグが付いていない動画が${untagged}本あります。タグを付けると、訪問者が絞り込みで見つけやすくなります。`);
     }
 
-    return { rows, totalViewers, totalEngaged, totalLikes, byTag, top, hints, countByTag };
+    // 画面を開かなくても見える「後押し」の一言。難しい数字は出さず、次の1本につながる言葉にする。
+    const monthFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit" });
+    const thisMonthKey = monthFmt.format(new Date());
+    const thisMonth = rows.filter((r) => monthFmt.format(new Date(r.createdAt)) === thisMonthKey).length;
+    const hotRow = rows.filter((r) => ratings[r.id]?.tier === "hot").sort((a, b) => ratings[b.id].ratio - ratings[a.id].ratio)[0];
+    const nudge =
+      idleDays >= 14
+        ? "しばらくお休み中ですね。短い動画1本からでも大丈夫です。気軽にどうぞ!"
+        : hotRow
+          ? `🔥「${hotRow.label}」が好調です!次も同じ感じで撮ってみましょう。`
+          : thisMonth >= 1
+            ? `今月は${thisMonth}本投稿しました。いい調子です!次の1本もどうぞ。`
+            : "今月はまだ投稿がありません。まずは1本、スマホで気軽に撮ってみましょう!";
+
+    return { nudge, rows, totalViewers, totalEngaged, totalLikes, byTag, top, advice, ratings, avgPerDay, countByTag, thisMonth };
   }, [reels, stats, searches, startedAt, organizer]);
+
+  // 動画ごとの評価を、一覧のタイル(ReelRatingBadge)へ渡す。内容が変わったときだけ更新する(無限ループ防止)。
+  const ratingsKey = JSON.stringify(view.ratings);
+  useEffect(() => {
+    organizer?.setRatings(JSON.parse(ratingsKey) as Record<string, Rating>);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ratingsKey]);
 
   if (reels.length === 0) return null;
 
@@ -181,11 +225,13 @@ export function ReelInsights({
       >
         <span className="flex items-center gap-2">
           <BarChart3 size={16} />
-          インサイト
+          あなたの動画のようす
           <span className={`text-[11px] font-normal ${ui.sub}`}>(あなただけに表示)</span>
         </span>
         <ChevronDown size={16} className={`transition ${open ? "rotate-180" : ""}`} />
       </button>
+
+      {!open && <p className={`-mt-1 px-4 pb-3 text-sm ${ui.body}`}>{view.nudge}</p>}
 
       {open && (
         <div className={`space-y-4 border-t px-4 pb-4 pt-3 text-xs ${ui.line} ${ui.body}`}>
@@ -195,6 +241,33 @@ export function ReelInsights({
             <p>集計中…</p>
           ) : (
             <>
+              <p className={`text-sm ${ui.strong}`}>{view.nudge}</p>
+
+              {view.advice.length > 0 && (
+                <div>
+                  <p className={`mb-1.5 font-semibold ${ui.strong}`}>ひとことアドバイス</p>
+                  <ul className="space-y-1.5">
+                    {view.advice.slice(0, 3).map((h) => (
+                      <li key={h} className={`rounded-lg px-3 py-2 ${ui.hint}`}>
+                        💡 {h}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setDetail((v) => !v)}
+                aria-expanded={detail}
+                className={`flex items-center gap-1 text-[11px] underline ${ui.sub}`}
+              >
+                くわしい数字を{detail ? "閉じる" : "見る"}
+                <ChevronDown size={12} className={`transition ${detail ? "rotate-180" : ""}`} />
+              </button>
+
+              {detail && (
+                <div className="space-y-4">
               <p className={ui.sub}>
                 {startedAt
                   ? `計測は${new Date(startedAt).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}から。それ以前の閲覧は含まれません。`
@@ -205,27 +278,17 @@ export function ReelInsights({
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className={`rounded-lg p-2 ${ui.cell}`}>
                   <p className={`text-lg font-bold ${ui.strong}`}>{view.totalViewers}</p>
-                  <p className={ui.sub}>延べ閲覧者</p>
+                  <p className={ui.sub}>見てくれた人</p>
                 </div>
                 <div className={`rounded-lg p-2 ${ui.cell}`}>
                   <p className={`text-lg font-bold ${ui.strong}`}>{pct(view.totalEngaged, view.totalViewers)}</p>
-                  <p className={ui.sub}>しっかり見た率</p>
+                  <p className={ui.sub}>しっかり見た人の割合</p>
                 </div>
                 <div className={`rounded-lg p-2 ${ui.cell}`}>
                   <p className={`text-lg font-bold ${ui.strong}`}>{view.totalLikes}</p>
                   <p className={ui.sub}>いいね(全期間)</p>
                 </div>
               </div>
-
-              {view.hints.length > 0 && (
-                <ul className="space-y-1.5">
-                  {view.hints.map((h) => (
-                    <li key={h} className={`rounded-lg px-3 py-2 ${ui.hint}`}>
-                      {h}
-                    </li>
-                  ))}
-                </ul>
-              )}
 
               {view.byTag.length > 0 && (
                 <div>
@@ -274,6 +337,7 @@ export function ReelInsights({
                         </span>
                         <span className={`shrink-0 ${ui.sub}`}>
                           閲覧 {r.viewers} ・ しっかり {pct(r.engaged, r.viewers)}
+                          {view.ratings[r.id] && view.avgPerDay > 0 ? ` ・ 平均の${fix1(view.ratings[r.id].ratio)}倍` : ""}
                         </span>
                       </li>
                     ))}
@@ -294,6 +358,8 @@ export function ReelInsights({
                         </span>
                       ))}
                   </div>
+                </div>
+              )}
                 </div>
               )}
             </>
