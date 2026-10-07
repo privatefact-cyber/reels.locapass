@@ -34,6 +34,15 @@ const labelOf = labels as Record<string, string>;
 
 /** 飲食以外の店の種類 → 写真グループ。 */
 const GROUP_OF_TYPE: Partial<Record<ShopType, string>> = { stay: "stay", tour: "tour", shopping: "shop", pet: "pet", hair: "beauty" };
+/**
+ * 店の種類によっては、分類(ラベル)だけでは粗いので、特に合う写真(PixabayのID)を先に使う。
+ * 例: 焼肉店には肉の写真、美容室には美容室・理容室の写真(マッサージやネイルではなく)。
+ */
+const PREFERRED_PHOTO_IDS: Partial<Record<ShopType, number[]>> = {
+  grill: [2806566, 6222139, 6351455, 2426889],
+  hair: [2521943, 5212059, 3173422, 6797761, 2345701, 2693077, 6964555, 7226341, 6818702],
+};
+
 /** 動画のあるグループ → その動画を使ってよい店の種類(動画の中身に合う店だけ)。 */
 const VIDEO_FOR: { group: string; type: ShopType }[] = [
   { group: "food", type: "cafe" }, // コーヒー豆の動画
@@ -83,6 +92,10 @@ async function main() {
 
   /** その店に合う、まだ使っていない写真。合うものが無ければ街の風景、それも無ければ観光の風景。 */
   function pickFor(type: ShopType): { photo: PlaceholderEntry; matched: boolean } | null {
+    for (const id of PREFERRED_PHOTO_IDS[type] ?? []) {
+      const p = take([...byLabel.values(), ...byGroup.values()].flat().filter((x) => x.url.endsWith(`/p-${id}.jpg`)));
+      if (p) return { photo: p, matched: true };
+    }
     const allowed = ALLOWED_PHOTO_LABELS[type];
     if (allowed) {
       for (const l of allowed) {
