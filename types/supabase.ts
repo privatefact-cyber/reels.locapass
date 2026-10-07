@@ -1887,6 +1887,7 @@ export type Database = {
           id: string
           images: Json
           is_comments_enabled: boolean
+          is_placeholder: boolean
           like_count: number
           pinned_at: string | null
           portal_id: number
@@ -1925,6 +1926,7 @@ export type Database = {
           id?: string
           images?: Json
           is_comments_enabled?: boolean
+          is_placeholder?: boolean
           like_count?: number
           pinned_at?: string | null
           portal_id: number
@@ -1963,6 +1965,7 @@ export type Database = {
           id?: string
           images?: Json
           is_comments_enabled?: boolean
+          is_placeholder?: boolean
           like_count?: number
           pinned_at?: string | null
           portal_id?: number

@@ -41,6 +41,7 @@ async function main() {
     .select("id, tags_status, locapass_shops!locapass_reels_shop_id_fkey ( name )")
     .eq("reel_type", "permanent")
     .eq("status", "publish")
+    .eq("is_placeholder", false)
     .order("published_at", { ascending: false })
     .limit(limit);
   if (!retag) query = query.or("tags_status.is.null,tags_status.eq.failed");

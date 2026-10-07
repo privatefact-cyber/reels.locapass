@@ -1,0 +1,9 @@
+{
+  "food": { "photos": [], "videos": [] },
+  "shop": { "photos": [], "videos": [] },
+  "tour": { "photos": [], "videos": [] },
+  "stay": { "photos": [], "videos": [] },
+  "pet": { "photos": [], "videos": [] },
+  "beauty": { "photos": [], "videos": [] },
+  "other": { "photos": [], "videos": [] }
+}

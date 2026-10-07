@@ -7,6 +7,7 @@ import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
 import { reelCtaUrl, reelProfileUrl } from "@/lib/reels/links";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { ShopMediaFallback } from "@/components/shop/ShopMediaFallback";
 import { ReelCard } from "@/components/ReelCard";
 import { PreloadNextVideo } from "@/components/video/PreloadNextVideo";
 import type { AdItem, ReelItem, ShopGridItem } from "@/lib/reels/types";
@@ -169,6 +170,8 @@ const GridTile = memo(function GridTile({
   onShopPeekLeave: () => void;
 }) {
   const thumbUrl = tileThumbUrl(tile);
+  // カバー画像のリンク切れ時も、真っ黒にせずイメージを出す。
+  const [thumbBroken, setThumbBroken] = useState(false);
   const fallbackVideoUrl = thumbUrl ? undefined : tileFallbackVideoUrl(tile);
   const label = tile.kind === "cast" ? tile.reel.castName : tile.kind === "shop" ? tile.shop.name : tile.ad.title;
   const sublabel = tile.kind === "cast" ? tile.reel.shopName : tile.kind === "shop" ? tile.shop.area : undefined;
@@ -180,9 +183,10 @@ const GridTile = memo(function GridTile({
       onMouseLeave={tile.kind === "shop" ? onShopPeekLeave : undefined}
       className="group relative block aspect-square w-full overflow-hidden rounded-none bg-panel-900 text-left"
     >
-      {thumbUrl ? (
+      {thumbUrl && !thumbBroken ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          onError={() => setThumbBroken(true)}
           src={thumbUrl}
           alt=""
           loading="lazy"
@@ -198,6 +202,11 @@ const GridTile = memo(function GridTile({
           preload="metadata"
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />
+      ) : tile.kind === "shop" ? (
+        // 店舗タイルで写真が無い/壊れているとき: イメージ写真(無ければ店名入りのグラデーション)。
+        <span className="relative block h-full w-full overflow-hidden bg-panel-900">
+          <ShopMediaFallback category={tile.shop.genre} seed={tile.shop.id} name={tile.shop.name} showCredit={false} />
+        </span>
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-tone-800 via-tone-950 to-black">
           <span className="font-display text-xs uppercase tracking-[0.2em] text-accent/50">

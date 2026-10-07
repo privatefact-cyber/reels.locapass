@@ -39,6 +39,7 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
+import { ShopHeroMedia } from "@/components/shop/ShopHeroMedia";
 import { PageDots } from "@/components/shop/PageDots";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
@@ -372,20 +373,13 @@ export default async function ShopDetailPage({
           <span>{site.name}</span>
         </Link>
 
-        {store.hero.url ? (
-          store.hero.type === "video" ? (
-            <AutoplayVideo src={store.hero.url} />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={store.hero.url}
-              alt={store.name}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          )
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-tone-900 via-page to-tone-900" />
-        )}
+        <ShopHeroMedia
+          url={store.hero.url}
+          type={store.hero.type}
+          alt={store.name}
+          category={store.genre}
+          seed={store.id}
+        />
 
         <div className="absolute inset-0 bg-gradient-to-t from-tone-950 via-tone-950/60 to-transparent" />
 

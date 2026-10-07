@@ -36,6 +36,8 @@ export default async function LocapassShopReelsPage({
       "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, tags, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
     )
     .eq("shop_id", shop.id)
+    // ダミー(イメージ映像)は店舗の投稿ではないので、管理画面の一覧・インサイトには出さない。
+    .eq("is_placeholder", false)
     .order("published_at", { ascending: false, nullsFirst: false });
 
   // 本家reelsの形(media配列・likes_count・status=published・post_type=reel)に揃える。
