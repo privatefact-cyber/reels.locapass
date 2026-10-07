@@ -6,6 +6,8 @@ import { deleteReel, setMapPreviewReel } from "../actions";
 import { StreamThumb } from "@/components/video/StreamThumb";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
+import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges } from "@/components/reels/ReelOrganizer";
+import { ConfirmSubmitButton } from "@/components/reels/ConfirmSubmitButton";
 
 /**
  * LUXELA本家のリール投稿画面(app/dashboard/reels/page.tsx)と同じ画面。一覧・投稿・削除は
@@ -30,7 +32,7 @@ export default async function LocapassShopReelsPage({
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
-      "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
+      "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, tags, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
     )
     .eq("shop_id", shop.id)
     .order("published_at", { ascending: false, nullsFirst: false });
@@ -53,6 +55,8 @@ export default async function LocapassShopReelsPage({
       status: r.status === "publish" ? "published" : r.status,
       post_type: r.reel_type === "story" ? "story" : "reel",
       author_name: r.author_name,
+      createdAt: r.published_at ?? r.updated_at ?? "",
+      tags: (r.tags as string[] | null) ?? [],
       cast_members: r.locapass_cast_members,
       shop_staff_members: r.locapass_shop_staff_members,
     };
@@ -102,7 +106,9 @@ export default async function LocapassShopReelsPage({
       <ShopReelPostForm shopId={shop.id} portalId={shop.portal_id} />
 
       {reels && reels.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
+        <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>
+        <ReelOrganizerBar variant="light" />
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {reels.map((r) => {
             const cast = Array.isArray(r.cast_members) ? r.cast_members[0] : r.cast_members;
             const staff = Array.isArray(r.shop_staff_members) ? r.shop_staff_members[0] : r.shop_staff_members;
@@ -112,8 +118,8 @@ export default async function LocapassShopReelsPage({
               media?.type === "video" && r.status === "published" && r.post_type === "reel";
             const isSelected = r.id === selectedReelId;
             return (
+              <ReelOrganizerItem key={r.id} id={r.id}>
               <div
-                key={r.id}
                 className={`relative aspect-[9/16] overflow-hidden rounded-lg border bg-slate-50 ${
                   isSelected ? "border-indigo-500 ring-2 ring-indigo-500" : "border-slate-200"
                 }`}
@@ -144,21 +150,24 @@ export default async function LocapassShopReelsPage({
                     ))}
                 </div>
                 <form action={deleteReel.bind(null, shop.id, r.id)} className="absolute right-1 top-1">
-                  <button
-                    type="submit"
+                  <ConfirmSubmitButton
+                    message={"この動画を削除しますか?\n削除すると元に戻せません。"}
                     className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white hover:bg-red-600"
                   >
                     削除
-                  </button>
+                  </ConfirmSubmitButton>
                 </form>
                 <div className="absolute right-1 top-7 flex flex-col items-end gap-1">
                   {media?.type === "video" && <ReelCaptionEditButton reelId={r.id} />}
                   <ReelTagEditButton reelId={r.id} />
                 </div>
+                <ReelTagBadges id={r.id} className="pointer-events-none absolute left-1 top-1 flex max-w-[55%] flex-wrap gap-0.5" />
               </div>
+              </ReelOrganizerItem>
             );
           })}
         </div>
+        </ReelOrganizerProvider>
       ) : (
         <p className="text-sm text-slate-500">まだリール投稿はありません。</p>
       )}

@@ -18,6 +18,7 @@ import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
 import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
+import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges } from "@/components/reels/ReelOrganizer";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
 import { uploadVideoToR2 } from "@/lib/storage/uploadToR2";
 import { StreamThumb } from "@/components/video/StreamThumb";
@@ -29,6 +30,8 @@ export type MyReel = {
   media: { type: "video" | "image"; url: string }[];
   likesCount: number;
   createdAt: string;
+  /** AIが自動で付けた(投稿者が直した)タグのID。整理バーの絞り込みと表示に使う。 */
+  tags: string[];
 };
 
 export type ShopEventRow = {
@@ -433,6 +436,7 @@ export function StaffDashboardClient({
         media: [{ type: isVideo ? "video" : "image", url: (videoUrl ?? imageUrl)! }],
         likesCount: inserted.like_count,
         createdAt: inserted.published_at ?? inserted.updated_at,
+        tags: [],
       },
       ...prev,
     ]);
@@ -446,6 +450,7 @@ export function StaffDashboardClient({
   }
 
   async function handleDeleteReel(reelId: string) {
+    if (!confirm("この動画を削除しますか?\n削除すると元に戻せません。")) return;
     const supabase = createClient();
     const { data, error: deleteError } = await supabase
       .from("locapass_reels")
@@ -914,10 +919,12 @@ export function StaffDashboardClient({
 
           {/* 投稿グリッド(キャストマイページと同じサムネイル3列表示)。
               タップすると、このスタッフの投稿だけを対象にした公開リール再生ページへ飛ぶ。 */}
-          <div className="mt-4 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
+          <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>
+          {isOwner && <ReelOrganizerBar />}
+          <div className="mt-2 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
             {reels.map((r) => (
+              <ReelOrganizerItem key={r.id} id={r.id}>
               <Link
-                key={r.id}
                 href={portalSlug && shopSlug ? `${staffReelsPath(portalSlug, shopSlug, issueNo)}?start=${r.id}` : "#"}
                 className="relative block aspect-[9/16] overflow-hidden bg-surface"
               >
@@ -966,9 +973,14 @@ export function StaffDashboardClient({
                 <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
                   ♥ {r.likesCount}
                 </span>
+                {isOwner && (
+                  <ReelTagBadges id={r.id} className="pointer-events-none absolute bottom-6 left-1 flex max-w-[90%] flex-wrap gap-0.5" />
+                )}
               </Link>
+              </ReelOrganizerItem>
             ))}
           </div>
+          </ReelOrganizerProvider>
           {reels.length === 0 && (
             <p className="px-4 py-8 text-center text-sm text-tone-500">
               {isOwner ? "まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。" : "まだ投稿がありません。"}

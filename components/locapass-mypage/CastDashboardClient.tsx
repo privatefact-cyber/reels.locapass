@@ -15,6 +15,7 @@ import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
 import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
+import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges } from "@/components/reels/ReelOrganizer";
 import { capturePosterFrame } from "@/lib/reels/capturePosterFrame";
 import { uploadToSignedUrl } from "@/lib/storage/uploadDirect";
 import { uploadPosterToR2, uploadVideoToR2 } from "@/lib/storage/uploadToR2";
@@ -29,6 +30,8 @@ export type MyReel = {
   createdAt: string;
   isCommentsEnabled: boolean;
   pinnedAt: string | null;
+  /** AIが自動で付けた(投稿者が直した)タグのID。整理バーの絞り込みと表示に使う。 */
+  tags: string[];
 };
 
 export type MyStory = {
@@ -304,6 +307,7 @@ export function CastDashboardClient({
           createdAt: inserted.published_at ?? inserted.updated_at,
           isCommentsEnabled: commentsEnabled,
           pinnedAt: null,
+          tags: [],
         },
         ...prev,
       ]);
@@ -328,6 +332,7 @@ export function CastDashboardClient({
   }
 
   async function handleDelete(reelId: string) {
+    if (!confirm("この動画を削除しますか?\n削除すると元に戻せません。")) return;
     const supabase = createClient();
     const { data, error: deleteError } = await supabase
       .from("locapass_reels")
@@ -693,7 +698,9 @@ export function CastDashboardClient({
       )}
 
       {/* 投稿グリッド(ピン留めした投稿を先頭に固定表示) */}
-      <div className="mt-6 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
+      <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>
+      <ReelOrganizerBar />
+      <div className="mt-2 grid grid-cols-3 gap-1 border-t border-main/10 pt-1">
         {[...reels]
           .sort((a, b) => {
             if (a.pinnedAt && b.pinnedAt) return b.pinnedAt.localeCompare(a.pinnedAt);
@@ -702,8 +709,8 @@ export function CastDashboardClient({
             return 0;
           })
           .map((r) => (
+            <ReelOrganizerItem key={r.id} id={r.id}>
             <Link
-              key={r.id}
               href={
                 portalSlug && shopSlug && issueNo != null
                   ? `${castReelsPath(portalSlug, shopSlug, issueNo)}?start=${r.id}`
@@ -778,9 +785,12 @@ export function CastDashboardClient({
               <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main">
                 ♥ {r.likesCount}
               </span>
+              <ReelTagBadges id={r.id} className="pointer-events-none absolute bottom-6 left-1 flex max-w-[90%] flex-wrap gap-0.5" />
             </Link>
+            </ReelOrganizerItem>
           ))}
       </div>
+      </ReelOrganizerProvider>
       {reels.length === 0 && (
         <p className="px-4 py-8 text-center text-sm text-tone-500">
           まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。

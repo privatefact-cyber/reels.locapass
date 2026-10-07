@@ -116,7 +116,7 @@ export default async function StaffDetailPage({
 
   const { data: reels } = await supabase
     .from("locapass_reels")
-    .select(`id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, published_at, updated_at`)
+    .select(`id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, published_at, updated_at, tags`)
     .eq("posted_by_staff_id", staff.id)
     .eq("status", "publish")
     .eq("reel_type", "permanent")
@@ -128,6 +128,7 @@ export default async function StaffDetailPage({
     media: toReelMedia(r),
     likesCount: r.like_count,
     createdAt: r.published_at ?? r.updated_at,
+    tags: r.tags ?? [],
   }));
 
   let shopEvents: ShopEventRow[] = [];

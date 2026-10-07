@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MAX_TAGS_PER_REEL, TAG_DEFS } from "@/lib/reels/tags/vocabulary";
+import { useOptionalReelOrganizer } from "@/components/reels/ReelOrganizer";
 
 const LABEL: Record<string, string> = Object.fromEntries(TAG_DEFS.map((t) => [t.id, t.labels.ja]));
 
@@ -11,6 +12,7 @@ const LABEL: Record<string, string> = Object.fromEntries(TAG_DEFS.map((t) => [t.
  * 選べるのは店舗の業種に合うタグだけ・最大4つ。動画ストックの絞り込みに使われる。
  */
 function TagEditorModal({ reelId, onClose }: { reelId: string; onClose: () => void }) {
+  const organizer = useOptionalReelOrganizer();
   const [allowed, setAllowed] = useState<string[] | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
@@ -64,6 +66,8 @@ function TagEditorModal({ reelId, onClose }: { reelId: string; onClose: () => vo
         return;
       }
       setInitial(selected);
+      // 一覧の絞り込み・タグ表示にも反映する(整理バーの中にあるとき)。
+      organizer?.setTags(reelId, selected);
       setMessage("保存しました(動画ストックへの反映まで最大1分ほどかかります)");
     } finally {
       setBusy(false);

@@ -16,6 +16,7 @@ type ReelRow = {
   expires_at: string | null;
   is_comments_enabled: boolean;
   pinned_at: string | null;
+  tags: string[] | null;
 };
 
 function toMedia(r: ReelRow): MyReel["media"] {
@@ -40,7 +41,7 @@ export default async function CastDashboardPage() {
 
   const supabase = await createClient();
   const select =
-    "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, expires_at, is_comments_enabled, pinned_at";
+    "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, expires_at, is_comments_enabled, pinned_at, tags";
   const [{ data: reels }, { data: stories }] = await Promise.all([
     supabase
       .from("locapass_reels")
@@ -66,6 +67,7 @@ export default async function CastDashboardPage() {
     createdAt: r.published_at ?? r.updated_at,
     isCommentsEnabled: r.is_comments_enabled,
     pinnedAt: r.pinned_at,
+    tags: r.tags ?? [],
   }));
 
   const myStories: MyStory[] = ((stories ?? []) as ReelRow[]).map((s) => ({
