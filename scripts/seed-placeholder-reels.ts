@@ -2,7 +2,7 @@
  * リールが1本も無い店舗に、Pixabayの無料写真(一部は動画)を「イメージ映像」のダミーリールとして入れる(フィードの見た目を整える用)。
  * 店舗ごとに別々の写真を使う(scripts/assign-placeholders.ts の割り当て)。動画は各グループで1店舗だけ。
  * 本物の投稿が入ったら --remove でまとめて消せる。ダミーは is_placeholder=true で見分け、キャプションにも
- * 投稿者名を「イメージ映像」にし、キャプションには撮影者名を入れる。閲覧はインサイトに数えない。
+ * 投稿者名は空(店名で表示)で、キャプションには撮影者名だけを入れる。閲覧はインサイトに数えない。
  *
  * 使い方(先に scripts/fetch-placeholder-media.ts で動画を集め、public/placeholders/ をコミット・デプロイしておく。
  *       動画ファイルが本番に無いうちに入れると、再生できないリールになる):
@@ -113,7 +113,8 @@ async function main() {
       poster_url: abs(assigned.video ? (assigned.video.poster ?? assigned.photo.url) : assigned.photo.url),
       images: assigned.video ? [] : [{ url: abs(assigned.photo.url) }],
       caption: `撮影: ${media.credit}`,
-      author_name: "イメージ映像",
+      // 投稿者名は空(店名で表示される)。ダミーかどうかは is_placeholder で見分け、キャプションには撮影者名だけを入れる。
+      author_name: null,
       reel_type: "permanent",
       status: "publish",
       is_placeholder: true,
