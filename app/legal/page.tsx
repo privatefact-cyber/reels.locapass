@@ -29,7 +29,7 @@ export default function Legal() {
           <div key={k} className="grid gap-1 p-4 sm:grid-cols-[11rem_1fr]"><dt className="font-semibold text-main">{k}</dt><dd>{v}</dd></div>
         ))}
       </dl>
-      <p className="text-xs">個人情報の取り扱いは、<Link href="/privacy" className="underline">プライバシーポリシー</Link>をご覧ください。</p>
+      <p className="text-xs">個人情報の取り扱いは、<Link href="/privacy" className="underline">プライバシーポリシー</Link>、サービスの利用条件は、<Link href="/terms" className="underline">利用規約</Link>をご覧ください。</p>
     </article>
   );
 }
