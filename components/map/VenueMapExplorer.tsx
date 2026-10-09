@@ -230,6 +230,10 @@ export function VenueMapExplorer({
   const fetchForCurrentView = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
+    // コンテナがまだ0x0のときの範囲は縮退していて、取得しても空(or 400)になり、
+    // lastQueryに記録されて以降の同一範囲取得も弾かれる。サイズ確定(resize→moveend)まで待つ。
+    const el = map.getContainer();
+    if (el.clientWidth === 0 || el.clientHeight === 0) return;
     const b = map.getBounds();
     const spanLat = b.getNorth() - b.getSouth();
     const spanLng = b.getEast() - b.getWest();
@@ -470,17 +474,21 @@ export function VenueMapExplorer({
       return;
     }
     let cancelled = false;
+    // 位置情報の許可ダイアログ待ち・取得待ち(最大8秒)の間も空白にならないよう、まず初期中心で取得しておく。
+    fetchForCurrentView();
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         if (cancelled) return;
         setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        void fetchForQuery(
-          `lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&radius=${INITIAL_RADIUS_M}&limit=${MAX_CARDS}`,
-        );
         const map = mapRef.current;
         if (!map) return;
-        programmaticMove.current = true;
+        // 半径500mで先に取ると、その後の表示範囲(bbox)とずれて「何も出ない→少し動かすと出る」になる。
+        // 現在地へ寄せ終わった時点の実際の表示範囲で取る(moveendのハンドラ+念のための保険)。
         map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16, speed: 1.4 });
+        map.once("moveend", () => fetchForCurrentView());
+        window.setTimeout(() => {
+          if (!cancelled) fetchForCurrentView();
+        }, 3000);
       },
       () => {
         if (!cancelled) fetchForCurrentView();
