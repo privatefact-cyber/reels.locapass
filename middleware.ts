@@ -55,6 +55,7 @@ export async function middleware(request: NextRequest) {
     // セッションCookieを確立する前にゲートへ戻してはいけない。
     pathname.startsWith("/auth") ||
     pathname.startsWith("/embed") ||
+    pathname.startsWith("/lp/") ||
     pathname === "/favicon.ico" ||
     // ブラウザのタブ・ホーム画面用アイコン(app/icon.png, app/apple-icon.png)。
     pathname === "/icon.png" ||
