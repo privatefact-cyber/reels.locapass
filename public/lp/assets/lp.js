@@ -57,3 +57,19 @@ document.querySelectorAll("form[data-lp-form]").forEach(function (form) {
     }
   });
 });
+
+// インバウンド向け 言語切替デモ(shop.html)
+(function () {
+  var box = document.getElementById("ccText"); if (!box) return;
+  var T = { ja: "焼きたてです。どうぞ、ごゆっくり。", en: "Freshly baked. Please, take your time.", zh: "刚出炉的,请慢慢享用。", ar: "خبز طازج. تفضلوا بكل راحة." };
+  var btns = document.querySelectorAll(".langs button");
+  function set(l) {
+    btns.forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-l") === l); });
+    box.style.opacity = 0;
+    setTimeout(function () { box.textContent = T[l]; box.lang = l; box.dir = l === "ar" ? "rtl" : "ltr"; box.style.opacity = 1; }, 160);
+  }
+  var order = ["ja", "en", "zh", "ar"], i = 0, timer;
+  function auto() { timer = setInterval(function () { i = (i + 1) % order.length; set(order[i]); }, 3200); }
+  btns.forEach(function (b) { b.addEventListener("click", function () { clearInterval(timer); i = order.indexOf(b.getAttribute("data-l")); set(order[i]); }); });
+  auto();
+})();

@@ -232,3 +232,23 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .algo .two2 b{display:block;font-size:clamp(20px,3vw,26px);color:var(--gold-hi);margin-top:6px;line-height:1.5}
 .algo .end{text-wrap:balance;margin-top:34px;font-size:clamp(17px,2.4vw,22px);font-weight:700;line-height:1.8}
 .algo .end em{font-style:normal;color:var(--gold-hi)}
+
+/* ---------- inbound ---------- */
+.inb{background:radial-gradient(ellipse at 20% 30%,rgba(212,176,106,.1),transparent 55%),var(--bg2)}
+.inb-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}
+@media(max-width:860px){.inb-grid{grid-template-columns:1fr}}
+.inb-demo{max-width:460px;margin-inline:auto;width:100%}
+.langs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.langs button{flex:1;min-width:72px;font:inherit;font-size:14px;font-weight:700;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:99px;padding:9px 12px;cursor:pointer;transition:.2s}
+.langs button.on{color:#1a1305;background:linear-gradient(135deg,var(--gold-hi),var(--gold));border-color:transparent}
+.stage{position:relative;aspect-ratio:4/5;border-radius:24px;overflow:hidden;border:1px solid var(--gold-lo);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.stage img{width:100%;height:100%;object-fit:cover}
+.stage::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent 45%)}
+.cc{position:absolute;z-index:2;left:14px;right:14px;bottom:18px;display:flex;align-items:center;gap:10px}
+.cc-tag{flex:none;font-size:11px;font-weight:900;color:#1a1305;background:var(--gold);border-radius:6px;padding:2px 7px}
+.cc p{background:rgba(0,0,0,.72);color:#fff;font-size:clamp(15px,2.2vw,18px);font-weight:700;padding:10px 14px;border-radius:12px;line-height:1.5;transition:opacity .25s}
+.demo-note{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+.inb-list{list-style:none;display:grid;gap:14px}
+.inb-list li{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.inb-list b{display:block;color:var(--gold-hi);font-size:16px;margin-bottom:2px}
+.inb-list span{font-size:14px;color:#c9c2b3}
