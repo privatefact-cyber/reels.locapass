@@ -34,7 +34,7 @@ export default async function LocapassShopDashboardLayout({
   const basePath = `/dashboard/shop/${shop.id}`;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       {viewer.needsRecoverySetup && <RecoveryInfoGateModal />}
       {viewer.isOperator && (
         <div className="flex flex-wrap items-center justify-between gap-2 bg-amber-500 px-4 py-2 text-sm font-semibold text-amber-950 sm:px-6">

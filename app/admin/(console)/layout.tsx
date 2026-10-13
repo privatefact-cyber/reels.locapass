@@ -6,7 +6,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const user = await requireAdmin();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <nav className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-6">

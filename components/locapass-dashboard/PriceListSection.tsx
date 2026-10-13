@@ -44,7 +44,7 @@ export function PriceListSection({
   }
 
   return (
-    <section id="shop-price" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6">
+    <section id="shop-price" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6 text-slate-900">
       <h2 className="mb-3 text-sm font-semibold text-slate-900">料金表</h2>
       {priceItems.length > 0 && (
         <ul className="mb-4 divide-y divide-black/10">
