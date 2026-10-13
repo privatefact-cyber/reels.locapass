@@ -4,6 +4,7 @@ import { BetaLaunchModal } from "@/components/BetaLaunchModal";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
+import { getPhotoPosts } from "@/lib/photo/getPhotoPosts";
 
 export const revalidate = 60;
 
@@ -13,6 +14,10 @@ export default async function TopPage() {
 
   // 全体トップは特定エリアに絞らず、全locapass_portalsを横断してshops/reelsを取得する。
   const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(null);
+  // PHOTOタブ用: ユーザー投稿写真の新着(失敗してもトップ全体は表示する)。
+  const photos = await getPhotoPosts(null, 30)
+    .then(({ posts }) => posts.map((p) => ({ id: p.id, imageUrl: p.imageUrl, spotName: p.spotName, placeKind: p.placeKind })))
+    .catch(() => []);
 
   // locapass_reels/locapass_shopsにはキャスト稼働スケジュールの概念が無いため、
   // NOWタブは常に空(受け皿はUI側に残るが、対応データが無い)。
@@ -33,7 +38,7 @@ export default async function TopPage() {
           「本日の出勤」の一覧は店舗詳細ページ、フォロー中のみの出勤状況はマイページで
           それぞれ表示する(トップでは全パートナー分を出すと件数に上限がないため扱わない)。
           adsはシステム管理者が投稿するPRで、指定頻度でグリッド/リール一覧の両方に紛れ込ませる。 */}
-      <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} />
+      <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} photos={photos} />
     </div>
   );
 }

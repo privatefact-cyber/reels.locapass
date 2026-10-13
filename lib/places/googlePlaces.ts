@@ -90,3 +90,29 @@ export function distanceMeters(a: { lat: number; lng: number }, b: { latitude: n
 
 /** 画像として使う写真(先頭=Googleが最も代表的と判断したもの)。 */
 export const COVER_URL_PREFIX = "https://locapass.net/api/place-photo/";
+
+/** 座標の近くにある飲食・観光系の場所を探す(Nearby Search)。穴場候補の取得用。 */
+export async function searchNearbyPlaces(lat: number, lng: number, radiusM = 200): Promise<PlaceCandidate[]> {
+  const res = await fetch(`${BASE}/places:searchNearby`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey(),
+      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location",
+    },
+    body: JSON.stringify({
+      languageCode: "ja",
+      regionCode: "JP",
+      maxResultCount: 10,
+      rankPreference: "DISTANCE",
+      includedTypes: [
+        "restaurant", "cafe", "bar", "bakery", "tourist_attraction", "park",
+        "museum", "shopping_mall", "store", "spa", "place_of_worship",
+      ],
+      locationRestriction: { circle: { center: { latitude: lat, longitude: lng }, radius: radiusM } },
+    }),
+  });
+  if (!res.ok) throw new Error(`Places searchNearby ${res.status}: ${await res.text()}`);
+  const json = (await res.json()) as { places?: PlaceCandidate[] };
+  return json.places ?? [];
+}

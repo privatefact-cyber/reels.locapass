@@ -1,0 +1,240 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, Maximize2, MapPin, Navigation } from "lucide-react";
+import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
+import { PhotoMap } from "@/components/photo/PhotoMap";
+import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
+import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
+import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
+
+function PlaceBadge({ kind }: { kind: PhotoPost["placeKind"] }) {
+  if (kind !== "listed" && kind !== "spot") return null;
+  return (
+    <span className="rounded-full border border-tone-600 px-2 py-0.5 text-[10px] text-tone-300">
+      {kind === "listed" ? "掲載店" : "穴場"}
+    </span>
+  );
+}
+
+function Avatar({ post }: { post: PhotoPost }) {
+  return post.avatarUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={post.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+  ) : (
+    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-tone-800 text-xs text-tone-300">
+      {post.userName.slice(0, 1)}
+    </span>
+  );
+}
+
+export function PhotoFeed({
+  posts,
+  areas,
+  areaSlug,
+  initialView = "grid",
+}: {
+  posts: PhotoPost[];
+  areas: PhotoArea[];
+  areaSlug: string | null;
+  initialView?: "grid" | "map";
+}) {
+  // ビューアに出す写真の並び。格子からは全体の中のその1枚から、マップのカードからは
+  // そのカード(同じ場所)の写真だけを出す。
+  const [viewer, setViewer] = useState<{ posts: PhotoPost[]; index: number; title: string | null; mode: "grid" | "detail" } | null>(null);
+  const [view, setView] = useState<"grid" | "map">(initialView);
+  // フルスクリーン表示中の写真(ビューアの並びの中の番号)。nullなら閉じている。
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+  const openRef = useRef<HTMLDivElement | null>(null);
+
+  // 開いた投稿の位置までスクロールして、そこから縦に見ていけるようにする。
+  useEffect(() => {
+    if (viewer) openRef.current?.scrollIntoView({ block: "start" });
+  }, [viewer]);
+
+  const chip = (active: boolean) =>
+    `shrink-0 rounded-full border px-3 py-1 text-xs ${
+      active ? "border-main bg-main text-on-accent" : "border-tone-700 text-tone-300 hover:text-main"
+    }`;
+
+  // マップのカードから開いたとき(title付き)は、まずその場所の写真をグリッドで一覧してから、
+  // 見たい写真をタップして縦のビューアに進む(写真が多いと縦だけでは全部に辿り着けないため)。
+  if (viewer && viewer.title && viewer.mode === "grid") {
+    return (
+      <div className="space-y-3 pb-10">
+        <button
+          type="button"
+          onClick={() => setViewer(null)}
+          className="flex items-center gap-1 px-3 pt-2 text-sm text-tone-300 hover:text-main"
+        >
+          <ChevronLeft size={18} />
+          マップに戻る
+        </button>
+        <p className="px-3 text-sm font-medium text-main">
+          {viewer.title}
+          <span className="ml-2 text-xs font-normal text-tone-500">{viewer.posts.length}枚</span>
+        </p>
+        <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
+          {viewer.posts.map((post, index) => (
+            <button
+              key={post.id}
+              type="button"
+              onClick={() => setViewer({ ...viewer, index, mode: "detail" })}
+              className="relative aspect-square overflow-hidden bg-tone-900"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photoResized(post.imageUrl, 360, true)} alt={post.spotName} loading="lazy" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (viewer) {
+    return (
+      <div className="space-y-6 pb-10">
+        <button
+          type="button"
+          onClick={() => setViewer(viewer.title ? { ...viewer, mode: "grid" } : null)}
+          className="flex items-center gap-1 px-3 pt-2 text-sm text-tone-300 hover:text-main"
+        >
+          <ChevronLeft size={18} />
+          {viewer.title ? "写真一覧に戻る" : "グリッドに戻る"}
+        </button>
+        {viewer.title ? <p className="px-3 text-sm font-medium text-main">{viewer.title}</p> : null}
+        {viewer.posts.map((post, index) => (
+          <article key={post.id} ref={index === viewer.index ? openRef : undefined} className="scroll-mt-[104px]">
+            {/* アイコン・名前をタップすると、その人のページ(投稿一覧とプロフィール)へ。 */}
+            {post.memberId ? (
+              <Link href={`/photo/u/${post.memberId}`} className="flex items-center gap-2 px-3 pb-2">
+                <Avatar post={post} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-main">{post.userName}</p>
+                  <p className="text-[11px] text-tone-500">{new Date(post.createdAt).toLocaleDateString("ja-JP")}</p>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2 px-3 pb-2">
+                <Avatar post={post} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-main">{post.userName}</p>
+                  <p className="text-[11px] text-tone-500">{new Date(post.createdAt).toLocaleDateString("ja-JP")}</p>
+                </div>
+              </div>
+            )}
+            <div className="relative md:mx-auto md:w-fit">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photoResized(post.imageUrl, 1080, false)} alt={post.spotName} loading="lazy" className="w-full bg-tone-900 object-contain md:mx-auto md:max-h-[80dvh] md:w-auto" />
+              <button
+                type="button"
+                onClick={() => setFullscreenIndex(index)}
+                aria-label="フルスクリーンで見る"
+                className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+              >
+                <Maximize2 size={18} />
+              </button>
+            </div>
+            <div className="space-y-2 px-3 pt-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-base font-medium text-main">{post.spotName}</p>
+                <PlaceBadge kind={post.placeKind} />
+              </div>
+              {post.comment ? <p className="whitespace-pre-wrap text-sm text-tone-300">{post.comment}</p> : null}
+              {post.tags.length > 0 ? (
+                <p className="text-xs text-tone-500">{post.tags.map((t) => `#${t}`).join(" ")}</p>
+              ) : null}
+              {post.address ? (
+                <p className="flex items-start gap-1 text-xs text-tone-500">
+                  <MapPin size={12} className="mt-0.5 shrink-0" />
+                  {post.address}
+                </p>
+              ) : null}
+              <div className="flex items-center gap-4 pt-1 text-sm text-tone-300">
+                <PhotoLikeButton postId={post.id} initialCount={post.likeCount} />
+                <a
+                  href={photoRouteUrl(post)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 hover:text-main"
+                >
+                  <Navigation size={16} />
+                  ルート案内
+                </a>
+              </div>
+            </div>
+          </article>
+        ))}
+        {fullscreenIndex !== null ? (
+          <PhotoFullscreen
+            posts={viewer.posts}
+            index={fullscreenIndex}
+            onIndexChange={setFullscreenIndex}
+            onClose={() => setFullscreenIndex(null)}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {areas.length > 1 ? (
+        <div className="flex gap-2 overflow-x-auto px-3 pt-2">
+          <Link href="/photo" className={chip(!areaSlug)}>
+            すべてのエリア
+          </Link>
+          {areas.map((a) => (
+            <Link key={a.slug} href={`/photo?area=${encodeURIComponent(a.slug)}`} className={chip(areaSlug === a.slug)}>
+              {a.name}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex items-center gap-2 px-3">
+        <button type="button" onClick={() => setView("grid")} className={chip(view === "grid")}>
+          グリッド
+        </button>
+        <button type="button" onClick={() => setView("map")} className={chip(view === "map")}>
+          マップ
+        </button>
+        <Link
+          href="/photo/new"
+          className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
+        >
+          ＋ 写真を投稿
+        </Link>
+      </div>
+
+      {view === "map" ? (
+        <PhotoMap posts={posts} onOpenSpot={(spotPosts, index, title) => setViewer({ posts: spotPosts, index, title, mode: "grid" })} />
+      ) : posts.length === 0 ? (
+        <p className="px-2 py-10 text-center text-sm text-tone-500">まだ投稿がありません。</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
+          {posts.map((post, index) => (
+            <button
+              key={post.id}
+              type="button"
+              onClick={() => setViewer({ posts, index, title: null, mode: "detail" })}
+              className="relative aspect-square overflow-hidden bg-tone-900"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photoResized(post.imageUrl, 360, true)} alt={post.spotName} loading="lazy" className="h-full w-full object-cover" />
+              {post.placeKind === "listed" || post.placeKind === "spot" ? (
+                <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white">
+                  {post.placeKind === "listed" ? "掲載店" : "穴場"}
+                </span>
+              ) : null}
+              <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-4 text-left text-[10px] text-white">
+                {post.spotName}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

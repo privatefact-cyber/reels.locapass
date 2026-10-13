@@ -12,18 +12,8 @@ export async function requireCurrentUser(redirectTo = "/mypage") {
     redirect(`/mypage/login?redirect=${encodeURIComponent(redirectTo)}`);
   }
 
-  // locapassの運営者(root admin)アカウントは、一般会員のプライベートマイページを
-  // 開かせるべきではないので管理画面へ弾く。店舗メンバー用ダッシュボードはlocapass側に
-  // まだ無いため、ここでは判定しない(⑥ダッシュボード対応時に追加する)。
-  const { data: rootAdmin } = await supabase
-    .from("locapass_super_admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (rootAdmin) {
-    redirect("/admin");
-  }
+  // 管理者・店舗スタッフ等の権限を持つアカウントも、一般会員と同じ「個人のマイページ」を開ける。
+  // (以前は運営者を /admin へ弾いていたが、個人の立場と管理の立場は /dashboard で選ぶ方式に変えた。)
 
   const { data: profile } = await supabase
     .from("locapass_members")

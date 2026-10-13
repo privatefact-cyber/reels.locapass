@@ -237,6 +237,9 @@ export type Database = {
           latitude: number
           longitude: number
           member_id: string | null
+          place_id: string | null
+          place_kind: string | null
+          place_name: string | null
           site: string
           spot_name: string
           tags: Json
@@ -253,6 +256,9 @@ export type Database = {
           latitude: number
           longitude: number
           member_id?: string | null
+          place_id?: string | null
+          place_kind?: string | null
+          place_name?: string | null
           site?: string
           spot_name: string
           tags?: Json
@@ -269,6 +275,9 @@ export type Database = {
           latitude?: number
           longitude?: number
           member_id?: string | null
+          place_id?: string | null
+          place_kind?: string | null
+          place_name?: string | null
           site?: string
           spot_name?: string
           tags?: Json
@@ -4547,6 +4556,14 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      locapass_public_members: {
+        Row: {
+          avatar_url: string | null
+          id: string | null
+          nickname: string | null
+        }
+        Relationships: []
       }
       locapass_public_casts: {
         Row: {

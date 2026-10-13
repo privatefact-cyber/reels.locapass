@@ -15,6 +15,8 @@ type Props = {
   myPageAvatarUrl: string | null;
   myPageInitial: string | null;
   portalSlugs: string[];
+  /** 管理側の立場(サイト管理・店舗管理など)を持つアカウントか。ヘッダーに「管理」の入口を出す。 */
+  hasManagement?: boolean;
 };
 
 const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
@@ -27,7 +29,7 @@ function isExcludedPath(pathname: string): boolean {
   return EXCLUDED_PREFIXES.some(matches);
 }
 
-export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs }: Props) {
+export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasManagement = false }: Props) {
   const pathname = usePathname();
   const { t } = useLocale();
   if (isExcludedPath(pathname ?? "")) return null;
@@ -82,6 +84,15 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs }: Prop
             <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSwitcher />
               <NotificationBell />
+              {/* 管理側の立場を持つアカウントだけに出す「管理」の入口。マイページ(個人)とは別の名前で並べる。 */}
+              {hasManagement ? (
+                <Link
+                  href="/dashboard/go?to=manage"
+                  className="rounded-full border border-accent/50 px-2.5 py-1 text-[11px] font-medium text-accent transition hover:bg-accent/10"
+                >
+                  管理
+                </Link>
+              ) : null}
               <Link
                 href="/mypage"
                 aria-label={t.nav.mypage}

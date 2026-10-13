@@ -14,6 +14,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               LOCAPASS 管理コンソール
             </Link>
             <Link
+              href="/dashboard/go?to=personal"
+              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-slate-500 hover:text-slate-900"
+            >
+              マイページ（個人）へ
+            </Link>
+            <Link
               href="/admin"
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >

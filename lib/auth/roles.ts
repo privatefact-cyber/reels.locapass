@@ -36,3 +36,27 @@ export function homePathForRoles(roles: MyRoles | null): string {
   if (roles.cast) return "/dashboard/cast";
   return "/mypage";
 }
+
+/** 管理側の画面(サイト管理・ポータル管理・店舗管理・スタッフ・パートナー)を使える立場を持っているか。 */
+export function hasManagementRole(roles: MyRoles | null): boolean {
+  if (!roles) return false;
+  return (
+    roles.super_admin ||
+    roles.portal_ids.length > 0 ||
+    roles.shop_admin_shop_ids.length > 0 ||
+    roles.staff !== null ||
+    roles.cast !== null
+  );
+}
+
+/** ログイン後に最後に選んだ「立場」を覚えておくCookie。personal=マイページ / manage=管理側。 */
+export const MODE_COOKIE = "lp_mode";
+
+/** 立場の表示名(選択画面・ヘッダー用)。 */
+export function managementLabel(roles: MyRoles): string {
+  if (roles.super_admin) return "サイト管理";
+  if (roles.portal_ids.length > 0) return "エリア管理";
+  if (roles.shop_admin_shop_ids.length > 0) return "店舗管理";
+  if (roles.staff) return "スタッフ画面";
+  return "パートナー画面";
+}

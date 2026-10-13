@@ -8,6 +8,7 @@ import { localeDir } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { isSiteTheme, themeInitScript } from "@/lib/theme";
 import { ThemeSync } from "@/components/ThemeSync";
+import { fetchMyRoles, hasManagementRole } from "@/lib/auth/roles";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -80,6 +81,7 @@ export default async function RootLayout({
   const portalSlugs = (portalRows ?? []).map((p) => p.slug);
   const manualTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
+  const hasManagement = user ? hasManagementRole(await fetchMyRoles(supabase)) : false;
   let myPageAvatarUrl: string | null = null;
   let myPageInitial: string | null = null;
   if (user) {
@@ -129,7 +131,12 @@ export default async function RootLayout({
         <ThemeSync manual={manualTheme} />
         <ImageInteractionGuard />
         <LocaleProvider initialLocale={locale}>
-          <SiteChrome myPageAvatarUrl={myPageAvatarUrl} myPageInitial={myPageInitial} portalSlugs={portalSlugs} />
+          <SiteChrome
+            myPageAvatarUrl={myPageAvatarUrl}
+            myPageInitial={myPageInitial}
+            portalSlugs={portalSlugs}
+            hasManagement={hasManagement}
+          />
 
           {/* メインコンテンツ(PC幅ではワイドに広がる、リール一覧はデスクトップでグリッド表示に切り替わる) */}
           <AppShell>{children}</AppShell>
