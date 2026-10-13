@@ -7,6 +7,7 @@ import * as maplibreNs from "maplibre-gl";
 // maplibre-glはCJS(UMD)なので、読み込み経路(サーバー描画を含む初期表示か、クリック後の遅延読み込みか)によって
 // 名前空間に直接Mapが無く default の下にだけある場合がある。どちらでも使えるようにここで解決する。
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
+import { Navigation, Route as RouteIcon, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 
@@ -16,6 +17,8 @@ const SOURCE_ID = "photo-spots";
 const POINT_LAYER = "photo-spot-points";
 const COUNT_LAYER = "photo-spot-count";
 const GLOW_LAYER = "photo-spot-glow";
+const ROUTE_BG_LAYER = "photo-spot-route-bg";
+const ROUTE_TEXT_LAYER = "photo-spot-route-text";
 /** ピンのタップ判定の余裕(px)。ピンは小さく、指だと芯を外しやすいので周囲の一番近いピンを選ぶ。 */
 const PIN_TAP_TOLERANCE_PX = 22;
 /** 近接とみなす距離(m)。この範囲の場所は1つのカード(ピン)にまとめる。 */
@@ -104,15 +107,39 @@ function buildSpots(posts: PhotoPost[]): Spot[] {
   return spots.sort((a, b) => b.latest.localeCompare(a.latest)).slice(0, MAX_SPOTS);
 }
 
-function toFeatureCollection(spots: Spot[]) {
+/** ルートの順番(0始まり)をA, B, C…の文字にする。 */
+const routeLetter = (i: number) => String.fromCharCode(65 + (i % 26));
+
+/** ルート選択中の場所には、地図のピンにも選んだ順の文字(A/B/C…)を出す。 */
+function toFeatureCollection(spots: Spot[], route: string[] = []) {
   return {
     type: "FeatureCollection" as const,
-    features: spots.map((s) => ({
-      type: "Feature" as const,
-      geometry: { type: "Point" as const, coordinates: [s.lng, s.lat] },
-      properties: { id: s.id, count: s.posts.length },
-    })),
+    features: spots.map((s) => {
+      const i = route.indexOf(s.id);
+      return {
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [s.lng, s.lat] },
+        properties: { id: s.id, count: s.posts.length, route: i >= 0 ? routeLetter(i) : "" },
+      };
+    }),
   };
+}
+
+/**
+ * Googleマップの経路URL。選んだ順に、最初をA(出発)、最後を目的地、間を経由地にする。
+ * 1か所だけなら現在地からの案内(目的地のみ)。目的地にGoogleの場所IDがあれば付ける。
+ */
+function routeUrlFor(spots: Spot[]): string {
+  const pt = (sp: Spot) => `${sp.lat},${sp.lng}`;
+  const last = spots[spots.length - 1];
+  const params = new URLSearchParams({ api: "1", destination: pt(last) });
+  const lastPlaceId = last.posts[0].post.placeId;
+  if (lastPlaceId) params.set("destination_place_id", lastPlaceId);
+  if (spots.length > 1) {
+    params.set("origin", pt(spots[0]));
+    if (spots.length > 2) params.set("waypoints", spots.slice(1, -1).map(pt).join("|"));
+  }
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 export function PhotoMap({
@@ -133,6 +160,10 @@ export function PhotoMap({
   // 拡大時に出す丸いサムネイル(DOMマーカー)。選択中のものだけ枠を金色にする。
   const thumbRefs = useRef(new Map<string, HTMLDivElement>());
   const [activeId, setActiveId] = useState<string | null>(spots[0]?.id ?? null);
+  // ルート作成: 選んだ場所を選んだ順(A→B→C…)に持つ。Googleマップの経路URLにして開く。
+  const [route, setRoute] = useState<string[]>([]);
+  const routeRef = useRef(route);
+  routeRef.current = route;
   const activeIdRef = useRef(activeId);
   activeIdRef.current = activeId;
   // カードのスクロール位置から選択を決めるとき、プログラムによるスクロールを無視するためのフラグ。
@@ -197,6 +228,12 @@ export function PhotoMap({
         e.stopPropagation();
         focusSpot(spot.id);
       });
+      // ルート選択中は、サムネイルの左上に選んだ順の文字(A/B/C…)を出す。
+      const routeBadge = document.createElement("span");
+      routeBadge.setAttribute("data-route-badge", "");
+      routeBadge.style.cssText =
+        "position:absolute;left:-4px;top:-4px;min-width:20px;height:20px;border-radius:10px;background:#0b0b0d;border:2px solid #fbbf24;color:#fbbf24;font-size:11px;font-weight:700;line-height:16px;text-align:center;display:none;";
+      el.appendChild(routeBadge);
       thumbRefs.current.set(spot.id, el);
       const marker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([spot.lng, spot.lat]).addTo(map);
       thumbMarkers.push(marker);
@@ -218,6 +255,9 @@ export function PhotoMap({
       // サムネイルにした場所の金色の点は隠す(残りの点だけ描く)。
       const notThumb: maplibregl.FilterSpecification = ["!", ["in", ["get", "id"], ["literal", thumbIds]]];
       if (map.getLayer(POINT_LAYER)) map.setFilter(POINT_LAYER, notThumb);
+      const hasRoute: maplibregl.FilterSpecification = ["!=", ["get", "route"], ""];
+      if (map.getLayer(ROUTE_BG_LAYER)) map.setFilter(ROUTE_BG_LAYER, ["all", hasRoute, notThumb]);
+      if (map.getLayer(ROUTE_TEXT_LAYER)) map.setFilter(ROUTE_TEXT_LAYER, ["all", hasRoute, notThumb]);
       if (map.getLayer(COUNT_LAYER)) map.setFilter(COUNT_LAYER, ["all", [">", ["get", "count"], 1], notThumb]);
     };
     map.on("zoom", syncThumbs);
@@ -229,7 +269,7 @@ export function PhotoMap({
     });
 
     map.on("load", () => {
-      map.addSource(SOURCE_ID, { type: "geojson", data: toFeatureCollection(spotsRef.current) });
+      map.addSource(SOURCE_ID, { type: "geojson", data: toFeatureCollection(spotsRef.current, routeRef.current) });
 
       map.addLayer({
         id: GLOW_LAYER,
@@ -249,6 +289,22 @@ export function PhotoMap({
           "circle-stroke-width": 2,
           "circle-stroke-color": "#0b0b0d",
         },
+      });
+      // ルートに選んだ場所は、黒地+金の縁の丸に文字(A/B/C…)を重ねる。
+      map.addLayer({
+        id: ROUTE_BG_LAYER,
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["!=", ["get", "route"], ""],
+        paint: { "circle-color": "#0b0b0d", "circle-radius": 13, "circle-stroke-width": 2, "circle-stroke-color": "#fbbf24" },
+      });
+      map.addLayer({
+        id: ROUTE_TEXT_LAYER,
+        type: "symbol",
+        source: SOURCE_ID,
+        filter: ["!=", ["get", "route"], ""],
+        layout: { "text-field": ["get", "route"], "text-font": ["Noto Sans Regular"], "text-size": 13, "text-allow-overlap": true },
+        paint: { "text-color": "#fbbf24" },
       });
       map.addLayer({
         id: COUNT_LAYER,
@@ -315,6 +371,23 @@ export function PhotoMap({
     };
   }, [spots, focusSpot]);
 
+  // ルートの選択が変わったら、地図のピン(点・サムネイル)のA/B/C表示を更新する。
+  useEffect(() => {
+    const map = mapRef.current;
+    const source = map?.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+    source?.setData(toFeatureCollection(spotsRef.current, route));
+    thumbRefs.current.forEach((el, id) => {
+      const badge = el.querySelector<HTMLElement>("[data-route-badge]");
+      if (!badge) return;
+      const i = route.indexOf(id);
+      badge.textContent = i >= 0 ? routeLetter(i) : "";
+      badge.style.display = i >= 0 ? "block" : "none";
+    });
+  }, [route]);
+
+  const toggleRoute = (id: string) =>
+    setRoute((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   // 選択中のピンだけ光らせる。
   useEffect(() => {
     const map = mapRef.current;
@@ -362,6 +435,40 @@ export function PhotoMap({
     <div className="relative" style={{ height: "calc(100dvh - 9.5rem)", minHeight: 480 }}>
       {/* maplibre-gl.cssが .maplibregl-map{position:relative} を後勝ちで当てるため、インラインで確実に勝たせる */}
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
+
+      {route.length > 0 ? (
+        <div className="pointer-events-auto absolute left-3 right-14 top-3 z-10 space-y-2 rounded-2xl border border-main/15 bg-black/80 p-2.5 backdrop-blur">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {route.map((id, i) => {
+              const sp = spots.find((x) => x.id === id);
+              if (!sp) return null;
+              return (
+                <span key={id} className="inline-flex max-w-[11rem] items-center gap-1 rounded-full border border-hl-400/50 bg-black px-2 py-1 text-[11px] text-main">
+                  <b className="text-hl-300">{routeLetter(i)}</b>
+                  <span className="truncate">{sp.names[0]}</span>
+                  <button type="button" aria-label="ルートから外す" onClick={() => toggleRoute(id)} className="text-tone-500 hover:text-main">
+                    <X size={12} />
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            <a
+              href={routeUrlFor(route.map((id) => spots.find((x) => x.id === id)).filter((x): x is Spot => Boolean(x)))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-cta-light py-2 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
+            >
+              <Navigation size={14} />
+              ルート検索スタート
+            </a>
+            <button type="button" onClick={() => setRoute([])} className="rounded-full border border-main/15 px-3 py-2 text-xs text-tone-300 hover:text-main">
+              クリア
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 pb-3">
         <div
@@ -429,6 +536,19 @@ export function PhotoMap({
                         {spot.kind === "listed" ? "掲載店" : "穴場"}
                       </span>
                     ) : null}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRoute(spot.id);
+                      }}
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] transition ${
+                        route.includes(spot.id) ? "border-hl-400 text-hl-300" : "border-main/20 text-tone-300 hover:text-main"
+                      }`}
+                    >
+                      <RouteIcon size={11} />
+                      {route.includes(spot.id) ? `ルート ${routeLetter(route.indexOf(spot.id))}` : "ルートに追加"}
+                    </button>
                   </div>
                   <div className="flex gap-2">
                     <a
