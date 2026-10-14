@@ -16,7 +16,7 @@ export default async function TopPage() {
   const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(null);
   // PHOTOタブ用: ユーザー投稿写真の新着(失敗してもトップ全体は表示する)。
   const photos = await getPhotoPosts(null, 30)
-    .then(({ posts }) => posts.map((p) => ({ id: p.id, imageUrl: p.imageUrl, spotName: p.spotName, placeKind: p.placeKind })))
+    .then(({ posts }) => posts.map((p) => ({ id: p.id, imageUrl: p.imageUrl, spotName: p.spotName, placeKind: p.placeKind, isVideo: Boolean(p.videoUrl) })))
     .catch(() => []);
 
   // locapass_reels/locapass_shopsにはキャスト稼働スケジュールの概念が無いため、

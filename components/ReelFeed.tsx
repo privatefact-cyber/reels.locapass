@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, ChevronLeft, X } from "lucide-react";
+import { Search, ChevronLeft, Play, X } from "lucide-react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
@@ -831,6 +831,11 @@ export function ReelFeed({
                 <Link key={p.id} href="/photo" className="relative aspect-square overflow-hidden bg-tone-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={photoResized(p.imageUrl, 360, true)} alt={p.spotName} loading="lazy" className="h-full w-full object-cover" />
+                  {p.isVideo ? (
+                    <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white">
+                      <Play size={11} className="fill-white" />
+                    </span>
+                  ) : null}
                   {p.placeKind === "listed" || p.placeKind === "spot" ? (
                     <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white">
                       {p.placeKind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}

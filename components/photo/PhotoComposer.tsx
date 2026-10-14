@@ -7,6 +7,7 @@ import { ChevronLeft, ImagePlus, Loader2, MapPin, Sparkles } from "lucide-react"
 import exifr from "exifr";
 import { geocode } from "@/lib/map/geocode";
 import { PHOTO_MAX_BYTES } from "@/lib/photo/tags";
+import { uploadPhotoVideoToR2 } from "@/lib/storage/uploadToR2";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 type Candidate = {
@@ -67,6 +68,49 @@ async function prepareUpload(file: File): Promise<File | null> {
   }
 }
 
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+const VIDEO_MAX_SECONDS = 30;
+const isVideoFile = (f: File) => f.type.startsWith("video/") || /\.(mp4|mov|webm)$/i.test(f.name);
+const VIDEO_EXT = /\.(mp4|mov|webm)$/i;
+
+/**
+ * 動画の途中の1コマ(ポスター)と長さを取り出す。ポスターは一覧の表示と、AIの審査・タグ付けに使う
+ * (動画本体はブラウザからR2へ直接送るので、サーバーのAIには画像の1コマだけを渡す)。
+ * ブラウザが読めない動画(例: HEVCのmovをChromeで開いた等)はnull。
+ */
+async function extractPoster(file: File): Promise<{ poster: File; duration: number } | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.src = url;
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error("metadata"));
+    });
+    const duration = video.duration;
+    await new Promise<void>((resolve, reject) => {
+      video.onseeked = () => resolve();
+      video.onerror = () => reject(new Error("seek"));
+      video.currentTime = Math.min(1, Math.max(0, duration / 2));
+    });
+    if (!video.videoWidth || !video.videoHeight) return null;
+    const scale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+    return blob ? { poster: new File([blob], "poster.jpg", { type: "image/jpeg" }), duration } : null;
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
   const { t } = useLocale();
   const router = useRouter();
@@ -85,6 +129,10 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
   // AIが作った一言。入力欄にはプレースホルダーとして出し、空のまま投稿されたらこれを採用する。
   const [aiComment, setAiComment] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
+  // 動画投稿: posterFile=動画の1コマ(一覧表示とAI審査用の画像)。uploadPct=R2への送信の進み具合。
+  const [isVideo, setIsVideo] = useState(false);
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,12 +153,53 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     }
   }
 
+  async function handleVideo(f: File) {
+    if (f.size > VIDEO_MAX_BYTES) {
+      setError(t.photo.errVideoTooLarge);
+      return;
+    }
+    if (!VIDEO_EXT.test(f.name)) {
+      setError(t.photo.errVideoFormat);
+      return;
+    }
+    setCoordsNote(t.photo.gpsChecking);
+    const r = await extractPoster(f);
+    if (!r) {
+      setCoordsNote(null);
+      setError(t.photo.errVideoPoster);
+      return;
+    }
+    if (r.duration > VIDEO_MAX_SECONDS + 0.5) {
+      setCoordsNote(null);
+      setError(t.photo.errVideoTooLong);
+      return;
+    }
+    setFile(f);
+    setIsVideo(true);
+    setPosterFile(r.poster);
+    setAiComment(null);
+    setSpotName("");
+    setPreviewUrl(URL.createObjectURL(f));
+    setCandidates([]);
+    setPick(null);
+    setCoords(null);
+    // 動画からは位置情報を読み取れないので、住所・地名の入力に進む。
+    setCoordsNote(t.photo.gpsNoneVideo);
+    setNeedAddress(true);
+  }
+
   async function handleFile(f: File) {
     setError(null);
+    if (isVideoFile(f)) {
+      await handleVideo(f);
+      return;
+    }
     if (f.size > PHOTO_MAX_BYTES) {
       setError(t.photo.errTooLarge15);
       return;
     }
+    setIsVideo(false);
+    setPosterFile(null);
     setFile(f);
     setAiComment(null);
     setSpotName("");
@@ -155,7 +244,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setError(null);
     try {
       const body = new FormData();
-      body.append("image", await downscale(file));
+      body.append("image", await downscale(isVideo && posterFile ? posterFile : file));
       body.append("address", address);
       const res = await fetch("/api/photo/caption", { method: "POST", body });
       const data = (await res.json().catch(() => ({}))) as { spotName?: string; comment?: string; error?: string };
@@ -187,7 +276,21 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     if (!file || !coords || busy) return;
     setBusy(true);
     setError(null);
-    const upload = await prepareUpload(file);
+    // 動画: まず動画本体をR2へ直接送る(Vercelのサイズ制限を受けない)。画像(1コマ)は従来どおりAPIへ。
+    let videoUrl: string | null = null;
+    if (isVideo) {
+      try {
+        setUploadPct(0);
+        videoUrl = await uploadPhotoVideoToR2(file, (r) => setUploadPct(Math.round(r * 100)));
+      } catch (err) {
+        setError(err instanceof Error && err.message ? err.message : t.photo.errNetwork);
+        setUploadPct(null);
+        setBusy(false);
+        return;
+      }
+      setUploadPct(null);
+    }
+    const upload = await prepareUpload(isVideo && posterFile ? posterFile : file);
     if (!upload) {
       setError(t.photo.errCannotSend);
       setBusy(false);
@@ -195,6 +298,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     }
     const body = new FormData();
     body.append("image", upload);
+    if (videoUrl) body.append("video_url", videoUrl);
     body.append("spot_name", spotName);
     body.append("comment", comment.trim() || aiComment || "");
     body.append("address", address);
@@ -239,25 +343,40 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       </Link>
       <h1 className="text-lg font-medium text-main">{t.photo.composeTitle}</h1>
 
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-main/25 bg-panel-950 text-tone-500"
-      >
-        {previewUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={previewUrl} alt="" className="h-full w-full object-contain" />
-        ) : (
-          <span className="flex flex-col items-center gap-2 text-sm">
-            <ImagePlus size={28} />
-            {t.photo.choosePhoto}
-          </span>
-        )}
-      </button>
+      {isVideo && previewUrl ? (
+        <div className="space-y-2">
+          <video
+            src={previewUrl}
+            controls
+            muted
+            playsInline
+            className="aspect-[4/3] w-full rounded-2xl bg-black object-contain"
+          />
+          <button type="button" onClick={() => fileRef.current?.click()} className="text-xs text-tone-300 underline">
+            {t.photo.chooseMedia}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-main/25 bg-panel-950 text-tone-500"
+        >
+          {previewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={previewUrl} alt="" className="h-full w-full object-contain" />
+          ) : (
+            <span className="flex flex-col items-center gap-2 text-sm">
+              <ImagePlus size={28} />
+              {t.photo.chooseMedia}
+            </span>
+          )}
+        </button>
+      )}
       <input
         ref={fileRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime,video/webm"
         className="hidden"
         onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
       />
@@ -343,9 +462,9 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
         className="flex w-full items-center justify-center gap-2 rounded-full bg-cta-light py-3 text-sm font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover disabled:opacity-40"
       >
         {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-        {busy ? t.photo.submitting : t.photo.submit}
+        {busy ? (uploadPct !== null ? t.photo.videoUploading(uploadPct) : t.photo.submitting) : t.photo.submit}
       </button>
-      <p className="text-center text-[11px] text-tone-600">{t.photo.moderationNote}</p>
+      <p className="text-center text-[11px] text-tone-600">{isVideo ? `${t.photo.videoNote} ` : ""}{t.photo.moderationNote}</p>
     </form>
   );
 }

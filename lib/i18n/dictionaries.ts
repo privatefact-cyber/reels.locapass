@@ -325,6 +325,17 @@ export type Dictionary = {
     moreSpots: (n: number) => string;
     routeLabel: (letter: string) => string;
     memberPhotos: (name: string) => string;
+    chooseMedia: string;
+    errVideoTooLong: string;
+    errVideoTooLarge: string;
+    errVideoFormat: string;
+    errVideoPoster: string;
+    videoNotFound: string;
+    videoNote: string;
+    gpsNoneVideo: string;
+    playVideo: string;
+    badgeVideo: string;
+    videoUploading: (pct: number) => string;
     tags: Record<string, string>;
   };
   language: {
@@ -653,6 +664,17 @@ const ja: Dictionary = {
     moreSpots: (n: number) => ` ほか${n}か所`,
     routeLabel: (letter: string) => `ルート ${letter}`,
     memberPhotos: (name: string) => `${name}のフォト`,
+    chooseMedia: "写真・動画を選ぶ",
+    errVideoTooLong: "動画は30秒以内にしてください。",
+    errVideoTooLarge: "動画は50MB以下にしてください。",
+    errVideoFormat: "対応していない動画形式です(mp4 / mov / webm)。",
+    errVideoPoster: "動画の1コマを取り出せませんでした。別の動画でお試しください。",
+    videoNotFound: "アップロードした動画が見つかりません。もう一度お試しください。",
+    videoNote: "動画は30秒・50MBまで。位置情報は、場所の住所から設定します。",
+    gpsNoneVideo: "動画からは位置情報を読み取れません。場所の住所や地名を入力してください。",
+    playVideo: "動画を再生",
+    badgeVideo: "動画",
+    videoUploading: (pct: number) => `動画をアップロード中… ${pct}%`,
     tags: { "グルメ": "グルメ", "カフェ": "カフェ", "自然・風景": "自然・風景", "夜景": "夜景", "歴史・寺社": "歴史・寺社", "公園": "公園", "建築": "建築", "アート": "アート", "買い物": "買い物", "祭り・イベント": "祭り・イベント", "アクティビティ": "アクティビティ", "スパ・温泉": "スパ・温泉" },
   },
   language: {
@@ -981,6 +1003,17 @@ const en: Dictionary = {
     moreSpots: (n: number) => ` +${n} more`,
     routeLabel: (letter: string) => `Route ${letter}`,
     memberPhotos: (name: string) => `${name}'s photos`,
+    chooseMedia: "Choose a photo or video",
+    errVideoTooLong: "Please use a video of 30 seconds or less.",
+    errVideoTooLarge: "Please use a video under 50 MB.",
+    errVideoFormat: "Unsupported video format (mp4 / mov / webm).",
+    errVideoPoster: "Couldn't read a frame from the video. Please try another one.",
+    videoNotFound: "We couldn't find the uploaded video. Please try again.",
+    videoNote: "Videos: up to 30 sec / 50 MB. Set the location by entering an address.",
+    gpsNoneVideo: "We can't read location from videos. Enter an address or place name.",
+    playVideo: "Play video",
+    badgeVideo: "Video",
+    videoUploading: (pct: number) => `Uploading video… ${pct}%`,
     tags: { "グルメ": "Food", "カフェ": "Cafe", "自然・風景": "Nature & scenery", "夜景": "Night view", "歴史・寺社": "History & shrines", "公園": "Park", "建築": "Architecture", "アート": "Art", "買い物": "Shopping", "祭り・イベント": "Festivals & events", "アクティビティ": "Activities", "スパ・温泉": "Spa & hot springs" },
   },
   language: {
@@ -1309,6 +1342,17 @@ const zh: Dictionary = {
     moreSpots: (n: number) => ` 等${n}处`,
     routeLabel: (letter: string) => `路线 ${letter}`,
     memberPhotos: (name: string) => `${name}的照片`,
+    chooseMedia: "选择照片或视频",
+    errVideoTooLong: "请使用30秒以内的视频。",
+    errVideoTooLarge: "请使用50MB以下的视频。",
+    errVideoFormat: "不支持的视频格式（mp4 / mov / webm）。",
+    errVideoPoster: "无法读取视频画面，请换一个视频试试。",
+    videoNotFound: "未找到已上传的视频，请重试。",
+    videoNote: "视频最长30秒、50MB以内。位置请通过输入地址设置。",
+    gpsNoneVideo: "无法从视频读取位置信息，请输入地址或地名。",
+    playVideo: "播放视频",
+    badgeVideo: "视频",
+    videoUploading: (pct: number) => `正在上传视频… ${pct}%`,
     tags: { "グルメ": "美食", "カフェ": "咖啡馆", "自然・風景": "自然风光", "夜景": "夜景", "歴史・寺社": "历史·寺社", "公園": "公园", "建築": "建筑", "アート": "艺术", "買い物": "购物", "祭り・イベント": "祭典·活动", "アクティビティ": "体验活动", "スパ・温泉": "水疗·温泉" },
   },
   language: {
@@ -1638,6 +1682,17 @@ const ar: Dictionary = {
     moreSpots: (n: number) => ` +${n} أخرى`,
     routeLabel: (letter: string) => `المسار ${letter}`,
     memberPhotos: (name: string) => `صور ${name}`,
+    chooseMedia: "اختر صورة أو فيديو",
+    errVideoTooLong: "يرجى استخدام فيديو مدته 30 ثانية أو أقل.",
+    errVideoTooLarge: "يرجى استخدام فيديو أقل من 50 ميغابايت.",
+    errVideoFormat: "صيغة الفيديو غير مدعومة (mp4 / mov / webm).",
+    errVideoPoster: "تعذّر قراءة لقطة من الفيديو. جرّب فيديو آخر.",
+    videoNotFound: "لم نجد الفيديو المرفوع. يرجى المحاولة مرة أخرى.",
+    videoNote: "الفيديو: حتى 30 ثانية و50 ميغابايت. حدّد الموقع بإدخال عنوان.",
+    gpsNoneVideo: "لا يمكن قراءة الموقع من الفيديو. أدخل عنوانًا أو اسم مكان.",
+    playVideo: "تشغيل الفيديو",
+    badgeVideo: "فيديو",
+    videoUploading: (pct: number) => `جارٍ رفع الفيديو… ${pct}%`,
     tags: { "グルメ": "طعام", "カフェ": "مقهى", "自然・風景": "طبيعة ومناظر", "夜景": "منظر ليلي", "歴史・寺社": "تاريخ ومعابد", "公園": "حديقة", "建築": "عمارة", "アート": "فن", "買い物": "تسوق", "祭り・イベント": "مهرجانات وفعاليات", "アクティビティ": "أنشطة", "スパ・温泉": "سبا وينابيع ساخنة" },
   },
   "language": {

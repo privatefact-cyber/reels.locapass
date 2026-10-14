@@ -6,11 +6,15 @@ import { PHOTO_ALLOWED_MIME, PHOTO_MAX_BYTES } from "@/lib/photo/tags";
 import { moderateAndTag } from "@/lib/photo/moderate";
 import { resolveAreaAndVenue } from "@/lib/photo/resolveArea";
 import { photoText, AI_LANGUAGE_NAME } from "@/lib/photo/serverText";
+import { getR2Client, R2_BUCKET, R2_PUBLIC_BASE_URL } from "@/lib/storage/r2";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export const maxDuration = 60;
 
 const OPERATOR_NAME = "LOCAPASS運営";
 const RATE_LIMIT_PER_10MIN = 10;
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 const text = (v: FormDataEntryValue | null, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 /**
@@ -84,6 +88,34 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // 動画投稿: 動画本体はブラウザからR2へ直接送信済み。ここでは「自分のフォルダのURLか」「実在して、
+  // 形式とサイズが上限内か」を確認する(imageは動画の1コマ=ポスターで、AIの審査・タグ付けもこの1コマで行う)。
+  let videoUrl: string | null = null;
+  const videoParam = text(form.get("video_url"), 300);
+  if (videoParam) {
+    const prefix = `${R2_PUBLIC_BASE_URL}/photo/${user.id}/`;
+    if (!videoParam.startsWith(prefix) || !/^[0-9]+\.(mp4|mov|webm)$/i.test(videoParam.slice(prefix.length))) {
+      return NextResponse.json({ error: t.apiBadInput }, { status: 400 });
+    }
+    const head = await fetch(videoParam, { method: "HEAD" }).catch(() => null);
+    const length = Number(head?.headers.get("content-length") ?? 0);
+    const type = (head?.headers.get("content-type") ?? "").split(";")[0];
+    if (!head || !head.ok || !VIDEO_TYPES.includes(type)) {
+      return NextResponse.json({ error: t.videoNotFound }, { status: 400 });
+    }
+    if (!length || length > VIDEO_MAX_BYTES) {
+      // 上限超過は保存せず、R2からも消す。
+      const r2 = getR2Client();
+      if (r2) {
+        await r2
+          .send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: videoParam.slice(R2_PUBLIC_BASE_URL.length + 1) }))
+          .catch(() => undefined);
+      }
+      return NextResponse.json({ error: t.errVideoTooLarge }, { status: 400 });
+    }
+    videoUrl = videoParam;
+  }
+
   const buffer = Buffer.from(await image.arrayBuffer());
   const moderation = await moderateAndTag(buffer, mime, spotName, comment, AI_LANGUAGE_NAME[locale]);
   if (!moderation.appropriate) {
@@ -113,6 +145,7 @@ export async function POST(request: NextRequest) {
       user_name: userName,
       avatar_url: avatarUrl,
       image_url: imageUrl,
+      video_url: videoUrl,
       latitude,
       longitude,
       address: address || null,

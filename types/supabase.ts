@@ -245,6 +245,7 @@ export type Database = {
           tags: Json
           user_name: string
           venue_id: string | null
+          video_url: string | null
         }
         Insert: {
           address?: string | null
@@ -264,6 +265,7 @@ export type Database = {
           tags?: Json
           user_name: string
           venue_id?: string | null
+          video_url?: string | null
         }
         Update: {
           address?: string | null
@@ -283,6 +285,7 @@ export type Database = {
           tags?: Json
           user_name?: string
           venue_id?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {

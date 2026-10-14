@@ -18,6 +18,8 @@ export type PhotoPost = {
   placeId: string | null;
   venueId: string | null;
   placeName: string | null;
+  /** 動画投稿のとき、動画本体(R2)のURL。imageUrlはその1コマ(ポスター)。 */
+  videoUrl: string | null;
   likeCount: number;
 };
 
@@ -36,7 +38,7 @@ export type PhotoProfile = {
 export const PHOTO_PAGE_SIZE = 90;
 
 const POST_COLUMNS =
-  "id,member_id,user_name,avatar_url,image_url,latitude,longitude,address,spot_name,comment,tags,created_at,site,place_kind,place_id,place_name,venue_id";
+  "id,member_id,user_name,avatar_url,image_url,latitude,longitude,address,spot_name,comment,tags,created_at,site,place_kind,place_id,place_name,venue_id,video_url";
 
 type Supabase = ReturnType<typeof createStaticClient>;
 type PostRow = {
@@ -57,6 +59,7 @@ type PostRow = {
   place_id: string | null;
   place_name: string | null;
   venue_id: string | null;
+  video_url: string | null;
 };
 
 async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<PhotoPost[]> {
@@ -84,6 +87,7 @@ async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<PhotoPost[]
     placeId: r.place_id,
     venueId: r.venue_id,
     placeName: r.place_name,
+    videoUrl: r.video_url,
     likeCount: likeCounts.get(r.id) ?? 0,
   }));
 }

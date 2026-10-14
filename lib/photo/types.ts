@@ -4,4 +4,6 @@ export type PhotoTeaser = {
   imageUrl: string;
   spotName: string;
   placeKind: "listed" | "spot" | "free" | null;
+  /** 動画投稿(imageUrlはその1コマ)。 */
+  isVideo?: boolean;
 };

@@ -7,7 +7,7 @@ import * as maplibreNs from "maplibre-gl";
 // maplibre-glはCJS(UMD)なので、読み込み経路(サーバー描画を含む初期表示か、クリック後の遅延読み込みか)によって
 // 名前空間に直接Mapが無く default の下にだけある場合がある。どちらでも使えるようにここで解決する。
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
-import { Navigation, Route as RouteIcon, X } from "lucide-react";
+import { Navigation, Play, Route as RouteIcon, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -516,6 +516,11 @@ export function PhotoMap({
                           loading="lazy"
                           className="h-full w-full object-cover"
                         />
+                        {post.videoUrl ? (
+                          <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white" aria-label={t.photo.badgeVideo}>
+                            <Play size={12} className="fill-white" />
+                          </span>
+                        ) : null}
                         {spot.names.length > 1 ? (
                           <span className="absolute bottom-2 left-2 max-w-[70%] truncate rounded-full bg-black/70 px-2 py-0.5 text-[10px] text-main">
                             {post.placeName || post.spotName}

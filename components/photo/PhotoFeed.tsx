@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Maximize2, MapPin, Navigation } from "lucide-react";
+import { ChevronLeft, Maximize2, MapPin, Navigation, Play } from "lucide-react";
 import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
@@ -96,6 +96,11 @@ export function PhotoFeed({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photoResized(post.imageUrl, 360, true)} alt={post.spotName} loading="lazy" className="h-full w-full object-cover" />
+              {post.videoUrl ? (
+                <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white" aria-label={t.photo.badgeVideo}>
+                  <Play size={11} className="fill-white" />
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
@@ -135,18 +140,38 @@ export function PhotoFeed({
                 </div>
               </div>
             )}
-            <div className="relative md:mx-auto md:w-fit">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photoResized(post.imageUrl, 1080, false)} alt={post.spotName} loading="lazy" className="w-full bg-tone-900 object-contain md:mx-auto md:max-h-[80dvh] md:w-auto" />
-              <button
-                type="button"
-                onClick={() => setFullscreenIndex(index)}
-                aria-label={t.photo.fullscreen}
-                className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
-              >
-                <Maximize2 size={18} />
-              </button>
-            </div>
+            {post.videoUrl ? (
+              // 動画投稿: ポスター(1コマ)を出し、再生ボタンで再生する(一覧に何本あっても、押すまで動画は読み込まない)。
+              // 再生を始めたら、ほかの動画は止める。全画面はブラウザ標準のコントロールを使う。
+              <video
+                data-photo-video
+                src={post.videoUrl}
+                poster={photoResized(post.imageUrl, 1080, false)}
+                controls
+                playsInline
+                preload="none"
+                aria-label={post.spotName}
+                onPlay={(e) => {
+                  document.querySelectorAll<HTMLVideoElement>("video[data-photo-video]").forEach((v) => {
+                    if (v !== e.currentTarget) v.pause();
+                  });
+                }}
+                className="w-full bg-black md:mx-auto md:max-h-[80dvh] md:w-auto"
+              />
+            ) : (
+              <div className="relative md:mx-auto md:w-fit">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoResized(post.imageUrl, 1080, false)} alt={post.spotName} loading="lazy" className="w-full bg-tone-900 object-contain md:mx-auto md:max-h-[80dvh] md:w-auto" />
+                <button
+                  type="button"
+                  onClick={() => setFullscreenIndex(index)}
+                  aria-label={t.photo.fullscreen}
+                  className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+                >
+                  <Maximize2 size={18} />
+                </button>
+              </div>
+            )}
             <div className="space-y-2 px-3 pt-3">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-base font-medium text-main">{post.spotName}</p>
@@ -234,6 +259,11 @@ export function PhotoFeed({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photoResized(post.imageUrl, 360, true)} alt={post.spotName} loading="lazy" className="h-full w-full object-cover" />
+              {post.videoUrl ? (
+                <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white" aria-label={t.photo.badgeVideo}>
+                  <Play size={11} className="fill-white" />
+                </span>
+              ) : null}
               {post.placeKind === "listed" || post.placeKind === "spot" ? (
                 <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white">
                   {post.placeKind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}

@@ -4,7 +4,8 @@ type UploadContext =
   | { context?: "cast_self" }
   | { context: "staff_self" }
   | { context: "shop_on_behalf_of_cast"; castId: string }
-  | { context: "shop_self"; shopId: string };
+  | { context: "shop_self"; shopId: string }
+  | { context: "photo_user" };
 
 /** 任意のファイル(Blob/File)をCloudflare R2へ直接PUTし、公開URL(media.locapass.net経由)を返す。 */
 async function uploadToR2(
@@ -31,6 +32,38 @@ async function uploadToR2(
     throw new Error(`アップロードに失敗しました(status: ${putResponse.status})`);
   }
 
+  return publicUrl;
+}
+
+/**
+ * エリアフォト用: 動画をR2へ直接送る(進捗つき)。fetchは送信の進捗が取れないのでXMLHttpRequestを使う。
+ * 署名にサイズを含めるため、presigned発行時に実際のファイルサイズを渡す。
+ */
+export async function uploadPhotoVideoToR2(file: File, onProgress?: (ratio: number) => void): Promise<string> {
+  const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+  const contentType = file.type || "video/mp4";
+  const created = await fetch("/api/r2/presigned-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ext, contentType, context: "photo_user", size: file.size }),
+  });
+  if (!created.ok) {
+    const body = await created.json().catch(() => ({}));
+    throw new Error(body.error ?? "アップロードURLの発行に失敗しました");
+  }
+  const { uploadURL, publicUrl } = (await created.json()) as { uploadURL: string; publicUrl: string };
+
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadURL);
+    xhr.setRequestHeader("Content-Type", contentType);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress?.(e.loaded / e.total);
+    };
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`アップロードに失敗しました(status: ${xhr.status})`)));
+    xhr.onerror = () => reject(new Error("通信に失敗しました"));
+    xhr.send(file);
+  });
   return publicUrl;
 }
 
