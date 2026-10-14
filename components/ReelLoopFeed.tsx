@@ -8,6 +8,8 @@ import { ReelCard } from "@/components/ReelCard";
 import type { ReelItem } from "@/lib/reels/types";
 
 const MAX_CYCLES = 50;
+/** 今見ているカードの前後これだけの枚数だけ中身を描き、それ以外は同じ縦横比の空の枠にする(低価格の端末の負荷対策)。 */
+const REEL_WINDOW = 4;
 
 /**
  * 縦スワイプのリール一覧。最後まで見きったら先頭へ戻るのではなく、
@@ -50,12 +52,18 @@ export function ReelLoopFeed({ reels }: { reels: ReelItem[] }) {
           // PC(md以上)では動画の縦横比(9:16)を保ったまま画面に収まるサイズに収める
           // (このwrapperが無いと、ReelCardのmd:h-full/w-autoが親の不定な高さのせいで
           // 効かず、幅いっぱいまで広がって縦長になりすぎる)。
-          <div key={loopKey} className="mx-auto w-full md:flex md:h-[85dvh] md:items-center md:justify-center">
+          <div
+            key={loopKey}
+            ref={registerItem(index)}
+            className={`mx-auto w-full md:flex md:h-[85dvh] md:items-center md:justify-center ${
+              Math.abs(index - activeIndex) <= REEL_WINDOW ? "" : "aspect-[9/16] md:aspect-auto"
+            }`}
+          >
+            {Math.abs(index - activeIndex) > REEL_WINDOW ? null : (
             <ReelCard
               reelId={reel.id}
               castId={reel.castId}
               commentsEnabled={reel.isCommentsEnabled}
-              containerRef={registerItem(index)}
               isActive={index === activeIndex}
               videoUrl={media?.type === "video" ? media.url : undefined}
               posterImageUrl={media?.type === "video" ? media.poster : media?.url}
@@ -70,6 +78,7 @@ export function ReelLoopFeed({ reels }: { reels: ReelItem[] }) {
               liked={liked.has(reel.id)}
               onToggleLike={() => toggleLike(reel.id)}
             />
+            )}
           </div>
         );
       })}

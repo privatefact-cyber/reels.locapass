@@ -35,6 +35,8 @@ const GATE_IDLE_MS = 5000;
 
 // リール一覧は最後まで見きっても先頭へ戻すのではなく、同じ並びをもう一周ぶん継ぎ足して
 // 下スワイプを永遠に続けられるようにする(ReelLoopFeedと同じ思想)。
+/** 縦スワイプ一覧で、今見ているカードの前後これだけの枚数だけ中身を描く。 */
+const REEL_WINDOW = 4;
 const MAX_CYCLES = 50;
 
 // SHOPホバー時プレビュー: 実際の店舗詳細ページ(/shops/[id])を縮小表示する(スマホ1画面分をまるごと縮小)。
@@ -562,6 +564,31 @@ export function ReelFeed({
   const { activeIndex: overlayActiveIndex, registerItem: registerOverlayItem } =
     useActiveReelIndex(loopedTiles.length);
 
+  // 縦スワイプ一覧の「間引き」: 今見ているカードの前後 REEL_WINDOW 枚だけ中身を描き、それ以外は
+  // 同じ縦横比の空の枠にする(カード=画像・ボタン・文字のDOMが多いと、低価格の端末で重くなるため)。
+  // 開いた直後は、IntersectionObserverの最初の報告(まだ先頭を指していることがある)ではなく、
+  // タップしたカードを中心にする。スクロールで位置が決まってから、見ているカードに追従する。
+  const [windowCenter, setWindowCenter] = useState(0);
+  const followActiveRef = useRef(false);
+  useEffect(() => {
+    if (openIndex === null) {
+      followActiveRef.current = false;
+      return;
+    }
+    followActiveRef.current = false;
+    setWindowCenter(openIndex);
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => (followActiveRef.current = true)));
+    return () => cancelAnimationFrame(id);
+  }, [openIndex]);
+  useEffect(() => {
+    if (openIndex !== null && followActiveRef.current) setWindowCenter(overlayActiveIndex);
+  }, [overlayActiveIndex, openIndex]);
+  // タイルをタップした同じ描画で、窓の中心も開いたカードにする(先頭付近を一瞬描かないため)。
+  const openTileAt = useCallback((index: number) => {
+    setWindowCenter(index);
+    setOpenIndex(index);
+  }, []);
+
   useEffect(() => {
     if (!tiles.length) return;
     if (overlayActiveIndex >= loopedTiles.length - 3) {
@@ -839,7 +866,7 @@ export function ReelFeed({
               key={tileKey(tile)}
               tile={tile}
               index={index}
-              onOpen={setOpenIndex}
+              onOpen={openTileAt}
               onShopPeekEnter={handleShopPeekEnter}
               onShopPeekLeave={handleShopPeekLeave}
             />
@@ -863,13 +890,17 @@ export function ReelFeed({
               (実際にアクティブになったときの再生開始までの待ち時間を減らす)。 */}
           <PreloadNextVideo src={tileVideoUrl(loopedTiles[overlayActiveIndex + 1]?.tile)} />
 
-          {loopedTiles.map(({ tile, loopKey }, index) => (
+          {loopedTiles.map(({ tile, loopKey }, index) => {
+            const mounted = Math.abs(index - windowCenter) <= REEL_WINDOW;
+            return (
             <div
               key={loopKey}
               ref={setOverlayItemRef(index)}
-              className="relative mx-auto w-full overflow-hidden bg-black md:flex md:h-[85dvh] md:items-center md:justify-center"
+              className={`relative mx-auto w-full overflow-hidden bg-black md:flex md:h-[85dvh] md:items-center md:justify-center ${
+                mounted ? "" : "aspect-[9/16] md:aspect-auto"
+              }`}
             >
-              {tile.kind === "cast" ? (
+              {!mounted ? null : tile.kind === "cast" ? (
                 (() => {
                   const media = tile.reel.media[0];
                   return (
@@ -932,7 +963,8 @@ export function ReelFeed({
                 />
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
