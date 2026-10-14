@@ -33,6 +33,39 @@ async function downscale(file: File): Promise<File> {
   }
 }
 
+// Vercelは1回のリクエストが約4.5MBまで(超えるとサーバーの処理に届く前に413で止まる)。
+// フォームの他の項目ぶんを見込んで、写真は4MB以下にして送る。
+const UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
+
+/**
+ * 投稿する写真を、長辺を縮め・JPEGの画質を下げながら UPLOAD_MAX_BYTES 以下にする。
+ * (表示は最大1920pxなので、2560px/画質0.85でも見た目は変わらない。位置情報は縮小前の元の写真から読み取り済み。)
+ * 縮小できない形式(HEICなどをブラウザが読めない場合)は、元のままで足りれば送り、大きすぎれば null。
+ */
+async function prepareUpload(file: File): Promise<File | null> {
+  if (file.size <= UPLOAD_MAX_BYTES && file.type !== "image/heic" && file.type !== "image/heif") return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    for (const [maxEdge, quality] of [
+      [2560, 0.85],
+      [2048, 0.8],
+      [1600, 0.75],
+      [1280, 0.7],
+    ] as const) {
+      const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+      if (blob && blob.size <= UPLOAD_MAX_BYTES) return new File([blob], "photo.jpg", { type: "image/jpeg" });
+    }
+    return null;
+  } catch {
+    return file.size <= UPLOAD_MAX_BYTES ? file : null;
+  }
+}
+
 export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -152,8 +185,14 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     if (!file || !coords || busy) return;
     setBusy(true);
     setError(null);
+    const upload = await prepareUpload(file);
+    if (!upload) {
+      setError("この写真は大きすぎて送れません。JPEG形式で保存し直すか、別の写真でお試しください。");
+      setBusy(false);
+      return;
+    }
     const body = new FormData();
-    body.append("image", file);
+    body.append("image", upload);
     body.append("spot_name", spotName);
     body.append("comment", comment.trim() || aiComment || "");
     body.append("address", address);
@@ -169,7 +208,13 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       const res = await fetch("/api/photo/posts", { method: "POST", body });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? "投稿に失敗しました。もう一度お試しください。");
+        // 413はサーバーの手前で止められるのでJSONが返らない(上限を超えた場合)。
+        setError(
+          data.error ??
+            (res.status === 413
+              ? "写真のサイズが大きすぎます。別の写真でお試しください。"
+              : "投稿に失敗しました。もう一度お試しください。"),
+        );
         setBusy(false);
         return;
       }
