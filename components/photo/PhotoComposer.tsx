@@ -96,67 +96,120 @@ function frameScore(video: HTMLVideoElement): number {
   return mean < 20 ? std * 0.1 : std + Math.min(mean, 128) * 0.2;
 }
 
+type PosterResult = { ok: true; poster: File; duration: number } | { ok: false; stage: string };
+
+/** イベントを待つ。来なくてもタイムアウトで先に進む(iPhone Safariは、seekedなどが来ないことがあるため)。 */
+function waitEvent(video: HTMLVideoElement, names: string[], ms: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    let finished = false;
+    const finish = (value: boolean) => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timer);
+      names.forEach((n) => video.removeEventListener(n, onOk));
+      video.removeEventListener("error", onErr);
+      resolve(value);
+    };
+    const onOk = () => finish(true);
+    const onErr = () => finish(false);
+    const timer = window.setTimeout(() => finish(false), ms);
+    names.forEach((n) => video.addEventListener(n, onOk, { once: true }));
+    video.addEventListener("error", onErr, { once: true });
+  });
+}
+
 /**
  * 動画の1コマ(ポスター)と長さを取り出す。ポスターは一覧の表示と、AIの審査・タグ付けに使う
  * (動画本体はブラウザからR2へ直接送るので、サーバーのAIには画像の1コマだけを渡す)。
  * 冒頭は暗転・フェードインのことが多いので、15% / 40% / 65% の位置から3コマを試し、見映えのよい1コマを選ぶ。
- * ブラウザが読めない動画(例: HEVCのmovをChromeで開いた等)はnull。
+ *
+ * iPhone Safari対策: 画面に置いていない<video>はコマを描画しないことがあるので、見えない状態でDOMに置く。
+ * muted/playsinline を属性でも付け、loadeddata(コマが使える状態)を待つ。seekedが来なくてもタイムアウトで続行し、
+ * 少し待ってから描く。全滅したら、一瞬だけ再生して(無音)そのコマを使う。失敗は段階のコードで返す。
  */
-async function extractPoster(file: File): Promise<{ poster: File; duration: number } | null> {
+async function extractPoster(file: File): Promise<PosterResult> {
   const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
   try {
-    const video = document.createElement("video");
     video.muted = true;
-    video.playsInline = true;
+    video.defaultMuted = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
     video.preload = "auto";
+    Object.assign(video.style, { position: "fixed", left: "-9999px", top: "0", width: "2px", height: "2px", opacity: "0", pointerEvents: "none" });
+    document.body.appendChild(video);
     video.src = url;
-    await new Promise<void>((resolve, reject) => {
-      video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject(new Error("metadata"));
-    });
+    video.load();
+
+    let ready = video.readyState >= 2 || (await waitEvent(video, ["loadeddata"], 8000));
+    if (!ready) {
+      // コマが使える状態にならないときは、無音で一瞬再生して読み込みを促す。
+      try {
+        await video.play();
+      } catch {
+        /* 自動再生が許可されない場合は、そのまま続ける */
+      }
+      ready = video.readyState >= 2 || (await waitEvent(video, ["loadeddata", "playing"], 3000));
+      video.pause();
+    }
+    if (video.readyState < 1) return { ok: false, stage: "load" };
     const duration = video.duration;
-    if (!video.videoWidth || !video.videoHeight) return null;
+    if (!video.videoWidth || !video.videoHeight) return { ok: false, stage: "size" };
+
     const scale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight));
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(video.videoWidth * scale);
     canvas.height = Math.round(video.videoHeight * scale);
     const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
+    if (!ctx) return { ok: false, stage: "canvas" };
 
     let bestBlob: Blob | null = null;
     let bestScore = -1;
+    const capture = async () => {
+      try {
+        const score = frameScore(video);
+        if (score > bestScore) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+          if (blob) {
+            bestBlob = blob;
+            bestScore = score;
+          }
+        }
+      } catch {
+        /* このコマは使えない(次のコマを試す) */
+      }
+    };
+
     const points = Number.isFinite(duration) && duration > 0 ? [0.15, 0.4, 0.65] : [0];
     for (const p of points) {
-      try {
-        await new Promise<void>((resolve, reject) => {
-          const timer = window.setTimeout(() => reject(new Error("seek-timeout")), 4000);
-          video.onseeked = () => {
-            window.clearTimeout(timer);
-            resolve();
-          };
-          video.onerror = () => {
-            window.clearTimeout(timer);
-            reject(new Error("seek"));
-          };
-          video.currentTime = Number.isFinite(duration) ? duration * p : 0;
-        });
-      } catch {
-        continue; // 1コマ読めなくても、ほかのコマを試す
-      }
-      const score = frameScore(video);
-      if (score > bestScore) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
-        if (blob) {
-          bestBlob = blob;
-          bestScore = score;
-        }
-      }
+      video.currentTime = Number.isFinite(duration) ? duration * p : 0;
+      await waitEvent(video, ["seeked"], 2500);
+      await new Promise((r) => window.setTimeout(r, 120)); // コマが描画されるのを少し待つ(iPhone)
+      await capture();
     }
-    return bestBlob ? { poster: new File([bestBlob], "poster.jpg", { type: "image/jpeg" }), duration } : null;
+
+    if (!bestBlob) {
+      // 全部だめだったら、一瞬だけ(無音で)再生して、そのコマを使う。
+      try {
+        await video.play();
+        await new Promise((r) => window.setTimeout(r, 600));
+        video.pause();
+      } catch {
+        /* 再生できないなら、現在のコマを試す */
+      }
+      await capture();
+    }
+    if (!bestBlob) return { ok: false, stage: "draw" };
+    return { ok: true, poster: new File([bestBlob], "poster.jpg", { type: "image/jpeg" }), duration: Number.isFinite(duration) ? duration : 0 };
   } catch {
-    return null;
+    return { ok: false, stage: "error" };
   } finally {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    video.remove();
     URL.revokeObjectURL(url);
   }
 }
@@ -230,8 +283,9 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setPreparing(true);
     const r = await extractPoster(f);
     setPreparing(false);
-    if (!r) {
-      setError(t.photo.errVideoPoster);
+    if (!r.ok) {
+      // どの段階で止まったかを、コードで添える(iPhoneなど端末ごとの不具合の切り分け用)。
+      setError(`${t.photo.errVideoPoster} (code ${r.stage})`);
       return;
     }
     if (r.duration > VIDEO_MAX_SECONDS + 0.5) {
