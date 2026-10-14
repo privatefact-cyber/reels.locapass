@@ -28,7 +28,7 @@ export function PreloadNextVideo({ src }: { src?: string }) {
       .then(({ default: Hls }) => {
         if (cancelled || !Hls.isSupported() || !videoRef.current) return;
         // maxBufferLengthを2〜3秒相当に絞り、それ以上のセグメントは取りに行かない。
-        hls = new Hls({ maxBufferLength: 3, maxMaxBufferLength: 3, backBufferLength: 0 });
+        hls = new Hls({ maxBufferLength: 3, maxMaxBufferLength: 3, backBufferLength: 0, startLevel: 0 });
         hls.loadSource(src);
         hls.attachMedia(video);
       })

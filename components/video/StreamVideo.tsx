@@ -50,7 +50,16 @@ export const StreamVideo = forwardRef<HTMLVideoElement, StreamVideoProps>(functi
     void import("hls.js")
       .then(({ default: Hls }) => {
         if (!Hls.isSupported() || !localRef.current) return;
-        hls = new Hls({ maxBufferLength: 8, backBufferLength: 0 });
+        // startLevel: 0 = 最も低い画質から再生を始め(開始が速い)、通信に余裕があれば自動で上げる。
+        // capLevelToPlayerSize + ignoreDevicePixelRatio = 表示サイズ(CSS px)を超える画質は取らない
+        // (小さな画面・低価格の端末で、必要以上の高画質を読み込んでデコードしないため)。
+        hls = new Hls({
+          maxBufferLength: 8,
+          backBufferLength: 0,
+          startLevel: 0,
+          capLevelToPlayerSize: true,
+          ignoreDevicePixelRatio: true,
+        });
         hls.loadSource(src);
         hls.attachMedia(video);
         void video.play().catch(() => undefined);
