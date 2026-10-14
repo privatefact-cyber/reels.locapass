@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 
-type PreferenceKey = "new_cast" | "new_event" | "new_shop_reel" | "new_cast_reel" | "shop_message";
+type PreferenceKey =
+  | "new_cast"
+  | "new_event"
+  | "new_shop_reel"
+  | "new_cast_reel"
+  | "shop_message"
+  | "photo_like"
+  | "photo_follow";
 
 const ITEMS: { key: PreferenceKey; label: string; description: string }[] = [
   { key: "new_cast", label: "新規FACES", description: "お気に入り店舗に新しいFACESが入ったとき" },
@@ -12,6 +19,8 @@ const ITEMS: { key: PreferenceKey; label: string; description: string }[] = [
   { key: "new_shop_reel", label: "店舗の新着リール", description: "お気に入り店舗が新しいリールを投稿したとき" },
   { key: "new_cast_reel", label: "FACESの新着リール", description: "フォロー中FACESが新しいリールを投稿したとき" },
   { key: "shop_message", label: "店舗からのメッセージ", description: "お気に入り店舗からのお知らせ・DM" },
+  { key: "photo_like", label: "写真へのいいね", description: "投稿した写真にいいねされたとき" },
+  { key: "photo_follow", label: "フォロー", description: "誰かにフォローされたとき" },
 ];
 
 type Preferences = Record<PreferenceKey, boolean>;
@@ -22,6 +31,8 @@ const DEFAULT_PREFERENCES: Preferences = {
   new_shop_reel: true,
   new_cast_reel: true,
   shop_message: true,
+  photo_like: true,
+  photo_follow: true,
 };
 
 export function NotificationPreferencesForm() {
@@ -38,7 +49,7 @@ export function NotificationPreferencesForm() {
 
       const { data: row } = await supabase
         .from("locapass_notification_preferences")
-        .select("new_cast, new_event, new_shop_reel, new_cast_reel, shop_message")
+        .select("new_cast, new_event, new_shop_reel, new_cast_reel, shop_message, photo_like, photo_follow")
         .eq("user_id", uid)
         .maybeSingle();
 

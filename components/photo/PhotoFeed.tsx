@@ -37,16 +37,23 @@ export function PhotoFeed({
   areas,
   areaSlug,
   initialView = "grid",
+  initialPostId,
 }: {
   posts: PhotoPost[];
   areas: PhotoArea[];
   areaSlug: string | null;
   initialView?: "grid" | "map";
+  /** 通知などからの直リンク: この写真を最初から縦ビューアで開く。 */
+  initialPostId?: string;
 }) {
   // ビューアに出す写真の並び。格子からは全体の中のその1枚から、マップのカードからは
   // そのカード(同じ場所)の写真だけを出す。
   const { t, locale } = useLocale();
-  const [viewer, setViewer] = useState<{ posts: PhotoPost[]; index: number; title: string | null; mode: "grid" | "detail" } | null>(null);
+  const [viewer, setViewer] = useState<{ posts: PhotoPost[]; index: number; title: string | null; mode: "grid" | "detail" } | null>(() => {
+    if (!initialPostId) return null;
+    const index = posts.findIndex((p) => p.id === initialPostId);
+    return index >= 0 ? { posts, index, title: null, mode: "detail" } : null;
+  });
   const [view, setView] = useState<"grid" | "map">(initialView);
   // フルスクリーン表示中の写真(ビューアの並びの中の番号)。nullなら閉じている。
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);

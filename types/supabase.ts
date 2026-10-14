@@ -1494,6 +1494,8 @@ export type Database = {
           new_cast: boolean
           new_cast_reel: boolean
           new_event: boolean
+          photo_follow: boolean
+          photo_like: boolean
           new_shop_reel: boolean
           shop_message: boolean
           updated_at: string
@@ -1503,6 +1505,8 @@ export type Database = {
           new_cast?: boolean
           new_cast_reel?: boolean
           new_event?: boolean
+          photo_follow?: boolean
+          photo_like?: boolean
           new_shop_reel?: boolean
           shop_message?: boolean
           updated_at?: string
@@ -1512,6 +1516,8 @@ export type Database = {
           new_cast?: boolean
           new_cast_reel?: boolean
           new_event?: boolean
+          photo_follow?: boolean
+          photo_like?: boolean
           new_shop_reel?: boolean
           shop_message?: boolean
           updated_at?: string

@@ -19,9 +19,16 @@ export async function generateMetadata({ params }: { params: Promise<{ memberId:
   return data ? { title: t.memberPhotos(data.profile.name) } : {};
 }
 
-export default async function MemberPhotoPage({ params }: { params: Promise<{ memberId: string }> }) {
+export default async function MemberPhotoPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ memberId: string }>;
+  searchParams: Promise<{ post?: string }>;
+}) {
   const { t } = await photoText();
   const { memberId } = await params;
+  const { post } = await searchParams;
   if (!UUID.test(memberId)) notFound();
   const data = await getMemberPhotos(memberId);
   if (!data) notFound();
@@ -49,7 +56,7 @@ export default async function MemberPhotoPage({ params }: { params: Promise<{ me
         </div>
       </header>
 
-      <PhotoFeed posts={posts} areas={[]} areaSlug={null} />
+      <PhotoFeed posts={posts} areas={[]} areaSlug={null} initialPostId={post && UUID.test(post) ? post : undefined} />
     </div>
   );
 }

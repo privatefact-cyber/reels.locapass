@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { photoText } from "@/lib/photo/serverText";
+import { notifyPhotoLike } from "@/lib/photo/notify";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -36,6 +37,11 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     // 同時押しでUNIQUE(post_id, member_id)に当たっても、結果は「いいね済み」で同じなので無視する。
     await admin.from("area_photo_likes").insert({ post_id: id, member_id: user.id });
     liked = true;
+  }
+
+  // いいねを付けたときだけ、投稿者に通知(レスポンスを返した後に行い、失敗してもいいね自体は成功のまま)。
+  if (liked) {
+    after(() => notifyPhotoLike(user.id, id).catch((e) => console.error("photo like notify failed", e)));
   }
 
   const { count } = await admin.from("area_photo_likes").select("id", { count: "exact", head: true }).eq("post_id", id);

@@ -10,7 +10,15 @@ import { sendPushToUser } from "@/lib/push/send";
 // admin_message(運営からのお知らせ)だけはカテゴリ別トグルの対象外で常に配信する。
 const ALWAYS_ON_TYPE = "admin_message";
 
-type NotificationType = "new_cast" | "new_event" | "new_shop_reel" | "new_cast_reel" | "shop_message" | "admin_message";
+type NotificationType =
+  | "new_cast"
+  | "new_event"
+  | "new_shop_reel"
+  | "new_cast_reel"
+  | "shop_message"
+  | "admin_message"
+  | "photo_like"
+  | "photo_follow";
 
 const PREFERENCE_COLUMN: Partial<Record<NotificationType, string>> = {
   new_cast: "new_cast",
@@ -18,6 +26,8 @@ const PREFERENCE_COLUMN: Partial<Record<NotificationType, string>> = {
   new_shop_reel: "new_shop_reel",
   new_cast_reel: "new_cast_reel",
   shop_message: "shop_message",
+  photo_like: "photo_like",
+  photo_follow: "photo_follow",
 };
 
 export async function POST(request: Request) {
@@ -48,7 +58,7 @@ export async function POST(request: Request) {
     if (column) {
       const { data: prefs } = await supabase
         .from("locapass_notification_preferences")
-        .select("new_cast, new_event, new_shop_reel, new_cast_reel, shop_message")
+        .select("new_cast, new_event, new_shop_reel, new_cast_reel, shop_message, photo_like, photo_follow")
         .eq("user_id", notification.user_id)
         .maybeSingle();
       // 設定行が無い(バックフィル漏れ等)場合はデフォルトのON扱いにする。

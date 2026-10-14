@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { photoText } from "@/lib/photo/serverText";
+import { notifyPhotoFollow } from "@/lib/photo/notify";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -40,6 +41,11 @@ export async function POST(_request: Request, { params }: { params: Promise<{ me
   } else {
     await admin.from("area_photo_follows").insert({ follower_member_id: user.id, followee_member_id: memberId });
     following = true;
+  }
+
+  // フォローしたときだけ、相手に通知(レスポンスを返した後に行い、失敗してもフォロー自体は成功のまま)。
+  if (following) {
+    after(() => notifyPhotoFollow(user.id, memberId).catch((e) => console.error("photo follow notify failed", e)));
   }
 
   const { count } = await admin
