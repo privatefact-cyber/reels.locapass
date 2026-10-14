@@ -213,7 +213,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
           data.error ??
             (res.status === 413
               ? "写真のサイズが大きすぎます。別の写真でお試しください。"
-              : "投稿に失敗しました。もう一度お試しください。"),
+              : `投稿に失敗しました。もう一度お試しください。(コード ${res.status})`),
         );
         setBusy(false);
         return;
@@ -221,7 +221,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       router.push("/photo");
       router.refresh();
     } catch {
-      setError("通信に失敗しました。もう一度お試しください。");
+      setError("通信に失敗しました。電波の良い場所でもう一度お試しください。(コード network)");
       setBusy(false);
     }
   }
