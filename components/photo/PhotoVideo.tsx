@@ -45,8 +45,16 @@ export function PhotoVideo({ src, poster, label }: { src: string; poster: string
       { threshold: [0, 0.6, 1] },
     );
     io.observe(el);
+    // アプリの切り替え・タブの切り替え・画面を閉じたとき(ブラウザが隠れたとき)も止める(音が流れ続けないように)。
+    const stopWhenHidden = () => {
+      if (document.visibilityState === "hidden") el.pause();
+    };
+    document.addEventListener("visibilitychange", stopWhenHidden);
+    window.addEventListener("pagehide", stopWhenHidden);
     return () => {
       io.disconnect();
+      document.removeEventListener("visibilitychange", stopWhenHidden);
+      window.removeEventListener("pagehide", stopWhenHidden);
       el.pause();
     };
   }, [near]);
