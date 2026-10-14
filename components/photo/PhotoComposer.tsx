@@ -74,9 +74,32 @@ const VIDEO_MAX_SECONDS = 30;
 const isVideoFile = (f: File) => f.type.startsWith("video/") || /\.(mp4|mov|webm)$/i.test(f.name);
 const VIDEO_EXT = /\.(mp4|mov|webm)$/i;
 
+/** 1コマの「見映え」の点数。暗すぎる(暗転)・のっぺり(フェードイン)は低く、明るさと明暗の差があるほど高い。 */
+function frameScore(video: HTMLVideoElement): number {
+  const c = document.createElement("canvas");
+  c.width = 48;
+  c.height = 48;
+  const ctx = c.getContext("2d");
+  if (!ctx) return 0;
+  ctx.drawImage(video, 0, 0, 48, 48);
+  const { data } = ctx.getImageData(0, 0, 48, 48);
+  let sum = 0;
+  let sumSq = 0;
+  const n = data.length / 4;
+  for (let i = 0; i < data.length; i += 4) {
+    const y = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    sum += y;
+    sumSq += y * y;
+  }
+  const mean = sum / n;
+  const std = Math.sqrt(Math.max(0, sumSq / n - mean * mean));
+  return mean < 20 ? std * 0.1 : std + Math.min(mean, 128) * 0.2;
+}
+
 /**
- * 動画の途中の1コマ(ポスター)と長さを取り出す。ポスターは一覧の表示と、AIの審査・タグ付けに使う
+ * 動画の1コマ(ポスター)と長さを取り出す。ポスターは一覧の表示と、AIの審査・タグ付けに使う
  * (動画本体はブラウザからR2へ直接送るので、サーバーのAIには画像の1コマだけを渡す)。
+ * 冒頭は暗転・フェードインのことが多いので、15% / 40% / 65% の位置から3コマを試し、見映えのよい1コマを選ぶ。
  * ブラウザが読めない動画(例: HEVCのmovをChromeで開いた等)はnull。
  */
 async function extractPoster(file: File): Promise<{ poster: File; duration: number } | null> {
@@ -85,26 +108,52 @@ async function extractPoster(file: File): Promise<{ poster: File; duration: numb
     const video = document.createElement("video");
     video.muted = true;
     video.playsInline = true;
-    video.preload = "metadata";
+    video.preload = "auto";
     video.src = url;
     await new Promise<void>((resolve, reject) => {
       video.onloadedmetadata = () => resolve();
       video.onerror = () => reject(new Error("metadata"));
     });
     const duration = video.duration;
-    await new Promise<void>((resolve, reject) => {
-      video.onseeked = () => resolve();
-      video.onerror = () => reject(new Error("seek"));
-      video.currentTime = Math.min(1, Math.max(0, duration / 2));
-    });
     if (!video.videoWidth || !video.videoHeight) return null;
     const scale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight));
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(video.videoWidth * scale);
     canvas.height = Math.round(video.videoHeight * scale);
-    canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
-    return blob ? { poster: new File([blob], "poster.jpg", { type: "image/jpeg" }), duration } : null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    let bestBlob: Blob | null = null;
+    let bestScore = -1;
+    const points = Number.isFinite(duration) && duration > 0 ? [0.15, 0.4, 0.65] : [0];
+    for (const p of points) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timer = window.setTimeout(() => reject(new Error("seek-timeout")), 4000);
+          video.onseeked = () => {
+            window.clearTimeout(timer);
+            resolve();
+          };
+          video.onerror = () => {
+            window.clearTimeout(timer);
+            reject(new Error("seek"));
+          };
+          video.currentTime = Number.isFinite(duration) ? duration * p : 0;
+        });
+      } catch {
+        continue; // 1コマ読めなくても、ほかのコマを試す
+      }
+      const score = frameScore(video);
+      if (score > bestScore) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+        if (blob) {
+          bestBlob = blob;
+          bestScore = score;
+        }
+      }
+    }
+    return bestBlob ? { poster: new File([bestBlob], "poster.jpg", { type: "image/jpeg" }), duration } : null;
   } catch {
     return null;
   } finally {
@@ -130,10 +179,13 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
   // AIが作った一言。入力欄にはプレースホルダーとして出し、空のまま投稿されたらこれを採用する。
   const [aiComment, setAiComment] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
-  // 動画投稿: posterFile=動画の1コマ(一覧表示とAI審査用の画像)。uploadPct=R2への送信の進み具合。
+  // 動画投稿: posterFile=動画の1コマ(一覧表示とAI審査用の画像)。
   const [isVideo, setIsVideo] = useState(false);
   const [posterFile, setPosterFile] = useState<File | null>(null);
-  const [uploadPct, setUploadPct] = useState<number | null>(null);
+  // 送信の段階: uploading=動画をR2へ送信中(進み具合あり) / checking=AIの確認と保存中。
+  const [phase, setPhase] = useState<"idle" | "uploading" | "checking">("idle");
+  const [uploadInfo, setUploadInfo] = useState<{ pct: number; loaded: number; total: number; etaSec: number | null } | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -142,6 +194,17 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  // 送信中にうっかり閉じる/戻ると、動画のアップロードが途中で切れるので、確認を出す。
+  useEffect(() => {
+    if (!busy) return;
+    const guard = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [busy]);
 
   async function loadCandidates(c: { lat: number; lng: number }) {
     try {
@@ -163,15 +226,15 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       setError(t.photo.errVideoFormat);
       return;
     }
-    setCoordsNote(t.photo.gpsChecking);
+    setCoordsNote(null);
+    setPreparing(true);
     const r = await extractPoster(f);
+    setPreparing(false);
     if (!r) {
-      setCoordsNote(null);
       setError(t.photo.errVideoPoster);
       return;
     }
     if (r.duration > VIDEO_MAX_SECONDS + 0.5) {
-      setCoordsNote(null);
       setError(t.photo.errVideoTooLong);
       return;
     }
@@ -287,20 +350,30 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     // 動画: まず動画本体をR2へ直接送る(Vercelのサイズ制限を受けない)。画像(1コマ)は従来どおりAPIへ。
     let videoUrl: string | null = null;
     if (isVideo) {
+      const startedAt = Date.now();
       try {
-        setUploadPct(0);
-        videoUrl = await uploadPhotoVideoToR2(file, (r) => setUploadPct(Math.round(r * 100)));
+        setPhase("uploading");
+        setUploadInfo({ pct: 0, loaded: 0, total: file.size, etaSec: null });
+        videoUrl = await uploadPhotoVideoToR2(file, ({ ratio, loaded, total }) => {
+          const elapsed = (Date.now() - startedAt) / 1000;
+          // 残り時間は、ある程度送ってから(誤差が大きい冒頭は出さない)、ここまでの平均速度で見積もる。
+          const etaSec = elapsed > 2 && ratio > 0.03 ? Math.max(1, Math.round((elapsed / ratio) * (1 - ratio))) : null;
+          setUploadInfo({ pct: Math.round(ratio * 100), loaded, total, etaSec });
+        });
       } catch (err) {
         setError(err instanceof Error && err.message ? err.message : t.photo.errNetwork);
-        setUploadPct(null);
+        setPhase("idle");
+        setUploadInfo(null);
         setBusy(false);
         return;
       }
-      setUploadPct(null);
     }
+    setPhase("checking");
     const upload = await prepareUpload(isVideo && posterFile ? posterFile : file);
     if (!upload) {
       setError(t.photo.errCannotSend);
+      setPhase("idle");
+      setUploadInfo(null);
       setBusy(false);
       return;
     }
@@ -329,6 +402,8 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
               ? t.photo.errPayload
               : `${t.photo.apiPostFailed} (code ${res.status})`),
         );
+        setPhase("idle");
+        setUploadInfo(null);
         setBusy(false);
         return;
       }
@@ -336,6 +411,8 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       router.refresh();
     } catch {
       setError(t.photo.errNetwork);
+      setPhase("idle");
+      setUploadInfo(null);
       setBusy(false);
     }
   }
@@ -401,6 +478,13 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
         </button>
       ) : null}
 
+      {preparing ? (
+        <p className="flex items-center gap-2 text-xs text-tone-500">
+          <Loader2 size={12} className="animate-spin" />
+          {t.photo.videoPreparing}
+        </p>
+      ) : null}
+
       {coordsNote ? (
         <p className="flex items-start gap-1 text-xs text-tone-500">
           <MapPin size={12} className="mt-0.5 shrink-0" />
@@ -464,13 +548,40 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
 
       {error ? <p className="rounded-xl bg-red-950/60 px-3 py-2 text-xs text-red-300">{error}</p> : null}
 
+      {busy && isVideo ? (
+        <div className="space-y-1.5" role="status" aria-live="polite">
+          <div
+            className="h-2 w-full overflow-hidden rounded-full bg-tone-800"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={phase === "checking" ? 100 : (uploadInfo?.pct ?? 0)}
+          >
+            {/* アップロードは全体の9割まで。残りの1割は、AIの確認と保存(進み具合は取れないので動かし続ける)。 */}
+            <div
+              className={`h-full rounded-full bg-cta-light transition-[width] duration-300 ${phase === "checking" ? "animate-pulse" : ""}`}
+              style={{ width: phase === "checking" ? "100%" : `${Math.round((uploadInfo?.pct ?? 0) * 0.9)}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-tone-500">
+            <span>
+              {phase === "uploading" && uploadInfo
+                ? `${uploadInfo.pct}%（${(uploadInfo.loaded / 1048576).toFixed(1)} / ${(uploadInfo.total / 1048576).toFixed(1)} MB）`
+                : t.photo.videoChecking}
+            </span>
+            <span>{phase === "uploading" && uploadInfo?.etaSec ? t.photo.videoEta(uploadInfo.etaSec) : ""}</span>
+          </div>
+          <p className="text-[11px] text-tone-600">{t.photo.keepOpen}</p>
+        </div>
+      ) : null}
+
       <button
         type="submit"
         disabled={!file || !coords || !spotName.trim() || busy}
         className="flex w-full items-center justify-center gap-2 rounded-full bg-cta-light py-3 text-sm font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover disabled:opacity-40"
       >
         {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-        {busy ? (uploadPct !== null ? t.photo.videoUploading(uploadPct) : t.photo.submitting) : t.photo.submit}
+        {busy ? (phase === "uploading" && uploadInfo ? t.photo.videoUploading(uploadInfo.pct) : phase === "checking" && isVideo ? t.photo.videoChecking : t.photo.submitting) : t.photo.submit}
       </button>
       <p className="text-center text-[11px] text-tone-600">{isVideo ? `${t.photo.videoNote} ` : ""}{t.photo.moderationNote}</p>
     </form>

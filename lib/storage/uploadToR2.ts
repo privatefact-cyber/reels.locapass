@@ -39,7 +39,10 @@ async function uploadToR2(
  * エリアフォト用: 動画をR2へ直接送る(進捗つき)。fetchは送信の進捗が取れないのでXMLHttpRequestを使う。
  * 署名にサイズを含めるため、presigned発行時に実際のファイルサイズを渡す。
  */
-export async function uploadPhotoVideoToR2(file: File, onProgress?: (ratio: number) => void): Promise<string> {
+export async function uploadPhotoVideoToR2(
+  file: File,
+  onProgress?: (info: { ratio: number; loaded: number; total: number }) => void,
+): Promise<string> {
   const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
   const contentType = file.type || "video/mp4";
   const created = await fetch("/api/r2/presigned-upload", {
@@ -58,7 +61,7 @@ export async function uploadPhotoVideoToR2(file: File, onProgress?: (ratio: numb
     xhr.open("PUT", uploadURL);
     xhr.setRequestHeader("Content-Type", contentType);
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress?.(e.loaded / e.total);
+      if (e.lengthComputable) onProgress?.({ ratio: e.loaded / e.total, loaded: e.loaded, total: e.total });
     };
     xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`アップロードに失敗しました(status: ${xhr.status})`)));
     xhr.onerror = () => reject(new Error("通信に失敗しました"));

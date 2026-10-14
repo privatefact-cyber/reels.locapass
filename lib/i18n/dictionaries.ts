@@ -337,6 +337,10 @@ export type Dictionary = {
     playVideo: string;
     badgeVideo: string;
     videoUploading: (pct: number) => string;
+    videoPreparing: string;
+    videoChecking: string;
+    keepOpen: string;
+    videoEta: (sec: number) => string;
     tags: Record<string, string>;
   };
   language: {
@@ -677,6 +681,10 @@ const ja: Dictionary = {
     playVideo: "動画を再生",
     badgeVideo: "動画",
     videoUploading: (pct: number) => `動画をアップロード中… ${pct}%`,
+    videoPreparing: "動画を読み込んでいます…",
+    videoChecking: "AIが確認して保存しています…",
+    keepOpen: "アップロード中は、この画面を閉じないでください。",
+    videoEta: (sec: number) => `残り約${sec}秒`,
     tags: { "グルメ": "グルメ", "カフェ": "カフェ", "自然・風景": "自然・風景", "夜景": "夜景", "歴史・寺社": "歴史・寺社", "公園": "公園", "建築": "建築", "アート": "アート", "買い物": "買い物", "祭り・イベント": "祭り・イベント", "アクティビティ": "アクティビティ", "スパ・温泉": "スパ・温泉" },
   },
   language: {
@@ -1017,6 +1025,10 @@ const en: Dictionary = {
     playVideo: "Play video",
     badgeVideo: "Video",
     videoUploading: (pct: number) => `Uploading video… ${pct}%`,
+    videoPreparing: "Reading the video…",
+    videoChecking: "AI is checking and saving…",
+    keepOpen: "Please keep this screen open while uploading.",
+    videoEta: (sec: number) => `About ${sec}s left`,
     tags: { "グルメ": "Food", "カフェ": "Cafe", "自然・風景": "Nature & scenery", "夜景": "Night view", "歴史・寺社": "History & shrines", "公園": "Park", "建築": "Architecture", "アート": "Art", "買い物": "Shopping", "祭り・イベント": "Festivals & events", "アクティビティ": "Activities", "スパ・温泉": "Spa & hot springs" },
   },
   language: {
@@ -1357,6 +1369,10 @@ const zh: Dictionary = {
     playVideo: "播放视频",
     badgeVideo: "视频",
     videoUploading: (pct: number) => `正在上传视频… ${pct}%`,
+    videoPreparing: "正在读取视频…",
+    videoChecking: "AI正在审核并保存…",
+    keepOpen: "上传期间请不要关闭此页面。",
+    videoEta: (sec: number) => `约剩余${sec}秒`,
     tags: { "グルメ": "美食", "カフェ": "咖啡馆", "自然・風景": "自然风光", "夜景": "夜景", "歴史・寺社": "历史·寺社", "公園": "公园", "建築": "建筑", "アート": "艺术", "買い物": "购物", "祭り・イベント": "祭典·活动", "アクティビティ": "体验活动", "スパ・温泉": "水疗·温泉" },
   },
   language: {
@@ -1698,6 +1714,10 @@ const ar: Dictionary = {
     playVideo: "تشغيل الفيديو",
     badgeVideo: "فيديو",
     videoUploading: (pct: number) => `جارٍ رفع الفيديو… ${pct}%`,
+    videoPreparing: "جارٍ قراءة الفيديو…",
+    videoChecking: "الذكاء الاصطناعي يفحص ويحفظ…",
+    keepOpen: "يرجى إبقاء هذه الشاشة مفتوحة أثناء الرفع.",
+    videoEta: (sec: number) => `المتبقي حوالي ${sec} ثانية`,
     tags: { "グルメ": "طعام", "カフェ": "مقهى", "自然・風景": "طبيعة ومناظر", "夜景": "منظر ليلي", "歴史・寺社": "تاريخ ومعابد", "公園": "حديقة", "建築": "عمارة", "アート": "فن", "買い物": "تسوق", "祭り・イベント": "مهرجانات وفعاليات", "アクティビティ": "أنشطة", "スパ・温泉": "سبا وينابيع ساخنة" },
   },
   "language": {
