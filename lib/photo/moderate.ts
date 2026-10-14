@@ -14,7 +14,13 @@ const PROMPT = `あなたは観光・街歩きポータルに投稿された写�
  * 画像をGeminiに渡して、公開してよいかの判定とタグ付けを1回で行う。
  * Geminiが未設定・失敗のときは「通す(タグなし)」にして、AIの障害で投稿機能が止まらないようにする。
  */
-export async function moderateAndTag(image: Buffer, mimeType: string, spotName: string, comment: string): Promise<Moderation> {
+export async function moderateAndTag(
+  image: Buffer,
+  mimeType: string,
+  spotName: string,
+  comment: string,
+  language = "日本語",
+): Promise<Moderation> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { appropriate: true, rejectReason: null, tags: [] };
 
@@ -26,7 +32,7 @@ export async function moderateAndTag(image: Buffer, mimeType: string, spotName: 
         contents: [
           {
             parts: [
-              { text: `${PROMPT}\n\nスポット名: ${spotName}\nコメント: ${comment}` },
+              { text: `${PROMPT}\nreject_reason は ${language} で書く。\n\nスポット名: ${spotName}\nコメント: ${comment}` },
               { inline_data: { mime_type: mimeType, data: image.toString("base64") } },
             ],
           },
@@ -47,7 +53,7 @@ export async function moderateAndTag(image: Buffer, mimeType: string, spotName: 
       ? parsed.tags.filter((t): t is string => typeof t === "string" && allowed.has(t)).slice(0, 3)
       : [];
     if (parsed.is_appropriate === false) {
-      return { appropriate: false, rejectReason: parsed.reject_reason || "この写真は投稿できません。", tags: [] };
+      return { appropriate: false, rejectReason: parsed.reject_reason || null, tags: [] };
     }
     return { appropriate: true, rejectReason: null, tags };
   } catch (e) {

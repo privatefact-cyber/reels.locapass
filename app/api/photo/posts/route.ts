@@ -5,6 +5,7 @@ import { fetchMyRoles, hasManagementRole } from "@/lib/auth/roles";
 import { PHOTO_ALLOWED_MIME, PHOTO_MAX_BYTES } from "@/lib/photo/tags";
 import { moderateAndTag } from "@/lib/photo/moderate";
 import { resolveAreaAndVenue } from "@/lib/photo/resolveArea";
+import { photoText, AI_LANGUAGE_NAME } from "@/lib/photo/serverText";
 
 export const maxDuration = 60;
 
@@ -19,23 +20,24 @@ const text = (v: FormDataEntryValue | null, max: number) => (typeof v === "strin
  * 書き込みはRLSをバイパスするため、本人確認とここでの検証が前提(service role)。
  */
 export async function POST(request: NextRequest) {
+  const { locale, t } = await photoText();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t.apiLoginRequired }, { status: 401 });
 
   const form = await request.formData();
   const image = form.get("image");
   if (!(image instanceof File) || image.size === 0) {
-    return NextResponse.json({ error: "写真を選択してください。" }, { status: 400 });
+    return NextResponse.json({ error: t.apiNoPhoto }, { status: 400 });
   }
   const mime = image.type === "image/jpg" ? "image/jpeg" : image.type;
   if (!(PHOTO_ALLOWED_MIME as readonly string[]).includes(mime)) {
-    return NextResponse.json({ error: "対応していない画像形式です。" }, { status: 400 });
+    return NextResponse.json({ error: t.apiBadFormat }, { status: 400 });
   }
   if (image.size > PHOTO_MAX_BYTES) {
-    return NextResponse.json({ error: "画像サイズは15MB以下にしてください。" }, { status: 400 });
+    return NextResponse.json({ error: t.errTooLarge15 }, { status: 400 });
   }
 
   const spotName = text(form.get("spot_name"), 100);
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
   const latitude = Number(form.get("latitude"));
   const longitude = Number(form.get("longitude"));
   if (!spotName || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
-    return NextResponse.json({ error: "入力内容をご確認ください。" }, { status: 400 });
+    return NextResponse.json({ error: t.apiBadInput }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
     .eq("member_id", user.id)
     .gte("created_at", since);
   if ((recent ?? 0) >= RATE_LIMIT_PER_10MIN) {
-    return NextResponse.json({ error: "投稿が続いています。少し時間をおいてお試しください。" }, { status: 429 });
+    return NextResponse.json({ error: t.apiRateLimit }, { status: 429 });
   }
 
   // 場所タグ(任意): listed=掲載店 / spot=Googleの穴場 / free=手入力のみ。掲載店のIDは実在確認する。
@@ -83,9 +85,9 @@ export async function POST(request: NextRequest) {
   }
 
   const buffer = Buffer.from(await image.arrayBuffer());
-  const moderation = await moderateAndTag(buffer, mime, spotName, comment);
+  const moderation = await moderateAndTag(buffer, mime, spotName, comment, AI_LANGUAGE_NAME[locale]);
   if (!moderation.appropriate) {
-    return NextResponse.json({ error: moderation.rejectReason ?? "この写真は投稿できません。" }, { status: 400 });
+    return NextResponse.json({ error: moderation.rejectReason ?? t.apiRejected }, { status: 400 });
   }
 
   // 表示名・アイコン: 会員のプロフィール(locapass_members)。管理側の立場を持つ人は「運営として投稿」を選べる。
@@ -99,7 +101,7 @@ export async function POST(request: NextRequest) {
   const { error: uploadError } = await admin.storage.from("map-photos").upload(path, buffer, { contentType: mime });
   if (uploadError) {
     console.error("photo upload failed", uploadError);
-    return NextResponse.json({ error: "画像のアップロードに失敗しました。" }, { status: 502 });
+    return NextResponse.json({ error: t.apiUploadFailed }, { status: 502 });
   }
   const imageUrl = admin.storage.from("map-photos").getPublicUrl(path).data.publicUrl;
 
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
   if (insertError || !inserted) {
     console.error("photo insert failed", insertError);
     await admin.storage.from("map-photos").remove([path]);
-    return NextResponse.json({ error: "投稿に失敗しました。もう一度お試しください。" }, { status: 502 });
+    return NextResponse.json({ error: t.apiPostFailed }, { status: 502 });
   }
 
   return NextResponse.json({ id: inserted.id, site, tags: moderation.tags });

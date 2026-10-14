@@ -12,6 +12,7 @@ export async function generateCaption(
   image: Buffer,
   mimeType: string,
   address: string,
+  language = "日本語",
 ): Promise<GeneratedCaption | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
@@ -23,7 +24,7 @@ export async function generateCaption(
         contents: [
           {
             parts: [
-              { text: address ? `${PROMPT}\n\n撮影場所の住所: ${address}` : PROMPT },
+              { text: `${PROMPT}\n- comment は ${language} で書く(文体の指定は同じ)。spot_name は看板などに書かれている表記のまま(元の言語)にする。${address ? `\n\n撮影場所の住所: ${address}` : ""}` },
               { inline_data: { mime_type: mimeType, data: image.toString("base64") } },
             ],
           },

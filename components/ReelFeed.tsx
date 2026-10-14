@@ -765,13 +765,13 @@ export function ReelFeed({
         // ユーザー投稿写真(エリアフォト)の新着。タップで /photo(一覧・マップ・投稿)へ。
         <div className="space-y-3">
           <div className="flex items-center justify-between px-2">
-            <p className="text-xs text-tone-500">みんなが投稿した街の写真</p>
+            <p className="text-xs text-tone-500">{t.photo.feedIntro}</p>
             <Link href="/photo/new" className="rounded-full bg-cta-light px-3 py-1 text-[11px] font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover">
-              ＋ 写真を投稿
+              {t.photo.postButton}
             </Link>
           </div>
           {photos.length === 0 ? (
-            <p className="px-2 py-10 text-center text-sm text-tone-500">まだ投稿がありません。</p>
+            <p className="px-2 py-10 text-center text-sm text-tone-500">{t.photo.empty}</p>
           ) : (
             <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
               {photos.map((p) => (
@@ -780,7 +780,7 @@ export function ReelFeed({
                   <img src={photoResized(p.imageUrl, 360, true)} alt={p.spotName} loading="lazy" className="h-full w-full object-cover" />
                   {p.placeKind === "listed" || p.placeKind === "spot" ? (
                     <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white">
-                      {p.placeKind === "listed" ? "掲載店" : "穴場"}
+                      {p.placeKind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}
                     </span>
                   ) : null}
                   <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-4 text-left text-[10px] text-white">
@@ -791,7 +791,7 @@ export function ReelFeed({
             </div>
           )}
           <Link href="/photo" className="block px-2 pb-4 text-center text-xs text-accent underline">
-            すべての写真・マップを見る
+            {t.photo.seeAll}
           </Link>
         </div>
       ) : tiles.length === 0 ? (

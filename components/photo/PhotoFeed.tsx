@@ -8,12 +8,15 @@ import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
 import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { areaLabel, dateLocaleTag, tagLabel } from "@/lib/photo/labels";
 
 function PlaceBadge({ kind }: { kind: PhotoPost["placeKind"] }) {
+  const { t } = useLocale();
   if (kind !== "listed" && kind !== "spot") return null;
   return (
     <span className="rounded-full border border-tone-600 px-2 py-0.5 text-[10px] text-tone-300">
-      {kind === "listed" ? "掲載店" : "穴場"}
+      {kind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}
     </span>
   );
 }
@@ -42,6 +45,7 @@ export function PhotoFeed({
 }) {
   // ビューアに出す写真の並び。格子からは全体の中のその1枚から、マップのカードからは
   // そのカード(同じ場所)の写真だけを出す。
+  const { t, locale } = useLocale();
   const [viewer, setViewer] = useState<{ posts: PhotoPost[]; index: number; title: string | null; mode: "grid" | "detail" } | null>(null);
   const [view, setView] = useState<"grid" | "map">(initialView);
   // フルスクリーン表示中の写真(ビューアの並びの中の番号)。nullなら閉じている。
@@ -69,11 +73,11 @@ export function PhotoFeed({
           className="flex items-center gap-1 px-3 pt-2 text-sm text-tone-300 hover:text-main"
         >
           <ChevronLeft size={18} />
-          マップに戻る
+          {t.photo.backToMap}
         </button>
         <p className="px-3 text-sm font-medium text-main">
           {viewer.title}
-          <span className="ml-2 text-xs font-normal text-tone-500">{viewer.posts.length}枚</span>
+          <span className="ml-2 text-xs font-normal text-tone-500">{t.photo.count(viewer.posts.length)}</span>
         </p>
         <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
           {viewer.posts.map((post, index) => (
@@ -101,7 +105,7 @@ export function PhotoFeed({
           className="flex items-center gap-1 px-3 pt-2 text-sm text-tone-300 hover:text-main"
         >
           <ChevronLeft size={18} />
-          {viewer.title ? "写真一覧に戻る" : "グリッドに戻る"}
+          {viewer.title ? t.photo.backToList : t.photo.backToGrid}
         </button>
         {viewer.title ? <p className="px-3 text-sm font-medium text-main">{viewer.title}</p> : null}
         {viewer.posts.map((post, index) => (
@@ -112,7 +116,7 @@ export function PhotoFeed({
                 <Avatar post={post} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-main">{post.userName}</p>
-                  <p className="text-[11px] text-tone-500">{new Date(post.createdAt).toLocaleDateString("ja-JP")}</p>
+                  <p className="text-[11px] text-tone-500">{new Date(post.createdAt).toLocaleDateString(dateLocaleTag(locale))}</p>
                 </div>
               </Link>
             ) : (
@@ -120,7 +124,7 @@ export function PhotoFeed({
                 <Avatar post={post} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-main">{post.userName}</p>
-                  <p className="text-[11px] text-tone-500">{new Date(post.createdAt).toLocaleDateString("ja-JP")}</p>
+                  <p className="text-[11px] text-tone-500">{new Date(post.createdAt).toLocaleDateString(dateLocaleTag(locale))}</p>
                 </div>
               </div>
             )}
@@ -130,7 +134,7 @@ export function PhotoFeed({
               <button
                 type="button"
                 onClick={() => setFullscreenIndex(index)}
-                aria-label="フルスクリーンで見る"
+                aria-label={t.photo.fullscreen}
                 className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
               >
                 <Maximize2 size={18} />
@@ -143,7 +147,7 @@ export function PhotoFeed({
               </div>
               {post.comment ? <p className="whitespace-pre-wrap text-sm text-tone-300">{post.comment}</p> : null}
               {post.tags.length > 0 ? (
-                <p className="text-xs text-tone-500">{post.tags.map((t) => `#${t}`).join(" ")}</p>
+                <p className="text-xs text-tone-500">{post.tags.map((tag) => `#${tagLabel(tag, t.photo)}`).join(" ")}</p>
               ) : null}
               {post.address ? (
                 <p className="flex items-start gap-1 text-xs text-tone-500">
@@ -160,7 +164,7 @@ export function PhotoFeed({
                   className="flex items-center gap-1 hover:text-main"
                 >
                   <Navigation size={16} />
-                  ルート案内
+                  {t.photo.directions}
                 </a>
               </div>
             </div>
@@ -183,11 +187,11 @@ export function PhotoFeed({
       {areas.length > 1 ? (
         <div className="flex gap-2 overflow-x-auto px-3 pt-2">
           <Link href="/photo" className={chip(!areaSlug)}>
-            すべてのエリア
+            {t.photo.allAreas}
           </Link>
           {areas.map((a) => (
             <Link key={a.slug} href={`/photo?area=${encodeURIComponent(a.slug)}`} className={chip(areaSlug === a.slug)}>
-              {a.name}
+              {areaLabel(a, locale, t.photo)}
             </Link>
           ))}
         </div>
@@ -195,23 +199,23 @@ export function PhotoFeed({
 
       <div className="flex items-center gap-2 px-3">
         <button type="button" onClick={() => setView("grid")} className={chip(view === "grid")}>
-          グリッド
+          {t.photo.viewGrid}
         </button>
         <button type="button" onClick={() => setView("map")} className={chip(view === "map")}>
-          マップ
+          {t.photo.viewMap}
         </button>
         <Link
           href="/photo/new"
           className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
         >
-          ＋ 写真を投稿
+          {t.photo.postButton}
         </Link>
       </div>
 
       {view === "map" ? (
         <PhotoMap posts={posts} onOpenSpot={(spotPosts, index, title) => setViewer({ posts: spotPosts, index, title, mode: "grid" })} />
       ) : posts.length === 0 ? (
-        <p className="px-2 py-10 text-center text-sm text-tone-500">まだ投稿がありません。</p>
+        <p className="px-2 py-10 text-center text-sm text-tone-500">{t.photo.empty}</p>
       ) : (
         <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
           {posts.map((post, index) => (
@@ -225,7 +229,7 @@ export function PhotoFeed({
               <img src={photoResized(post.imageUrl, 360, true)} alt={post.spotName} loading="lazy" className="h-full w-full object-cover" />
               {post.placeKind === "listed" || post.placeKind === "spot" ? (
                 <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white">
-                  {post.placeKind === "listed" ? "掲載店" : "穴場"}
+                  {post.placeKind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}
                 </span>
               ) : null}
               <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-4 text-left text-[10px] text-white">

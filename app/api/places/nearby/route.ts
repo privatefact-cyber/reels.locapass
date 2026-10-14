@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { photoText } from "@/lib/photo/serverText";
 import { searchNearbyPlaces } from "@/lib/places/googlePlaces";
 
 /**
@@ -49,6 +50,8 @@ function distanceM(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 export async function GET(request: NextRequest) {
   const headers = corsHeaders(request.headers.get("origin"));
+  const { t, locale } = await photoText();
+  const googleLang = { ja: "ja", en: "en", zh: "zh-CN", ar: "ar" }[locale];
   // WP(別オリジン)からはBearerトークン、locapass.net自身のページからはCookieのセッションで本人確認する。
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const supabase = createStaticClient();
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
     const cookieClient = await createServerClient();
     authedUser = (await cookieClient.auth.getUser()).data.user;
   }
-  if (!authedUser) return NextResponse.json({ error: "ログインが必要です" }, { status: 401, headers });
+  if (!authedUser) return NextResponse.json({ error: t.apiLoginRequired }, { status: 401, headers });
 
   const lat = Number(request.nextUrl.searchParams.get("lat"));
   const lng = Number(request.nextUrl.searchParams.get("lng"));
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
   const d = 0.003;
   const { data: venues } = await supabase
     .from("locapass_venues")
-    .select("id, name, address, lat, lng")
+    .select("id, name, name_en, address, lat, lng")
     .eq("status", "publish")
     .gte("lat", lat - d)
     .lte("lat", lat + d)
@@ -84,7 +87,7 @@ export async function GET(request: NextRequest) {
     .filter((v) => v.lat != null && v.lng != null)
     .map((v) => ({
       kind: "listed" as const,
-      name: v.name,
+      name: locale !== "ja" && v.name_en ? v.name_en : v.name,
       address: v.address,
       venue_id: v.id,
       distance_m: distanceM(lat, lng, v.lat as number, v.lng as number),
@@ -95,7 +98,7 @@ export async function GET(request: NextRequest) {
   // ② Googleの場所(掲載店と同名のものは重複なので除く)
   let spots: Candidate[] = [];
   try {
-    const places = await searchNearbyPlaces(lat, lng);
+    const places = await searchNearbyPlaces(lat, lng, 200, googleLang);
     const listedNames = new Set(listed.map((c) => c.name.replace(/\s/g, "")));
     spots = places
       .filter((p) => p.displayName?.text && !listedNames.has(p.displayName.text.replace(/\s/g, "")))

@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { usePhotoViewer } from "@/components/photo/useViewer";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 type Stats = { postCount: number; likesReceived: number; followerCount: number; followingCount: number };
 
 /** プロフィールの数字(投稿・いいね・フォロワー・フォロー中)と、フォローするボタン。自分のページにはボタンを出さない。 */
 export function PhotoProfileStats({ memberId, stats }: { memberId: string; stats: Stats }) {
+  const { t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const viewer = usePhotoViewer();
@@ -57,10 +59,10 @@ export function PhotoProfileStats({ memberId, stats }: { memberId: string; stats
   return (
     <div className="min-w-0 flex-1 space-y-2">
       <dl className="flex gap-5 text-center text-xs text-tone-500">
-        {item(stats.postCount, "投稿")}
-        {item(stats.likesReceived, "いいね")}
-        {item(followers, "フォロワー")}
-        {item(stats.followingCount, "フォロー中")}
+        {item(stats.postCount, t.photo.profilePosts)}
+        {item(stats.likesReceived, t.photo.profileLikes)}
+        {item(followers, t.photo.profileFollowers)}
+        {item(stats.followingCount, t.photo.profileFollowing)}
       </dl>
       {isSelf ? null : (
         <button
@@ -71,7 +73,7 @@ export function PhotoProfileStats({ memberId, stats }: { memberId: string; stats
             following ? "border border-main/25 text-tone-300 hover:text-main" : "bg-cta-light text-on-cta-gold hover:bg-cta-hover"
           }`}
         >
-          {following ? "フォロー中" : "フォローする"}
+          {following ? t.photo.profileFollowing : t.photo.follow}
         </button>
       )}
     </div>

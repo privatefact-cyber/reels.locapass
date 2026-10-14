@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { usePhotoViewer } from "@/components/photo/useViewer";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function PhotoLikeButton({ postId, initialCount }: { postId: string; initialCount: number }) {
+  const { t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const viewer = usePhotoViewer();
@@ -49,7 +51,7 @@ export function PhotoLikeButton({ postId, initialCount }: { postId: string; init
       type="button"
       onClick={toggle}
       aria-pressed={liked}
-      aria-label={liked ? "いいねを取り消す" : "いいね"}
+      aria-label={liked ? t.photo.unlike : t.photo.like}
       className={`flex items-center gap-1 transition ${liked ? "text-rose-400" : "text-tone-300 hover:text-main"}`}
     >
       <Heart size={18} className={liked ? "fill-rose-400" : ""} />

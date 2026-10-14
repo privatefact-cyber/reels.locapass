@@ -10,6 +10,7 @@ const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: type
 import { Navigation, Route as RouteIcon, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // /map(VenueMapExplorer)と同じダーク地図・金色のピン・下のカードの見た目に揃えてある。
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
@@ -149,6 +150,7 @@ export function PhotoMap({
   posts: PhotoPost[];
   onOpenSpot: (spotPosts: PhotoPost[], index: number, title: string) => void;
 }) {
+  const { t } = useLocale();
   const spots = useMemo(() => buildSpots(posts), [posts]);
   const spotsRef = useRef(spots);
   spotsRef.current = spots;
@@ -423,12 +425,12 @@ export function PhotoMap({
   // そのカード(同じ場所にまとまった写真)だけをビューアに渡す。
   const openSpot = (spot: Spot, startPostId: string) => {
     const spotPosts = spot.posts.map((p) => p.post);
-    const title = spot.names[0] + (spot.names.length > 1 ? ` ほか${spot.names.length - 1}か所` : "");
+    const title = spot.names[0] + (spot.names.length > 1 ? t.photo.moreSpots(spot.names.length - 1) : "");
     onOpenSpot(spotPosts, Math.max(0, spotPosts.findIndex((p) => p.id === startPostId)), title);
   };
 
   if (spots.length === 0) {
-    return <p className="px-2 py-10 text-center text-sm text-tone-500">まだ投稿がありません。</p>;
+    return <p className="px-2 py-10 text-center text-sm text-tone-500">{t.photo.empty}</p>;
   }
 
   return (
@@ -446,7 +448,7 @@ export function PhotoMap({
                 <span key={id} className="inline-flex max-w-[11rem] items-center gap-1 rounded-full border border-hl-400/50 bg-black px-2 py-1 text-[11px] text-main">
                   <b className="text-hl-300">{routeLetter(i)}</b>
                   <span className="truncate">{sp.names[0]}</span>
-                  <button type="button" aria-label="ルートから外す" onClick={() => toggleRoute(id)} className="text-tone-500 hover:text-main">
+                  <button type="button" aria-label={t.photo.routeRemove} onClick={() => toggleRoute(id)} className="text-tone-500 hover:text-main">
                     <X size={12} />
                   </button>
                 </span>
@@ -461,10 +463,10 @@ export function PhotoMap({
               className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-cta-light py-2 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
             >
               <Navigation size={14} />
-              ルート検索スタート
+              {t.photo.routeStart}
             </a>
             <button type="button" onClick={() => setRoute([])} className="rounded-full border border-main/15 px-3 py-2 text-xs text-tone-300 hover:text-main">
-              クリア
+              {t.photo.routeClear}
             </button>
           </div>
         </div>
@@ -478,7 +480,7 @@ export function PhotoMap({
         >
           {spots.map((spot) => {
             const isActive = spot.id === activeId;
-            const title = spot.names[0] + (spot.names.length > 1 ? ` ほか${spot.names.length - 1}か所` : "");
+            const title = spot.names[0] + (spot.names.length > 1 ? t.photo.moreSpots(spot.names.length - 1) : "");
             return (
               <div
                 key={spot.id}
@@ -524,7 +526,7 @@ export function PhotoMap({
                   </div>
                   {spot.posts.length > 1 ? (
                     <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-main backdrop-blur">
-                      {spot.posts.length}枚 ←→
+                      {t.photo.count(spot.posts.length)} ←→
                     </span>
                   ) : null}
                 </div>
@@ -533,7 +535,7 @@ export function PhotoMap({
                     <p className="min-w-0 flex-1 truncate font-display text-sm font-bold text-main">{title}</p>
                     {spot.kind === "listed" || spot.kind === "spot" ? (
                       <span className="rounded-full border border-tone-600 px-2 py-0.5 text-[10px] text-tone-300">
-                        {spot.kind === "listed" ? "掲載店" : "穴場"}
+                        {spot.kind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}
                       </span>
                     ) : null}
                     <button
@@ -547,7 +549,7 @@ export function PhotoMap({
                       }`}
                     >
                       <RouteIcon size={11} />
-                      {route.includes(spot.id) ? `ルート ${routeLetter(route.indexOf(spot.id))}` : "ルートに追加"}
+                      {route.includes(spot.id) ? t.photo.routeLabel(routeLetter(route.indexOf(spot.id))) : t.photo.routeAdd}
                     </button>
                   </div>
                   <div className="flex gap-2">
@@ -558,7 +560,7 @@ export function PhotoMap({
                       onClick={(e) => e.stopPropagation()}
                       className="flex-1 rounded-full bg-cta-light py-2 text-center text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
                     >
-                      ルート案内 →
+                      {t.photo.directionsArrow}
                     </a>
                     <button
                       type="button"
@@ -568,7 +570,7 @@ export function PhotoMap({
                       }}
                       className="rounded-full border border-main/15 px-3 py-2 text-xs text-tone-300 transition hover:border-hl-400/50 hover:text-hl-300"
                     >
-                      写真を見る
+                      {t.photo.viewPhotos}
                     </button>
                   </div>
                 </div>

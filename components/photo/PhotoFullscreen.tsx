@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized } from "@/components/photo/photoUtils";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /**
  * 写真のフルスクリーン表示。縦スワイプのビューアの上に、画面全体を黒で覆って1枚をいっぱいに出す。
@@ -22,6 +23,7 @@ export function PhotoFullscreen({
   onIndexChange: (index: number) => void;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const touchStartX = useRef<number | null>(null);
   const post = posts[index];
 
@@ -70,7 +72,7 @@ export function PhotoFullscreen({
           e.stopPropagation();
           onClose();
         }}
-        aria-label="閉じる"
+        aria-label={t.photo.close}
         className="absolute right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur"
         style={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
       >
@@ -89,7 +91,7 @@ export function PhotoFullscreen({
       {index > 0 ? (
         <button
           type="button"
-          aria-label="前の写真"
+          aria-label={t.photo.prevPhoto}
           className={`${arrow} left-3`}
           onClick={(e) => {
             e.stopPropagation();
@@ -102,7 +104,7 @@ export function PhotoFullscreen({
       {index < posts.length - 1 ? (
         <button
           type="button"
-          aria-label="次の写真"
+          aria-label={t.photo.nextPhoto}
           className={`${arrow} right-3`}
           onClick={(e) => {
             e.stopPropagation();

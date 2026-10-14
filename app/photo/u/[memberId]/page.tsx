@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { PhotoProfileStats } from "@/components/photo/PhotoProfileStats";
 import { getMemberPhotos } from "@/lib/photo/getPhotoPosts";
+import { photoText } from "@/lib/photo/serverText";
 
 export const revalidate = 60;
 
@@ -14,10 +15,12 @@ export async function generateMetadata({ params }: { params: Promise<{ memberId:
   const { memberId } = await params;
   if (!UUID.test(memberId)) return {};
   const data = await getMemberPhotos(memberId);
-  return data ? { title: `${data.profile.name}のフォト` } : {};
+  const { t } = await photoText();
+  return data ? { title: t.memberPhotos(data.profile.name) } : {};
 }
 
 export default async function MemberPhotoPage({ params }: { params: Promise<{ memberId: string }> }) {
+  const { t } = await photoText();
   const { memberId } = await params;
   if (!UUID.test(memberId)) notFound();
   const data = await getMemberPhotos(memberId);
@@ -28,7 +31,7 @@ export default async function MemberPhotoPage({ params }: { params: Promise<{ me
     <div className="space-y-4">
       <Link href="/photo" className="flex items-center gap-1 px-3 pt-3 text-sm text-tone-300 hover:text-main">
         <ChevronLeft size={18} />
-        みんなのフォト
+        {t.backToPhotos}
       </Link>
 
       <header className="flex items-center gap-4 px-4">

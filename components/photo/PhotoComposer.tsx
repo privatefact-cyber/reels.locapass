@@ -7,6 +7,7 @@ import { ChevronLeft, ImagePlus, Loader2, MapPin, Sparkles } from "lucide-react"
 import exifr from "exifr";
 import { geocode } from "@/lib/map/geocode";
 import { PHOTO_MAX_BYTES } from "@/lib/photo/tags";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 type Candidate = {
   kind: "listed" | "spot";
@@ -67,6 +68,7 @@ async function prepareUpload(file: File): Promise<File | null> {
 }
 
 export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
+  const { t } = useLocale();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -106,7 +108,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
   async function handleFile(f: File) {
     setError(null);
     if (f.size > PHOTO_MAX_BYTES) {
-      setError("画像サイズは15MB以下にしてください。");
+      setError(t.photo.errTooLarge15);
       return;
     }
     setFile(f);
@@ -117,20 +119,20 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setPick(null);
     setCoords(null);
     setNeedAddress(false);
-    setCoordsNote("写真の位置情報を確認しています…");
+    setCoordsNote(t.photo.gpsChecking);
     try {
       const gps = await exifr.gps(f);
       if (gps && typeof gps.latitude === "number" && typeof gps.longitude === "number") {
         const c = { lat: gps.latitude, lng: gps.longitude };
         setCoords(c);
-        setCoordsNote("写真から位置情報を検出しました。");
+        setCoordsNote(t.photo.gpsFound);
         void loadCandidates(c);
         return;
       }
     } catch {
       // 位置情報が読めない写真は、下の住所入力にフォールバックする。
     }
-    setCoordsNote("この写真には位置情報がありません。場所の住所や地名を入力してください。");
+    setCoordsNote(t.photo.gpsNone);
     setNeedAddress(true);
   }
 
@@ -139,11 +141,11 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setError(null);
     const hit = await geocode(address);
     if (!hit) {
-      setError("住所から位置を特定できませんでした。別の書き方でお試しください。");
+      setError(t.photo.errGeocode);
       return;
     }
     setCoords(hit);
-    setCoordsNote("入力した場所から位置を設定しました。");
+    setCoordsNote(t.photo.gpsFromAddress);
     void loadCandidates(hit);
   }
 
@@ -158,14 +160,14 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       const res = await fetch("/api/photo/caption", { method: "POST", body });
       const data = (await res.json().catch(() => ({}))) as { spotName?: string; comment?: string; error?: string };
       if (!res.ok) {
-        setError(data.error ?? "うまく生成できませんでした。手入力でも投稿できます。");
+        setError(data.error ?? t.photo.errAiFailed);
       } else {
         // 店名は必須項目なので実際の値として入れる。一言は投稿者が自分の言葉で書く余地を残して候補表示にする。
         if (data.spotName && !pick) setSpotName(data.spotName);
         if (data.comment) setAiComment(data.comment);
       }
     } catch {
-      setError("通信に失敗しました。もう一度お試しください。");
+      setError(t.photo.errNetwork);
     }
     setAiBusy(false);
   }
@@ -187,7 +189,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setError(null);
     const upload = await prepareUpload(file);
     if (!upload) {
-      setError("この写真は大きすぎて送れません。JPEG形式で保存し直すか、別の写真でお試しください。");
+      setError(t.photo.errCannotSend);
       setBusy(false);
       return;
     }
@@ -212,8 +214,8 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
         setError(
           data.error ??
             (res.status === 413
-              ? "写真のサイズが大きすぎます。別の写真でお試しください。"
-              : `投稿に失敗しました。もう一度お試しください。(コード ${res.status})`),
+              ? t.photo.errPayload
+              : `${t.photo.apiPostFailed} (code ${res.status})`),
         );
         setBusy(false);
         return;
@@ -221,7 +223,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       router.push("/photo");
       router.refresh();
     } catch {
-      setError("通信に失敗しました。電波の良い場所でもう一度お試しください。(コード network)");
+      setError(t.photo.errNetwork);
       setBusy(false);
     }
   }
@@ -233,9 +235,9 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-3">
       <Link href="/photo" className="flex items-center gap-1 text-sm text-tone-300 hover:text-main">
         <ChevronLeft size={18} />
-        みんなのフォト
+        {t.photo.backToPhotos}
       </Link>
-      <h1 className="text-lg font-medium text-main">写真を投稿</h1>
+      <h1 className="text-lg font-medium text-main">{t.photo.composeTitle}</h1>
 
       <button
         type="button"
@@ -248,7 +250,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
         ) : (
           <span className="flex flex-col items-center gap-2 text-sm">
             <ImagePlus size={28} />
-            写真を選ぶ
+            {t.photo.choosePhoto}
           </span>
         )}
       </button>
@@ -268,7 +270,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
           className="flex w-full items-center justify-center gap-2 rounded-full border border-main/15 py-2.5 text-sm text-tone-300 transition hover:border-hl-400/50 hover:text-main disabled:opacity-50"
         >
           {aiBusy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-          {aiBusy ? "AIが考えています…" : "✨ AIにおまかせ生成"}
+          {aiBusy ? t.photo.aiThinking : t.photo.aiGenerate}
         </button>
       ) : null}
 
@@ -284,18 +286,18 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
           <input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="例: 東京都渋谷区神宮前5-3-12"
+            placeholder={t.photo.addressPlaceholder}
             className={input}
           />
           <button type="button" onClick={lookupAddress} className="shrink-0 rounded-xl border border-main/15 px-3 text-xs text-tone-300 hover:text-main">
-            位置を確認
+            {t.photo.checkLocation}
           </button>
         </div>
       ) : null}
 
       {candidates.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-xs text-tone-500">近くの場所から選ぶ</p>
+          <p className="text-xs text-tone-500">{t.photo.nearbyTitle}</p>
           <div className="flex flex-wrap gap-2">
             {candidates.map((c) => (
               <button
@@ -307,7 +309,7 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
                 }`}
               >
                 <span className="rounded-full bg-tone-700 px-1.5 py-0.5 text-[9px] text-main">
-                  {c.kind === "listed" ? "掲載店" : "穴場"}
+                  {c.kind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}
                 </span>
                 {c.name}
                 <span className="text-[10px] text-tone-500">{c.distance_m}m</span>
@@ -318,18 +320,18 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
       ) : null}
 
       <label className="block space-y-1">
-        <span className="text-xs text-tone-500">おすすめの場所・店名（必須）</span>
-        <input value={spotName} onChange={(e) => setSpotName(e.target.value)} required maxLength={100} className={input} placeholder="例: 千波湖の桜並木" />
+        <span className="text-xs text-tone-500">{t.photo.spotLabel}</span>
+        <input value={spotName} onChange={(e) => setSpotName(e.target.value)} required maxLength={100} className={input} placeholder={t.photo.spotPlaceholder} />
       </label>
       <label className="block space-y-1">
-        <span className="text-xs text-tone-500">ひとこと（任意）</span>
-        <textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} rows={3} className={input} placeholder={aiComment ?? "どんな場所か、おすすめポイントなど"} />
+        <span className="text-xs text-tone-500">{t.photo.commentLabel}</span>
+        <textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} rows={3} className={input} placeholder={aiComment ?? t.photo.commentPlaceholder} />
       </label>
 
       {canOperator ? (
         <label className="flex items-center gap-2 text-sm text-tone-300">
           <input type="checkbox" checked={asOperator} onChange={(e) => setAsOperator(e.target.checked)} />
-          運営として投稿する（表示名: LOCAPASS運営）
+          {t.photo.asOperator}
         </label>
       ) : null}
 
@@ -341,9 +343,9 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
         className="flex w-full items-center justify-center gap-2 rounded-full bg-cta-light py-3 text-sm font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover disabled:opacity-40"
       >
         {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-        {busy ? "投稿しています…" : "投稿する"}
+        {busy ? t.photo.submitting : t.photo.submit}
       </button>
-      <p className="text-center text-[11px] text-tone-600">不適切な写真は、AIによる確認で投稿できないことがあります。</p>
+      <p className="text-center text-[11px] text-tone-600">{t.photo.moderationNote}</p>
     </form>
   );
 }

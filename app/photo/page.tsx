@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { getPhotoPosts } from "@/lib/photo/getPhotoPosts";
+import { photoText } from "@/lib/photo/serverText";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "みんなのフォト",
-  description: "街で撮られたユーザー投稿の写真を、エリアごとに見られます。",
-  alternates: { canonical: "https://locapass.net/photo" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await photoText();
+  return { title: t.title, description: t.description, alternates: { canonical: "https://locapass.net/photo" } };
+}
 
 export default async function PhotoPage({ searchParams }: { searchParams: Promise<{ area?: string; view?: string }> }) {
   const { area, view } = await searchParams;

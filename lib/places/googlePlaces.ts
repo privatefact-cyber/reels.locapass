@@ -92,7 +92,12 @@ export function distanceMeters(a: { lat: number; lng: number }, b: { latitude: n
 export const COVER_URL_PREFIX = "https://locapass.net/api/place-photo/";
 
 /** 座標の近くにある飲食・観光系の場所を探す(Nearby Search)。穴場候補の取得用。 */
-export async function searchNearbyPlaces(lat: number, lng: number, radiusM = 200): Promise<PlaceCandidate[]> {
+export async function searchNearbyPlaces(
+  lat: number,
+  lng: number,
+  radiusM = 200,
+  languageCode = "ja",
+): Promise<PlaceCandidate[]> {
   const res = await fetch(`${BASE}/places:searchNearby`, {
     method: "POST",
     headers: {
@@ -101,7 +106,7 @@ export async function searchNearbyPlaces(lat: number, lng: number, radiusM = 200
       "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location",
     },
     body: JSON.stringify({
-      languageCode: "ja",
+      languageCode,
       regionCode: "JP",
       maxResultCount: 10,
       rankPreference: "DISTANCE",

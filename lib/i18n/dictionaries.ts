@@ -250,6 +250,83 @@ export type Dictionary = {
     deleteAllConfirm: string;
     deleteFailed: string;
   };
+  photo: {
+    title: string;
+    description: string;
+    allAreas: string;
+    otherArea: string;
+    viewGrid: string;
+    viewMap: string;
+    postButton: string;
+    empty: string;
+    feedIntro: string;
+    seeAll: string;
+    backToPhotos: string;
+    backToGrid: string;
+    backToMap: string;
+    backToList: string;
+    badgeListed: string;
+    badgeSpot: string;
+    fullscreen: string;
+    close: string;
+    prevPhoto: string;
+    nextPhoto: string;
+    like: string;
+    unlike: string;
+    directions: string;
+    directionsArrow: string;
+    viewPhotos: string;
+    routeAdd: string;
+    routeRemove: string;
+    routeStart: string;
+    routeClear: string;
+    profilePosts: string;
+    profileLikes: string;
+    profileFollowers: string;
+    profileFollowing: string;
+    follow: string;
+    composeTitle: string;
+    choosePhoto: string;
+    aiGenerate: string;
+    aiThinking: string;
+    gpsChecking: string;
+    gpsFound: string;
+    gpsNone: string;
+    gpsFromAddress: string;
+    addressPlaceholder: string;
+    checkLocation: string;
+    nearbyTitle: string;
+    spotLabel: string;
+    spotPlaceholder: string;
+    commentLabel: string;
+    commentPlaceholder: string;
+    asOperator: string;
+    submit: string;
+    submitting: string;
+    moderationNote: string;
+    errTooLarge15: string;
+    errGeocode: string;
+    errCannotSend: string;
+    errPayload: string;
+    errNetwork: string;
+    errAiFailed: string;
+    apiLoginRequired: string;
+    apiNoPhoto: string;
+    apiBadFormat: string;
+    apiBadInput: string;
+    apiRateLimit: string;
+    apiRejected: string;
+    apiUploadFailed: string;
+    apiPostFailed: string;
+    apiWaitMoment: string;
+    apiNotFound: string;
+    apiSelfFollow: string;
+    count: (n: number) => string;
+    moreSpots: (n: number) => string;
+    routeLabel: (letter: string) => string;
+    memberPhotos: (name: string) => string;
+    tags: Record<string, string>;
+  };
   language: {
     switch: string;
   };
@@ -500,6 +577,83 @@ const ja: Dictionary = {
     deleteAll: "すべて削除",
     deleteAllConfirm: "すべての通知を削除します。よろしいですか?",
     deleteFailed: "削除できませんでした。もう一度お試しください。",
+  },
+  photo: {
+    title: "みんなのフォト",
+    description: "街で撮られたユーザー投稿の写真を、エリアごとに見られます。",
+    allAreas: "すべてのエリア",
+    otherArea: "その他",
+    viewGrid: "グリッド",
+    viewMap: "マップ",
+    postButton: "＋ 写真を投稿",
+    empty: "まだ投稿がありません。",
+    feedIntro: "みんなが投稿した街の写真",
+    seeAll: "すべての写真・マップを見る",
+    backToPhotos: "みんなのフォト",
+    backToGrid: "グリッドに戻る",
+    backToMap: "マップに戻る",
+    backToList: "写真一覧に戻る",
+    badgeListed: "掲載店",
+    badgeSpot: "穴場",
+    fullscreen: "フルスクリーンで見る",
+    close: "閉じる",
+    prevPhoto: "前の写真",
+    nextPhoto: "次の写真",
+    like: "いいね",
+    unlike: "いいねを取り消す",
+    directions: "ルート案内",
+    directionsArrow: "ルート案内 →",
+    viewPhotos: "写真を見る",
+    routeAdd: "ルートに追加",
+    routeRemove: "ルートから外す",
+    routeStart: "ルート検索スタート",
+    routeClear: "クリア",
+    profilePosts: "投稿",
+    profileLikes: "いいね",
+    profileFollowers: "フォロワー",
+    profileFollowing: "フォロー中",
+    follow: "フォローする",
+    composeTitle: "写真を投稿",
+    choosePhoto: "写真を選ぶ",
+    aiGenerate: "✨ AIにおまかせ生成",
+    aiThinking: "AIが考えています…",
+    gpsChecking: "写真の位置情報を確認しています…",
+    gpsFound: "写真から位置情報を検出しました。",
+    gpsNone: "この写真には位置情報がありません。場所の住所や地名を入力してください。",
+    gpsFromAddress: "入力した場所から位置を設定しました。",
+    addressPlaceholder: "例: 東京都渋谷区神宮前5-3-12",
+    checkLocation: "位置を確認",
+    nearbyTitle: "近くの場所から選ぶ",
+    spotLabel: "おすすめの場所・店名（必須）",
+    spotPlaceholder: "例: 千波湖の桜並木",
+    commentLabel: "ひとこと（任意）",
+    commentPlaceholder: "どんな場所か、おすすめポイントなど",
+    asOperator: "運営として投稿する（表示名: LOCAPASS運営）",
+    submit: "投稿する",
+    submitting: "投稿しています…",
+    moderationNote: "不適切な写真は、AIによる確認で投稿できないことがあります。",
+    errTooLarge15: "画像サイズは15MB以下にしてください。",
+    errGeocode: "住所から位置を特定できませんでした。別の書き方でお試しください。",
+    errCannotSend: "この写真は大きすぎて送れません。JPEG形式で保存し直すか、別の写真でお試しください。",
+    errPayload: "写真のサイズが大きすぎます。別の写真でお試しください。",
+    errNetwork: "通信に失敗しました。電波の良い場所でもう一度お試しください。(コード network)",
+    errAiFailed: "うまく生成できませんでした。手入力でも投稿できます。",
+    apiLoginRequired: "ログインが必要です。",
+    apiNoPhoto: "写真を選択してください。",
+    apiBadFormat: "対応していない画像形式です。",
+    apiBadInput: "入力内容をご確認ください。",
+    apiRateLimit: "投稿が続いています。少し時間をおいてお試しください。",
+    apiRejected: "この写真は投稿できません。",
+    apiUploadFailed: "画像のアップロードに失敗しました。",
+    apiPostFailed: "投稿に失敗しました。もう一度お試しください。",
+    apiWaitMoment: "少し時間をおいてからもう一度お試しください。",
+    apiNotFound: "見つかりません。",
+    apiSelfFollow: "自分自身はフォローできません。",
+    count: (n: number) => `${n}枚`,
+    moreSpots: (n: number) => ` ほか${n}か所`,
+    routeLabel: (letter: string) => `ルート ${letter}`,
+    memberPhotos: (name: string) => `${name}のフォト`,
+    tags: { "グルメ": "グルメ", "カフェ": "カフェ", "自然・風景": "自然・風景", "夜景": "夜景", "歴史・寺社": "歴史・寺社", "公園": "公園", "建築": "建築", "アート": "アート", "買い物": "買い物", "祭り・イベント": "祭り・イベント", "アクティビティ": "アクティビティ", "スパ・温泉": "スパ・温泉" },
   },
   language: {
     switch: "言語",
@@ -752,6 +906,83 @@ const en: Dictionary = {
     deleteAllConfirm: "Delete all notifications?",
     deleteFailed: "Could not delete. Please try again.",
   },
+  photo: {
+    title: "Community Photos",
+    description: "Browse photos shared by locals and visitors, area by area.",
+    allAreas: "All areas",
+    otherArea: "Other",
+    viewGrid: "Grid",
+    viewMap: "Map",
+    postButton: "+ Post a photo",
+    empty: "No photos yet.",
+    feedIntro: "Photos of the area shared by everyone",
+    seeAll: "See all photos & map",
+    backToPhotos: "Community Photos",
+    backToGrid: "Back to grid",
+    backToMap: "Back to map",
+    backToList: "Back to photo list",
+    badgeListed: "Listed",
+    badgeSpot: "Hidden gem",
+    fullscreen: "View fullscreen",
+    close: "Close",
+    prevPhoto: "Previous photo",
+    nextPhoto: "Next photo",
+    like: "Like",
+    unlike: "Remove like",
+    directions: "Directions",
+    directionsArrow: "Directions →",
+    viewPhotos: "View photos",
+    routeAdd: "Add to route",
+    routeRemove: "Remove from route",
+    routeStart: "Start route search",
+    routeClear: "Clear",
+    profilePosts: "Posts",
+    profileLikes: "Likes",
+    profileFollowers: "Followers",
+    profileFollowing: "Following",
+    follow: "Follow",
+    composeTitle: "Post a photo",
+    choosePhoto: "Choose a photo",
+    aiGenerate: "✨ Let AI write it",
+    aiThinking: "AI is thinking…",
+    gpsChecking: "Reading the photo's location…",
+    gpsFound: "Location detected from the photo.",
+    gpsNone: "This photo has no location data. Enter an address or place name.",
+    gpsFromAddress: "Location set from the place you entered.",
+    addressPlaceholder: "e.g. 5-3-12 Jingumae, Shibuya, Tokyo",
+    checkLocation: "Check location",
+    nearbyTitle: "Pick a nearby place",
+    spotLabel: "Place or shop name (required)",
+    spotPlaceholder: "e.g. Cherry blossoms along the lake",
+    commentLabel: "A few words (optional)",
+    commentPlaceholder: "What's it like? Why do you recommend it?",
+    asOperator: "Post as the operator (display name: LOCAPASS運営)",
+    submit: "Post",
+    submitting: "Posting…",
+    moderationNote: "Inappropriate photos may be rejected by our AI check.",
+    errTooLarge15: "Please use an image under 15 MB.",
+    errGeocode: "Couldn't find that location. Try a different spelling.",
+    errCannotSend: "This photo is too large to upload. Save it as JPEG or try another photo.",
+    errPayload: "The photo is too large. Please try another one.",
+    errNetwork: "Network error. Please try again with a better connection. (code network)",
+    errAiFailed: "Couldn't generate that. You can still type it in yourself.",
+    apiLoginRequired: "Please log in.",
+    apiNoPhoto: "Please choose a photo.",
+    apiBadFormat: "Unsupported image format.",
+    apiBadInput: "Please check your input.",
+    apiRateLimit: "You're posting too fast. Please wait a moment.",
+    apiRejected: "This photo can't be posted.",
+    apiUploadFailed: "Image upload failed.",
+    apiPostFailed: "Posting failed. Please try again.",
+    apiWaitMoment: "Please wait a moment and try again.",
+    apiNotFound: "Not found.",
+    apiSelfFollow: "You can't follow yourself.",
+    count: (n: number) => `${n} ${n === 1 ? "photo" : "photos"}`,
+    moreSpots: (n: number) => ` +${n} more`,
+    routeLabel: (letter: string) => `Route ${letter}`,
+    memberPhotos: (name: string) => `${name}'s photos`,
+    tags: { "グルメ": "Food", "カフェ": "Cafe", "自然・風景": "Nature & scenery", "夜景": "Night view", "歴史・寺社": "History & shrines", "公園": "Park", "建築": "Architecture", "アート": "Art", "買い物": "Shopping", "祭り・イベント": "Festivals & events", "アクティビティ": "Activities", "スパ・温泉": "Spa & hot springs" },
+  },
   language: {
     switch: "Language",
   },
@@ -1002,6 +1233,83 @@ const zh: Dictionary = {
     deleteAll: "全部删除",
     deleteAllConfirm: "确定删除所有通知吗?",
     deleteFailed: "删除失败,请重试。",
+  },
+  photo: {
+    title: "大家的照片",
+    description: "按区域浏览当地人和游客分享的街头照片。",
+    allAreas: "所有区域",
+    otherArea: "其他",
+    viewGrid: "网格",
+    viewMap: "地图",
+    postButton: "＋ 发布照片",
+    empty: "还没有投稿。",
+    feedIntro: "大家分享的街头照片",
+    seeAll: "查看全部照片和地图",
+    backToPhotos: "大家的照片",
+    backToGrid: "返回网格",
+    backToMap: "返回地图",
+    backToList: "返回照片列表",
+    badgeListed: "合作店铺",
+    badgeSpot: "隐藏好去处",
+    fullscreen: "全屏查看",
+    close: "关闭",
+    prevPhoto: "上一张",
+    nextPhoto: "下一张",
+    like: "点赞",
+    unlike: "取消点赞",
+    directions: "路线指引",
+    directionsArrow: "路线指引 →",
+    viewPhotos: "查看照片",
+    routeAdd: "加入路线",
+    routeRemove: "从路线移除",
+    routeStart: "开始路线搜索",
+    routeClear: "清除",
+    profilePosts: "投稿",
+    profileLikes: "获赞",
+    profileFollowers: "粉丝",
+    profileFollowing: "关注中",
+    follow: "关注",
+    composeTitle: "发布照片",
+    choosePhoto: "选择照片",
+    aiGenerate: "✨ 交给AI生成",
+    aiThinking: "AI正在构思…",
+    gpsChecking: "正在读取照片位置信息…",
+    gpsFound: "已从照片中检测到位置信息。",
+    gpsNone: "这张照片没有位置信息，请输入地址或地名。",
+    gpsFromAddress: "已根据输入的地点设置位置。",
+    addressPlaceholder: "例：东京都涩谷区神宫前5-3-12",
+    checkLocation: "确认位置",
+    nearbyTitle: "从附近地点中选择",
+    spotLabel: "推荐的地点/店名（必填）",
+    spotPlaceholder: "例：湖畔的樱花道",
+    commentLabel: "一句话（选填）",
+    commentPlaceholder: "这是个怎样的地方？有什么推荐理由？",
+    asOperator: "以运营身份发布（显示名称：LOCAPASS运营）",
+    submit: "发布",
+    submitting: "正在发布…",
+    moderationNote: "不当照片可能无法通过AI审核而无法发布。",
+    errTooLarge15: "请使用15MB以下的图片。",
+    errGeocode: "无法根据地址确定位置，请换一种写法试试。",
+    errCannotSend: "这张照片太大无法上传。请另存为JPEG格式或换一张照片。",
+    errPayload: "照片太大，请换一张试试。",
+    errNetwork: "网络连接失败，请在信号良好的地方重试。（代码 network）",
+    errAiFailed: "生成失败，也可以手动输入后发布。",
+    apiLoginRequired: "请先登录。",
+    apiNoPhoto: "请选择照片。",
+    apiBadFormat: "不支持的图片格式。",
+    apiBadInput: "请检查输入内容。",
+    apiRateLimit: "发布过于频繁，请稍后再试。",
+    apiRejected: "这张照片无法发布。",
+    apiUploadFailed: "图片上传失败。",
+    apiPostFailed: "发布失败，请重试。",
+    apiWaitMoment: "请稍后再试。",
+    apiNotFound: "未找到。",
+    apiSelfFollow: "不能关注自己。",
+    count: (n: number) => `${n}张`,
+    moreSpots: (n: number) => ` 等${n}处`,
+    routeLabel: (letter: string) => `路线 ${letter}`,
+    memberPhotos: (name: string) => `${name}的照片`,
+    tags: { "グルメ": "美食", "カフェ": "咖啡馆", "自然・風景": "自然风光", "夜景": "夜景", "歴史・寺社": "历史·寺社", "公園": "公园", "建築": "建筑", "アート": "艺术", "買い物": "购物", "祭り・イベント": "祭典·活动", "アクティビティ": "体验活动", "スパ・温泉": "水疗·温泉" },
   },
   language: {
     switch: "语言",
@@ -1254,6 +1562,83 @@ const ar: Dictionary = {
     "deleteAll": "حذف الكل",
     "deleteAllConfirm": "هل تريد حذف جميع الإشعارات؟",
     "deleteFailed": "تعذر الحذف. يرجى المحاولة مرة أخرى."
+  },
+  photo: {
+    title: "صور المجتمع",
+    description: "تصفّح الصور التي شاركها السكان والزوار حسب المنطقة.",
+    allAreas: "كل المناطق",
+    otherArea: "أخرى",
+    viewGrid: "شبكة",
+    viewMap: "الخريطة",
+    postButton: "＋ انشر صورة",
+    empty: "لا توجد صور بعد.",
+    feedIntro: "صور المدينة التي شاركها الجميع",
+    seeAll: "عرض كل الصور والخريطة",
+    backToPhotos: "صور المجتمع",
+    backToGrid: "العودة إلى الشبكة",
+    backToMap: "العودة إلى الخريطة",
+    backToList: "العودة إلى قائمة الصور",
+    badgeListed: "متجر مُدرج",
+    badgeSpot: "جوهرة مخفية",
+    fullscreen: "عرض بملء الشاشة",
+    close: "إغلاق",
+    prevPhoto: "الصورة السابقة",
+    nextPhoto: "الصورة التالية",
+    like: "إعجاب",
+    unlike: "إلغاء الإعجاب",
+    directions: "الاتجاهات",
+    directionsArrow: "الاتجاهات ←",
+    viewPhotos: "عرض الصور",
+    routeAdd: "أضف إلى المسار",
+    routeRemove: "إزالة من المسار",
+    routeStart: "ابدأ البحث عن المسار",
+    routeClear: "مسح",
+    profilePosts: "المنشورات",
+    profileLikes: "الإعجابات",
+    profileFollowers: "المتابعون",
+    profileFollowing: "المتابَعون",
+    follow: "متابعة",
+    composeTitle: "انشر صورة",
+    choosePhoto: "اختر صورة",
+    aiGenerate: "✨ دع الذكاء الاصطناعي يكتب",
+    aiThinking: "الذكاء الاصطناعي يفكر…",
+    gpsChecking: "جارٍ قراءة موقع الصورة…",
+    gpsFound: "تم اكتشاف الموقع من الصورة.",
+    gpsNone: "لا تحتوي هذه الصورة على بيانات موقع. أدخل عنوانًا أو اسم مكان.",
+    gpsFromAddress: "تم تحديد الموقع من المكان الذي أدخلته.",
+    addressPlaceholder: "مثال: 5-3-12 Jingumae, Shibuya, Tokyo",
+    checkLocation: "تحقق من الموقع",
+    nearbyTitle: "اختر مكانًا قريبًا",
+    spotLabel: "اسم المكان أو المتجر (مطلوب)",
+    spotPlaceholder: "مثال: أشجار الكرز بجانب البحيرة",
+    commentLabel: "كلمة موجزة (اختياري)",
+    commentPlaceholder: "كيف هو المكان؟ ولماذا تنصح به؟",
+    asOperator: "النشر باسم المشغّل (الاسم المعروض: LOCAPASS运营)",
+    submit: "نشر",
+    submitting: "جارٍ النشر…",
+    moderationNote: "قد يتم رفض الصور غير المناسبة بواسطة فحص الذكاء الاصطناعي.",
+    errTooLarge15: "يرجى استخدام صورة أقل من 15 ميغابايت.",
+    errGeocode: "تعذّر تحديد الموقع من العنوان. جرّب صياغة أخرى.",
+    errCannotSend: "هذه الصورة كبيرة جدًا للرفع. احفظها بصيغة JPEG أو جرّب صورة أخرى.",
+    errPayload: "الصورة كبيرة جدًا. يرجى تجربة صورة أخرى.",
+    errNetwork: "فشل الاتصال. يرجى المحاولة مرة أخرى باتصال أفضل. (الرمز network)",
+    errAiFailed: "تعذّر التوليد. يمكنك الكتابة يدويًا والنشر.",
+    apiLoginRequired: "يرجى تسجيل الدخول.",
+    apiNoPhoto: "يرجى اختيار صورة.",
+    apiBadFormat: "صيغة الصورة غير مدعومة.",
+    apiBadInput: "يرجى التحقق من المدخلات.",
+    apiRateLimit: "تنشر بسرعة كبيرة. يرجى الانتظار قليلًا.",
+    apiRejected: "لا يمكن نشر هذه الصورة.",
+    apiUploadFailed: "فشل رفع الصورة.",
+    apiPostFailed: "فشل النشر. يرجى المحاولة مرة أخرى.",
+    apiWaitMoment: "يرجى الانتظار قليلًا ثم المحاولة مرة أخرى.",
+    apiNotFound: "غير موجود.",
+    apiSelfFollow: "لا يمكنك متابعة نفسك.",
+    count: (n: number) => `${n} صورة`,
+    moreSpots: (n: number) => ` +${n} أخرى`,
+    routeLabel: (letter: string) => `المسار ${letter}`,
+    memberPhotos: (name: string) => `صور ${name}`,
+    tags: { "グルメ": "طعام", "カフェ": "مقهى", "自然・風景": "طبيعة ومناظر", "夜景": "منظر ليلي", "歴史・寺社": "تاريخ ومعابد", "公園": "حديقة", "建築": "عمارة", "アート": "فن", "買い物": "تسوق", "祭り・イベント": "مهرجانات وفعاليات", "アクティビティ": "أنشطة", "スパ・温泉": "سبا وينابيع ساخنة" },
   },
   "language": {
     "switch": "اللغة"

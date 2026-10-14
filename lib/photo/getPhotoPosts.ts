@@ -21,7 +21,7 @@ export type PhotoPost = {
   likeCount: number;
 };
 
-export type PhotoArea = { slug: string; name: string };
+export type PhotoArea = { slug: string; name: string; nameEn: string | null };
 
 export type PhotoProfile = {
   memberId: string;
@@ -109,17 +109,20 @@ export async function getPhotoPosts(
   const [{ data: rows, error }, { data: siteRows }, { data: portals }] = await Promise.all([
     query,
     supabase.from("area_photo_posts").select("site").limit(2000),
-    supabase.from("locapass_portals").select("slug,name"),
+    supabase.from("locapass_portals").select("slug,name,name_en"),
   ]);
   if (error) throw error;
 
   const posts = await toPosts(supabase, (rows ?? []) as PostRow[]);
 
   // エリア切り替えには、実際に投稿があるエリアだけを出す。
-  const nameBySlug = new Map((portals ?? []).map((p) => [p.slug, p.name]));
+  const portalBySlug = new Map((portals ?? []).map((p) => [p.slug, p]));
   const present = Array.from(new Set((siteRows ?? []).map((r) => r.site)));
   const areas: PhotoArea[] = present
-    .map((slug) => ({ slug, name: slug === "other" ? "その他" : (nameBySlug.get(slug) ?? slug) }))
+    .map((slug) => {
+      const portal = portalBySlug.get(slug);
+      return { slug, name: portal?.name ?? slug, nameEn: portal?.name_en ?? null };
+    })
     .sort((a, b) => a.name.localeCompare(b.name, "ja"));
 
   return { posts, areas };

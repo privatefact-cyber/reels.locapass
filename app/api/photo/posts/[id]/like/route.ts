@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { photoText } from "@/lib/photo/serverText";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** 写真へのいいねのON/OFF(トグル)。書き込みはRLSをバイパスするため、本人確認はここで行う。 */
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { t } = await photoText();
   const { id } = await params;
-  if (!UUID.test(id)) return NextResponse.json({ error: "不正な投稿です。" }, { status: 400 });
+  if (!UUID.test(id)) return NextResponse.json({ error: t.apiBadInput }, { status: 400 });
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t.apiLoginRequired }, { status: 401 });
 
   const admin = createAdminClient();
   const { data: post } = await admin.from("area_photo_posts").select("id").eq("id", id).maybeSingle();
-  if (!post) return NextResponse.json({ error: "投稿が見つかりません。" }, { status: 404 });
+  if (!post) return NextResponse.json({ error: t.apiNotFound }, { status: 404 });
 
   const { data: existing } = await admin
     .from("area_photo_likes")
