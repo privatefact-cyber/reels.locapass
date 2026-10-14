@@ -7,6 +7,7 @@ import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
 import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
+import { PhotoVideo } from "@/components/photo/PhotoVideo";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { areaLabel, dateLocaleTag, tagLabel } from "@/lib/photo/labels";
@@ -141,23 +142,8 @@ export function PhotoFeed({
               </div>
             )}
             {post.videoUrl ? (
-              // 動画投稿: ポスター(1コマ)を出し、再生ボタンで再生する(一覧に何本あっても、押すまで動画は読み込まない)。
-              // 再生を始めたら、ほかの動画は止める。全画面はブラウザ標準のコントロールを使う。
-              <video
-                data-photo-video
-                src={post.videoUrl}
-                poster={photoResized(post.imageUrl, 1080, false)}
-                controls
-                playsInline
-                preload="none"
-                aria-label={post.spotName}
-                onPlay={(e) => {
-                  document.querySelectorAll<HTMLVideoElement>("video[data-photo-video]").forEach((v) => {
-                    if (v !== e.currentTarget) v.pause();
-                  });
-                }}
-                className="w-full bg-black md:mx-auto md:max-h-[80dvh] md:w-auto"
-              />
+              // 動画投稿: 画面に映ったら無音で自動再生(リールと同じ)。全画面・音はプレーヤー標準のコントロール。
+              <PhotoVideo src={post.videoUrl} poster={photoResized(post.imageUrl, 1080, false)} label={post.spotName} />
             ) : (
               <div className="relative md:mx-auto md:w-fit">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
