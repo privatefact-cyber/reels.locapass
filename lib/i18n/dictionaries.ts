@@ -333,6 +333,7 @@ export type Dictionary = {
     videoNotFound: string;
     videoNote: string;
     gpsNoneVideo: string;
+    gpsFoundVideo: string;
     playVideo: string;
     badgeVideo: string;
     videoUploading: (pct: number) => string;
@@ -670,8 +671,9 @@ const ja: Dictionary = {
     errVideoFormat: "対応していない動画形式です(mp4 / mov / webm)。",
     errVideoPoster: "動画の1コマを取り出せませんでした。別の動画でお試しください。",
     videoNotFound: "アップロードした動画が見つかりません。もう一度お試しください。",
-    videoNote: "動画は30秒・50MBまで。位置情報は、場所の住所から設定します。",
-    gpsNoneVideo: "動画からは位置情報を読み取れません。場所の住所や地名を入力してください。",
+    videoNote: "動画は30秒・50MBまで。",
+    gpsNoneVideo: "この動画には位置情報がありません。場所の住所や地名を入力してください。",
+    gpsFoundVideo: "動画から位置情報を検出しました。",
     playVideo: "動画を再生",
     badgeVideo: "動画",
     videoUploading: (pct: number) => `動画をアップロード中… ${pct}%`,
@@ -1009,8 +1011,9 @@ const en: Dictionary = {
     errVideoFormat: "Unsupported video format (mp4 / mov / webm).",
     errVideoPoster: "Couldn't read a frame from the video. Please try another one.",
     videoNotFound: "We couldn't find the uploaded video. Please try again.",
-    videoNote: "Videos: up to 30 sec / 50 MB. Set the location by entering an address.",
-    gpsNoneVideo: "We can't read location from videos. Enter an address or place name.",
+    videoNote: "Videos: up to 30 sec / 50 MB.",
+    gpsNoneVideo: "This video has no location data. Enter an address or place name.",
+    gpsFoundVideo: "Location detected from the video.",
     playVideo: "Play video",
     badgeVideo: "Video",
     videoUploading: (pct: number) => `Uploading video… ${pct}%`,
@@ -1348,8 +1351,9 @@ const zh: Dictionary = {
     errVideoFormat: "不支持的视频格式（mp4 / mov / webm）。",
     errVideoPoster: "无法读取视频画面，请换一个视频试试。",
     videoNotFound: "未找到已上传的视频，请重试。",
-    videoNote: "视频最长30秒、50MB以内。位置请通过输入地址设置。",
-    gpsNoneVideo: "无法从视频读取位置信息，请输入地址或地名。",
+    videoNote: "视频最长30秒、50MB以内。",
+    gpsNoneVideo: "这个视频没有位置信息，请输入地址或地名。",
+    gpsFoundVideo: "已从视频中检测到位置信息。",
     playVideo: "播放视频",
     badgeVideo: "视频",
     videoUploading: (pct: number) => `正在上传视频… ${pct}%`,
@@ -1688,8 +1692,9 @@ const ar: Dictionary = {
     errVideoFormat: "صيغة الفيديو غير مدعومة (mp4 / mov / webm).",
     errVideoPoster: "تعذّر قراءة لقطة من الفيديو. جرّب فيديو آخر.",
     videoNotFound: "لم نجد الفيديو المرفوع. يرجى المحاولة مرة أخرى.",
-    videoNote: "الفيديو: حتى 30 ثانية و50 ميغابايت. حدّد الموقع بإدخال عنوان.",
-    gpsNoneVideo: "لا يمكن قراءة الموقع من الفيديو. أدخل عنوانًا أو اسم مكان.",
+    videoNote: "الفيديو: حتى 30 ثانية و50 ميغابايت.",
+    gpsNoneVideo: "لا يحتوي هذا الفيديو على بيانات موقع. أدخل عنوانًا أو اسم مكان.",
+    gpsFoundVideo: "تم اكتشاف الموقع من الفيديو.",
     playVideo: "تشغيل الفيديو",
     badgeVideo: "فيديو",
     videoUploading: (pct: number) => `جارٍ رفع الفيديو… ${pct}%`,

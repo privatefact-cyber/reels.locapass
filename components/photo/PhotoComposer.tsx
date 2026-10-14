@@ -8,6 +8,7 @@ import exifr from "exifr";
 import { geocode } from "@/lib/map/geocode";
 import { PHOTO_MAX_BYTES } from "@/lib/photo/tags";
 import { uploadPhotoVideoToR2 } from "@/lib/storage/uploadToR2";
+import { readVideoGps } from "@/lib/photo/videoGps";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 type Candidate = {
@@ -183,7 +184,14 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setCandidates([]);
     setPick(null);
     setCoords(null);
-    // 動画からは位置情報を読み取れないので、住所・地名の入力に進む。
+    // 動画の管理情報(moov)にある撮影場所を読む。無ければ住所・地名の入力に進む。
+    const gps = await readVideoGps(f);
+    if (gps) {
+      setCoords(gps);
+      setCoordsNote(t.photo.gpsFoundVideo);
+      void loadCandidates(gps);
+      return;
+    }
     setCoordsNote(t.photo.gpsNoneVideo);
     setNeedAddress(true);
   }
