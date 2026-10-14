@@ -11,6 +11,7 @@ import { useReelMutedPreference } from "@/lib/reels/useReelMutedPreference";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { StreamVideo } from "@/components/video/StreamVideo";
+import { posterImage } from "@/lib/images/thumb";
 import { ReelCaptionOverlay } from "@/components/reels/ReelCaptionOverlay";
 import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
@@ -232,13 +233,13 @@ export function ReelCard({
         <>
           {posterImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={sanitizeImageUrl(posterImageUrl)} alt="" className="absolute inset-0 h-full w-full object-contain" />
+            <img src={posterImage(sanitizeImageUrl(posterImageUrl))} alt="" className="absolute inset-0 h-full w-full object-contain" />
           )}
           <StreamVideo
             ref={videoRef}
             src={videoUrl}
             active={isActive}
-            poster={sanitizeImageUrl(posterImageUrl)}
+            poster={posterImage(sanitizeImageUrl(posterImageUrl))}
             className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-200 ${
               firstFrame ? "opacity-100" : "opacity-0"
             }`}
@@ -262,7 +263,7 @@ export function ReelCard({
       ) : posterImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={sanitizeImageUrl(posterImageUrl)}
+          src={posterImage(sanitizeImageUrl(posterImageUrl))}
           alt=""
           loading="lazy"
           className="h-full w-full object-contain"

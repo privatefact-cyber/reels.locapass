@@ -18,6 +18,7 @@ import { genreLabel } from "@/lib/i18n/genreLabels";
 import { setAiSelectedContext } from "@/lib/aiContext";
 import { isHiddenByDefaultGenre } from "@/lib/shop/genres";
 import { photoResized } from "@/components/photo/photoUtils";
+import { gridThumb } from "@/lib/images/thumb";
 import type { PhotoTeaser } from "@/lib/photo/types";
 
 export type { ReelItem } from "@/lib/reels/types";
@@ -178,7 +179,7 @@ const GridTile = memo(function GridTile({
   onShopPeekEnter: (shop: ShopGridItem, e: React.MouseEvent<HTMLElement>) => void;
   onShopPeekLeave: () => void;
 }) {
-  const thumbUrl = tileThumbUrl(tile);
+  const thumbUrl = gridThumb(tileThumbUrl(tile));
   // カバー画像のリンク切れ時も、真っ黒にせずイメージを出す。
   const [thumbBroken, setThumbBroken] = useState(false);
   const fallbackVideoUrl = thumbUrl ? undefined : tileFallbackVideoUrl(tile);
@@ -199,6 +200,7 @@ const GridTile = memo(function GridTile({
           src={thumbUrl}
           alt=""
           loading="lazy"
+          decoding="async"
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />
       ) : fallbackVideoUrl ? (
@@ -214,7 +216,7 @@ const GridTile = memo(function GridTile({
       ) : tile.kind === "shop" ? (
         // 店舗タイルで写真が無い/壊れているとき: イメージ写真(無ければ店名入りのグラデーション)。
         <span className="relative block h-full w-full overflow-hidden bg-panel-900">
-          <ShopMediaFallback category={tile.shop.genre} seed={tile.shop.id} name={tile.shop.name} showCredit={false} />
+          <ShopMediaFallback category={tile.shop.genre} seed={tile.shop.id} name={tile.shop.name} showCredit={false} thumb />
         </span>
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-tone-800 via-tone-950 to-black">
@@ -281,6 +283,10 @@ export function ReelFeed({
   const [nowOnly, setNowOnly] = useState(false);
   // PHOTOタブ: ICON/SHOPのリール一覧の代わりに、ユーザー投稿写真の新着を出す。
   const [photoOnly, setPhotoOnly] = useState(false);
+  // グリッドは最初の GRID_PAGE 枚だけ描き、末尾に近づいたら続きを足す(画像・DOMが多いと低価格の端末が重くなるため)。
+  const GRID_PAGE = 36;
+  const [visibleCount, setVisibleCount] = useState(GRID_PAGE);
+  const gridSentinelRef = useRef<HTMLDivElement | null>(null);
   const nowOnlyRef = useRef(false);
   const [gateOpen, setGateOpen] = useState(false);
   // gateClosing/gateEnteringはどちらも「縮小+透明」の見た目で、開閉どちらもブワっと同じアニメーションになる。
@@ -516,6 +522,26 @@ export function ReelFeed({
       ),
     [nowOnly, filteredNowReels, filteredReels, filteredShops, ads],
   );
+  // 絞り込み・タブが変わったら、先頭からやり直す。
+  useEffect(() => {
+    setVisibleCount(GRID_PAGE);
+  }, [tiles]);
+
+  // 末尾の目印が画面の手前(800px)に来たら、続きの GRID_PAGE 枚を足す。
+  const hasMoreTiles = visibleCount < tiles.length;
+  useEffect(() => {
+    const el = gridSentinelRef.current;
+    if (!el || !hasMoreTiles) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) setVisibleCount((c) => c + GRID_PAGE);
+      },
+      { rootMargin: "800px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMoreTiles, visibleCount]);
+
 
   // リール一覧側は、最後まで見きったら先頭へ戻すのではなく、同じ並びをもう一周ぶん
   // 継ぎ足して下スワイプを続けられるようにする(永遠にループ)。
@@ -808,7 +834,7 @@ export function ReelFeed({
         // 1枚が小さい割に余白が目立つため、横向き(landscape)とは別に列数を増やす。
         // 判定はmdではなくsm(640px)を起点にする(iPad miniの縦幅744pxはmd=768px未満のため)。
         <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
-          {tiles.map((tile, index) => (
+          {tiles.slice(0, visibleCount).map((tile, index) => (
             <GridTile
               key={tileKey(tile)}
               tile={tile}
@@ -818,6 +844,7 @@ export function ReelFeed({
               onShopPeekLeave={handleShopPeekLeave}
             />
           ))}
+          {hasMoreTiles ? <div ref={gridSentinelRef} aria-hidden className="col-span-full h-px" /> : null}
         </div>
       ) : (
         // 縦スワイプのリール一覧。ヘッダー・ボトムナビはページの通常コンテンツとして

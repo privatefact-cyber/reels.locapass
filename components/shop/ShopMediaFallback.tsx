@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { gridThumb } from "@/lib/images/thumb";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 import { pickPlaceholder } from "@/lib/placeholders/pick";
 
@@ -15,12 +16,15 @@ export function ShopMediaFallback({
   name,
   allowVideo = false,
   showCredit = true,
+  thumb = false,
 }: {
   category: string | null | undefined;
   seed: string;
   name: string;
   allowVideo?: boolean;
   showCredit?: boolean;
+  /** 一覧のタイル用: 軽い縮小版の画像を使う。 */
+  thumb?: boolean;
 }) {
   const pick = pickPlaceholder(category, seed, { allowVideo });
   const initial = name.trim().slice(0, 1) || "L";
@@ -31,7 +35,7 @@ export function ShopMediaFallback({
         <AutoplayVideo src={pick.url} />
       ) : pick?.kind === "photo" ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={pick.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={thumb ? (gridThumb(pick.url) ?? pick.url) : pick.url} alt="" decoding="async" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-gradient-to-br from-hl-900/70 via-tone-900 to-black">
           <span className="font-display select-none text-[8rem] font-bold leading-none text-main/[0.06]">{initial}</span>
