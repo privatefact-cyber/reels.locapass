@@ -21,8 +21,6 @@ const NAV_ITEMS = [
   { path: "/inquiries", label: "お問い合わせ" },
 ];
 
-/** 使い方(サポートAI)。店舗管理画面の外にある共通ページへ。 */
-const SUPPORT_HREF = "/support";
 
 export default async function LocapassShopDashboardLayout({
   children,
@@ -62,7 +60,7 @@ export default async function LocapassShopDashboardLayout({
               </Link>
             ))}
           </div>
-          <Link href={SUPPORT_HREF} className="mr-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-50">
+          <Link href={`${basePath}/support`} className="mr-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-50">
             使い方
           </Link>
           <DashboardSignOutButton redirectTo={viewer.isOperator ? "/admin/login" : "/login"} />

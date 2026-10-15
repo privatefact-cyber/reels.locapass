@@ -9,13 +9,13 @@ import { SAMPLE_QUESTIONS, supportText } from "@/lib/support/text";
 type Doc = { id: string; audience: "user" | "shop"; title: string; body: string };
 type Msg = { role: "user" | "ai"; text: string; links?: { title: string; url: string }[]; unanswered?: boolean; question?: string };
 
-export function SupportCenter({ docs, isShop }: { docs: Doc[]; isShop: boolean }) {
+/** audience="user": 一般向け(/support)。audience="shop": 店舗管理画面の中のサポート。画面・AI・ガイドは完全に別。 */
+export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user" | "shop" }) {
   const { locale } = useLocale();
   const t = supportText(locale);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState<"user" | "shop">("user");
   const [contact, setContact] = useState("");
   const [sent, setSent] = useState<Record<number, boolean>>({});
   const endRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,7 @@ export function SupportCenter({ docs, isShop }: { docs: Doc[]; isShop: boolean }
       const res = await fetch("/api/support/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: q, history, path: "/support" }),
+        body: JSON.stringify({ message: q, history, path: "/support", audience }),
       });
       const data = await res.json();
       setMsgs((p) => [...p, { role: "ai", text: data?.reply ?? "エラーが発生しました。", links: data?.links, unanswered: data?.answered === false, question: q }]);
@@ -44,18 +44,18 @@ export function SupportCenter({ docs, isShop }: { docs: Doc[]; isShop: boolean }
   }
 
   async function escalate(i: number, question: string) {
-    const res = await fetch("/api/support/escalate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: question, contact }) });
+    const res = await fetch("/api/support/escalate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: question, contact, audience }) });
     if (res.ok) setSent((p) => ({ ...p, [i]: true }));
   }
 
-  const samples = SAMPLE_QUESTIONS[isShop && tab === "shop" ? "shop" : "user"];
-  const shown = docs.filter((d) => d.audience === tab);
+  const samples = SAMPLE_QUESTIONS[audience];
+  const shown = docs.filter((d) => d.audience === audience);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 pb-28 pt-6 text-main">
       <header>
         <h1 className="flex items-center gap-2 text-xl font-black">
-          <Sparkles className="h-5 w-5 text-accent" /> {t.title}
+          <Sparkles className="h-5 w-5 text-accent" /> {audience === "shop" ? `${t.title}(${t.shop})` : t.title}
         </h1>
         <p className="mt-1 text-sm text-tone-300">{t.lead}</p>
       </header>
@@ -133,15 +133,6 @@ export function SupportCenter({ docs, isShop }: { docs: Doc[]; isShop: boolean }
 
       <section>
         <h2 className="mb-2 text-sm font-bold">{t.guide}</h2>
-        {isShop && (
-          <div className="mb-3 flex gap-1 rounded-lg border border-main/10 bg-page/20 p-1" role="tablist">
-            {(["user", "shop"] as const).map((k) => (
-              <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold ${tab === k ? "bg-main/10 text-accent" : "text-main/50"}`}>
-                {k === "user" ? t.user : t.shop}
-              </button>
-            ))}
-          </div>
-        )}
         <div className="space-y-2">
           {shown.map((d) => (
             <details key={d.id} className="rounded-xl border border-main/10 bg-tone-900/60 px-3 py-2.5">

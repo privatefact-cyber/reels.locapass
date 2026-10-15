@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** AIが答えられなかった質問を、運営に送る(返信先は任意)。 */
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => null)) as { message?: unknown; contact?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { message?: unknown; contact?: unknown; audience?: unknown } | null;
   const message = typeof body?.message === "string" ? body.message.trim().slice(0, 500) : "";
   const contact = typeof body?.contact === "string" ? body.contact.trim().slice(0, 200) : "";
   if (!message) return NextResponse.json({ error: "empty" }, { status: 400 });
@@ -22,8 +22,8 @@ export async function POST(req: Request) {
     answered: false,
     escalated: true,
     contact: contact || (user?.email ?? null),
-    audience: hasManagementRole(roles) ? "shop" : "user",
-    path: "/support",
+    audience: body?.audience === "shop" && hasManagementRole(roles) ? "shop" : "user",
+    path: body?.audience === "shop" ? "/dashboard/support" : "/support",
   });
   if (error) return NextResponse.json({ error: "failed" }, { status: 500 });
   return NextResponse.json({ ok: true });
