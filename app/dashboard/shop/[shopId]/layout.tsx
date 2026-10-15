@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { path: "/staff", label: "スタッフ管理" },
   { path: "/reels", label: "リール投稿" },
   { path: "/boost", label: "⚡ブースト" },
+  { path: "/reservations", label: "優先予約" },
   { path: "/messages", label: "お客様へのメッセージ" },
   { path: "/applicants", label: "応募者管理" },
   { path: "/inquiries", label: "お問い合わせ" },

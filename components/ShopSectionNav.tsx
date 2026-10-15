@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, Users, Star, MapPin, Phone } from "lucide-react";
+import Link from "next/link";
+import { Calendar, CalendarCheck, Users, Star, MapPin, Phone } from "lucide-react";
 import { ShopContactModal } from "@/components/ShopContactModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -20,12 +21,15 @@ export function ShopSectionNav({
   phone,
   lineContactUrl,
   lineQrImageUrl,
+  reserveHref = null,
   sections,
 }: {
   shopId: string;
   phone: string | null;
   lineContactUrl: string | null;
   lineQrImageUrl: string | null;
+  /** 優先予約(有料掲載店のみ・公開時)の行き先。無ければ非表示。 */
+  reserveHref?: string | null;
   /** 店舗ページに実際に表示されているセクションのid。未入力で非表示のセクションはナビにも出さない。 */
   sections: string[];
 }) {
@@ -84,6 +88,14 @@ export function ShopSectionNav({
               </li>
             );
           })}
+          {reserveHref && (
+            <li>
+              <Link href={reserveHref} className="flex flex-col items-center gap-1 text-[10px] font-bold text-hl-300">
+                <CalendarCheck size={16} />
+                予約
+              </Link>
+            </li>
+          )}
           {showContact && (
             <li>
               <button

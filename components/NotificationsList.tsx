@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Calendar, Film, Heart, MessageSquare, Megaphone, Trash2, UserPlus } from "lucide-react";
+import { Bell, Calendar, CalendarCheck, Film, Heart, MessageSquare, Megaphone, Trash2, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -26,6 +26,10 @@ const ICONS: Record<string, typeof Bell> = {
   admin_message: Megaphone,
   photo_like: Heart,
   photo_follow: UserPlus,
+  reservation_request: CalendarCheck,
+  reservation_confirmed: CalendarCheck,
+  reservation_declined: CalendarCheck,
+  reservation_cancelled: CalendarCheck,
 };
 
 const TABLE = "locapass_notifications";

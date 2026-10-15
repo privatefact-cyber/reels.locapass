@@ -1,6 +1,7 @@
 import { requireCurrentUser } from "@/lib/user/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { fetchMyRoles } from "@/lib/auth/roles";
+import { reservationEnabled } from "@/lib/reservation/config";
 import { MypageClient, type PostShop, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 
@@ -99,6 +100,13 @@ export default async function MypagePage() {
     operatorShops = (shopRows ?? []).map((r) => ({ id: r.id, name: r.name }));
   }
 
+  // 優先予約の履歴リンク: 機能が公開中、または過去に予約がある人だけ。
+  let showReservations = reservationEnabled();
+  if (!showReservations) {
+    const { count } = await (supabase as any).from("locapass_reservations").select("id", { count: "exact", head: true }).eq("user_id", user.id);
+    showReservations = (count ?? 0) > 0;
+  }
+
   const favoriteReelsRes = await supabase
     .from("locapass_member_favorite_reels")
     .select(
@@ -137,6 +145,7 @@ export default async function MypagePage() {
       favoriteShops={favoriteShops}
       myComments={myComments}
       postShops={postShops}
+      showReservations={showReservations}
       operatorShops={operatorShops}
     />
   );

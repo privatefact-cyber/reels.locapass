@@ -68,6 +68,7 @@ export function MypageClient({
   myComments,
   postShops = [],
   operatorShops = [],
+  showReservations = false,
 }: {
   userId: string;
   initialNickname: string;
@@ -80,6 +81,8 @@ export function MypageClient({
   postShops?: PostShop[];
   /** 運営(システム/エリア管理者)が代理で投稿できる店舗の一覧。 */
   operatorShops?: PostShop[];
+  /** 優先予約の履歴リンクを出すか。 */
+  showReservations?: boolean;
 }) {
   const { t } = useLocale();
   const TABS: { key: Tab; label: string }[] = [
@@ -299,6 +302,13 @@ export function MypageClient({
           </button>
         </div>
       </section>
+
+      {showReservations && (
+        <Link href="/mypage/reservations" className="mx-4 mt-4 flex items-center justify-between rounded-xl border border-main/15 bg-tone-900/60 px-4 py-3 text-sm font-bold text-main">
+          <span>優先予約の履歴</span>
+          <span className="text-tone-500">›</span>
+        </Link>
+      )}
 
       {/* 店舗管理者向けの投稿ショートカット(通常投稿 / ⚡ブースト投稿)。スマホからすぐ投稿できるよう上部に置く。 */}
       {postShops.length > 0 && (

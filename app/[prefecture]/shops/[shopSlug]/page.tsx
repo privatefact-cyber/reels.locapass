@@ -23,6 +23,7 @@ import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { InquiryButton } from "@/components/InquiryButton";
 import { ShopAccordion } from "@/components/ShopAccordion";
+import { reservationEnabled, shopCanTakeReservations } from "@/lib/reservation/config";
 import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
@@ -65,7 +66,7 @@ async function resolveShop(params: PageParams) {
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, slug, name, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url, cover_image_attribution",
+      "id, slug, name, plan, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url, cover_image_attribution",
     )
     .eq("portal_id", portal.id)
     .eq("slug", params.shopSlug)
@@ -695,6 +696,7 @@ export default async function ShopDetailPage({
         phone={store.phone}
         lineContactUrl={store.lineContactUrl}
         lineQrImageUrl={store.lineQrImageUrl}
+        reserveHref={reservationEnabled() && shopCanTakeReservations(shopRow.plan) ? `/reserve/${shopRow.id}` : null}
         sections={[
           ...(todayCasts.length > 0 ? ["today"] : []),
           ...(casts.length > 0 ? ["cast"] : []),
