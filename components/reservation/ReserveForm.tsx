@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarCheck } from "lucide-react";
 import { submitReservation } from "@/app/reserve/[shopId]/actions";
-import { CUSTOMER_CANCEL_HOURS, DEPOSIT_AMOUNT, MAX_DAYS_AHEAD } from "@/lib/reservation/config";
+import { AUTO_DECLINE_HOURS, DEPOSIT_MAX, DEPOSIT_PER_PERSON, MAX_DAYS_AHEAD, depositFor, methodFor } from "@/lib/reservation/config";
 
 const SLOTS = Array.from({ length: 29 }, (_, i) => {
   const m = 10 * 60 + i * 30; // 10:00〜24:00
@@ -16,7 +16,7 @@ function jstDate(offsetDays: number) {
   return d.toISOString().slice(0, 10);
 }
 
-export function ReserveForm({ shopId, shopName, defaultName, stub }: { shopId: string; shopName: string; defaultName: string; stub: boolean }) {
+export function ReserveForm({ shopId, shopName, defaultName, stub, freeCancelHours }: { shopId: string; shopName: string; defaultName: string; stub: boolean; freeCancelHours: number }) {
   const router = useRouter();
   const dates = useMemo(
     () =>
@@ -34,6 +34,8 @@ export function ReserveForm({ shopId, shopName, defaultName, stub }: { shopId: s
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [agree, setAgree] = useState(false);
+  const deposit = depositFor(party);
+  const method = methodFor(new Date(`${date}T${time}:00+09:00`).getTime());
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -73,11 +75,16 @@ export function ReserveForm({ shopId, shopName, defaultName, stub }: { shopId: s
       <div className="rounded-xl border border-main/10 bg-tone-900/60 p-3 text-xs leading-relaxed text-tone-300">
         <p className="font-bold text-main">席だけ確保。お料理は当日お店でご注文ください。</p>
         <ul className="mt-1 list-disc space-y-0.5 pl-4">
-          <li>デポジット {DEPOSIT_AMOUNT.toLocaleString()}円 の仮決済(カード枠の確保)でリクエストします。この時点では請求されません。</li>
-          <li>お店が「受ける」と確定。「断る」の場合は仮決済が解放され、請求は0円です。</li>
-          <li>ご来店後は仮決済が解放され、お会計は現地で全額お支払い(またはデポジットを会計に充当)となります。</li>
-          <li>無断キャンセルの場合は、デポジット{DEPOSIT_AMOUNT.toLocaleString()}円をお店の売上として申し受けます。</li>
-          <li>確定後のお取り消しは来店の{CUSTOMER_CANCEL_HOURS}時間前まで。それ以降はお店へ直接ご連絡ください。</li>
+          <li>デポジットは1名{DEPOSIT_PER_PERSON.toLocaleString()}円(上限{DEPOSIT_MAX.toLocaleString()}円)。ご来店されれば<b>請求は0円</b>です。</li>
+          <li>
+            {method === "hold"
+              ? "ご予約時にカード枠を一時的に確保します(まだ請求されません)。ご来店・お取り消しで解放されます。"
+              : "ご予約時にカード情報を保存します(枠の確保や請求はありません)。無断キャンセルのときだけ保存したカードに請求します。"}
+          </li>
+          <li>お店が「受ける」と予約確定。お受けできない場合や、お店から返答がない場合({AUTO_DECLINE_HOURS}時間)は、請求なしで解放されます。</li>
+          <li>無断キャンセルの場合は、デポジットをキャンセル料として請求します。</li>
+          <li>確定後のお取り消しは、来店の{freeCancelHours}時間前までは無料です。それ以降は、お店の判断でキャンセル料(上記デポジット)が発生する場合があります。事前にご連絡いただければ、お店が配慮することもあります。</li>
+          <li>プリペイドカードはご利用いただけません。</li>
         </ul>
       </div>
 
@@ -122,7 +129,7 @@ export function ReserveForm({ shopId, shopName, defaultName, stub }: { shopId: s
 
       <label className="flex items-start gap-2 text-xs text-tone-300">
         <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4" />
-        上記の内容(デポジットの扱い・無断キャンセル時の没収)に同意します。
+        上記の内容(デポジットの扱い・無断キャンセル時のキャンセル料の請求)に同意します。
       </label>
 
       {error && <p className="text-sm font-semibold text-red-400">{error}</p>}
@@ -131,7 +138,7 @@ export function ReserveForm({ shopId, shopName, defaultName, stub }: { shopId: s
         disabled={pending || !agree || !name.trim() || !phone.trim()}
         className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-4 text-base font-black text-black disabled:opacity-50 active:scale-95"
       >
-        {pending ? "送信中..." : `デポジット${DEPOSIT_AMOUNT.toLocaleString()}円で予約をリクエスト`}
+        {pending ? "送信中..." : `デポジット${deposit.toLocaleString()}円で予約をリクエスト`}
       </button>
     </form>
   );

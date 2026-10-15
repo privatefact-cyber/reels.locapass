@@ -1,15 +1,48 @@
 /** 優先予約の共通設定。 */
-export const DEPOSIT_AMOUNT = 1000;
-/** 与信(仮決済)の有効期間はカード会社の都合で約7日。それを超える先の予約は受けない。 */
-export const MAX_DAYS_AHEAD = 7;
+/** デポジットは 1人500円・上限5,000円。 */
+export const DEPOSIT_PER_PERSON = 500;
+export const DEPOSIT_MAX = 5000;
+export const depositFor = (partySize: number) => Math.min(DEPOSIT_PER_PERSON * Math.max(1, partySize), DEPOSIT_MAX);
+
+/**
+ * カードの保証方法。来店がこの日数以内なら与信保持(hold: 枠を確保。回収はほぼ確実)。
+ * 与信の有効期間はカード会社の都合で約7日なので、処理の余裕を見て5日。
+ * それより先はカード保存(save: 枠は確保せず、無断キャンセルのときだけ保存カードに請求)。
+ */
+export const HOLD_MAX_DAYS = 5;
+export const MAX_DAYS_AHEAD = 30;
+export type PaymentMethod = "hold" | "save";
+export const methodFor = (reserveAtMs: number, nowMs = Date.now()): PaymentMethod =>
+  reserveAtMs - nowMs <= HOLD_MAX_DAYS * 24 * 3600_000 ? "hold" : "save";
+
+/** 来店の処理がされないまま、この時間が過ぎたら自動で解放する(自動で没収はしない)。 */
+export const AUTO_RELEASE_HOURS = 24;
+/** お店が返答しないまま、この時間が過ぎた(または来店の30分前になった)リクエストは自動で辞退し解放する。 */
+export const AUTO_DECLINE_HOURS = 12;
+
+/** はじめて予約するお客様(来店済みの実績なし)の上限。 */
+export const NEWBIE_MAX_PARTY = 6;
+export const NEWBIE_MAX_OPEN = 1;
+
+/** 没収額から差し引く、Stripe決済手数料の見込み率(実額は接続後にStripeの値で置き換える)。 */
+export const FEE_RATE = 0.036;
 /** 受付は、来店のこの時間前まで。 */
 export const MIN_LEAD_HOURS = 1;
-/** 客が確定後に自分で取り消せるのは、来店のこの時間前まで(直前はお店へ連絡)。 */
-export const CUSTOMER_CANCEL_HOURS = 3;
+/** お客様が無料で取り消せる期限の既定値(来店のN時間前まで)。店舗ごとに設定でき、それ以降の取り消しは「お店の判断待ち」になる。 */
+export const DEFAULT_FREE_CANCEL_HOURS = 3;
+export const FREE_CANCEL_CHOICES = [0, 1, 3, 6, 12, 24, 48] as const;
 /** 同時に持てる未完了の予約(リクエスト中+確定・来店前)の上限。 */
 export const MAX_OPEN_PER_USER = 3;
 
-export type ReservationStatus = "requested" | "confirmed" | "declined" | "cancelled" | "completed" | "no_show";
+export type ReservationStatus =
+  | "requested"
+  | "confirmed"
+  | "declined"
+  | "cancelled"
+  | "completed"
+  | "no_show"
+  | "cancel_review"
+  | "late_cancelled";
 export type PaymentStatus = "none" | "authorized" | "released" | "captured" | "failed";
 
 export type ReservationRow = {
@@ -24,6 +57,8 @@ export type ReservationRow = {
   status: ReservationStatus;
   deposit_amount: number;
   payment_provider: "stub" | "stripe";
+  payment_method: PaymentMethod;
+  card_fingerprint: string | null;
   payment_status: PaymentStatus;
   payment_ref: string | null;
   shop_message: string | null;

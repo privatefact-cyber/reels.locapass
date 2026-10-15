@@ -7,6 +7,8 @@ export const STATUS_LABEL: Record<ReservationStatus, string> = {
   cancelled: "取り消し済み",
   completed: "ご来店済み",
   no_show: "無断キャンセル",
+  cancel_review: "お店の判断待ち",
+  late_cancelled: "キャンセル料を請求",
 };
 
 export const STATUS_COLOR: Record<ReservationStatus, string> = {
@@ -16,14 +18,16 @@ export const STATUS_COLOR: Record<ReservationStatus, string> = {
   cancelled: "bg-zinc-600 text-white",
   completed: "bg-sky-500 text-white",
   no_show: "bg-red-600 text-white",
+  cancel_review: "bg-orange-500 text-white",
+  late_cancelled: "bg-red-600 text-white",
 };
 
 export const PAYMENT_LABEL: Record<PaymentStatus, string> = {
   none: "-",
-  authorized: "仮決済中(未請求)",
+  authorized: "保証中(未請求)",
   released: "解放済み(請求なし)",
-  captured: "デポジット確定",
-  failed: "決済エラー",
+  captured: "キャンセル料を請求済み",
+  failed: "請求できませんでした",
 };
 
 export function formatJst(iso: string): string {

@@ -20,11 +20,11 @@ export default async function ReservePage({ params }: { params: Promise<{ shopId
   const admin = createAdminClient();
   const { data: shop } = await (admin as any)
     .from("locapass_shops")
-    .select("id, name, plan, status, tel, line_url, cover_url")
+    .select("id, name, plan, status, tel, line_url, cover_url, reservation_free_cancel_hours")
     .eq("id", shopId)
     .maybeSingle();
   if (!shop || shop.status !== "active" || !shopCanTakeReservations(shop.plan)) notFound();
 
   const { data: member } = await admin.from("locapass_members").select("nickname").eq("id", user.id).maybeSingle();
-  return <ReserveForm shopId={shop.id} shopName={shop.name} defaultName={member?.nickname ?? ""} stub={!process.env.STRIPE_SECRET_KEY} />;
+  return <ReserveForm shopId={shop.id} shopName={shop.name} defaultName={member?.nickname ?? ""} stub={!process.env.STRIPE_SECRET_KEY} freeCancelHours={shop.reservation_free_cancel_hours ?? 3} />;
 }

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cancelMyReservation } from "@/app/mypage/reservations/actions";
 
-export function CancelButton({ id }: { id: string }) {
+export function CancelButton({ id, late, freeHours, deposit }: { id: string; late: boolean; freeHours: number; deposit: number }) {
   const router = useRouter();
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -14,7 +14,10 @@ export function CancelButton({ id }: { id: string }) {
         type="button"
         disabled={pending}
         onClick={() => {
-          if (!confirm("この予約を取り消しますか?(仮決済は解放されます)")) return;
+          const ask = late
+            ? `来店の${freeHours}時間前を過ぎているため、お店の判断でキャンセル料(${deposit.toLocaleString()}円)が発生する場合があります。取り消しますか?`
+            : "この予約を取り消しますか?(請求は発生しません)";
+          if (!confirm(ask)) return;
           start(async () => {
             const r = await cancelMyReservation(id);
             if (!r.ok) setErr(r.error);
