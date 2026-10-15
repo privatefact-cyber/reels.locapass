@@ -4,15 +4,17 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { notifyBoostCreated } from "@/lib/boost/notify";
+import { BOOST_DURATIONS } from "@/lib/boost/types";
 
 export type BoostActionResult = { ok: true } | { ok: false; error: string };
 
-/** ⚡ブーストを発射する。掲載時間(60分)と同時掲載数の上限はDBトリガー側で強制する。 */
+/** ⚡ブーストを発射する。掲載時間(1〜3時間)と同時掲載数の上限はDBトリガー側で強制する。 */
 export async function launchBoost(shopId: string, input: {
   title: string;
   description: string;
   imageUrl: string | null;
   discountTag: string | null;
+  durationMinutes: number;
 }): Promise<BoostActionResult> {
   const viewer = await getShopForManager(shopId);
   if (!viewer) return { ok: false, error: "権限がありません" };
@@ -26,10 +28,12 @@ export async function launchBoost(shopId: string, input: {
   if (description.length > 600) return { ok: false, error: "詳細は600文字以内にしてください" };
   if (discountTag && discountTag.length > 20) return { ok: false, error: "特典タグは20文字以内にしてください" };
 
+  if (!(BOOST_DURATIONS as readonly number[]).includes(input.durationMinutes)) return { ok: false, error: "掲載時間は1〜3時間から選んでください" };
+
   const supabase = await createClient();
   const { data, error } = await (supabase as any)
     .from("locapass_boost_posts")
-    .insert({ shop_id: shopId, title, description, image_url: input.imageUrl || null, discount_tag: discountTag })
+    .insert({ shop_id: shopId, title, description, image_url: input.imageUrl || null, discount_tag: discountTag, duration_minutes: input.durationMinutes })
     .select("id")
     .single();
   if (error || !data) {

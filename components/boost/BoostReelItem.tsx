@@ -3,7 +3,7 @@
 import { Zap, ChevronUp } from "lucide-react";
 import { BoostCountdown } from "./BoostCountdown";
 import type { BoostItem } from "@/lib/boost/types";
-import type { BoostText } from "@/lib/boost/text";
+import { limitedLabel, type BoostText } from "@/lib/boost/text";
 import { photoResized } from "@/components/photo/photoUtils";
 
 /** 縦スワイプ一覧の1枚。全面に写真、残り時間と要約を重ねる。タップで詳細カードを開く。 */
@@ -17,7 +17,7 @@ export function BoostReelItem({ boost, now, t, onOpen }: { boost: BoostItem; now
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/40" />
       <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-black">
-          <Zap className="h-3.5 w-3.5 fill-black" /> {t.limited}
+          <Zap className="h-3.5 w-3.5 fill-black" /> {limitedLabel(t, boost.durationMinutes)}
         </span>
         {boost.discountTag && <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-black text-amber-300">{boost.discountTag}</span>}
       </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Phone, MapPin, Zap, MessageCircle, Store } from "lucide-react";
 import { BoostCountdown } from "./BoostCountdown";
 import type { BoostItem } from "@/lib/boost/types";
-import type { BoostText } from "@/lib/boost/text";
+import { limitedLabel, type BoostText } from "@/lib/boost/text";
 import { photoResized } from "@/components/photo/photoUtils";
 
 function mapUrl(s: BoostItem["shop"]): string | null {
@@ -25,7 +25,7 @@ export function BoostCard({ boost, now, t }: { boost: BoostItem; now: number; t:
     >
       <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-black">
         <span className="flex items-center gap-1 text-sm font-black">
-          <Zap className="h-4 w-4 fill-black" /> {t.limited}
+          <Zap className="h-4 w-4 fill-black" /> {limitedLabel(t, boost.durationMinutes)}
         </span>
         {boost.discountTag && <span className="rounded-full bg-black px-3 py-0.5 text-xs font-black text-amber-300">{boost.discountTag}</span>}
       </div>

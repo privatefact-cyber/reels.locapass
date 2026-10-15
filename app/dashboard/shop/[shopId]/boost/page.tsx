@@ -36,7 +36,7 @@ export default async function ShopBoostPage({ params }: { params: Promise<{ shop
       <div>
         <h1 className="text-xl font-black text-slate-900">⚡ 緊急ブースト</h1>
         <p className="mt-1 text-sm text-slate-600">
-          ドタキャンや作りすぎの時に、1時間限定のお得情報をすぐ掲載できます。
+          ドタキャンや作りすぎの時に、1〜3時間限定のお得情報をすぐ掲載できます。
           <Link href="/boost" className="ml-1 underline">お客様側の表示を見る</Link>
           <Link href={`/dashboard/shop/${shopId}/support`} className="ml-2 underline">使い方</Link>
         </p>

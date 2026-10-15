@@ -13,9 +13,11 @@ export function useNow(intervalMs = 1000) {
 
 export function formatRemain(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
-  const m = Math.floor(total / 60);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
+  // 1時間以上は 時:分:秒(2時間のブーストが「119:47」のように見えないように)。
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /** 残り時間のカウントダウン。5分を切ると赤く点滅して緊急感を出す。 */

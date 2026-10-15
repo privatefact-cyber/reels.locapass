@@ -6,6 +6,7 @@ export type BoostItem = {
   discountTag: string | null;
   createdAt: string;
   expiresAt: string;
+  durationMinutes: number;
   shop: {
     id: string;
     name: string;
@@ -20,6 +21,7 @@ export type BoostItem = {
   };
 };
 
-/** 1時間限定。カード・API・DBトリガーで共通の掲載時間(分)。 */
+/** 掲載時間の選択肢(分)。店舗が1/2/3時間から選ぶ。DBの check と同じ値。既定は1時間。 */
+export const BOOST_DURATIONS = [60, 120, 180] as const;
 export const BOOST_MINUTES = 60;
 export const BOOST_TAGS = ["無料提供", "半額", "80%OFF", "50%OFF", "ドリンク代のみ"] as const;

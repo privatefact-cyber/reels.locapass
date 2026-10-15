@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Zap } from "lucide-react";
 import { SingleImageDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
-import { BOOST_TAGS } from "@/lib/boost/types";
+import { BOOST_DURATIONS, BOOST_TAGS } from "@/lib/boost/types";
 import { launchBoost } from "@/app/dashboard/shop/[shopId]/boost/actions";
 
 /** 店舗向けの緊急ブースト発射フォーム。スマホで最短入力できるよう、必須はタイトルと詳細だけ。 */
@@ -14,6 +14,7 @@ export function BoostLaunchForm({ shopId, defaultImage }: { shopId: string; defa
   const [description, setDescription] = useState("");
   const [tag, setTag] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [duration, setDuration] = useState<number>(60);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [pending, start] = useTransition();
@@ -22,7 +23,7 @@ export function BoostLaunchForm({ shopId, defaultImage }: { shopId: string; defa
     e.preventDefault();
     setError(null);
     start(async () => {
-      const res = await launchBoost(shopId, { title, description, imageUrl: image, discountTag: tag || null });
+      const res = await launchBoost(shopId, { title, description, imageUrl: image, discountTag: tag || null, durationMinutes: duration });
       if (!res.ok) {
         setError(res.error);
         return;
@@ -31,6 +32,7 @@ export function BoostLaunchForm({ shopId, defaultImage }: { shopId: string; defa
       setDescription("");
       setTag("");
       setImage(null);
+      setDuration(60);
       setDone(true);
       router.refresh();
     });
@@ -61,7 +63,17 @@ export function BoostLaunchForm({ shopId, defaultImage }: { shopId: string; defa
       </div>
       <SingleImageDropzone shopId={shopId} name="boost_image" label="写真(任意・未設定なら店舗の写真)" defaultUrl={image} onChange={setImage} boxClassName="h-36 w-full" />
       {!image && defaultImage && <p className="text-[11px] text-slate-500">写真を選ばない場合は店舗のカバー写真が使われます。</p>}
-      <p className="text-xs text-slate-600">掲載時間は <b>60分</b> 固定です。お客様はこの情報を見てそのままご来店し、「locapassを見た」とお伝えします。</p>
+      <div>
+        <label className="text-sm font-bold">掲載時間</label>
+        <div className="mt-1 grid grid-cols-3 gap-2">
+          {BOOST_DURATIONS.map((m) => (
+            <button key={m} type="button" onClick={() => setDuration(m)} className={`rounded-lg border py-2.5 text-sm font-bold ${duration === m ? "border-amber-500 bg-amber-400 text-black" : "border-slate-300 bg-white text-slate-700"}`}>
+              {m / 60}時間
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-slate-600">発射すると、選んだ時間だけ掲載されます(あとから変更はできません。早く終えたいときは「今すぐ終了」)。お客様はこの情報を見てそのままご来店し、「locapassを見た」とお伝えします。</p>
+      </div>
       {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
       {done && <p className="text-sm font-semibold text-emerald-700">発射しました! ブースト一覧に掲載中です。</p>}
       <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-4 text-lg font-black text-black shadow disabled:opacity-60 active:scale-95">
