@@ -12,6 +12,7 @@ type Row = {
   shop: {
     id: string;
     name: string;
+    category: string | null;
     tel: string | null;
     line_url: string | null;
     address: string | null;
@@ -25,7 +26,7 @@ type Row = {
 };
 
 const SELECT =
-  "id, title, description, image_url, discount_tag, created_at, expires_at, shop:locapass_shops ( id, name, tel, line_url, address, lat, lng, icon_url, cover_url, slug, portal:locapass_portals ( slug ) )";
+  "id, title, description, image_url, discount_tag, created_at, expires_at, shop:locapass_shops ( id, name, category, tel, line_url, address, lat, lng, icon_url, cover_url, slug, portal:locapass_portals ( slug ) )";
 
 /** 掲載中(active かつ期限内)のブーストを、残り時間が短い順ではなく新着順で返す。公開RLSがそのまま効く。 */
 export async function getActiveBoosts(): Promise<BoostItem[]> {
@@ -70,6 +71,7 @@ function toItem(r: Row): BoostItem | null {
     shop: {
       id: s.id,
       name: s.name,
+      genre: s.category,
       tel: s.tel,
       lineUrl: s.line_url,
       address: s.address,

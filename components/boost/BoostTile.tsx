@@ -1,41 +1,72 @@
 "use client";
 
-import Link from "next/link";
+import { memo, useState } from "react";
 import { Zap } from "lucide-react";
 import { formatRemain } from "./BoostCountdown";
 import type { BoostItem } from "@/lib/boost/types";
-import type { BoostText } from "@/lib/boost/text";
-import { photoResized } from "@/components/photo/photoUtils";
+import { gridThumb } from "@/lib/images/thumb";
 
-/** 一覧グリッドの1マス。残り時間をバッジで常時表示し、タップで詳細へ。 */
-export function BoostTile({ boost, now, t }: { boost: BoostItem; now: number; t: BoostText }) {
+/** トップのグリッド(GridTile)と同じ正方形タイル。左上に残り時間のタイマーバッジを重ねる。 */
+export const BoostTile = memo(function BoostTile({
+  boost,
+  index,
+  now,
+  endedLabel,
+  onOpen,
+}: {
+  boost: BoostItem;
+  index: number;
+  now: number;
+  endedLabel: string;
+  onOpen: (index: number) => void;
+}) {
+  const thumb = gridThumb(boost.imageUrl ?? undefined);
+  const [broken, setBroken] = useState(false);
   const left = new Date(boost.expiresAt).getTime() - now;
   const ended = left <= 0;
   const urgent = left < 5 * 60 * 1000;
   return (
-    <Link
-      href={`/boost/${boost.id}`}
-      className={`relative block aspect-[3/4] overflow-hidden rounded-xl bg-zinc-900 ring-1 ring-amber-400/30 transition-opacity duration-700 ${ended ? "opacity-40" : ""}`}
+    <button
+      data-surface="media"
+      type="button"
+      onClick={() => onOpen(index)}
+      className={`group relative block aspect-square w-full overflow-hidden rounded-none bg-panel-900 text-left transition-opacity duration-700 ${ended ? "opacity-40" : ""}`}
     >
-      {boost.imageUrl && (
+      {thumb && !broken ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={photoResized(boost.imageUrl, 420, true)} alt={boost.title} loading="lazy" className="h-full w-full object-cover" />
+        <img
+          onError={() => setBroken(true)}
+          src={thumb}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-tone-800 via-tone-950 to-black">
+          <span className="font-display text-xs uppercase tracking-[0.2em] text-accent/50">LOCAPASS</span>
+        </div>
       )}
-      <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-1 bg-gradient-to-b from-black/80 to-transparent p-2">
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-sm font-black tabular-nums ${
-            ended ? "bg-zinc-700 text-white" : urgent ? "animate-pulse bg-red-500 text-white" : "bg-amber-400 text-black"
-          }`}
-        >
-          <Zap className="h-3.5 w-3.5 fill-current" />
-          {ended ? t.ended : formatRemain(left)}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent" />
+      <span
+        className={`pointer-events-none absolute left-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-mono text-[11px] font-black tabular-nums ${
+          ended ? "bg-zinc-700 text-white" : urgent ? "animate-pulse bg-red-500 text-white" : "bg-amber-400 text-black"
+        }`}
+      >
+        <Zap size={10} className="fill-current" />
+        {ended ? endedLabel : formatRemain(left)}
+      </span>
+      {boost.discountTag && (
+        <span className="pointer-events-none absolute right-1.5 top-1.5 max-w-[60%] truncate rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
+          {boost.discountTag}
         </span>
-        {boost.discountTag && <span className="max-w-[55%] truncate rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-black text-amber-300">{boost.discountTag}</span>}
-      </div>
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2.5 pt-10">
-        <p className="truncate text-[11px] font-bold text-amber-200">{boost.shop.name}</p>
-        <p className="line-clamp-2 text-sm font-black leading-snug text-white">{boost.title}</p>
-      </div>
-    </Link>
+      )}
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-4">
+        <span dir="auto" className="block truncate text-[11px] font-semibold text-main drop-shadow">
+          {boost.shop.name}
+        </span>
+        <span dir="auto" className="block truncate text-[10px] text-main/70">{boost.title}</span>
+      </span>
+    </button>
   );
-}
+});

@@ -9,6 +9,7 @@ export type BoostItem = {
   shop: {
     id: string;
     name: string;
+    genre: string | null;
     tel: string | null;
     lineUrl: string | null;
     address: string | null;
