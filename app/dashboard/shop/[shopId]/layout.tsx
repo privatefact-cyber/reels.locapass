@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { path: "/cast", label: "FACES管理" },
   { path: "/staff", label: "スタッフ管理" },
   { path: "/reels", label: "リール投稿" },
+  { path: "/boost", label: "⚡ブースト" },
   { path: "/messages", label: "お客様へのメッセージ" },
   { path: "/applicants", label: "応募者管理" },
   { path: "/inquiries", label: "お問い合わせ" },

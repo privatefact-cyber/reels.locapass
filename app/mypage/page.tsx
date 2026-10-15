@@ -1,6 +1,7 @@
 import { requireCurrentUser } from "@/lib/user/current-user";
 import { createClient } from "@/lib/supabase/server";
-import { MypageClient, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
+import { fetchMyRoles } from "@/lib/auth/roles";
+import { MypageClient, type PostShop, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 
 function buildMedia(videoUrl: string | null, posterUrl: string | null, images: unknown): SavedReel["media"] {
@@ -84,6 +85,14 @@ export default async function MypagePage() {
     };
   });
 
+  // 店舗管理者なら、自分の店舗への投稿ボタン(通常/ブースト)を出す。
+  let postShops: PostShop[] = [];
+  const roles = await fetchMyRoles(supabase);
+  if (roles && roles.shop_admin_shop_ids.length > 0) {
+    const { data: shopRows } = await supabase.from("locapass_shops").select("id, name").in("id", roles.shop_admin_shop_ids);
+    postShops = (shopRows ?? []).map((r) => ({ id: r.id, name: r.name }));
+  }
+
   const favoriteReelsRes = await supabase
     .from("locapass_member_favorite_reels")
     .select(
@@ -121,6 +130,7 @@ export default async function MypagePage() {
       followedCasts={followedCasts}
       favoriteShops={favoriteShops}
       myComments={myComments}
+      postShops={postShops}
     />
   );
 }

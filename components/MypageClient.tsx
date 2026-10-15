@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
+import { Camera, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -52,6 +52,8 @@ export type MyComment = {
   reelThumbnailUrl: string | null;
 };
 
+export type PostShop = { id: string; name: string };
+
 type Tab = "reels" | "casts" | "shops" | "comments";
 
 
@@ -64,6 +66,7 @@ export function MypageClient({
   followedCasts: initialFollowedCasts,
   favoriteShops: initialFavoriteShops,
   myComments,
+  postShops = [],
 }: {
   userId: string;
   initialNickname: string;
@@ -72,6 +75,8 @@ export function MypageClient({
   followedCasts: FollowedCast[];
   favoriteShops: FavoriteShop[];
   myComments: MyComment[];
+  /** 投稿権限のある自分の店舗(店舗管理者のみ)。あればマイページ上部に投稿ボタンを出す。 */
+  postShops?: PostShop[];
 }) {
   const { t } = useLocale();
   const TABS: { key: Tab; label: string }[] = [
@@ -290,6 +295,31 @@ export function MypageClient({
           </button>
         </div>
       </section>
+
+      {/* 店舗管理者向けの投稿ショートカット(通常投稿 / ⚡ブースト投稿)。スマホからすぐ投稿できるよう上部に置く。 */}
+      {postShops.length > 0 && (
+        <section className="mx-4 mt-4 space-y-3 rounded-2xl border border-accent/40 bg-tone-900/60 p-3">
+          {postShops.map((s) => (
+            <div key={s.id} className="space-y-2">
+              <p className="truncate text-xs font-semibold text-muted">{s.name} に投稿</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href={`/dashboard/shop/${s.id}/reels`}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-main/20 bg-tone-800 py-3 text-sm font-bold text-main active:scale-95"
+                >
+                  <PenSquare size={16} /> 通常投稿
+                </Link>
+                <Link
+                  href={`/dashboard/shop/${s.id}/boost`}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-sm font-black text-black active:scale-95"
+                >
+                  <Zap size={16} className="fill-black" /> ブースト投稿
+                </Link>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* 本日出勤中の推し(丸アイコン、店舗詳細ページの「本日の出勤」と同じ見た目) */}
       {followedCasts.some((c) => c.isWorkingToday) && (

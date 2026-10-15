@@ -4,6 +4,9 @@ import { BetaLaunchModal } from "@/components/BetaLaunchModal";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
+import Link from "next/link";
+import { getActiveBoosts } from "@/lib/boost/getBoosts";
+import { boostText } from "@/lib/boost/text";
 import { getPhotoPosts } from "@/lib/photo/getPhotoPosts";
 
 export const revalidate = 60;
@@ -19,6 +22,10 @@ export default async function TopPage() {
     .then(({ posts }) => posts.map((p) => ({ id: p.id, imageUrl: p.imageUrl, spotName: p.spotName, placeKind: p.placeKind, isVideo: Boolean(p.videoUrl) })))
     .catch(() => []);
 
+  // 緊急ブーストが掲載中ならトップに入口を出す(失敗してもトップ全体は表示する)。
+  const boosts = await getActiveBoosts().catch(() => []);
+  const bt = boostText(locale);
+
   // locapass_reels/locapass_shopsにはキャスト稼働スケジュールの概念が無いため、
   // NOWタブは常に空(受け皿はUI側に残るが、対応データが無い)。
   const nowReels: ReelItem[] = [];
@@ -31,6 +38,16 @@ export default async function TopPage() {
       {/* トップの提携店舗特集(FEATURED)。運営がshops.featured_rankで選んだ店舗だけを、
           黒×ゴールドのコンパクトな見せ方で出す。1件も無ければ/×で閉じたら何も表示しない。 */}
       <FeaturedSection shops={featuredShops} />
+
+      {boosts.length > 0 && (
+        <Link
+          href="/boost"
+          className="mx-2 flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 text-black active:scale-[0.99]"
+        >
+          <span className="text-sm font-black">⚡ {bt.title}・{bt.limited}</span>
+          <span className="rounded-full bg-black px-3 py-0.5 text-xs font-black text-amber-300">{boosts.length}</span>
+        </Link>
+      )}
 
       {/* リールフィード（検索・タグ絞り込み付き）。CASTタブはキャストが投稿したリール、
           SHOPタブは店舗のトップサムネイル（縦型メイン画像）グリッド。NOWは今まさに稼働中の
