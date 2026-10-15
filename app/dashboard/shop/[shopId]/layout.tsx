@@ -48,8 +48,9 @@ export default async function LocapassShopDashboardLayout({
         </div>
       )}
       <nav className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-1 overflow-x-auto px-4 py-2 sm:px-6">
-          <div className="flex gap-1">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-1 px-4 py-2 sm:px-6">
+          {/* メニューは横スクロール。右の「使い方」「ログアウト」は常に見える位置に固定する。 */}
+          <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.path}
@@ -60,10 +61,12 @@ export default async function LocapassShopDashboardLayout({
               </Link>
             ))}
           </div>
-          <Link href={`${basePath}/support`} className="mr-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-50">
-            使い方
-          </Link>
-          <DashboardSignOutButton redirectTo={viewer.isOperator ? "/admin/login" : "/login"} />
+          <div className="flex shrink-0 items-center gap-1 border-l border-slate-200 pl-2">
+            <Link href={`${basePath}/support`} className="whitespace-nowrap rounded-lg bg-sky-50 px-3 py-2 text-sm font-bold text-sky-700 hover:bg-sky-100">
+              ❓ 使い方
+            </Link>
+            <DashboardSignOutButton redirectTo={viewer.isOperator ? "/admin/login" : "/login"} />
+          </div>
         </div>
       </nav>
       <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">{children}</div>
