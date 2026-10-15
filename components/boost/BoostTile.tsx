@@ -49,7 +49,7 @@ export const BoostTile = memo(function BoostTile({
       )}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent" />
       <span
-        className={`pointer-events-none absolute left-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-mono text-[11px] font-black tabular-nums ${
+        className={`pointer-events-none absolute left-1.5 top-1.5 inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full px-1.5 py-0.5 font-mono text-[11px] font-black tabular-nums ${
           ended ? "bg-zinc-700 text-white" : urgent ? "animate-pulse bg-red-500 text-white" : "bg-amber-400 text-black"
         }`}
       >
@@ -57,7 +57,7 @@ export const BoostTile = memo(function BoostTile({
         {ended ? endedLabel : formatRemain(left)}
       </span>
       {boost.discountTag && (
-        <span className="pointer-events-none absolute right-1.5 top-1.5 max-w-[60%] truncate rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
+        <span className="pointer-events-none absolute left-1.5 top-7 max-w-[85%] truncate rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
           {boost.discountTag}
         </span>
       )}
