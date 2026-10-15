@@ -67,6 +67,7 @@ export function MypageClient({
   favoriteShops: initialFavoriteShops,
   myComments,
   postShops = [],
+  operatorShops = [],
 }: {
   userId: string;
   initialNickname: string;
@@ -77,6 +78,8 @@ export function MypageClient({
   myComments: MyComment[];
   /** 投稿権限のある自分の店舗(店舗管理者のみ)。あればマイページ上部に投稿ボタンを出す。 */
   postShops?: PostShop[];
+  /** 運営(システム/エリア管理者)が代理で投稿できる店舗の一覧。 */
+  operatorShops?: PostShop[];
 }) {
   const { t } = useLocale();
   const TABS: { key: Tab; label: string }[] = [
@@ -86,6 +89,7 @@ export function MypageClient({
     { key: "comments", label: t.mypage.tabComments },
   ];
   const router = useRouter();
+  const [opShopId, setOpShopId] = useState("");
   const [tab, setTab] = useState<Tab>("reels");
   const [nickname, setNickname] = useState(initialNickname);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
@@ -318,6 +322,38 @@ export function MypageClient({
               </div>
             </div>
           ))}
+        </section>
+      )}
+
+      {operatorShops.length > 0 && (
+        <section className="mx-4 mt-4 space-y-2 rounded-2xl border border-accent/40 bg-tone-900/60 p-3">
+          <p className="text-xs font-semibold text-muted">運営として店舗に投稿</p>
+          <select
+            value={opShopId}
+            onChange={(e) => setOpShopId(e.target.value)}
+            className="w-full rounded-lg border border-main/20 bg-tone-800 px-3 py-2.5 text-base text-main"
+          >
+            <option value="">店舗を選択</option>
+            {operatorShops.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href={opShopId ? `/dashboard/shop/${opShopId}/reels` : "#"}
+              aria-disabled={!opShopId}
+              className={`flex items-center justify-center gap-1.5 rounded-xl border border-main/20 bg-tone-800 py-3 text-sm font-bold text-main active:scale-95 ${opShopId ? "" : "pointer-events-none opacity-40"}`}
+            >
+              <PenSquare size={16} /> 通常投稿
+            </Link>
+            <Link
+              href={opShopId ? `/dashboard/shop/${opShopId}/boost` : "#"}
+              aria-disabled={!opShopId}
+              className={`flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-sm font-black text-black active:scale-95 ${opShopId ? "" : "pointer-events-none opacity-40"}`}
+            >
+              <Zap size={16} className="fill-black" /> ブースト投稿
+            </Link>
+          </div>
         </section>
       )}
 

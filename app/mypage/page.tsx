@@ -92,6 +92,12 @@ export default async function MypagePage() {
     const { data: shopRows } = await supabase.from("locapass_shops").select("id, name").in("id", roles.shop_admin_shop_ids);
     postShops = (shopRows ?? []).map((r) => ({ id: r.id, name: r.name }));
   }
+  // システム管理者・エリア管理者は自分の店舗を持たないので、管理できる店舗を選んで投稿する(RLSで見える店舗=管理できる店舗)。
+  let operatorShops: PostShop[] = [];
+  if (roles && (roles.super_admin || roles.portal_ids.length > 0)) {
+    const { data: shopRows } = await supabase.from("locapass_shops").select("id, name").order("name").limit(500);
+    operatorShops = (shopRows ?? []).map((r) => ({ id: r.id, name: r.name }));
+  }
 
   const favoriteReelsRes = await supabase
     .from("locapass_member_favorite_reels")
@@ -131,6 +137,7 @@ export default async function MypagePage() {
       favoriteShops={favoriteShops}
       myComments={myComments}
       postShops={postShops}
+      operatorShops={operatorShops}
     />
   );
 }
