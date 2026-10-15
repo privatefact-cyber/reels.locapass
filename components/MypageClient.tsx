@@ -303,6 +303,11 @@ export function MypageClient({
         </div>
       </section>
 
+      <Link href="/support" className="mx-4 mt-4 flex items-center justify-between rounded-xl border border-main/15 bg-tone-900/60 px-4 py-3 text-sm font-bold text-main">
+        <span>ヘルプ・使い方(AIに質問)</span>
+        <span className="text-tone-500">›</span>
+      </Link>
+
       {showReservations && (
         <Link href="/mypage/reservations" className="mx-4 mt-4 flex items-center justify-between rounded-xl border border-main/15 bg-tone-900/60 px-4 py-3 text-sm font-bold text-main">
           <span>優先予約の履歴</span>

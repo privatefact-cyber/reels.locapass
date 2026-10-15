@@ -16,6 +16,7 @@ const RESERVED_TOP_SEGMENTS = new Set([
   "admin",
   "api",
   "auth",
+  "boost",
   "c",
   "cast",
   "dashboard",
@@ -26,9 +27,12 @@ const RESERVED_TOP_SEGMENTS = new Set([
   "map",
   "mypage",
   "notifications",
+  "photo",
+  "reserve",
   "s",
   "shops",
   "staff",
+  "support",
 ]);
 
 // 現在のパスから、今見ているエリアポータル(locapass_portals.slug)らしき値を推測する。
