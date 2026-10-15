@@ -10,6 +10,7 @@ export type BoostItem = {
     id: string;
     name: string;
     tel: string | null;
+    lineUrl: string | null;
     address: string | null;
     lat: number | null;
     lng: number | null;

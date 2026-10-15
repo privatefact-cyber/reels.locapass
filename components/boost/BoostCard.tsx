@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Phone, MapPin, Zap } from "lucide-react";
+import { Phone, MapPin, Zap, MessageCircle, Store } from "lucide-react";
 import { BoostCountdown } from "./BoostCountdown";
 import type { BoostItem } from "@/lib/boost/types";
 import type { BoostText } from "@/lib/boost/text";
@@ -49,7 +49,7 @@ export function BoostCard({ boost, now, t }: { boost: BoostItem; now: number; t:
             // eslint-disable-next-line @next/next/no-img-element
             <img src={boost.shop.iconUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
           )}
-          {boost.shop.shopPath ? <Link href={boost.shop.shopPath} className="underline-offset-2 hover:underline">{boost.shop.name}</Link> : boost.shop.name}
+          {boost.shop.name}
         </div>
         <h2 className="text-lg font-black leading-snug text-white">{boost.title}</h2>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/80">{boost.description}</p>
@@ -57,20 +57,28 @@ export function BoostCard({ boost, now, t }: { boost: BoostItem; now: number; t:
       </div>
 
       {!ended && (
-        <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-          {map ? (
-            <a href={map} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-400 py-3 text-sm font-black text-black active:scale-95">
+        <div className="space-y-2 px-4 pb-4">
+          <div className="grid grid-cols-2 gap-2">
+            {boost.shop.lineUrl ? (
+              <a href={boost.shop.lineUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white active:scale-95">
+                <MessageCircle className="h-4 w-4" /> {t.line}
+              </a>
+            ) : null}
+            {tel ? (
+              <a href={`tel:${tel}`} className="flex items-center justify-center gap-1.5 rounded-xl bg-white py-3.5 text-sm font-black text-black active:scale-95">
+                <Phone className="h-4 w-4" /> {t.call}
+              </a>
+            ) : null}
+          </div>
+          {map && (
+            <a href={map} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-400 py-3.5 text-sm font-black text-black active:scale-95">
               <MapPin className="h-4 w-4" /> {t.go}
             </a>
-          ) : (
-            <span />
           )}
-          {tel ? (
-            <a href={`tel:${tel}`} className="flex items-center justify-center gap-1.5 rounded-xl border border-white/30 bg-white/10 py-3 text-sm font-black text-white active:scale-95">
-              <Phone className="h-4 w-4" /> {t.call}
-            </a>
-          ) : (
-            <span />
+          {boost.shop.shopPath && (
+            <Link href={boost.shop.shopPath} className="flex items-center justify-center gap-1.5 rounded-xl border border-white/30 bg-white/10 py-3.5 text-sm font-black text-white active:scale-95">
+              <Store className="h-4 w-4" /> {t.more}
+            </Link>
           )}
         </div>
       )}

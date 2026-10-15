@@ -261,6 +261,7 @@ export function ReelFeed({
   genreChoices,
   ads = [],
   photos = [],
+  boostCount = 0,
 }: {
   reels: ReelItem[];
   /** 今まさに稼働中(出勤前後1時間バッファ込み)のICONの、最新リール1本ずつ。 */
@@ -271,6 +272,8 @@ export function ReelFeed({
   ads?: AdItem[];
   /** PHOTOタブに出す、ユーザー投稿写真(エリアフォト)の新着。 */
   photos?: PhotoTeaser[];
+  /** 掲載中の緊急ブースト件数。1件以上なら⚡ピルに件数を出す。 */
+  boostCount?: number;
 }) {
   const { locale, t } = useLocale();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -789,6 +792,12 @@ export function ReelFeed({
               <button type="button" onClick={() => setPhotoOnly((v) => !v)} className={pillClass(photoOnly)}>
                 PHOTO
               </button>
+              <Link
+                href="/boost"
+                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-black text-black"
+              >
+                ⚡ BOOST{boostCount > 0 && <span className="rounded-full bg-black px-1.5 text-[10px] text-amber-300">{boostCount}</span>}
+              </Link>
             </>
           )}
           {keyword && (

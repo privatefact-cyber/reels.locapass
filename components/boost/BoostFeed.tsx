@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { boostText } from "@/lib/boost/text";
 import type { BoostItem } from "@/lib/boost/types";
-import { BoostCard } from "./BoostCard";
+import { BoostTile } from "./BoostTile";
 import { useNow } from "./BoostCountdown";
 
 const POLL_MS = 30_000;
@@ -53,7 +53,7 @@ export function BoostFeed({ initial }: { initial: BoostItem[] }) {
   const visible = items.filter((b) => new Date(b.expiresAt).getTime() + FADE_MS > now);
 
   return (
-    <div className="mx-auto max-w-xl space-y-4 px-4 pb-16 pt-6">
+    <div className="mx-auto max-w-3xl space-y-4 px-4 pb-16 pt-6">
       <header className="text-center">
         <h1 className="flex items-center justify-center gap-2 text-2xl font-black text-amber-300">
           <Zap className="h-6 w-6 fill-amber-300" /> {t.title}
@@ -67,7 +67,11 @@ export function BoostFeed({ initial }: { initial: BoostItem[] }) {
           <p className="mt-1 text-sm text-white/60">{t.emptySub}</p>
         </div>
       ) : (
-        visible.map((b) => <BoostCard key={b.id} boost={b} now={now} t={t} />)
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {visible.map((b) => (
+            <BoostTile key={b.id} boost={b} now={now} t={t} />
+          ))}
+        </div>
       )}
     </div>
   );
