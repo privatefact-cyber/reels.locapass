@@ -5,6 +5,9 @@ import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
+import Link from "next/link";
+import { getActiveBoosts } from "@/lib/boost/getBoosts";
+import { boostText } from "@/lib/boost/text";
 import { PortalHero } from "@/components/portal/PortalHero";
 import { PortalThemeScope } from "@/components/portal/PortalThemeScope";
 import { isSiteTheme } from "@/lib/theme";
@@ -38,6 +41,9 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
   const featuredShops = await getFeaturedShops(locale);
   const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(portal.id);
   const nowReels: ReelItem[] = [];
+  // このポータルの店舗の緊急ブーストだけ(失敗してもポータル全体は表示する)。
+  const boosts = await getActiveBoosts(portal.id).catch(() => []);
+  const bt = boostText(locale);
 
   return (
     <div id="portal-feed" className="space-y-4">
@@ -52,7 +58,16 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
         heroLinkUrl={portal.hero_link_url}
       />
       <FeaturedSection shops={featuredShops} />
-      <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} />
+      {boosts.length > 0 && (
+        <Link
+          href={`/${slug}/boost`}
+          className="mx-2 flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 text-black active:scale-[0.99]"
+        >
+          <span className="text-sm font-black">⚡ {bt.title}・{bt.limited}</span>
+          <span className="rounded-full bg-black px-3 py-0.5 text-xs font-black text-amber-300">{boosts.length}</span>
+        </Link>
+      )}
+      <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} boostHref={`/${slug}/boost`} />
     </div>
   );
 }

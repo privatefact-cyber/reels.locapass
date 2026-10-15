@@ -22,7 +22,7 @@ const FADE_MS = 6_000;
  * 緊急ブースト一覧。トップページと同じ作り: 虫眼鏡検索+ジャンルタグで絞り込み → 正方形グリッド
  * (残り時間バッジ付き、時間切れが近い順)→ タップで縦スワイプ → タップで詳細カード → 店舗詳細へ。
  */
-export function BoostFeed({ initial }: { initial: BoostItem[] }) {
+export function BoostFeed({ initial, portalSlug }: { initial: BoostItem[]; portalSlug?: string }) {
   const { locale, t: dict } = useLocale();
   const t = boostText(locale);
   const [items, setItems] = useState(initial);
@@ -40,14 +40,14 @@ export function BoostFeed({ initial }: { initial: BoostItem[] }) {
     if (busy.current) return;
     busy.current = true;
     try {
-      const res = await fetch("/api/boost", { cache: "no-store" });
+      const res = await fetch(portalSlug ? `/api/boost?portal=${encodeURIComponent(portalSlug)}` : "/api/boost", { cache: "no-store" });
       if (res.ok) setItems(((await res.json()) as { items: BoostItem[] }).items);
     } catch {
       // 通信失敗時は今の表示を維持する(次の周期で再取得)。
     } finally {
       busy.current = false;
     }
-  }, []);
+  }, [portalSlug]);
 
   // 新着はRealtimeで即反映。取りこぼし・購読不可の端末向けに30秒ごと&タブ復帰時にも再取得する。
   useEffect(() => {

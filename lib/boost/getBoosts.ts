@@ -12,6 +12,7 @@ type Row = {
   shop: {
     id: string;
     name: string;
+    portal_id: number;
     category: string | null;
     tel: string | null;
     line_url: string | null;
@@ -26,18 +27,19 @@ type Row = {
 };
 
 const SELECT =
-  "id, title, description, image_url, discount_tag, created_at, expires_at, shop:locapass_shops ( id, name, category, tel, line_url, address, lat, lng, icon_url, cover_url, slug, portal:locapass_portals ( slug ) )";
+  "id, title, description, image_url, discount_tag, created_at, expires_at, shop:locapass_shops!inner ( id, name, portal_id, category, tel, line_url, address, lat, lng, icon_url, cover_url, slug, portal:locapass_portals ( slug ) )";
 
 /** 掲載中(active かつ期限内)のブーストを、残り時間が短い順ではなく新着順で返す。公開RLSがそのまま効く。 */
-export async function getActiveBoosts(): Promise<BoostItem[]> {
+export async function getActiveBoosts(portalId: number | null = null): Promise<BoostItem[]> {
   const supabase = createStaticClient();
-  const { data } = await (supabase as any)
+  let q = (supabase as any)
     .from("locapass_boost_posts")
     .select(SELECT)
     .eq("status", "active")
-    .gt("expires_at", new Date().toISOString())
-    .order("created_at", { ascending: false })
-    .limit(60);
+    .gt("expires_at", new Date().toISOString());
+  // 子ポータル(水戸など)では、そのポータルに所属する店舗のブーストだけ。グランドトップ(null)は全部。
+  if (portalId !== null) q = q.eq("shop.portal_id", portalId);
+  const { data } = await q.order("created_at", { ascending: false }).limit(60);
 
   return ((data ?? []) as Row[]).map(toItem).filter((b): b is BoostItem => b !== null);
 }

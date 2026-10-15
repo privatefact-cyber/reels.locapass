@@ -262,6 +262,7 @@ export function ReelFeed({
   ads = [],
   photos = [],
   boostCount = 0,
+  boostHref = "/boost",
 }: {
   reels: ReelItem[];
   /** 今まさに稼働中(出勤前後1時間バッファ込み)のICONの、最新リール1本ずつ。 */
@@ -274,6 +275,8 @@ export function ReelFeed({
   photos?: PhotoTeaser[];
   /** 掲載中の緊急ブースト件数。1件以上なら⚡ピルに件数を出す。 */
   boostCount?: number;
+  /** BOOSTピルの行き先。子ポータルでは /{slug}/boost(そのポータルの店舗だけ)。 */
+  boostHref?: string;
 }) {
   const { locale, t } = useLocale();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -793,7 +796,7 @@ export function ReelFeed({
                 PHOTO
               </button>
               <Link
-                href="/boost"
+                href={boostHref}
                 className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-black text-black"
               >
                 ⚡ BOOST{boostCount > 0 && <span className="rounded-full bg-black px-1.5 text-[10px] text-amber-300">{boostCount}</span>}

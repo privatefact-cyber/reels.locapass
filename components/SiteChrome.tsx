@@ -69,7 +69,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
               <Link href={eventsHref} className="transition hover:text-accent">
                 {t.nav.events}
               </Link>
-              <Link href="/boost" className="font-bold text-amber-400 transition hover:text-amber-300">
+              <Link href={inPortal ? `/${firstSegment}/boost` : "/boost"} className="font-bold text-amber-400 transition hover:text-amber-300">
                 ⚡ BOOST
               </Link>
               <Link href="/map" className="inline-flex items-center gap-1.5 transition hover:text-accent">

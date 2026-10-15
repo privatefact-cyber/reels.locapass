@@ -23,7 +23,7 @@ export function SearchButton({ home = "/" }: { home?: string }) {
     // homeは今いるポータルのトップ("/"=全体、"/mito"=子ポータル)。子ポータルでは検索対象もそのポータルに限るため、
     // 全体トップ("/")ではなくそのポータルのトップへ戻して開く。
     const inPlacePaths = [home, `${home === "/" ? "" : home}/events`];
-    if (pathname && (inPlacePaths.includes(pathname) || MAP_PATH_PATTERN.test(pathname) || pathname === "/boost")) {
+    if (pathname && (inPlacePaths.includes(pathname) || MAP_PATH_PATTERN.test(pathname) || pathname === "/boost" || pathname === `${home === "/" ? "" : home}/boost`)) {
       window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
     } else {
       router.push(`${home}?search=1`);
