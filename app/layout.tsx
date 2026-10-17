@@ -8,6 +8,7 @@ import { localeDir } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { isSiteTheme, themeInitScript } from "@/lib/theme";
 import { ThemeSync } from "@/components/ThemeSync";
+import { SiteHitBeacon } from "@/components/analytics/SiteHitBeacon";
 import { fetchMyRoles, hasManagementRole } from "@/lib/auth/roles";
 import "./globals.css";
 
@@ -129,6 +130,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen bg-page text-main pb-20 md:pb-0">
         <ThemeSync manual={manualTheme} />
+        <SiteHitBeacon />
         <ImageInteractionGuard />
         <LocaleProvider initialLocale={locale}>
           <SiteChrome

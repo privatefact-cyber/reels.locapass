@@ -44,6 +44,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               お知らせ配信
             </Link>
             <Link
+              href="/admin/analytics"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+            >
+              アクセス解析
+            </Link>
+            <Link
               href="/admin/ads"
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >
