@@ -17,7 +17,7 @@ function defaultWeek(): WeeklyHours {
  * 曜日ごとの営業時間カレンダー。保存はhiddenの business_hours_weekly(JSON)で送る。
  * 未設定(未記入)のときは空文字を送り、その店舗はNOWタブに出ない。
  */
-export function BusinessHoursEditor({ initial }: { initial: WeeklyHours | null }) {
+export function BusinessHoursEditor({ initial, nowNote = true }: { initial: WeeklyHours | null; nowNote?: boolean }) {
   const [week, setWeek] = useState<WeeklyHours | null>(initial);
 
   const update = (key: DayKey, patch: Partial<WeeklyHours[DayKey]>) =>
@@ -28,7 +28,9 @@ export function BusinessHoursEditor({ initial }: { initial: WeeklyHours | null }
       <div>
         <input type="hidden" name="business_hours_weekly" value="" />
         <p className="text-xs text-slate-500">
-          未記入です。曜日ごとの営業時間を設定すると、営業中だけトップの「NOW」に表示されます。
+          {nowNote
+            ? "未記入です。曜日ごとの営業時間を設定すると、営業中だけトップの「NOW」に表示されます。"
+            : "未記入です。曜日ごとの営業時間を設定すると、店舗ページに曜日別で表示されます。"}
         </p>
         <button type="button" onClick={() => setWeek(defaultWeek())} className="mt-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">
           カレンダーで設定する

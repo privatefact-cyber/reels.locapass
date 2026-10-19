@@ -119,3 +119,11 @@ export function weeklyToText(weekly: WeeklyHours, locale: string): string {
     .map((r) => `${r.days}  ${r.hours}`)
     .join("\n");
 }
+
+/** 今日(JST)の営業時間を1行で。定休日・未設定の曜日はnull。トップの店舗紹介など1行表示向け。 */
+export function todayHoursText(weekly: WeeklyHours, nowJst: Date, locale: string): string | null {
+  const labels = LABELS[locale] ?? LABELS.en;
+  const d = weekly[DAY_KEYS[(nowJst.getUTCDay() + 6) % 7]];
+  if (d.closed || d.ranges.length === 0) return labels.closed;
+  return d.ranges.map((r) => `${r.open}〜${r.last ? labels.last : r.close}`).join(" / ");
+}

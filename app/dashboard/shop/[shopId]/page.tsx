@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { SaveForm } from "@/components/locapass-dashboard/SaveForm";
 import { BusinessHoursEditor } from "@/components/locapass-dashboard/BusinessHoursEditor";
 import { sanitizeWeekly } from "@/lib/shop/businessHours";
 import { notFound } from "next/navigation";
@@ -298,7 +299,7 @@ export default async function LocapassShopSettingsPage({
         <p className="-mt-2 mb-3 text-xs text-slate-500">
           お店紹介文・営業時間・利用説明は、保存すると英語・中国語に自動翻訳されて海外のお客さんにも表示されます。
         </p>
-        <form action={updateShopProfile.bind(null, currentShop.id)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <SaveForm action={updateShopProfile.bind(null, currentShop.id)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-semibold text-slate-500">店舗名</label>
             <input
@@ -357,7 +358,7 @@ export default async function LocapassShopSettingsPage({
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-slate-500">営業時間カレンダー(NOWタブの表示に使われます)</label>
+            <label className="block text-xs font-semibold text-slate-500">営業時間カレンダー</label>
             <div className="mt-1">
               <BusinessHoursEditor initial={shop.business_hours_weekly} />
             </div>
@@ -461,13 +462,7 @@ export default async function LocapassShopSettingsPage({
             />
           </div>
           <input type="hidden" name="price_info" value={shop.price_info ?? ""} />
-          <button
-            type="submit"
-            className="sm:col-span-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-          >
-            更新する
-          </button>
-        </form>
+        </SaveForm>
       </section>
 
       <section id="shop-gallery" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6">
