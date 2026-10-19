@@ -1,4 +1,4 @@
-import { GEMINI_MODEL, geminiGenerateContentUrl } from "@/lib/gemini";
+import { geminiGenerateWithFallback } from "@/lib/gemini";
 import { PHOTO_TAGS } from "@/lib/photo/tags";
 
 export type Moderation = { appropriate: boolean; rejectReason: string | null; tags: string[] };
@@ -25,10 +25,9 @@ export async function moderateAndTag(
   if (!apiKey) return { appropriate: true, rejectReason: null, tags: [] };
 
   try {
-    const res = await fetch(geminiGenerateContentUrl(apiKey), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await geminiGenerateWithFallback(
+      apiKey,
+      {
         contents: [
           {
             parts: [
@@ -38,12 +37,10 @@ export async function moderateAndTag(
           },
         ],
         generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
-      }),
-    });
-    if (!res.ok) {
-      console.error(`photo moderation: ${GEMINI_MODEL} ${res.status}`);
-      return { appropriate: true, rejectReason: null, tags: [] };
-    }
+      },
+      "photo moderation",
+    );
+    if (!res) return { appropriate: true, rejectReason: null, tags: [] };
     const json = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
     const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) return { appropriate: true, rejectReason: null, tags: [] };

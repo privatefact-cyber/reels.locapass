@@ -22,3 +22,41 @@ export const GEMINI_LITE_MODEL = "gemini-2.5-flash-lite";
 export function geminiLiteGenerateContentUrl(apiKey: string): string {
   return `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_LITE_MODEL}:generateContent?key=${apiKey}`;
 }
+
+/**
+ * 画像つきの生成(写真の一言・審査)用の予備モデル。主モデルが混雑(503)や上限(429)のときだけ使う。
+ * 2026-10-20に主モデルが503を返し続け、写真の「AIおまかせ生成」が使えなくなったことへの対策。
+ */
+export const GEMINI_FALLBACK_MODEL = "gemini-2.5-flash";
+
+/**
+ * generateContentを呼ぶ。主モデルが一時的なエラー(429/500/502/503/504)や通信失敗のときは、少し待って1回やり直し、
+ * それでもだめなら予備モデルに切り替える。成功したResponseを返し、全部失敗したらnull。
+ * (404など恒久的なエラーはやり直さず、すぐ予備に切り替える。)
+ */
+export async function geminiGenerateWithFallback(apiKey: string, body: unknown, label: string): Promise<Response | null> {
+  const attempts: { model: string; delayMs: number }[] = [
+    { model: GEMINI_MODEL, delayMs: 0 },
+    { model: GEMINI_MODEL, delayMs: 1200 },
+    { model: GEMINI_FALLBACK_MODEL, delayMs: 0 },
+  ];
+  const retryable = new Set([429, 500, 502, 503, 504]);
+  let skipSecondPrimary = false;
+  for (let i = 0; i < attempts.length; i++) {
+    const { model, delayMs } = attempts[i];
+    if (i === 1 && skipSecondPrimary) continue;
+    if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(25_000) },
+      );
+      if (res.ok) return res;
+      console.error(`${label}: ${model} ${res.status}`);
+      if (!retryable.has(res.status)) skipSecondPrimary = true; // 恒久的なエラーは同じモデルでやり直さない
+    } catch (e) {
+      console.error(`${label}: ${model} failed`, e);
+    }
+  }
+  return null;
+}

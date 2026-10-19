@@ -1,4 +1,4 @@
-import { GEMINI_MODEL, geminiGenerateContentUrl } from "@/lib/gemini";
+import { geminiGenerateWithFallback } from "@/lib/gemini";
 
 export type GeneratedCaption = { spotName: string; comment: string };
 
@@ -17,10 +17,9 @@ export async function generateCaption(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
   try {
-    const res = await fetch(geminiGenerateContentUrl(apiKey), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await geminiGenerateWithFallback(
+      apiKey,
+      {
         contents: [
           {
             parts: [
@@ -30,12 +29,10 @@ export async function generateCaption(
           },
         ],
         generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
-      }),
-    });
-    if (!res.ok) {
-      console.error(`photo caption: ${GEMINI_MODEL} ${res.status}`);
-      return null;
-    }
+      },
+      "photo caption",
+    );
+    if (!res) return null;
     const json = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
     const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) return null;
