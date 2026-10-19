@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { sanitizeWeekly, weeklyToText } from "@/lib/shop/businessHours";
 import Link from "next/link";
 import QRCode from "qrcode";
 import type { Metadata } from "next";
@@ -66,7 +67,7 @@ async function resolveShop(params: PageParams) {
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, slug, name, plan, category, address, address_en, tel, business_hours, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url, cover_image_attribution",
+      "id, slug, name, plan, category, address, address_en, tel, business_hours, business_hours_weekly, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url, cover_image_attribution",
     )
     .eq("portal_id", portal.id)
     .eq("slug", params.shopSlug)
@@ -197,7 +198,13 @@ export default async function ShopDetailPage({
     genre: shopRow.category,
     address: shopRow.address,
     phone: shopRow.tel,
-    businessHours: tr(shopRow.business_hours, "business_hours"),
+    // 曜日カレンダーがあればそれを表示し、補足の自由記述(あれば)を下に添える。
+    businessHours: (() => {
+      const weekly = sanitizeWeekly(shopRow.business_hours_weekly);
+      const note = tr(shopRow.business_hours, "business_hours");
+      if (!weekly) return note;
+      return [weeklyToText(weekly, locale), note].filter(Boolean).join("\n");
+    })(),
     priceInfo: tr(shopRow.price_info, "price_info"),
     description: tr(shopRow.description, "description"),
     coverImageUrl: shopRow.cover_url ?? shopRow.icon_url,
@@ -724,7 +731,7 @@ function InfoRow({ icon, label, value, ltr }: { icon: React.ReactNode; label: st
       <span className="mt-0.5 text-hl-400/80">{icon}</span>
       <div>
         <p className="text-[11px] text-hl-200/50">{label}</p>
-        <p dir={ltr ? "ltr" : "auto"} className={`text-tone-200 ${ltr ? "text-start" : ""}`}>{value}</p>
+        <p dir={ltr ? "ltr" : "auto"} className={`whitespace-pre-line text-tone-200 ${ltr ? "text-start" : ""}`}>{value}</p>
       </div>
     </div>
   );

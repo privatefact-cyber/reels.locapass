@@ -1,4 +1,6 @@
 import QRCode from "qrcode";
+import { BusinessHoursEditor } from "@/components/locapass-dashboard/BusinessHoursEditor";
+import { sanitizeWeekly } from "@/lib/shop/businessHours";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
@@ -58,7 +60,7 @@ export default async function LocapassShopSettingsPage({
       supabase
         .from("locapass_shops")
         .select(
-          "id, name, category, address, tel, business_hours, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code",
+          "id, name, category, address, tel, business_hours, business_hours_weekly, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code",
         )
         .eq("id", currentShop.id)
         .single(),
@@ -100,6 +102,7 @@ export default async function LocapassShopSettingsPage({
     address: shopRow.address,
     phone: shopRow.tel,
     business_hours: shopRow.business_hours,
+    business_hours_weekly: sanitizeWeekly(shopRow.business_hours_weekly),
     price_info: shopRow.price_info,
     description: shopRow.description,
     cover_image_url: shopRow.cover_url,
@@ -283,7 +286,7 @@ export default async function LocapassShopSettingsPage({
         defaultUrl={shop.website_url}
         current={{
           description: !!shop.description?.trim(),
-          hours: !!shop.business_hours?.trim(),
+          hours: !!shop.business_hours?.trim() || !!shop.business_hours_weekly,
           phone: !!shop.phone?.trim(),
           cover: !!shop.cover_image_url,
           hero: !!shop.hero_media_url,
@@ -353,12 +356,18 @@ export default async function LocapassShopSettingsPage({
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
           </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-slate-500">営業時間カレンダー(NOWタブの表示に使われます)</label>
+            <div className="mt-1">
+              <BusinessHoursEditor initial={shop.business_hours_weekly} />
+            </div>
+          </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500">営業時間</label>
+            <label className="block text-xs font-semibold text-slate-500">営業時間の補足(任意)</label>
             <input
               name="business_hours"
               defaultValue={shop.business_hours ?? ""}
-              placeholder="例: 18:00〜翌5:00"
+              placeholder="例: L.O.は閉店30分前 / 不定休あり"
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
           </div>

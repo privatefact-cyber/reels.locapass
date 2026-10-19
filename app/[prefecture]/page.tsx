@@ -4,6 +4,7 @@ import { ReelFeed, type ReelItem } from "@/components/ReelFeed";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { getNowReels } from "@/lib/reels/getNowReels";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
 import Link from "next/link";
 import { getActiveBoosts } from "@/lib/boost/getBoosts";
@@ -40,7 +41,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
   const locale = await getServerLocale();
   const featuredShops = await getFeaturedShops(locale);
   const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(portal.id);
-  const nowReels: ReelItem[] = [];
+  const nowReels: ReelItem[] = await getNowReels(portal.id).catch(() => []);
   // このポータルの店舗の緊急ブーストだけ(失敗してもポータル全体は表示する)。
   const boosts = await getActiveBoosts(portal.id).catch(() => []);
   const bt = boostText(locale);

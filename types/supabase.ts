@@ -2494,6 +2494,7 @@ export type Database = {
           address_en: string | null
           area: string | null
           business_hours: string | null
+          business_hours_weekly: Json | null
           category: string | null
           cover_image_attribution: Json | null
           cover_url: string | null
@@ -2543,6 +2544,7 @@ export type Database = {
           address_en?: string | null
           area?: string | null
           business_hours?: string | null
+          business_hours_weekly?: Json | null
           category?: string | null
           cover_image_attribution?: Json | null
           cover_url?: string | null
@@ -2592,6 +2594,7 @@ export type Database = {
           address_en?: string | null
           area?: string | null
           business_hours?: string | null
+          business_hours_weekly?: Json | null
           category?: string | null
           cover_image_attribution?: Json | null
           cover_url?: string | null

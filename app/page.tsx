@@ -4,6 +4,7 @@ import { BetaLaunchModal } from "@/components/BetaLaunchModal";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
+import { getNowReels } from "@/lib/reels/getNowReels";
 import Link from "next/link";
 import { getActiveBoosts } from "@/lib/boost/getBoosts";
 import { boostText } from "@/lib/boost/text";
@@ -26,9 +27,9 @@ export default async function TopPage() {
   const boosts = await getActiveBoosts().catch(() => []);
   const bt = boostText(locale);
 
-  // locapass_reels/locapass_shopsにはキャスト稼働スケジュールの概念が無いため、
-  // NOWタブは常に空(受け皿はUI側に残るが、対応データが無い)。
-  const nowReels: ReelItem[] = [];
+  // NOWタブ: 今営業時間内の店舗の最新リール(店舗ごとに1本)。営業時間は店舗の曜日カレンダーで判定し、
+  // 未記入の店舗は出さない。失敗してもトップ全体は表示する。
+  const nowReels: ReelItem[] = await getNowReels(null).catch(() => []);
 
   return (
     <div className="space-y-4">
@@ -50,8 +51,8 @@ export default async function TopPage() {
       )}
 
       {/* リールフィード（検索・タグ絞り込み付き）。CASTタブはキャストが投稿したリール、
-          SHOPタブは店舗のトップサムネイル（縦型メイン画像）グリッド。NOWは今まさに稼働中の
-          パートナーの最新リール1本ずつのみを表示する。
+          SHOPタブは店舗のトップサムネイル（縦型メイン画像）グリッド。NOWは今営業中の
+          店舗の最新リール1本ずつのみを表示する。
           「本日の出勤」の一覧は店舗詳細ページ、フォロー中のみの出勤状況はマイページで
           それぞれ表示する(トップでは全パートナー分を出すと件数に上限がないため扱わない)。
           adsはシステム管理者が投稿するPRで、指定頻度でグリッド/リール一覧の両方に紛れ込ませる。 */}

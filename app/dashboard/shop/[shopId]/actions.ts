@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { sanitizeWeekly, type WeeklyHours } from "@/lib/shop/businessHours";
 import { saveSchedule } from "@/lib/schedules/saveSchedule";
 import { createClient } from "@/lib/supabase/server";
 import { translateAddressToEnglish } from "@/lib/map/translateAddress";
@@ -44,6 +45,16 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   const address = String(formData.get("address") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const businessHours = String(formData.get("business_hours") ?? "").trim() || null;
+  // 曜日ごとの営業時間(JSON)。空・不正なら未記入(null)として保存する。
+  const weeklyRaw = String(formData.get("business_hours_weekly") ?? "").trim();
+  let businessHoursWeekly: WeeklyHours | null = null;
+  if (weeklyRaw) {
+    try {
+      businessHoursWeekly = sanitizeWeekly(JSON.parse(weeklyRaw));
+    } catch {
+      businessHoursWeekly = null;
+    }
+  }
   const description = String(formData.get("description") ?? "").trim() || null;
   const coverImageUrl = String(formData.get("cover_image_url") ?? "").trim();
   const websiteUrl = String(formData.get("website_url") ?? "").trim();
@@ -108,6 +119,7 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
       ...addressEnPatch,
       tel: phone || null,
       business_hours: businessHours,
+      business_hours_weekly: businessHoursWeekly as unknown as Json,
       description,
       cover_url: coverImageUrl || null,
       url: websiteUrl || null,
