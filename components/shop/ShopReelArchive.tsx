@@ -216,7 +216,7 @@ export function ShopReelArchive({
           <Film size={13} />
           ── ARCHIVE ──
         </p>
-        <h1 className="font-display mt-1 bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-2xl font-bold text-transparent">
+        <h1 className="font-display mt-1 bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-xl font-bold text-transparent">
           {t.shop.archiveTitle}
         </h1>
         <p className="mt-1 text-xs text-muted">

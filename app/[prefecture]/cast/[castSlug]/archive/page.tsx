@@ -11,7 +11,7 @@ import { isSiteTheme } from "@/lib/theme";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "動画ストック - LOCAPASS",
+  title: "ストック - LOCAPASS",
   // 一覧の派生ページなので検索結果には出さない(個人ページ本体を正とする)。
   robots: { index: false, follow: true },
 };

@@ -68,7 +68,7 @@ function TagEditorModal({ reelId, onClose }: { reelId: string; onClose: () => vo
       setInitial(selected);
       // 一覧の絞り込み・タグ表示にも反映する(整理バーの中にあるとき)。
       organizer?.setTags(reelId, selected);
-      setMessage("保存しました(動画ストックへの反映まで最大1分ほどかかります)");
+      setMessage("保存しました(ストックへの反映まで最大1分ほどかかります)");
     } finally {
       setBusy(false);
     }
