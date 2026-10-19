@@ -13,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PhotoPage({ searchParams }: { searchParams: Promise<{ area?: string; view?: string }> }) {
   const { area, view } = await searchParams;
   const areaSlug = area && /^[a-z0-9_-]{1,40}$/i.test(area) ? area : null;
-  const { posts, areas } = await getPhotoPosts(areaSlug);
-  return <PhotoFeed posts={posts} areas={areas} areaSlug={areaSlug} initialView={view === "map" ? "map" : "grid"} />;
+  // 穴場(掲載店ではない場所ごとのまとめ)は、より多くの投稿から場所を作るため多めに取る。
+  const { posts, areas } = await getPhotoPosts(areaSlug, view === "spots" ? 300 : undefined);
+  return <PhotoFeed posts={posts} areas={areas} areaSlug={areaSlug} initialView={view === "map" ? "map" : view === "spots" ? "spots" : "grid"} />;
 }

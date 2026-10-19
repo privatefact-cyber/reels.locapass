@@ -262,6 +262,11 @@ export type Dictionary = {
     otherArea: string;
     viewGrid: string;
     viewMap: string;
+    viewSpots: string;
+    spotsIntro: string;
+    spotsSortPopular: string;
+    spotsSortNew: string;
+    spotsEmpty: string;
     postButton: string;
     empty: string;
     feedIntro: string;
@@ -613,6 +618,11 @@ const ja: Dictionary = {
     otherArea: "その他",
     viewGrid: "グリッド",
     viewMap: "マップ",
+    viewSpots: "穴場",
+    spotsIntro: "掲載店ではない、みんなが見つけたお気に入りの場所です。",
+    spotsSortPopular: "人気順",
+    spotsSortNew: "新着順",
+    spotsEmpty: "まだ穴場の投稿がありません",
     postButton: "＋ 写真を投稿",
     empty: "まだ投稿がありません。",
     feedIntro: "みんなが投稿した街の写真",
@@ -964,6 +974,11 @@ const en: Dictionary = {
     otherArea: "Other",
     viewGrid: "Grid",
     viewMap: "Map",
+    viewSpots: "Hidden gems",
+    spotsIntro: "Places our visitors discovered — not listed shops.",
+    spotsSortPopular: "Popular",
+    spotsSortNew: "Newest",
+    spotsEmpty: "No hidden-gem posts yet",
     postButton: "+ Post a photo",
     empty: "No photos yet.",
     feedIntro: "Photos of the area shared by everyone",
@@ -1315,6 +1330,11 @@ const zh: Dictionary = {
     otherArea: "其他",
     viewGrid: "网格",
     viewMap: "地图",
+    viewSpots: "秘境好去处",
+    spotsIntro: "大家发现的、不在合作名单里的宝藏地点。",
+    spotsSortPopular: "人气",
+    spotsSortNew: "最新",
+    spotsEmpty: "暂无秘境投稿",
     postButton: "＋ 发布照片",
     empty: "还没有投稿。",
     feedIntro: "大家分享的街头照片",
@@ -1667,6 +1687,11 @@ const ar: Dictionary = {
     otherArea: "أخرى",
     viewGrid: "شبكة",
     viewMap: "الخريطة",
+    viewSpots: "أماكن خفية",
+    spotsIntro: "أماكن اكتشفها الزوار وليست متاجر مُدرجة.",
+    spotsSortPopular: "الأكثر شعبية",
+    spotsSortNew: "الأحدث",
+    spotsEmpty: "لا توجد منشورات بعد",
     postButton: "＋ انشر صورة",
     empty: "لا توجد صور بعد.",
     feedIntro: "صور المدينة التي شاركها الجميع",

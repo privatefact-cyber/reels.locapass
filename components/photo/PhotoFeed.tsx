@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Maximize2, MapPin, Navigation, Play } from "lucide-react";
 import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { PhotoMap } from "@/components/photo/PhotoMap";
+import { PhotoSpotList } from "@/components/photo/PhotoSpotList";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
 import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
 import { PhotoVideo } from "@/components/photo/PhotoVideo";
@@ -43,7 +44,7 @@ export function PhotoFeed({
   posts: PhotoPost[];
   areas: PhotoArea[];
   areaSlug: string | null;
-  initialView?: "grid" | "map";
+  initialView?: "grid" | "map" | "spots";
   /** 通知などからの直リンク: この写真を最初から縦ビューアで開く。 */
   initialPostId?: string;
 }) {
@@ -55,7 +56,7 @@ export function PhotoFeed({
     const index = posts.findIndex((p) => p.id === initialPostId);
     return index >= 0 ? { posts, index, title: null, mode: "detail" } : null;
   });
-  const [view, setView] = useState<"grid" | "map">(initialView);
+  const [view, setView] = useState<"grid" | "map" | "spots">(initialView);
   // フルスクリーン表示中の写真(ビューアの並びの中の番号)。nullなら閉じている。
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const openRef = useRef<HTMLDivElement | null>(null);
@@ -222,6 +223,9 @@ export function PhotoFeed({
         <button type="button" onClick={() => setView("map")} className={chip(view === "map")}>
           {t.photo.viewMap}
         </button>
+        <button type="button" onClick={() => setView("spots")} className={chip(view === "spots")}>
+          {t.photo.viewSpots}
+        </button>
         <Link
           href="/photo/new"
           className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
@@ -230,7 +234,9 @@ export function PhotoFeed({
         </Link>
       </div>
 
-      {view === "map" ? (
+      {view === "spots" ? (
+        <PhotoSpotList posts={posts} areas={areas} onOpenSpot={(spotPosts, index, title) => setViewer({ posts: spotPosts, index, title, mode: index === 0 ? "grid" : "detail" })} />
+      ) : view === "map" ? (
         <PhotoMap posts={posts} onOpenSpot={(spotPosts, index, title) => setViewer({ posts: spotPosts, index, title, mode: "grid" })} />
       ) : posts.length === 0 ? (
         <p className="px-2 py-10 text-center text-sm text-tone-500">{t.photo.empty}</p>
