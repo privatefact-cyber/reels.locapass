@@ -8,6 +8,7 @@ import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoSpotList } from "@/components/photo/PhotoSpotList";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
 import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
+import { PhotoDeleteButton } from "@/components/photo/PhotoDeleteButton";
 import { PhotoVideo } from "@/components/photo/PhotoVideo";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -35,7 +36,7 @@ function Avatar({ post }: { post: PhotoPost }) {
 }
 
 export function PhotoFeed({
-  posts,
+  posts: allPosts,
   areas,
   areaSlug,
   initialView = "grid",
@@ -51,6 +52,9 @@ export function PhotoFeed({
   // ビューアに出す写真の並び。格子からは全体の中のその1枚から、マップのカードからは
   // そのカード(同じ場所)の写真だけを出す。
   const { t, locale } = useLocale();
+  // 削除した写真はその場で一覧から外す(本人とルート管理者だけに削除ボタンが出る)。
+  const [deleted, setDeleted] = useState<Set<string>>(new Set());
+  const posts = allPosts.filter((p) => !deleted.has(p.id));
   const [viewer, setViewer] = useState<{ posts: PhotoPost[]; index: number; title: string | null; mode: "grid" | "detail" } | null>(() => {
     if (!initialPostId) return null;
     const index = posts.findIndex((p) => p.id === initialPostId);
@@ -176,6 +180,14 @@ export function PhotoFeed({
               ) : null}
               <div className="flex items-center gap-4 pt-1 text-sm text-tone-300">
                 <PhotoLikeButton postId={post.id} initialCount={post.likeCount} />
+                <PhotoDeleteButton
+                  post={post}
+                  onDeleted={(id) => {
+                    setDeleted((prev) => new Set(prev).add(id));
+                    setViewer(null);
+                    setFullscreenIndex(null);
+                  }}
+                />
                 <a
                   href={photoRouteUrl(post)}
                   target="_blank"
@@ -195,6 +207,11 @@ export function PhotoFeed({
             index={fullscreenIndex}
             onIndexChange={setFullscreenIndex}
             onClose={() => setFullscreenIndex(null)}
+            onDeleted={(id) => {
+              setDeleted((prev) => new Set(prev).add(id));
+              setViewer(null);
+              setFullscreenIndex(null);
+            }}
           />
         ) : null}
       </div>

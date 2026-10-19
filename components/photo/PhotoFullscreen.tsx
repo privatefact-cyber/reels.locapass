@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized } from "@/components/photo/photoUtils";
+import { PhotoDeleteButton } from "@/components/photo/PhotoDeleteButton";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /**
@@ -17,11 +18,14 @@ export function PhotoFullscreen({
   index,
   onIndexChange,
   onClose,
+  onDeleted,
 }: {
   posts: PhotoPost[];
   index: number;
   onIndexChange: (index: number) => void;
   onClose: () => void;
+  /** 渡すと、投稿者本人とルート管理者にだけ削除ボタンが出る。削除後に呼ばれる。 */
+  onDeleted?: (postId: string) => void;
 }) {
   const { t } = useLocale();
   const touchStartX = useRef<number | null>(null);
@@ -78,6 +82,8 @@ export function PhotoFullscreen({
       >
         <X size={22} />
       </button>
+
+      {onDeleted ? <PhotoDeleteButton post={post} onDeleted={onDeleted} variant="icon" /> : null}
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

@@ -7,8 +7,11 @@ import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
 import { photoResized } from "@/components/photo/photoUtils";
 
 /** 店舗ごとの「みんなの写真」の格子。タップで全画面表示(左右で前後の写真)。 */
-export function ShopUserPhotoGrid({ posts }: { posts: PhotoPost[] }) {
+export function ShopUserPhotoGrid({ posts: allPosts }: { posts: PhotoPost[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // 削除した写真はその場で一覧から外す(本人とルート管理者だけに削除ボタンが出る)。
+  const [deleted, setDeleted] = useState<Set<string>>(new Set());
+  const posts = allPosts.filter((p) => !deleted.has(p.id));
   return (
     <>
       <div className="grid grid-cols-3 gap-[2px] sm:grid-cols-4 md:grid-cols-6">
@@ -30,7 +33,16 @@ export function ShopUserPhotoGrid({ posts }: { posts: PhotoPost[] }) {
         ))}
       </div>
       {openIndex !== null && (
-        <PhotoFullscreen posts={posts} index={openIndex} onIndexChange={setOpenIndex} onClose={() => setOpenIndex(null)} />
+        <PhotoFullscreen
+          posts={posts}
+          index={openIndex}
+          onIndexChange={setOpenIndex}
+          onClose={() => setOpenIndex(null)}
+          onDeleted={(id) => {
+            setDeleted((prev) => new Set(prev).add(id));
+            setOpenIndex(null);
+          }}
+        />
       )}
     </>
   );

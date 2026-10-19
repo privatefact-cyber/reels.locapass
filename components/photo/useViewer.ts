@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-export type PhotoViewer = { userId: string | null; likedPostIds: Set<string>; followingIds: Set<string> };
+export type PhotoViewer = { userId: string | null; isRootAdmin: boolean; likedPostIds: Set<string>; followingIds: Set<string> };
 
-const EMPTY = (): PhotoViewer => ({ userId: null, likedPostIds: new Set(), followingIds: new Set() });
+const EMPTY = (): PhotoViewer => ({ userId: null, isRootAdmin: false, likedPostIds: new Set(), followingIds: new Set() });
 
 // ページ内で1回だけ取得して共有する(いいねボタンが何個あっても/api/photo/meは1回)。
 let cache: Promise<PhotoViewer> | null = null;
@@ -13,8 +13,9 @@ function load(): Promise<PhotoViewer> {
   if (!cache) {
     cache = fetch("/api/photo/me", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { userId?: string | null; likedPostIds?: string[]; followingIds?: string[] } | null) => ({
+      .then((d: { userId?: string | null; isRootAdmin?: boolean; likedPostIds?: string[]; followingIds?: string[] } | null) => ({
         userId: d?.userId ?? null,
+        isRootAdmin: d?.isRootAdmin === true,
         likedPostIds: new Set(d?.likedPostIds ?? []),
         followingIds: new Set(d?.followingIds ?? []),
       }))

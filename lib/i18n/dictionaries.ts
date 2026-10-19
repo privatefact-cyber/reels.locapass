@@ -334,6 +334,11 @@ export type Dictionary = {
     apiPostFailed: string;
     apiWaitMoment: string;
     apiNotFound: string;
+    apiForbidden: string;
+    apiDeleteFailed: string;
+    deleteButton: string;
+    deleteConfirm: string;
+    deleteFailed: string;
     apiSelfFollow: string;
     count: (n: number) => string;
     moreSpots: (n: number) => string;
@@ -692,6 +697,11 @@ const ja: Dictionary = {
     apiPostFailed: "投稿に失敗しました。もう一度お試しください。",
     apiWaitMoment: "少し時間をおいてからもう一度お試しください。",
     apiNotFound: "見つかりません。",
+    apiForbidden: "この投稿を削除する権限がありません。",
+    apiDeleteFailed: "削除に失敗しました。",
+    deleteButton: "削除",
+    deleteConfirm: "この写真を削除しますか？ 元に戻せません。",
+    deleteFailed: "削除できませんでした。時間をおいてもう一度お試しください。",
     apiSelfFollow: "自分自身はフォローできません。",
     count: (n: number) => `${n}枚`,
     moreSpots: (n: number) => ` ほか${n}か所`,
@@ -1050,6 +1060,11 @@ const en: Dictionary = {
     apiPostFailed: "Posting failed. Please try again.",
     apiWaitMoment: "Please wait a moment and try again.",
     apiNotFound: "Not found.",
+    apiForbidden: "You don't have permission to delete this post.",
+    apiDeleteFailed: "Failed to delete.",
+    deleteButton: "Delete",
+    deleteConfirm: "Delete this photo? This can't be undone.",
+    deleteFailed: "Couldn't delete. Please try again later.",
     apiSelfFollow: "You can't follow yourself.",
     count: (n: number) => `${n} ${n === 1 ? "photo" : "photos"}`,
     moreSpots: (n: number) => ` +${n} more`,
@@ -1408,6 +1423,11 @@ const zh: Dictionary = {
     apiPostFailed: "发布失败，请重试。",
     apiWaitMoment: "请稍后再试。",
     apiNotFound: "未找到。",
+    apiForbidden: "您无权删除此投稿。",
+    apiDeleteFailed: "删除失败。",
+    deleteButton: "删除",
+    deleteConfirm: "确定删除这张照片吗？删除后无法恢复。",
+    deleteFailed: "无法删除，请稍后再试。",
     apiSelfFollow: "不能关注自己。",
     count: (n: number) => `${n}张`,
     moreSpots: (n: number) => ` 等${n}处`,
@@ -1767,6 +1787,11 @@ const ar: Dictionary = {
     apiPostFailed: "فشل النشر. يرجى المحاولة مرة أخرى.",
     apiWaitMoment: "يرجى الانتظار قليلًا ثم المحاولة مرة أخرى.",
     apiNotFound: "غير موجود.",
+    apiForbidden: "ليس لديك صلاحية حذف هذا المنشور.",
+    apiDeleteFailed: "فشل الحذف.",
+    deleteButton: "حذف",
+    deleteConfirm: "هل تريد حذف هذه الصورة؟ لا يمكن التراجع.",
+    deleteFailed: "تعذّر الحذف. حاول مرة أخرى لاحقًا.",
     apiSelfFollow: "لا يمكنك متابعة نفسك.",
     count: (n: number) => `${n} صورة`,
     moreSpots: (n: number) => ` +${n} أخرى`,
