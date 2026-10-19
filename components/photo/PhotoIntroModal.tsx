@@ -3,20 +3,15 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
-// トップのBetaLaunchModalと同じすりガラスカードの見た目。フォト(穴場情報)の入口で、セッションに1回だけ出す。
-const DISMISS_KEY = "locapass_photo_intro_dismissed";
+// トップのBetaLaunchModalと同じすりガラスカードの見た目。フォト(穴場情報)のページを開くたびに毎回出す。
 
 export function PhotoIntroModal() {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
 
+  // ページを開くたびに(再読み込み・他のページから戻ったときも)毎回出す。
   useEffect(() => {
-    // ?intro=1 を付けると、閉じたあとでも必ず出す(見た目の確認用)。
-    const force = new URLSearchParams(window.location.search).get("intro") === "1";
-    try {
-      if (!force && sessionStorage.getItem(DISMISS_KEY)) return;
-    } catch {}
     setOpen(true);
   }, []);
 
@@ -25,9 +20,6 @@ export function PhotoIntroModal() {
     window.setTimeout(() => {
       setOpen(false);
       setClosing(false);
-      try {
-        sessionStorage.setItem(DISMISS_KEY, "1");
-      } catch {}
     }, 250);
   }
 
