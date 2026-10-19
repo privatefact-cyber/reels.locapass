@@ -14,6 +14,11 @@ export function shopReelsPath(portalSlug: string, shopSlug: string): string {
   return `${shopPath(portalSlug, shopSlug)}/reels`;
 }
 
+/** 訪問者が投稿した写真(みんなの写真)の一覧ページ。 */
+export function shopPhotosPath(portalSlug: string, shopSlug: string): string {
+  return `${shopPath(portalSlug, shopSlug)}/photos`;
+}
+
 /** 過去動画のストック(時系列/カレンダー検索)ページ。 */
 export function shopArchivePath(portalSlug: string, shopSlug: string): string {
   return `${shopPath(portalSlug, shopSlug)}/archive`;

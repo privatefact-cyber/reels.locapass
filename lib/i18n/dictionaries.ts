@@ -90,6 +90,10 @@ export type Dictionary = {
     areaNotSet: string;
     genreNotSet: string;
     archiveTitle: string;
+    userPhotosTitle: string;
+    userPhotosAll: string;
+    userPhotosEmpty: string;
+    userPhotosCount: (n: number) => string;
     archiveAllReels: string;
     archiveTimeline: string;
     archiveCalendar: string;
@@ -436,6 +440,10 @@ const ja: Dictionary = {
     areaNotSet: "エリア未設定",
     genreNotSet: "ジャンル未設定",
     archiveTitle: "ストック",
+    userPhotosTitle: "みんなの写真",
+    userPhotosAll: "すべて見る →",
+    userPhotosEmpty: "まだ写真の投稿がありません",
+    userPhotosCount: (n: number) => `${n}枚`,
     archiveAllReels: "すべてのリールを見る →",
     archiveTimeline: "タイムライン",
     archiveCalendar: "カレンダー",
@@ -781,6 +789,10 @@ const en: Dictionary = {
     areaNotSet: "Area not set",
     genreNotSet: "Genre not set",
     archiveTitle: "Archive",
+    userPhotosTitle: "Photos from visitors",
+    userPhotosAll: "See all →",
+    userPhotosEmpty: "No photos posted yet",
+    userPhotosCount: (n: number) => `${n} ${n === 1 ? "photo" : "photos"}`,
     archiveAllReels: "All reels →",
     archiveTimeline: "Timeline",
     archiveCalendar: "Calendar",
@@ -1126,6 +1138,10 @@ const zh: Dictionary = {
     areaNotSet: "地区未设置",
     genreNotSet: "类型未设置",
     archiveTitle: "存档",
+    userPhotosTitle: "大家的照片",
+    userPhotosAll: "查看全部 →",
+    userPhotosEmpty: "暂无照片投稿",
+    userPhotosCount: (n: number) => `${n}张`,
     archiveAllReels: "查看全部视频 →",
     archiveTimeline: "时间线",
     archiveCalendar: "日历",
@@ -1473,6 +1489,10 @@ const ar: Dictionary = {
     "areaNotSet": "المنطقة غير محددة",
     "genreNotSet": "الفئة غير محددة",
     "archiveTitle": "الأرشيف",
+    "userPhotosTitle": "صور الزوار",
+    "userPhotosAll": "عرض الكل ←",
+    "userPhotosEmpty": "لا توجد صور بعد",
+    "userPhotosCount": (n: number) => `${n}`,
     "archiveAllReels": "كل الريلز ←",
     "archiveTimeline": "الجدول الزمني",
     "archiveCalendar": "التقويم",

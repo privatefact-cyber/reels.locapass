@@ -37,11 +37,11 @@ export type PhotoProfile = {
 
 export const PHOTO_PAGE_SIZE = 90;
 
-const POST_COLUMNS =
+export const POST_COLUMNS =
   "id,member_id,user_name,avatar_url,image_url,latitude,longitude,address,spot_name,comment,tags,created_at,site,place_kind,place_id,place_name,venue_id,video_url";
 
 type Supabase = ReturnType<typeof createStaticClient>;
-type PostRow = {
+export type PostRow = {
   id: string;
   member_id: string | null;
   user_name: string;
@@ -62,7 +62,7 @@ type PostRow = {
   video_url: string | null;
 };
 
-async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<PhotoPost[]> {
+export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<PhotoPost[]> {
   const ids = rows.map((r) => r.id);
   const likeCounts = new Map<string, number>();
   if (ids.length > 0) {

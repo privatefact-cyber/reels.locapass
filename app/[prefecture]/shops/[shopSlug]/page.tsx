@@ -42,10 +42,12 @@ import { genreLabel } from "@/lib/i18n/genreLabels";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { ShopHeroMedia } from "@/components/shop/ShopHeroMedia";
+import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
+import { getShopPhotoPosts } from "@/lib/photo/getShopPhotoPosts";
 import { PageDots } from "@/components/shop/PageDots";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
-import { shopPath, shopReelsPath, shopArchivePath, castPath } from "@/lib/locapass/publicUrls";
+import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
@@ -67,7 +69,7 @@ async function resolveShop(params: PageParams) {
   const { data: shopRow, error: shopError } = await supabase
     .from("locapass_shops")
     .select(
-      "id, slug, name, plan, category, address, address_en, tel, business_hours, business_hours_weekly, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url, cover_image_attribution",
+      "id, slug, name, plan, category, address, address_en, tel, business_hours, business_hours_weekly, description, translations, cover_url, icon_url, url, tagline, line_url, portal_id, gallery_image_urls, price_info, usage_notes, area, sns_links, hero_media_url, hero_media_type, line_qr_image_url, cover_image_attribution, venue_id, lat, lng",
     )
     .eq("portal_id", portal.id)
     .eq("slug", params.shopSlug)
@@ -331,6 +333,13 @@ export default async function ShopDetailPage({
   ];
 
   const archiveHref = shopArchivePath(site.slug, shopRow.slug);
+  // 訪問者が投稿した写真(みんなの写真)。取得に失敗しても店舗ページ本体は表示する。
+  const userPhotos = await getShopPhotoPosts({
+    name: shopRow.name,
+    venueId: shopRow.venue_id,
+    lat: shopRow.lat,
+    lng: shopRow.lng,
+  }).catch(() => []);
   const totalReels = allReelRows?.length ?? 0;
 
   return (
@@ -540,6 +549,17 @@ export default async function ShopDetailPage({
               ))}
             </div>
         </section>
+        )}
+
+        {/* 訪問者の投稿写真(みんなの写真)。1枚でもあれば、最新の数枚と一覧ページへの入口を出す。 */}
+        {userPhotos.length > 0 && (
+          <section id="user-photos" className="scroll-mt-24 space-y-3">
+            <SectionHeading eyebrow="PHOTOS" title={t.shop.userPhotosTitle} icon={<Camera size={14} />} />
+            <ShopUserPhotoGrid posts={userPhotos.slice(0, 6)} />
+            <Link href={shopPhotosPath(site.slug, shopRow.slug)} className="block text-center text-xs text-accent underline">
+              {t.shop.userPhotosAll}({t.shop.userPhotosCount(userPhotos.length)})
+            </Link>
+          </section>
         )}
 
         {/* 3. 店舗基本情報 */}
