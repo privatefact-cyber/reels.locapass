@@ -9,6 +9,8 @@ import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StreamVideo } from "@/components/video/StreamVideo";
+import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
+import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 import { shopPath, shopReelsPath, castPath } from "@/lib/locapass/publicUrls";
 
@@ -54,7 +56,7 @@ export type MyComment = {
 
 export type PostShop = { id: string; name: string };
 
-type Tab = "reels" | "casts" | "shops" | "comments";
+type Tab = "reels" | "casts" | "shops" | "photos" | "comments";
 
 
 
@@ -69,6 +71,7 @@ export function MypageClient({
   postShops = [],
   operatorShops = [],
   managementLinks = [],
+  myPhotos = [],
   showReservations = false,
 }: {
   userId: string;
@@ -84,6 +87,8 @@ export function MypageClient({
   operatorShops?: PostShop[];
   /** 管理側の画面(エリア管理・店舗管理・スタッフ・キャスト)への入口。ルート管理者以外の管理側の立場がここから入る。 */
   managementLinks?: { label: string; href: string }[];
+  /** 自分が投稿した写真・動画(みんなのフォト)。新しい順。 */
+  myPhotos?: PhotoPost[];
   /** 優先予約の履歴リンクを出すか。 */
   showReservations?: boolean;
 }) {
@@ -92,6 +97,7 @@ export function MypageClient({
     { key: "reels", label: t.mypage.tabReels },
     { key: "casts", label: t.mypage.tabCasts },
     { key: "shops", label: t.mypage.tabShops },
+    { key: "photos", label: t.mypage.tabPhotos },
     { key: "comments", label: t.mypage.tabComments },
   ];
   const router = useRouter();
@@ -577,6 +583,22 @@ export function MypageClient({
                 </li>
               ))}
             </ul>
+          )
+        )}
+
+        {tab === "photos" && (
+          myPhotos.length === 0 ? (
+            <div className="space-y-4">
+              <EmptyState text={t.mypage.noPhotos} />
+              <Link href="/photo/new" className="mx-auto block w-fit rounded-full bg-cta-light px-5 py-2 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover">
+                {t.photo.postButton}
+              </Link>
+            </div>
+          ) : (
+            // タブ内は左右に余白があるので、画面端まで広げて格子にする。
+            <div className="-mx-4">
+              <ShopUserPhotoGrid posts={myPhotos} />
+            </div>
           )
         )}
 

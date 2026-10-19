@@ -216,6 +216,8 @@ export type Dictionary = {
     tabCasts: string;
     tabShops: string;
     tabComments: string;
+    tabPhotos: string;
+    noPhotos: string;
     noSavedReels: string;
     noFollowedCasts: string;
     noFavoriteShops: string;
@@ -572,6 +574,8 @@ const ja: Dictionary = {
     tabCasts: "推しFACES",
     tabShops: "店舗ストック",
     tabComments: "コメント履歴",
+    tabPhotos: "投稿写真",
+    noPhotos: "まだ写真を投稿していません",
     noSavedReels: "保存した動画はまだありません",
     noFollowedCasts: "フォロー中のFACESはまだいません",
     noFavoriteShops: "保存した店舗はまだありません",
@@ -928,6 +932,8 @@ const en: Dictionary = {
     tabCasts: "Favorite FACES",
     tabShops: "Favorite Shops",
     tabComments: "Comment History",
+    tabPhotos: "My Photos",
+    noPhotos: "You haven't posted any photos yet",
     noSavedReels: "No saved reels yet.",
     noFollowedCasts: "You're not following any FACES yet.",
     noFavoriteShops: "No favorite shops yet.",
@@ -1284,6 +1290,8 @@ const zh: Dictionary = {
     tabCasts: "关注的FACES",
     tabShops: "收藏的店铺",
     tabComments: "评论记录",
+    tabPhotos: "我的照片",
+    noPhotos: "还没有投稿照片",
     noSavedReels: "暂无已保存的帖子。",
     noFollowedCasts: "暂未关注任何FACES。",
     noFavoriteShops: "暂无收藏的店铺。",
@@ -1641,6 +1649,8 @@ const ar: Dictionary = {
     "tabCasts": "FACES المفضلون",
     "tabShops": "المتاجر المفضلة",
     "tabComments": "سجل التعليقات",
+    "tabPhotos": "صوري",
+    "noPhotos": "لم تنشر أي صور بعد",
     "noSavedReels": "لا توجد مقاطع محفوظة بعد.",
     "noFollowedCasts": "أنت لا تتابع أيًا من FACES بعد.",
     "noFavoriteShops": "لا توجد متاجر مفضلة بعد.",

@@ -4,6 +4,7 @@ import { fetchMyRoles } from "@/lib/auth/roles";
 import { reservationEnabled } from "@/lib/reservation/config";
 import { MypageClient, type PostShop, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
 import { getJstNow, toJstDateString, isWithinWorkingWindow } from "@/lib/reels/nowWorking";
+import { getMemberPhotos } from "@/lib/photo/getPhotoPosts";
 
 function buildMedia(videoUrl: string | null, posterUrl: string | null, images: unknown): SavedReel["media"] {
   if (videoUrl) return [{ type: "video", url: videoUrl, poster: posterUrl ?? undefined }];
@@ -122,6 +123,9 @@ export default async function MypagePage() {
     if (roles.cast) managementLinks.push({ label: "キャスト画面", href: "/dashboard/cast" });
   }
 
+  // 自分が投稿した写真・動画(みんなのフォト)。取得に失敗してもマイページ全体は表示する。
+  const myPhotos = (await getMemberPhotos(user.id).catch(() => null))?.posts ?? [];
+
   // 優先予約の履歴リンク: 機能が公開中、または過去に予約がある人だけ。
   let showReservations = reservationEnabled();
   if (!showReservations) {
@@ -168,6 +172,7 @@ export default async function MypagePage() {
       myComments={myComments}
       postShops={postShops}
       managementLinks={managementLinks}
+      myPhotos={myPhotos}
       showReservations={showReservations}
       operatorShops={operatorShops}
     />
