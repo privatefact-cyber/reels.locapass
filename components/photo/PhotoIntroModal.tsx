@@ -12,8 +12,10 @@ export function PhotoIntroModal() {
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
+    // ?intro=1 を付けると、閉じたあとでも必ず出す(見た目の確認用)。
+    const force = new URLSearchParams(window.location.search).get("intro") === "1";
     try {
-      if (sessionStorage.getItem(DISMISS_KEY)) return;
+      if (!force && sessionStorage.getItem(DISMISS_KEY)) return;
     } catch {}
     setOpen(true);
   }, []);
