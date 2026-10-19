@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSiteTheme, themeInitScript } from "@/lib/theme";
 import { ThemeSync } from "@/components/ThemeSync";
 import { SiteHitBeacon } from "@/components/analytics/SiteHitBeacon";
-import { fetchMyRoles, hasManagementRole } from "@/lib/auth/roles";
+import { fetchMyRoles } from "@/lib/auth/roles";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -82,7 +82,8 @@ export default async function RootLayout({
   const portalSlugs = (portalRows ?? []).map((p) => p.slug);
   const manualTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
-  const hasManagement = user ? hasManagementRole(await fetchMyRoles(supabase)) : false;
+  // ヘッダーの「管理」ボタンは、ルート管理者(super_admin)でログインしているときだけ出す。
+  const hasManagement = user ? (await fetchMyRoles(supabase))?.super_admin === true : false;
   let myPageAvatarUrl: string | null = null;
   let myPageInitial: string | null = null;
   if (user) {

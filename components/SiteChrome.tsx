@@ -15,7 +15,7 @@ type Props = {
   myPageAvatarUrl: string | null;
   myPageInitial: string | null;
   portalSlugs: string[];
-  /** 管理側の立場(サイト管理・店舗管理など)を持つアカウントか。ヘッダーに「管理」の入口を出す。 */
+  /** ルート管理者(super_admin)でログイン中か。ヘッダーに「管理」の入口を出す。 */
   hasManagement?: boolean;
 };
 
@@ -90,7 +90,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
             <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSwitcher />
               <NotificationBell />
-              {/* 管理側の立場を持つアカウントだけに出す「管理」の入口。マイページ(個人)とは別の名前で並べる。 */}
+              {/* ルート管理者だけに出す「管理」の入口。マイページ(個人)とは別の名前で並べる。 */}
               {hasManagement ? (
                 <Link
                   href="/dashboard/go?to=manage"
