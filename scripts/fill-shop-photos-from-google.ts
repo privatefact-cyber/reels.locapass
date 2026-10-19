@@ -6,6 +6,7 @@
  *   npx tsx scripts/fill-shop-photos-from-google.ts                                    # 実際に反映
  *   npx tsx scripts/fill-shop-photos-from-google.ts --limit 5                          # 試し打ち
  *   npx tsx scripts/fill-shop-photos-from-google.ts --portal oarai                     # 特定ポータルのみ
+ *   npx tsx scripts/fill-shop-photos-from-google.ts --slugs a,b,c                       # 指定したslugの店舗だけ(lizandでも対象)
  *
  * 必要な環境変数(.env.local): GOOGLE_MAPS_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  *
@@ -43,6 +44,7 @@ const dryRun = process.argv.includes("--dry-run");
 const limit = arg("--limit") ? Number(arg("--limit")) : undefined;
 const onlyPortal = arg("--portal");
 const outPath = arg("--out");
+const onlySlugs = arg("--slugs")?.split(",").map((x) => x.trim()).filter(Boolean);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const norm = (s: string) => s.normalize("NFKC").toLowerCase().replace(/[\s　・･\-ー_()（）「」【】]/g, "");
@@ -84,7 +86,7 @@ async function main() {
 
   const { data: shops, error } = await supabase
     .from("locapass_shops")
-    .select("id, portal_id, name, address, area, lat, lng, cover_url, google_place_id")
+    .select("id, slug, portal_id, name, address, area, lat, lng, cover_url, google_place_id")
     .eq("status", "active")
     .is("google_place_id", null)
     .order("portal_id");
@@ -92,6 +94,8 @@ async function main() {
 
   let targets = (shops ?? []).filter((s) => {
     const slug = slugById.get(s.portal_id) ?? "";
+    // --slugs で明示した店舗は、ダミー店舗のポータル(lizand)でも対象にする。
+    if (onlySlugs) return onlySlugs.includes(s.slug) && !s.cover_url;
     if (EXCLUDED_PORTAL_SLUGS.includes(slug)) return false;
     if (onlyPortal && slug !== onlyPortal) return false;
     return !s.cover_url;
