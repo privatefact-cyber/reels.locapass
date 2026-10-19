@@ -26,7 +26,7 @@ export function ShopMediaFallback({
   /** 一覧のタイル用: 軽い縮小版の画像を使う。 */
   thumb?: boolean;
 }) {
-  const pick = pickPlaceholder(category, seed, { allowVideo });
+  const pick = pickPlaceholder(category, seed, { allowVideo, hint: name });
   const initial = name.trim().slice(0, 1) || "L";
 
   return (
