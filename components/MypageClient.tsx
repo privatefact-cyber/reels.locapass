@@ -306,6 +306,15 @@ export function MypageClient({
         </div>
       </section>
 
+      {/* フォトの投稿ボタン(みんなのフォト /photo に写真・動画を投稿する) */}
+      <Link
+        href="/photo/new"
+        className="mx-4 mt-4 flex items-center justify-center gap-2 rounded-xl bg-cta-light px-4 py-3 text-sm font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover active:scale-95"
+      >
+        <Camera size={18} />
+        {t.photo.postButton}
+      </Link>
+
       <Link href="/support" className="mx-4 mt-4 flex items-center justify-between rounded-xl border border-main/15 bg-tone-900/60 px-4 py-3 text-sm font-bold text-main">
         <span>ヘルプ・使い方(AIに質問)</span>
         <span className="text-tone-500">›</span>
