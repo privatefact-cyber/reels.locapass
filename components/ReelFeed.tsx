@@ -19,7 +19,6 @@ import { setAiSelectedContext } from "@/lib/aiContext";
 import { isHiddenByDefaultGenre } from "@/lib/shop/genres";
 import { photoResized } from "@/components/photo/photoUtils";
 import { gridThumb } from "@/lib/images/thumb";
-import type { PhotoTeaser } from "@/lib/photo/types";
 
 export type { ReelItem } from "@/lib/reels/types";
 
@@ -260,7 +259,6 @@ export function ReelFeed({
   shops,
   genreChoices,
   ads = [],
-  photos = [],
   boostCount = 0,
   boostHref = "/boost",
 }: {
@@ -271,8 +269,6 @@ export function ReelFeed({
   genreChoices: string[];
   /** システム管理者が投稿するPR。各adの頻度でグリッド/リール一覧に紛れ込ませる。 */
   ads?: AdItem[];
-  /** PHOTOタブに出す、ユーザー投稿写真(エリアフォト)の新着。 */
-  photos?: PhotoTeaser[];
   /** 掲載中の緊急ブースト件数。1件以上なら⚡ピルに件数を出す。 */
   boostCount?: number;
   /** BOOSTピルの行き先。子ポータルでは /{slug}/boost(そのポータルの店舗だけ)。 */
@@ -289,8 +285,6 @@ export function ReelFeed({
     return () => setAiSelectedContext({ keyword: "", genres: [] });
   }, [keyword, activeGenres]);
   const [nowOnly, setNowOnly] = useState(false);
-  // PHOTOタブ: ICON/SHOPのリール一覧の代わりに、ユーザー投稿写真の新着を出す。
-  const [photoOnly, setPhotoOnly] = useState(false);
   // グリッドは最初の GRID_PAGE 枚だけ描き、末尾に近づいたら続きを足す(画像・DOMが多いと低価格の端末が重くなるため)。
   const GRID_PAGE = 36;
   const [visibleCount, setVisibleCount] = useState(GRID_PAGE);
@@ -675,7 +669,6 @@ export function ReelFeed({
     // ゲートで選んだ投稿者種別の絞り込みは、ピルでの手動切り替えとは独立した状態なので、
     // ここで触られたら一旦リセットする(古い絞り込みが残って混乱するのを防ぐ)。
     setReelAuthorFilter(null);
-    setPhotoOnly(false);
     setActiveTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   }
 
@@ -777,8 +770,7 @@ export function ReelFeed({
           <button
             type="button"
             onClick={() => {
-              setPhotoOnly(false);
-              setNowOnly((v) => !v);
+                        setNowOnly((v) => !v);
             }}
             className={pillClass(nowOnly)}
           >
@@ -792,9 +784,10 @@ export function ReelFeed({
               <button type="button" onClick={() => toggleType("shop")} className={pillClass(activeTypes.includes("shop"))}>
                 SHOP
               </button>
-              <button type="button" onClick={() => setPhotoOnly((v) => !v)} className={pillClass(photoOnly)}>
+              {/* PHOTO: 途中のページを挟まず、そのままフォト(/photo)へ。 */}
+              <Link href="/photo" className={pillClass(false)}>
                 PHOTO
-              </button>
+              </Link>
               <Link
                 href={boostHref}
                 className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-black text-black"
@@ -826,45 +819,7 @@ export function ReelFeed({
         </div>
       </div>
 
-      {photoOnly ? (
-        // ユーザー投稿写真(エリアフォト)の新着。タップで /photo(一覧・マップ・投稿)へ。
-        <div className="space-y-3">
-          <div className="flex items-center justify-between px-2">
-            <p className="text-xs text-tone-500">{t.photo.feedIntro}</p>
-            <Link href="/photo/new" className="rounded-full bg-cta-light px-3 py-1 text-[11px] font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover">
-              {t.photo.postButton}
-            </Link>
-          </div>
-          {photos.length === 0 ? (
-            <p className="px-2 py-10 text-center text-sm text-tone-500">{t.photo.empty}</p>
-          ) : (
-            <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
-              {photos.map((p) => (
-                <Link key={p.id} href="/photo" className="relative aspect-square overflow-hidden bg-tone-900">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoResized(p.imageUrl, 360, true)} alt={p.spotName} loading="lazy" className="h-full w-full object-cover" />
-                  {p.isVideo ? (
-                    <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white">
-                      <Play size={11} className="fill-white" />
-                    </span>
-                  ) : null}
-                  {p.placeKind === "listed" || p.placeKind === "spot" ? (
-                    <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white">
-                      {p.placeKind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}
-                    </span>
-                  ) : null}
-                  <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-4 text-left text-[10px] text-white">
-                    {p.spotName}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
-          <Link href="/photo" className="block px-2 pb-4 text-center text-xs text-accent underline">
-            {t.photo.seeAll}
-          </Link>
-        </div>
-      ) : tiles.length === 0 ? (
+      {tiles.length === 0 ? (
         <p className="px-2 py-10 text-center text-sm text-tone-500">
           {nowOnly ? t.feed.noNowPosts : t.feed.noResults}
         </p>
