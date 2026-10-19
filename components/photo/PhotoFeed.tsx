@@ -41,6 +41,7 @@ export function PhotoFeed({
   areaSlug,
   initialView = "grid",
   initialPostId,
+  hideToolbar = false,
 }: {
   posts: PhotoPost[];
   areas: PhotoArea[];
@@ -48,6 +49,8 @@ export function PhotoFeed({
   initialView?: "grid" | "map" | "spots";
   /** 通知などからの直リンク: この写真を最初から縦ビューアで開く。 */
   initialPostId?: string;
+  /** グリッド/マップの切り替えと「写真を投稿」を出さない(マイページの「いいね写真」など、格子と縦ビューアだけで使うとき)。 */
+  hideToolbar?: boolean;
 }) {
   // ビューアに出す写真の並び。格子からは全体の中のその1枚から、マップのカードからは
   // そのカード(同じ場所)の写真だけを出す。
@@ -233,23 +236,25 @@ export function PhotoFeed({
         </div>
       ) : null}
 
+      {hideToolbar ? null : (
       <div className="flex items-center gap-2 px-3">
-        <button type="button" onClick={() => setView("grid")} className={chip(view === "grid")}>
-          {t.photo.viewGrid}
-        </button>
-        <button type="button" onClick={() => setView("map")} className={chip(view === "map")}>
-          {t.photo.viewMap}
-        </button>
-        <button type="button" onClick={() => setView("spots")} className={chip(view === "spots")}>
-          {t.photo.viewSpots}
-        </button>
-        <Link
-          href="/photo/new"
-          className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
-        >
-          {t.photo.postButton}
-        </Link>
-      </div>
+          <button type="button" onClick={() => setView("grid")} className={chip(view === "grid")}>
+            {t.photo.viewGrid}
+          </button>
+          <button type="button" onClick={() => setView("map")} className={chip(view === "map")}>
+            {t.photo.viewMap}
+          </button>
+          <button type="button" onClick={() => setView("spots")} className={chip(view === "spots")}>
+            {t.photo.viewSpots}
+          </button>
+          <Link
+            href="/photo/new"
+            className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
+          >
+            {t.photo.postButton}
+          </Link>
+        </div>
+      )}
 
       {view === "spots" ? (
         <PhotoSpotList posts={posts} areas={areas} onOpenSpot={(spotPosts, index, title) => setViewer({ posts: spotPosts, index, title, mode: index === 0 ? "grid" : "detail" })} />

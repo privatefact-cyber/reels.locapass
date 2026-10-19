@@ -10,7 +10,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StreamVideo } from "@/components/video/StreamVideo";
 import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
-import { LikedPhotoList } from "@/components/photo/LikedPhotoList";
+import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 import { shopPath, shopReelsPath, castPath } from "@/lib/locapass/publicUrls";
@@ -616,7 +616,10 @@ export function MypageClient({
               </Link>
             </div>
           ) : (
-            <LikedPhotoList posts={likedPhotos} />
+            // 他のフォト一覧と同じ、3列(画面が広いと列が増える)の正方形サムネイル。タップすると縦スライドのビューア。
+            <div className="-mx-4">
+              <PhotoFeed posts={likedPhotos} areas={[]} areaSlug={null} hideToolbar />
+            </div>
           )
         )}
 
