@@ -38,6 +38,13 @@ const PIN_TAP_TOLERANCE_PX = 22;
 /** ピンが「画面内に見えている」とみなす余白(px)。上は検索バー+ジャンルピルぶん広めに取る。 */
 const REVEAL_MARGIN_PX = 48;
 const REVEAL_TOP_PX = 120;
+/**
+ * 拡大して位置が確定して見える段階(THUMB_MIN_ZOOM以上)では、金色の点の代わりに店舗の丸いサムネイルを出す
+ * (PHOTOマップと同じ)。画面上で他のピンから THUMB_GAP_PX 以上離れた店舗だけサムネイルにし、重なる店舗は点のまま。
+ */
+const THUMB_MIN_ZOOM = 12;
+const THUMB_GAP_PX = 24;
+const THUMB_SIZE_PX = 44;
 
 function toFeatureCollection(pins: VenuePin[]) {
   return {
@@ -112,6 +119,11 @@ export function VenueMapExplorer({
   const focusVenueRef = useRef<(id: string, opts?: { fromMap?: boolean }) => void>(() => {});
   // カード未取得のピンをタップして周辺を取り直したとき、取り直し後にそのカードを中央へ寄せるための目印。
   const pendingCenterId = useRef<string | null>(null);
+  // 丸いサムネイルのマーカー(店舗ID→マーカー)。ピンは地図を動かすたびに入れ替わるので、IDで差分管理する。
+  const thumbMarkers = useRef(new Map<string, { marker: maplibregl.Marker; el: HTMLDivElement }>());
+  const pinsRef = useRef<VenuePin[]>([]);
+  const activeIdRef = useRef<string | null>(null);
+  const syncThumbsRef = useRef<() => void>(() => {});
 
   const { t, locale } = useLocale();
   const router = useRouter();
@@ -420,6 +432,12 @@ export function VenueMapExplorer({
         });
       });
 
+      map.on("zoom", () => syncThumbsRef.current());
+      map.on("moveend", () => syncThumbsRef.current());
+      map.on("sourcedata", (e) => {
+        if (e.sourceId === SOURCE_ID && e.isSourceLoaded) syncThumbsRef.current();
+      });
+
       if (initialBounds) {
         programmaticMove.current = true;
         map.fitBounds(
@@ -447,6 +465,8 @@ export function VenueMapExplorer({
     mapRef.current = map;
     return () => {
       resizeObserver.disconnect();
+      thumbMarkers.current.forEach(({ marker }) => marker.remove());
+      thumbMarkers.current.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -602,8 +622,85 @@ export function VenueMapExplorer({
     const map = mapRef.current;
     if (!map || !mapReady) return;
     const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+    pinsRef.current = filteredPins;
     source?.setData(toFeatureCollection(filteredPins));
+    syncThumbsRef.current();
   }, [filteredPins, mapReady]);
+
+  // 丸いサムネイルの表示・非表示を、今の表示倍率とクラスタの状態に合わせて更新する。
+  // 毎レンダーで差し替えるだけの軽い関数(refだけを読む)。
+  syncThumbsRef.current = () => {
+    const map = mapRef.current;
+    if (!map || !map.getSource(SOURCE_ID)) return;
+    const all = pinsRef.current;
+    const present = new Set(all.map((p) => p.id));
+    // 範囲外に出たピンのマーカーは片付ける。
+    thumbMarkers.current.forEach(({ marker }, id) => {
+      if (!present.has(id)) {
+        marker.remove();
+        thumbMarkers.current.delete(id);
+      }
+    });
+
+    // クラスタ(数字の丸)にまとめられていないピンだけが対象。ソースの準備前は全部を対象にする。
+    let visible = all;
+    if (map.isSourceLoaded(SOURCE_ID)) {
+      const ids = new Set(
+        map.querySourceFeatures(SOURCE_ID, { filter: ["!", ["has", "point_count"]] }).map((f) => String(f.properties?.id)),
+      );
+      visible = all.filter((p) => ids.has(p.id));
+    }
+    const zoomedEnough = map.getZoom() >= THUMB_MIN_ZOOM;
+    const pts = visible.map((p) => map.project([p.lng, p.lat]));
+    const shown = new Set<string>();
+    visible.forEach((p, i) => {
+      if (!zoomedEnough || !p.thumbUrl) return;
+      for (let j = 0; j < visible.length; j++) {
+        if (j !== i && Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) < THUMB_GAP_PX) return;
+      }
+      shown.add(p.id);
+    });
+
+    for (const p of visible) {
+      if (!shown.has(p.id) || thumbMarkers.current.has(p.id)) continue;
+      const el = document.createElement("div");
+      el.setAttribute("role", "button");
+      // マーカー要素にpositionは指定しない(maplibreが位置決めに使うため、上書きするとピンがずれる)。
+      el.style.cssText =
+        `width:${THUMB_SIZE_PX}px;height:${THUMB_SIZE_PX}px;border-radius:50%;border:2.5px solid #fff;box-sizing:border-box;cursor:pointer;` +
+        `box-shadow:0 2px 10px rgba(0,0,0,.6);background:#222 center/cover no-repeat;background-image:url("${p.thumbUrl}")`;
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        focusVenueRef.current(p.id, { fromMap: true });
+      });
+      const marker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([p.lng, p.lat]).addTo(map);
+      thumbMarkers.current.set(p.id, { marker, el });
+    }
+    thumbMarkers.current.forEach(({ el }, id) => {
+      el.style.display = shown.has(id) ? "block" : "none";
+      el.style.borderColor = id === activeIdRef.current ? "#fbbf24" : "#fff";
+      el.style.zIndex = id === activeIdRef.current ? "2" : "1";
+    });
+
+    // サムネイルにした店舗の金色の点は隠す(残りの点だけ描く)。
+    const notThumb = ["!", ["in", ["get", "id"], ["literal", Array.from(shown)]]];
+    const notCluster = ["!", ["has", "point_count"]];
+    if (map.getLayer(POINT_LAYER)) {
+      map.setFilter(POINT_LAYER, ["all", notCluster, ["==", ["get", "sponsored"], 0], notThumb] as unknown as maplibregl.FilterSpecification);
+    }
+    if (map.getLayer(SPONSORED_LAYER)) {
+      map.setFilter(SPONSORED_LAYER, ["all", notCluster, ["==", ["get", "sponsored"], 1], notThumb] as unknown as maplibregl.FilterSpecification);
+    }
+  };
+
+  // 選択中の店舗のサムネイルは枠を金色にする。
+  useEffect(() => {
+    activeIdRef.current = activeId;
+    thumbMarkers.current.forEach(({ el }, id) => {
+      el.style.borderColor = id === activeId ? "#fbbf24" : "#fff";
+      el.style.zIndex = id === activeId ? "2" : "1";
+    });
+  }, [activeId]);
 
   const focusVenue = useCallback(
     (id: string, opts?: { fromMap?: boolean }) => {

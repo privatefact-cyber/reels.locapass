@@ -24,6 +24,8 @@ export interface VenuePin {
   lng: number;
   genre: string | null;
   isSponsored: boolean;
+  /** 拡大したときに丸いサムネイルとして出す店舗の画像(軽量版)。画像が無い店舗・Google写真の店舗はnull(点のまま)。 */
+  thumbUrl: string | null;
 }
 
 export interface VenueCardData {

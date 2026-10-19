@@ -3,6 +3,8 @@ import { EXCLUDE_OFFICIAL_FILTER } from "@/lib/shop/genres";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { CastSummary, VenueCardData, VenuePin } from "@/types/venue";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
+import { gridThumb } from "@/lib/images/thumb";
 
 /**
  * 地図の取得範囲。全国一括取得はメモリ・転送量が破綻するため、
@@ -72,6 +74,16 @@ export async function getVenueGenres(): Promise<string[]> {
 }
 
 /**
+ * ピンの丸いサムネイルに使う店舗画像。Google写真(中継)は表示のたびに有料APIを叩くため、地図の大量のピンには使わない。
+ * 仮のイメージ画像も店舗の写真ではないので使わない(どちらも点のまま)。
+ */
+function pinThumbUrl(url: string | null | undefined): string | null {
+  const clean = sanitizeImageUrl(url);
+  if (!clean || isPlacePhotoUrl(clean) || clean.includes("/placeholders/")) return null;
+  return gridThumb(clean, 120) ?? null;
+}
+
+/**
  * 地図に打つピンだけの軽量データ。動画URLは含めない。
  * 広域ズームでクラスタを描くのはこちらだけを使う。
  */
@@ -79,7 +91,7 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
   const supabase = mapClient();
   const { data } = await supabase
     .from("locapass_shops")
-    .select("id, lat, lng, category")
+    .select("id, lat, lng, category, cover_url, icon_url")
     .eq("status", "active")
     .not("lat", "is", null)
     .not("lng", "is", null)
@@ -96,6 +108,7 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
     genre: s.category,
     // 現状locapass_shopsは全店舗plan="free"でスポンサー枠が無いため常にfalse。
     isSponsored: false,
+    thumbUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
   }));
 }
 
