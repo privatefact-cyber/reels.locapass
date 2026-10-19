@@ -265,6 +265,9 @@ export type Dictionary = {
     viewGrid: string;
     viewMap: string;
     viewSpots: string;
+    introLead: string;
+    introBody: string;
+    introButton: string;
     showAllSpots: string;
     spotsIntro: string;
     spotsSortPopular: string;
@@ -629,6 +632,9 @@ const ja: Dictionary = {
     viewGrid: "グリッド",
     viewMap: "マップ",
     viewSpots: "穴場",
+    introLead: "みんなで投稿する穴場情報です",
+    introBody: "写真・動画をあげるだけで、どんどんマップにピンが立っていきます！",
+    introButton: "見る",
     showAllSpots: "すべての場所を表示",
     spotsIntro: "掲載店ではない、みんなが見つけたお気に入りの場所です。",
     spotsSortPopular: "人気順",
@@ -993,6 +999,9 @@ const en: Dictionary = {
     viewGrid: "Grid",
     viewMap: "Map",
     viewSpots: "Hidden gems",
+    introLead: "Hidden gems, posted by everyone",
+    introBody: "Just upload a photo or video — pins keep appearing on the map!",
+    introButton: "Explore",
     showAllSpots: "Show all places",
     spotsIntro: "Places our visitors discovered — not listed shops.",
     spotsSortPopular: "Popular",
@@ -1357,6 +1366,9 @@ const zh: Dictionary = {
     viewGrid: "网格",
     viewMap: "地图",
     viewSpots: "秘境好去处",
+    introLead: "大家一起分享的秘境好去处",
+    introBody: "只要上传照片或视频，地图上就会不断出现新的标记！",
+    introButton: "查看",
     showAllSpots: "显示所有地点",
     spotsIntro: "大家发现的、不在合作名单里的宝藏地点。",
     spotsSortPopular: "人气",
@@ -1722,6 +1734,9 @@ const ar: Dictionary = {
     viewGrid: "شبكة",
     viewMap: "الخريطة",
     viewSpots: "أماكن خفية",
+    introLead: "أماكن خفية ينشرها الجميع",
+    introBody: "ما عليك سوى رفع صورة أو فيديو لتظهر الدبابيس على الخريطة!",
+    introButton: "استكشف",
     showAllSpots: "عرض كل الأماكن",
     spotsIntro: "أماكن اكتشفها الزوار وليست متاجر مُدرجة.",
     spotsSortPopular: "الأكثر شعبية",
