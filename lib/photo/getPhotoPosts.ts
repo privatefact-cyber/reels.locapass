@@ -173,3 +173,24 @@ export async function getMemberPhotos(memberId: string): Promise<{ profile: Phot
     posts,
   };
 }
+
+/** 会員が「いいね」した写真・動画(いいねした新しい順)。行きたい場所のストックとして、マイページに出す。 */
+export async function getLikedPosts(memberId: string, limit: number = PHOTO_PAGE_SIZE): Promise<PhotoPost[]> {
+  const supabase = createStaticClient();
+  const { data: likes, error } = await supabase
+    .from("area_photo_likes")
+    .select("post_id, created_at")
+    .eq("member_id", memberId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  const ids = (likes ?? []).map((l) => l.post_id);
+  if (ids.length === 0) return [];
+
+  const { data: rows, error: postsError } = await supabase.from("area_photo_posts").select(POST_COLUMNS).in("id", ids);
+  if (postsError) throw postsError;
+  // 削除済みの投稿は取れないので自然に外れる。並びは「いいねした順」に戻す。
+  const byId = new Map(((rows ?? []) as PostRow[]).map((r) => [r.id, r]));
+  const ordered = ids.map((id) => byId.get(id)).filter((r): r is PostRow => Boolean(r));
+  return toPosts(supabase, ordered);
+}

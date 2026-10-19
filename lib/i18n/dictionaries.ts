@@ -218,6 +218,9 @@ export type Dictionary = {
     tabComments: string;
     tabPhotos: string;
     noPhotos: string;
+    tabLikedPhotos: string;
+    noLikedPhotos: string;
+    unlikePhoto: string;
     noSavedReels: string;
     noFollowedCasts: string;
     noFavoriteShops: string;
@@ -585,6 +588,9 @@ const ja: Dictionary = {
     tabComments: "コメント履歴",
     tabPhotos: "投稿写真",
     noPhotos: "まだ写真を投稿していません",
+    tabLikedPhotos: "いいね写真",
+    noLikedPhotos: "いいね！した写真がここに保存されます。行きたい場所のストックに便利です。",
+    unlikePhoto: "いいね解除",
     noSavedReels: "保存した動画はまだありません",
     noFollowedCasts: "フォロー中のFACESはまだいません",
     noFavoriteShops: "保存した店舗はまだありません",
@@ -952,6 +958,9 @@ const en: Dictionary = {
     tabComments: "Comment History",
     tabPhotos: "My Photos",
     noPhotos: "You haven't posted any photos yet",
+    tabLikedPhotos: "Liked",
+    noLikedPhotos: "Photos you like are saved here — handy for places you want to visit.",
+    unlikePhoto: "Unlike",
     noSavedReels: "No saved reels yet.",
     noFollowedCasts: "You're not following any FACES yet.",
     noFavoriteShops: "No favorite shops yet.",
@@ -1319,6 +1328,9 @@ const zh: Dictionary = {
     tabComments: "评论记录",
     tabPhotos: "我的照片",
     noPhotos: "还没有投稿照片",
+    tabLikedPhotos: "喜欢",
+    noLikedPhotos: "点赞的照片会保存在这里，方便收藏想去的地方。",
+    unlikePhoto: "取消点赞",
     noSavedReels: "暂无已保存的帖子。",
     noFollowedCasts: "暂未关注任何FACES。",
     noFavoriteShops: "暂无收藏的店铺。",
@@ -1687,6 +1699,9 @@ const ar: Dictionary = {
     "tabComments": "سجل التعليقات",
     "tabPhotos": "صوري",
     "noPhotos": "لم تنشر أي صور بعد",
+    "tabLikedPhotos": "المفضلة",
+    "noLikedPhotos": "تُحفظ هنا الصور التي أعجبتك — مفيدة للأماكن التي تريد زيارتها.",
+    "unlikePhoto": "إلغاء الإعجاب",
     "noSavedReels": "لا توجد مقاطع محفوظة بعد.",
     "noFollowedCasts": "أنت لا تتابع أيًا من FACES بعد.",
     "noFavoriteShops": "لا توجد متاجر مفضلة بعد.",

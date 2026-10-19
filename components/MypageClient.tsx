@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StreamVideo } from "@/components/video/StreamVideo";
 import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
+import { LikedPhotoList } from "@/components/photo/LikedPhotoList";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 import { shopPath, shopReelsPath, castPath } from "@/lib/locapass/publicUrls";
@@ -56,7 +57,7 @@ export type MyComment = {
 
 export type PostShop = { id: string; name: string };
 
-type Tab = "reels" | "casts" | "shops" | "photos" | "comments";
+type Tab = "reels" | "casts" | "shops" | "photos" | "liked" | "comments";
 
 
 
@@ -72,6 +73,7 @@ export function MypageClient({
   operatorShops = [],
   managementLinks = [],
   myPhotos = [],
+  likedPhotos = [],
   showReservations = false,
 }: {
   userId: string;
@@ -89,6 +91,8 @@ export function MypageClient({
   managementLinks?: { label: string; href: string }[];
   /** 自分が投稿した写真・動画(みんなのフォト)。新しい順。 */
   myPhotos?: PhotoPost[];
+  /** いいねした写真・動画(行きたい場所のストック)。いいねした新しい順。 */
+  likedPhotos?: PhotoPost[];
   /** 優先予約の履歴リンクを出すか。 */
   showReservations?: boolean;
 }) {
@@ -98,6 +102,7 @@ export function MypageClient({
     { key: "casts", label: t.mypage.tabCasts },
     { key: "shops", label: t.mypage.tabShops },
     { key: "photos", label: t.mypage.tabPhotos },
+    { key: "liked", label: t.mypage.tabLikedPhotos },
     { key: "comments", label: t.mypage.tabComments },
   ];
   const router = useRouter();
@@ -444,13 +449,13 @@ export function MypageClient({
       )}
 
       {/* タブ */}
-      <nav className="mt-6 flex border-b border-main/10 px-2">
+      <nav className="mt-6 flex overflow-x-auto border-b border-main/10 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((tabItem) => (
           <button
             key={tabItem.key}
             type="button"
             onClick={() => setTab(tabItem.key)}
-            className={`flex-1 px-1 py-3 text-[11px] font-medium transition ${
+            className={`flex-1 shrink-0 whitespace-nowrap px-3 py-3 text-[11px] font-medium transition ${
               tab === tabItem.key ? "border-b-2 border-accent text-accent" : "text-tone-500"
             }`}
           >
@@ -599,6 +604,19 @@ export function MypageClient({
             <div className="-mx-4">
               <ShopUserPhotoGrid posts={myPhotos} />
             </div>
+          )
+        )}
+
+        {tab === "liked" && (
+          likedPhotos.length === 0 ? (
+            <div className="space-y-4">
+              <EmptyState text={t.mypage.noLikedPhotos} />
+              <Link href="/photo" className="mx-auto block w-fit rounded-full bg-cta-light px-5 py-2 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover">
+                {t.photo.title}
+              </Link>
+            </div>
+          ) : (
+            <LikedPhotoList posts={likedPhotos} />
           )
         )}
 
