@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { saveSchedule } from "@/lib/schedules/saveSchedule";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hashDob, hashName, hashPhone } from "@/lib/blacklist/identifier";
@@ -271,7 +272,7 @@ export async function addSchedule(shopId: string, castId: string, formData: Form
     .maybeSingle();
   if (!cast) throw new Error("対象のFACESが見つかりません");
 
-  const { error } = await supabase.from("locapass_schedules").insert({
+  const { error } = await saveSchedule(supabase, "locapass_schedules", {
     cast_id: castId,
     date,
     start_time: startTime || null,

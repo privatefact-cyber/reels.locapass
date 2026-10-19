@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { saveSchedule } from "@/lib/schedules/saveSchedule";
 import { createClient } from "@/lib/supabase/server";
 import { translateAddressToEnglish } from "@/lib/map/translateAddress";
 import { needsTranslation, translateFields } from "@/lib/i18n/contentTranslation";
@@ -447,7 +448,7 @@ export async function upsertTodaySchedule(
   };
   const { data, error } = scheduleId
     ? await supabase.from("locapass_schedules").update(payload).eq("id", scheduleId).eq("cast_id", castId).select("id")
-    : await supabase.from("locapass_schedules").insert(payload).select("id");
+    : await saveSchedule(supabase, "locapass_schedules", payload);
 
   if (error) throw new Error(`出勤予定の更新に失敗しました: ${error.message}`);
   if (!data || data.length === 0) {
