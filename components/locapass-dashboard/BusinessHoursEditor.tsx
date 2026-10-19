@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DAY_KEYS, LAST_CLOSE, emptyWeek, type DayKey, type WeeklyHours } from "@/lib/shop/businessHours";
+import { DAY_KEYS, LAST_CLOSE, emptyWeek, isAllDay, type DayKey, type WeeklyHours } from "@/lib/shop/businessHours";
 
 const DAY_LABEL: Record<DayKey, string> = { mon: "月", tue: "火", wed: "水", thu: "木", fri: "金", sat: "土", sun: "日" };
 const INPUT =
@@ -71,6 +71,18 @@ export function BusinessHoursEditor({ initial, nowNote = true }: { initial: Week
                         onChange={(e) => update(key, { ranges: d.ranges.map((x, j) => (j === i ? { ...x, close: e.target.value } : x)) })}
                         className={INPUT}
                       />
+                      <label className="flex items-center gap-1 text-xs text-slate-600">
+                        <input
+                          type="checkbox"
+                          checked={isAllDay(r)}
+                          onChange={(e) =>
+                            update(key, {
+                              ranges: d.ranges.map((x, j) => (j === i ? (e.target.checked ? { open: "00:00", close: "00:00" } : { open: "10:00", close: "19:00" }) : x)),
+                            })
+                          }
+                        />
+                        24時間営業
+                      </label>
                       <label className="flex items-center gap-1 text-xs text-slate-600">
                         <input
                           type="checkbox"

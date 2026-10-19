@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { EXCLUDE_OFFICIAL_FILTER } from "@/lib/shop/genres";
 import { getJstNow } from "@/lib/reels/nowWorking";
 import { isOpenNow, sanitizeWeekly } from "@/lib/shop/businessHours";
 import { REEL_SELECT, toReelItem } from "@/lib/reels/getPortalFeedData";
@@ -8,7 +7,7 @@ import type { ReelItem } from "@/lib/reels/types";
 /**
  * NOWタブ用: 今(JST)営業時間内の店舗の、最新リールを店舗ごとに1本ずつ返す。
  * 営業時間は店舗が登録した曜日ごとのカレンダー(locapass_shops.business_hours_weekly)で判定する。
- * 未記入の店舗は対象外(記入した時点から表示される)。siteIdがnullなら全エリア横断。
+ * 未記入の店舗は対象外(記入した時点から表示される)。運営の公式店舗も、営業時間を入れていれば対象にする。siteIdがnullなら全エリア横断。
  */
 export async function getNowReels(siteId: number | null): Promise<ReelItem[]> {
   const supabase = await createClient();
@@ -17,7 +16,6 @@ export async function getNowReels(siteId: number | null): Promise<ReelItem[]> {
     .from("locapass_shops")
     .select("id, business_hours_weekly")
     .eq("status", "active")
-    .or(EXCLUDE_OFFICIAL_FILTER)
     .not("business_hours_weekly", "is", null);
   if (siteId !== null) shopsQuery = shopsQuery.eq("portal_id", siteId);
 

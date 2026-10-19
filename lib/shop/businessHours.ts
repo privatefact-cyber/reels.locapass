@@ -81,14 +81,23 @@ export function isOpenNow(weekly: WeeklyHours | null, nowJst: Date): boolean {
 }
 
 /** 表示用: 同じ内容の連続した曜日をまとめる(例: 月〜金 18:00〜03:00 / 土 18:00〜00:00 / 日 定休日)。 */
+/** 開始と終了が同じ時刻(00:00〜00:00)は24時間営業。 */
+export function isAllDay(r: HoursRange): boolean {
+  return !r.last && r.open === r.close;
+}
+
+function rangeText(r: HoursRange, labels: { last: string; allDay: string }): string {
+  return isAllDay(r) ? labels.allDay : `${r.open}〜${r.last ? labels.last : r.close}`;
+}
+
 export function summarizeWeekly(
   weekly: WeeklyHours,
-  labels: { days: Record<DayKey, string>; closed: string; last: string; sep: string },
+  labels: { days: Record<DayKey, string>; closed: string; last: string; allDay: string; sep: string },
 ): { days: string; hours: string }[] {
   const text = (d: DayHours) =>
     d.closed || d.ranges.length === 0
       ? labels.closed
-      : d.ranges.map((r) => `${r.open}〜${r.last ? labels.last : r.close}`).join(" / ");
+      : d.ranges.map((r) => rangeText(r, labels)).join(" / ");
   const rows: { keys: DayKey[]; hours: string }[] = [];
   for (const key of DAY_KEYS) {
     const h = text(weekly[key]);
@@ -105,11 +114,11 @@ export function summarizeWeekly(
   }));
 }
 
-const LABELS: Record<string, { days: Record<DayKey, string>; closed: string; last: string; sep: string }> = {
-  ja: { days: { mon: "月", tue: "火", wed: "水", thu: "木", fri: "金", sat: "土", sun: "日" }, closed: "定休日", last: "LAST", sep: "〜" },
-  en: { days: { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" }, closed: "Closed", last: "Last call", sep: "–" },
-  zh: { days: { mon: "周一", tue: "周二", wed: "周三", thu: "周四", fri: "周五", sat: "周六", sun: "周日" }, closed: "休息", last: "营业至最后", sep: "至" },
-  ar: { days: { mon: "الاثنين", tue: "الثلاثاء", wed: "الأربعاء", thu: "الخميس", fri: "الجمعة", sat: "السبت", sun: "الأحد" }, closed: "مغلق", last: "حتى الإغلاق", sep: "–" },
+const LABELS: Record<string, { days: Record<DayKey, string>; closed: string; last: string; allDay: string; sep: string }> = {
+  ja: { days: { mon: "月", tue: "火", wed: "水", thu: "木", fri: "金", sat: "土", sun: "日" }, closed: "定休日", last: "LAST", allDay: "24時間営業", sep: "〜" },
+  en: { days: { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" }, closed: "Closed", last: "Last call", allDay: "Open 24 hours", sep: "–" },
+  zh: { days: { mon: "周一", tue: "周二", wed: "周三", thu: "周四", fri: "周五", sat: "周六", sun: "周日" }, closed: "休息", last: "营业至最后", allDay: "24小时营业", sep: "至" },
+  ar: { days: { mon: "الاثنين", tue: "الثلاثاء", wed: "الأربعاء", thu: "الخميس", fri: "الجمعة", sat: "السبت", sun: "الأحد" }, closed: "مغلق", last: "حتى الإغلاق", allDay: "مفتوح 24 ساعة", sep: "–" },
 };
 
 /** 店舗詳細に出す複数行テキスト(曜日ごとにまとめた営業時間)。 */
@@ -125,5 +134,5 @@ export function todayHoursText(weekly: WeeklyHours, nowJst: Date, locale: string
   const labels = LABELS[locale] ?? LABELS.en;
   const d = weekly[DAY_KEYS[(nowJst.getUTCDay() + 6) % 7]];
   if (d.closed || d.ranges.length === 0) return labels.closed;
-  return d.ranges.map((r) => `${r.open}〜${r.last ? labels.last : r.close}`).join(" / ");
+  return d.ranges.map((r) => rangeText(r, labels)).join(" / ");
 }
