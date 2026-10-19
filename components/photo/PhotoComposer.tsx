@@ -383,9 +383,13 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
       if (!res.ok) {
         setError(data.error ?? t.photo.errAiFailed);
       } else {
-        // 店名は必須項目なので実際の値として入れる。一言は投稿者が自分の言葉で書く余地を残して候補表示にする。
+        // 店名・一言とも、入力欄に実際の値として入れる(生成のあとも、投稿者が自由に直せる)。
+        // 掲載店を選んでいるときは、店名はそのまま残す。
         if (data.spotName && !pick) setSpotName(data.spotName);
-        if (data.comment) setAiComment(data.comment);
+        if (data.comment) {
+          setComment(data.comment);
+          setAiComment(null);
+        }
       }
     } catch {
       setError(t.photo.errNetwork);
