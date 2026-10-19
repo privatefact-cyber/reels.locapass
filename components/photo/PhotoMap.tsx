@@ -164,6 +164,15 @@ export function PhotoMap({
   // 拡大時に出す丸いサムネイル(DOMマーカー)。選択中のものだけ枠を金色にする。
   const thumbRefs = useRef(new Map<string, HTMLDivElement>());
   const [activeId, setActiveId] = useState<string | null>(spots[0]?.id ?? null);
+  // クラスタ(数字の丸)をタップしたとき、下のカードをそのクラスタ周辺の場所だけに絞る。nullなら全体。
+  const [focusIds, setFocusIds] = useState<string[] | null>(null);
+  const focusIdsRef = useRef(focusIds);
+  focusIdsRef.current = focusIds;
+  const shownSpots = useMemo(() => {
+    if (!focusIds) return spots;
+    const byId = new Map(spots.map((sp) => [sp.id, sp]));
+    return focusIds.map((id) => byId.get(id)).filter((sp): sp is Spot => Boolean(sp));
+  }, [spots, focusIds]);
   // ルート作成: 選んだ場所を選んだ順(A→B→C…)に持つ。Googleマップの経路URLにして開く。
   const [route, setRoute] = useState<string[]>([]);
   const routeRef = useRef(route);
@@ -177,12 +186,21 @@ export function PhotoMap({
     const spot = spotsRef.current.find((s) => s.id === id);
     if (!spot) return;
     setActiveId(id);
-    const card = cardRefs.current.get(id);
-    const carousel = carouselRef.current;
-    if (card && carousel) {
-      programmaticScroll.current = true;
-      carousel.scrollTo({ left: card.offsetLeft - (carousel.clientWidth - card.clientWidth) / 2, behavior: "smooth" });
-      window.setTimeout(() => (programmaticScroll.current = false), 500);
+    const scrollToCard = () => {
+      const card = cardRefs.current.get(id);
+      const carousel = carouselRef.current;
+      if (card && carousel) {
+        programmaticScroll.current = true;
+        carousel.scrollTo({ left: card.offsetLeft - (carousel.clientWidth - card.clientWidth) / 2, behavior: "smooth" });
+        window.setTimeout(() => (programmaticScroll.current = false), 500);
+      }
+    };
+    // 絞り込み中のカードに無い場所のピンをタップしたときは、絞り込みを外して全体から選ぶ。
+    if (focusIdsRef.current && !focusIdsRef.current.includes(id)) {
+      setFocusIds(null);
+      window.setTimeout(scrollToCard, 60);
+    } else {
+      scrollToCard();
     }
     if (opts.fly) {
       // カードに隠れない位置(地図の上寄り)へ寄せる。
@@ -406,6 +424,23 @@ export function PhotoMap({
         if (!cluster || clusterId === undefined || cluster.geometry.type !== "Point") return;
         const center = cluster.geometry.coordinates as [number, number];
         const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource;
+        // 下のカードを、このクラスタに含まれる場所だけにする(中心に近い順)。
+        source.getClusterLeaves(clusterId, 200, 0, (leavesErr: Error | null | undefined, leaves: GeoJSON.Feature[] | null | undefined) => {
+          if (leavesErr || !leaves || leaves.length === 0) return;
+          const lookup = new Map(spotsRef.current.map((sp) => [sp.id, sp]));
+          const ids = leaves
+            .map((f) => String(f.properties?.id))
+            .filter((id) => lookup.has(id))
+            .sort((a, b) => {
+              const sa = lookup.get(a)!;
+              const sb = lookup.get(b)!;
+              return Math.hypot(sa.lng - center[0], sa.lat - center[1]) - Math.hypot(sb.lng - center[0], sb.lat - center[1]);
+            });
+          if (ids.length === 0) return;
+          setFocusIds(ids);
+          setActiveId(ids[0]);
+          carouselRef.current?.scrollTo({ left: 0, behavior: "auto" });
+        });
         source.getClusterExpansionZoom(clusterId, (err: Error | null | undefined, zoom: number | null | undefined) => {
           if (err) return;
           map.easeTo({ center, zoom: zoom ?? map.getZoom() + 2 });
@@ -534,12 +569,24 @@ export function PhotoMap({
       ) : null}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 pb-3">
+        {focusIds ? (
+          <div className="pointer-events-none mb-2 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setFocusIds(null)}
+              className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-hl-400/50 bg-black/80 px-3 py-1 text-[11px] text-main backdrop-blur"
+            >
+              <X size={12} />
+              {t.photo.showAllSpots}
+            </button>
+          </div>
+        ) : null}
         <div
           ref={carouselRef}
           onScroll={handleCarouselScroll}
           className={`${CAROUSEL_HEIGHT} pointer-events-auto flex snap-x snap-mandatory gap-3 overflow-x-auto px-[9vw] sm:px-[calc(50%-10rem)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
         >
-          {spots.map((spot) => {
+          {shownSpots.map((spot) => {
             const isActive = spot.id === activeId;
             const title = spot.names[0] + (spot.names.length > 1 ? t.photo.moreSpots(spot.names.length - 1) : "");
             return (

@@ -265,6 +265,7 @@ export type Dictionary = {
     viewGrid: string;
     viewMap: string;
     viewSpots: string;
+    showAllSpots: string;
     spotsIntro: string;
     spotsSortPopular: string;
     spotsSortNew: string;
@@ -628,6 +629,7 @@ const ja: Dictionary = {
     viewGrid: "グリッド",
     viewMap: "マップ",
     viewSpots: "穴場",
+    showAllSpots: "すべての場所を表示",
     spotsIntro: "掲載店ではない、みんなが見つけたお気に入りの場所です。",
     spotsSortPopular: "人気順",
     spotsSortNew: "新着順",
@@ -991,6 +993,7 @@ const en: Dictionary = {
     viewGrid: "Grid",
     viewMap: "Map",
     viewSpots: "Hidden gems",
+    showAllSpots: "Show all places",
     spotsIntro: "Places our visitors discovered — not listed shops.",
     spotsSortPopular: "Popular",
     spotsSortNew: "Newest",
@@ -1354,6 +1357,7 @@ const zh: Dictionary = {
     viewGrid: "网格",
     viewMap: "地图",
     viewSpots: "秘境好去处",
+    showAllSpots: "显示所有地点",
     spotsIntro: "大家发现的、不在合作名单里的宝藏地点。",
     spotsSortPopular: "人气",
     spotsSortNew: "最新",
@@ -1718,6 +1722,7 @@ const ar: Dictionary = {
     viewGrid: "شبكة",
     viewMap: "الخريطة",
     viewSpots: "أماكن خفية",
+    showAllSpots: "عرض كل الأماكن",
     spotsIntro: "أماكن اكتشفها الزوار وليست متاجر مُدرجة.",
     spotsSortPopular: "الأكثر شعبية",
     spotsSortNew: "الأحدث",
