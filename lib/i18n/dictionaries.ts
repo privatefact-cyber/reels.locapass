@@ -356,7 +356,7 @@ const ja: Dictionary = {
     notifications: "お知らせ",
     mypage: "マイページ",
     menu: "メニュー",
-    now: "今稼働中のFACES",
+    now: "営業中の店舗",
     nowShort: "NOW",
     search: "検索",
     map: "マップ",
@@ -460,7 +460,7 @@ const ja: Dictionary = {
     yen: (price) => `¥${price}`,
   },
   feed: {
-    noNowPosts: "今稼働中のFACESの投稿がまだありません。",
+    noNowPosts: "営業中の店舗の投稿がまだありません。",
     noResults: "条件に合う投稿・店舗がありません。",
     noEvents: "条件に合うイベントがありません。",
     searchPlaceholder: "エリア・店名で検索(例: 新宿)",
@@ -700,7 +700,7 @@ const en: Dictionary = {
     notifications: "Notifications",
     mypage: "My Page",
     menu: "Menu",
-    now: "FACES working now",
+    now: "Open now",
     nowShort: "NOW",
     search: "Search",
     map: "Map",
@@ -804,7 +804,7 @@ const en: Dictionary = {
     yen: (price) => `¥${price}`,
   },
   feed: {
-    noNowPosts: "No posts from FACES currently working.",
+    noNowPosts: "No posts from shops that are open right now.",
     noResults: "No posts or shops match your filters.",
     noEvents: "No events match your filters.",
     searchPlaceholder: "Search by area or shop name (e.g. Shinjuku)",
@@ -1044,7 +1044,7 @@ const zh: Dictionary = {
     notifications: "通知",
     mypage: "我的页面",
     menu: "菜单",
-    now: "当前出勤",
+    now: "营业中的店铺",
     nowShort: "NOW",
     search: "搜索",
     map: "地图",
@@ -1148,7 +1148,7 @@ const zh: Dictionary = {
     yen: (price) => `¥${price}`,
   },
   feed: {
-    noNowPosts: "暂无当前出勤FACES的帖子。",
+    noNowPosts: "暂无营业中店铺的帖子。",
     noResults: "没有符合条件的帖子或店铺。",
     noEvents: "没有符合条件的活动。",
     searchPlaceholder: "按地区・店名搜索(例: 新宿)",
@@ -1389,7 +1389,7 @@ const ar: Dictionary = {
     "notifications": "الإشعارات",
     "mypage": "صفحتي",
     "menu": "القائمة",
-    "now": "FACES المتواجدون الآن",
+    "now": "المتاجر المفتوحة الآن",
     "nowShort": "NOW",
     "search": "بحث",
     "map": "الخريطة"
@@ -1493,7 +1493,7 @@ const ar: Dictionary = {
     "featuredLead": "تشكيلة مختارة بعناية من الأماكن الشريكة لـ LOCAPASS."
   },
   "feed": {
-    "noNowPosts": "لا توجد منشورات من FACES المتواجدين حاليًا.",
+    "noNowPosts": "لا توجد منشورات من المتاجر المفتوحة حاليًا.",
     "noResults": "لا توجد منشورات أو متاجر تطابق معايير التصفية.",
     "noEvents": "لا توجد فعاليات تطابق معايير التصفية.",
     "searchPlaceholder": "البحث حسب المنطقة أو اسم المتجر (مثال: Shinjuku)",

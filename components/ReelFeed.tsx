@@ -265,7 +265,7 @@ export function ReelFeed({
   boostHref = "/boost",
 }: {
   reels: ReelItem[];
-  /** 今まさに稼働中(出勤前後1時間バッファ込み)のICONの、最新リール1本ずつ。 */
+  /** 今営業中(店舗の曜日別営業時間カレンダー基準)の店舗の、最新リール1本ずつ。 */
   nowReels: ReelItem[];
   shops: ShopGridItem[];
   genreChoices: string[];
@@ -506,7 +506,7 @@ export function ReelFeed({
   );
 
   // NOW絞り込み中は、キーワード・ジャンルの絞り込みはそのまま今まで通り効かせる
-  // (ICON/SHOPタグの状態には左右されない。NOWは常に「稼働中のICON」だけが対象のため)。
+  // (ICON/SHOPタグの状態には左右されない。NOWは常に「営業中の店舗」だけが対象のため)。
   const filteredNowReels = useMemo(
     () =>
       nowReels.filter((r) => {
