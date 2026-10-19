@@ -79,7 +79,7 @@ export async function getVenueGenres(): Promise<string[]> {
  */
 function pinThumbUrl(url: string | null | undefined): string | null {
   const clean = sanitizeImageUrl(url);
-  if (!clean || isPlacePhotoUrl(clean) || clean.includes("/placeholders/")) return null;
+  if (!clean || isPlacePhotoUrl(clean) || /placeholder/i.test(clean)) return null;
   return gridThumb(clean, 120) ?? null;
 }
 
