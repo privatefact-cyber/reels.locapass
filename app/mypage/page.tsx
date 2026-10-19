@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchMyRoles } from "@/lib/auth/roles";
 import { reservationEnabled } from "@/lib/reservation/config";
 import { MypageClient, type PostShop, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
-import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
+import { getJstNow, toJstDateString, isWithinWorkingWindow } from "@/lib/reels/nowWorking";
 
 function buildMedia(videoUrl: string | null, posterUrl: string | null, images: unknown): SavedReel["media"] {
   if (videoUrl) return [{ type: "video", url: videoUrl, poster: posterUrl ?? undefined }];
@@ -16,14 +16,16 @@ export default async function MypagePage() {
   const user = await requireCurrentUser();
   const supabase = await createClient();
 
-  const today = toJstDateString(getJstNow());
+  const nowJst = getJstNow();
+  const today = toJstDateString(nowJst);
+  const yesterday = toJstDateString(new Date(nowJst.getTime() - 24 * 60 * 60 * 1000));
 
   // 本家マイページと同じく、フォロー中のキャスト・お気に入り店舗・自分のコメントを locapass から読む。
   const [followsRes, favoritesRes, commentsRes] = await Promise.all([
     supabase
       .from("locapass_cast_follows")
       .select(
-        "cast_id, cast:locapass_public_casts ( id, name, avatar_url, shop_id, issue_no, shops:locapass_shops ( name, slug, portal:locapass_portals ( slug ) ), schedules:locapass_schedules ( is_working_today, date ) )",
+        "cast_id, cast:locapass_public_casts ( id, name, avatar_url, shop_id, issue_no, shops:locapass_shops ( name, slug, portal:locapass_portals ( slug ) ), schedules:locapass_schedules ( is_working_today, date, start_time, end_time ) )",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
@@ -47,8 +49,19 @@ export default async function MypagePage() {
       const shop = Array.isArray(cast.shops) ? cast.shops[0] : cast.shops;
       const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
       const schedules = Array.isArray(cast.schedules) ? cast.schedules : cast.schedules ? [cast.schedules] : [];
+      // 「本日出勤中」は日付だけでなく、シフト時間(前後1時間の余裕あり、深夜跨ぎ対応)に今が入っているかで判定する。
+      // 開始・終了が未入力の行は時間が決まっていないので、従来どおり日付だけで判定する。
       const isWorkingToday = schedules.some(
-        (sch: { date: string; is_working_today: boolean }) => sch.date === today && sch.is_working_today,
+        (sch: { date: string; is_working_today: boolean; start_time: string | null; end_time: string | null }) => {
+          if (!sch.is_working_today) return false;
+          if (!sch.start_time || !sch.end_time) return sch.date === today;
+          return isWithinWorkingWindow(
+            { date: sch.date, startTime: sch.start_time, endTime: sch.end_time },
+            today,
+            yesterday,
+            nowJst,
+          );
+        },
       );
       return {
         id: cast.id,
