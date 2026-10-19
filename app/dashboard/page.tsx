@@ -2,11 +2,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { fetchMyRoles, hasManagementRole, homePathForRoles, managementLabel, MODE_COOKIE } from "@/lib/auth/roles";
+import { fetchMyRoles, hasManagementRole, homePathForRoles, isPartnerOnly, managementLabel, MODE_COOKIE } from "@/lib/auth/roles";
 
 /**
  * ログイン後の振り分け。
  *  - 管理側の立場を持たない会員 → そのままマイページ。
+ *  - キャスト・スタッフだけのアカウント → 選択画面なしで、それぞれの画面(/dashboard/cast, /dashboard/staff)へ。
  *  - 管理側の立場(サイト管理・エリア管理・店舗管理・スタッフ・パートナー)を持つアカウント →
  *    「マイページ(個人)」か「管理」かを選ぶ。最後に選んだ立場は覚えて、次回からは直接そちらへ。
  *    ?choose=1 を付けると、覚えていても選択画面を出す。
@@ -20,6 +21,9 @@ export default async function DashboardIndexPage({ searchParams }: { searchParam
 
   const roles = await fetchMyRoles(supabase);
   if (!roles || !hasManagementRole(roles)) redirect("/mypage");
+
+  // キャスト(FACES)・スタッフだけのアカウントは、選択画面も個人マイページも挟まず、自分の画面へ直接入る。
+  if (isPartnerOnly(roles)) redirect(homePathForRoles(roles));
 
   const { choose } = await searchParams;
   const remembered = (await cookies()).get(MODE_COOKIE)?.value;

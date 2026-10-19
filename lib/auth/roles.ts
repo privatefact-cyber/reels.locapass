@@ -49,6 +49,16 @@ export function hasManagementRole(roles: MyRoles | null): boolean {
   );
 }
 
+/**
+ * キャスト(FACES)・スタッフだけの立場か(店舗管理者・エリア管理者・ルート管理者を兼ねていない)。
+ * この立場のアカウントは、一般会員向けの個人マイページ(「ゲスト」ページ)を経由せず、自分の画面へ直接入る。
+ */
+export function isPartnerOnly(roles: MyRoles | null): boolean {
+  if (!roles) return false;
+  if (roles.super_admin || roles.portal_ids.length > 0 || roles.shop_admin_shop_ids.length > 0) return false;
+  return roles.staff !== null || roles.cast !== null;
+}
+
 /** ログイン後に最後に選んだ「立場」を覚えておくCookie。personal=マイページ / manage=管理側。 */
 export const MODE_COOKIE = "lp_mode";
 

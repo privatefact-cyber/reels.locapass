@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSiteTheme, themeInitScript } from "@/lib/theme";
 import { ThemeSync } from "@/components/ThemeSync";
 import { SiteHitBeacon } from "@/components/analytics/SiteHitBeacon";
-import { fetchMyRoles } from "@/lib/auth/roles";
+import { fetchMyRoles, isPartnerOnly, homePathForRoles } from "@/lib/auth/roles";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -83,7 +83,10 @@ export default async function RootLayout({
   const manualTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
   // ヘッダーの「管理」ボタンは、ルート管理者(super_admin)でログインしているときだけ出す。
-  const hasManagement = user ? (await fetchMyRoles(supabase))?.super_admin === true : false;
+  const myRoles = user ? await fetchMyRoles(supabase) : null;
+  const hasManagement = myRoles?.super_admin === true;
+  // ヘッダーのアイコンの行き先。キャスト・スタッフだけのアカウントは、個人マイページ(ゲストページ)でなく自分の画面へ。
+  const accountHref = isPartnerOnly(myRoles) ? homePathForRoles(myRoles) : "/mypage";
   let myPageAvatarUrl: string | null = null;
   let myPageInitial: string | null = null;
   if (user) {
@@ -139,6 +142,7 @@ export default async function RootLayout({
             myPageInitial={myPageInitial}
             portalSlugs={portalSlugs}
             hasManagement={hasManagement}
+            accountHref={accountHref}
           />
 
           {/* メインコンテンツ(PC幅ではワイドに広がる、リール一覧はデスクトップでグリッド表示に切り替わる) */}

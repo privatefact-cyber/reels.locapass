@@ -1,6 +1,7 @@
+import { redirect } from "next/navigation";
 import { requireCurrentUser } from "@/lib/user/current-user";
 import { createClient } from "@/lib/supabase/server";
-import { fetchMyRoles } from "@/lib/auth/roles";
+import { fetchMyRoles, isPartnerOnly, homePathForRoles } from "@/lib/auth/roles";
 import { reservationEnabled } from "@/lib/reservation/config";
 import { MypageClient, type PostShop, type SavedReel, type FollowedCast, type FavoriteShop, type MyComment } from "@/components/MypageClient";
 import { getJstNow, toJstDateString, isWithinWorkingWindow } from "@/lib/reels/nowWorking";
@@ -14,8 +15,17 @@ function buildMedia(videoUrl: string | null, posterUrl: string | null, images: u
 }
 
 export default async function MypagePage() {
-  const user = await requireCurrentUser();
   const supabase = await createClient();
+  // キャスト(FACES)・スタッフだけのアカウントは、個人マイページ(「ゲスト」ページ)を経由せず自分の画面へ。
+  // (requireCurrentUserは初回アクセスで「ゲスト」の会員行を作るので、その前に判定する。)
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (authUser) {
+    const myRoles = await fetchMyRoles(supabase);
+    if (isPartnerOnly(myRoles)) redirect(homePathForRoles(myRoles));
+  }
+  const user = await requireCurrentUser();
 
   const nowJst = getJstNow();
   const today = toJstDateString(nowJst);

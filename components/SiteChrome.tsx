@@ -17,6 +17,8 @@ type Props = {
   portalSlugs: string[];
   /** ルート管理者(super_admin)でログイン中か。ヘッダーに「管理」の入口を出す。 */
   hasManagement?: boolean;
+  /** アカウントアイコンの行き先。既定は個人マイページ(/mypage)。 */
+  accountHref?: string;
 };
 
 const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
@@ -29,7 +31,7 @@ function isExcludedPath(pathname: string): boolean {
   return EXCLUDED_PREFIXES.some(matches);
 }
 
-export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasManagement = false }: Props) {
+export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasManagement = false, accountHref = "/mypage" }: Props) {
   const pathname = usePathname();
   const { t } = useLocale();
   if (isExcludedPath(pathname ?? "")) return null;
@@ -100,7 +102,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
                 </Link>
               ) : null}
               <Link
-                href="/mypage"
+                href={accountHref}
                 aria-label={t.nav.mypage}
                 className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-accent/60 bg-gradient-to-tr from-accent-dark via-accent to-accent-light text-on-accent"
               >
