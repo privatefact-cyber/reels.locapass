@@ -58,12 +58,12 @@ export function pickPlaceholder(
   const key = groupKeyOf(category);
   const byGenre = key === "stay" || key === "tour" || key === "shop" || key === "pet" || key === "beauty";
   let photos = byGenre ? (manifest as Record<string, Group>)[key].photos : CITY_PHOTOS;
-  // ペットの写真は犬と猫が混ざっているので、店名から犬向け/猫向けと分かるときは、それに合う動物だけから選ぶ
-  // (ドッグカフェに猫の写真が出ないように)。どちらとも分からない店名は、従来どおり全部から選ぶ。
-  if (key === "pet" && opts.hint) {
+  // ペットの写真は犬と猫が混ざっているので、店名が猫向けと分かるとき以外は犬の写真から選ぶ
+  // (ドッグカフェに猫の写真が出ないように。ペット施設のポータルは犬が中心)。
+  if (key === "pet") {
     const cats = new Set(petKinds.cat);
-    if (/猫|ねこ|ネコ|キャット|\bcats?\b/i.test(opts.hint)) photos = photos.filter((p) => cats.has(p.url));
-    else if (/犬|ドッグ|わん|ワン|\bdogs?\b/i.test(opts.hint)) photos = photos.filter((p) => !cats.has(p.url));
+    const catShop = /猫|ねこ|ネコ|キャット|\bcats?\b/i.test(opts.hint ?? "");
+    photos = photos.filter((p) => (catShop ? cats.has(p.url) : !cats.has(p.url)));
   }
   if (photos.length) {
     const p = photos[hash(seed) % photos.length];
