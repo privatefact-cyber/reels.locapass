@@ -214,7 +214,10 @@ async function extractPoster(file: File): Promise<PosterResult> {
   }
 }
 
-export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
+/** 店舗ページから来たとき、その店を最初から「掲載店」として選んだ状態にするための指定。 */
+export type PhotoComposerPreset = { venueId: string; name: string; address: string | null };
+
+export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; preset?: PhotoComposerPreset }) {
   const { t } = useLocale();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -225,8 +228,12 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
   const [needAddress, setNeedAddress] = useState(false);
   const [address, setAddress] = useState("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [pick, setPick] = useState<Candidate | null>(null);
-  const [spotName, setSpotName] = useState("");
+  // 店舗ページから来たときは、その店を選択済みにしておく(写真を選び直しても保たれる)。
+  const presetPick: Candidate | null = preset
+    ? { kind: "listed", name: preset.name, address: preset.address, distance_m: 0, venue_id: preset.venueId }
+    : null;
+  const [pick, setPick] = useState<Candidate | null>(presetPick);
+  const [spotName, setSpotName] = useState(preset?.name ?? "");
   const [comment, setComment] = useState("");
   const [asOperator, setAsOperator] = useState(false);
   // AIが作った一言。入力欄にはプレースホルダーとして出し、空のまま投稿されたらこれを採用する。
@@ -296,10 +303,10 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setIsVideo(true);
     setPosterFile(r.poster);
     setAiComment(null);
-    setSpotName("");
+    setSpotName(preset?.name ?? "");
     setPreviewUrl(URL.createObjectURL(f));
     setCandidates([]);
-    setPick(null);
+    setPick(presetPick);
     setCoords(null);
     // 動画の管理情報(moov)にある撮影場所を読む。無ければ住所・地名の入力に進む。
     const gps = await readVideoGps(f);
@@ -327,10 +334,10 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
     setPosterFile(null);
     setFile(f);
     setAiComment(null);
-    setSpotName("");
+    setSpotName(preset?.name ?? "");
     setPreviewUrl(URL.createObjectURL(f));
     setCandidates([]);
-    setPick(null);
+    setPick(presetPick);
     setCoords(null);
     setNeedAddress(false);
     setCoordsNote(t.photo.gpsChecking);
@@ -556,6 +563,22 @@ export function PhotoComposer({ canOperator }: { canOperator: boolean }) {
           />
           <button type="button" onClick={lookupAddress} className="shrink-0 rounded-xl border border-main/15 px-3 text-xs text-tone-300 hover:text-main">
             {t.photo.checkLocation}
+          </button>
+        </div>
+      ) : null}
+
+      {preset && pick?.venue_id === preset.venueId ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-hl-400/50 bg-tone-900/60 px-3 py-2 text-sm text-main">
+          <span className="min-w-0 truncate">📍 {t.photo.postingTo(preset.name)}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setPick(null);
+              setSpotName("");
+            }}
+            className="shrink-0 text-xs text-tone-400 underline"
+          >
+            {t.photo.postingToClear}
           </button>
         </div>
       ) : null}

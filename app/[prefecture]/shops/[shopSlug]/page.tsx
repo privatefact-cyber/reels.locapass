@@ -559,6 +559,9 @@ export default async function ShopDetailPage({
             <Link href={shopPhotosPath(site.slug, shopRow.slug)} className="block text-center text-xs text-accent underline">
               {t.shop.userPhotosAll}({t.shop.userPhotosCount(userPhotos.length)})
             </Link>
+            <Link href={`/photo/new?shop=${shopRow.id}`} className="block text-center text-xs text-tone-400 underline">
+              {t.photo.postButton}
+            </Link>
           </section>
         )}
 

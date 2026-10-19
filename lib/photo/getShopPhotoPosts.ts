@@ -11,17 +11,15 @@ function nameLike(a: string | null | undefined, b: string) {
 }
 
 /**
- * その店舗に紐付く、訪問者の投稿写真(エリアフォト)。
- * 写真は「掲載店(locapass_venues)」に紐付く。親ポータルが全店の複製を持つため、同じ店のvenueが複数あるので
- * 名前と座標が同じvenueを「同じ店」としてまとめて探す。店舗にvenue_idが無いときは、座標が近く名前が似たvenueで探す。
- *
- * 投稿時の自動紐付けは「150m以内で一番近い掲載店」なので、手入力の場所名が別の店でも近いだけで紐付くことがある。
- * 店舗ページで他店の写真が混ざらないよう、(1)投稿者が掲載店として選んだ写真か、(2)場所名がこの店の名前に似ている写真だけを出す。
+ * 店舗に対応する掲載店(locapass_venues)のIDの一覧。親ポータルが全店の複製を持つため、同じ店のvenueが複数ある。
+ * 名前と座標が同じvenueを同じ店としてまとめる。店舗にvenue_idが無いときは、座標が近く名前が似たvenueで探す。
  */
-export async function getShopPhotoPosts(
-  shop: { name: string; venueId: string | null; lat: number | null; lng: number | null },
-  limit = 90,
-): Promise<PhotoPost[]> {
+export async function resolveShopVenueIds(shop: {
+  name: string;
+  venueId: string | null;
+  lat: number | null;
+  lng: number | null;
+}): Promise<string[]> {
   const supabase = createStaticClient();
 
   let venueIds: string[] = [];
@@ -48,6 +46,23 @@ export async function getShopPhotoPosts(
       .lte("lng", shop.lng + d);
     venueIds = (near ?? []).filter((v) => nameLike(v.name, shop.name)).map((v) => v.id);
   }
+  return venueIds;
+}
+
+/**
+ * その店舗に紐付く、訪問者の投稿写真(エリアフォト)。
+ * 写真は「掲載店(locapass_venues)」に紐付く。親ポータルが全店の複製を持つため、同じ店のvenueが複数あるので
+ * 名前と座標が同じvenueを「同じ店」としてまとめて探す。店舗にvenue_idが無いときは、座標が近く名前が似たvenueで探す。
+ *
+ * 投稿時の自動紐付けは「150m以内で一番近い掲載店」なので、手入力の場所名が別の店でも近いだけで紐付くことがある。
+ * 店舗ページで他店の写真が混ざらないよう、(1)投稿者が掲載店として選んだ写真か、(2)場所名がこの店の名前に似ている写真だけを出す。
+ */
+export async function getShopPhotoPosts(
+  shop: { name: string; venueId: string | null; lat: number | null; lng: number | null },
+  limit = 90,
+): Promise<PhotoPost[]> {
+  const venueIds = await resolveShopVenueIds(shop);
+  const supabase = createStaticClient();
   if (venueIds.length === 0) return [];
 
   const { data: rows, error } = await supabase

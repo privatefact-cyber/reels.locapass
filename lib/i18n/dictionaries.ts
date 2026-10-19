@@ -271,6 +271,8 @@ export type Dictionary = {
     backToMap: string;
     backToList: string;
     badgeListed: string;
+    postingTo: (name: string) => string;
+    postingToClear: string;
     badgeSpot: string;
     fullscreen: string;
     close: string;
@@ -620,6 +622,8 @@ const ja: Dictionary = {
     backToMap: "マップに戻る",
     backToList: "写真一覧に戻る",
     badgeListed: "掲載店",
+    postingTo: (name: string) => `${name} の写真として投稿します`,
+    postingToClear: "解除",
     badgeSpot: "穴場",
     fullscreen: "フルスクリーンで見る",
     close: "閉じる",
@@ -969,6 +973,8 @@ const en: Dictionary = {
     backToMap: "Back to map",
     backToList: "Back to photo list",
     badgeListed: "Listed",
+    postingTo: (name: string) => `Posting as a photo of ${name}`,
+    postingToClear: "Clear",
     badgeSpot: "Hidden gem",
     fullscreen: "View fullscreen",
     close: "Close",
@@ -1318,6 +1324,8 @@ const zh: Dictionary = {
     backToMap: "返回地图",
     backToList: "返回照片列表",
     badgeListed: "合作店铺",
+    postingTo: (name: string) => `将作为 ${name} 的照片投稿`,
+    postingToClear: "取消",
     badgeSpot: "隐藏好去处",
     fullscreen: "全屏查看",
     close: "关闭",
@@ -1668,6 +1676,8 @@ const ar: Dictionary = {
     backToMap: "العودة إلى الخريطة",
     backToList: "العودة إلى قائمة الصور",
     badgeListed: "متجر مُدرج",
+    postingTo: (name: string) => `النشر كصورة من ${name}`,
+    postingToClear: "إلغاء",
     badgeSpot: "جوهرة مخفية",
     fullscreen: "عرض بملء الشاشة",
     close: "إغلاق",
