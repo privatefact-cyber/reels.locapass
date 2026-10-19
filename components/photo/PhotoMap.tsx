@@ -18,12 +18,14 @@ const SOURCE_ID = "photo-spots";
 const POINT_LAYER = "photo-spot-points";
 const COUNT_LAYER = "photo-spot-count";
 const GLOW_LAYER = "photo-spot-glow";
+const CLUSTER_LAYER = "photo-spot-clusters";
+const CLUSTER_COUNT_LAYER = "photo-spot-cluster-count";
 const ROUTE_BG_LAYER = "photo-spot-route-bg";
 const ROUTE_TEXT_LAYER = "photo-spot-route-text";
 /** ピンのタップ判定の余裕(px)。ピンは小さく、指だと芯を外しやすいので周囲の一番近いピンを選ぶ。 */
 const PIN_TAP_TOLERANCE_PX = 22;
-/** 近接とみなす距離(m)。この範囲の場所は1つのカード(ピン)にまとめる。 */
-const MERGE_RADIUS_M = 30;
+/** 同じ場所とみなす距離(m)。この範囲だけを1つのピンにまとめる(それより離れた場所は、拡大すると別々のピンに分かれる)。 */
+const MERGE_RADIUS_M = 10;
 const MAX_SPOTS = 60;
 /**
  * 金色の点から丸いサムネイルへの切り替え。固定のズームではなく、点が「ばらけた」段階で場所ごとに切り替える:
@@ -241,28 +243,48 @@ export function PhotoMap({
       thumbMarkers.push(marker);
     }
     const syncThumbs = () => {
-      const list = spotsRef.current;
+      // いまクラスタ(数字の丸)にまとめられていない場所だけが、点・サムネイルとして見える。
+      // ソースの準備前(初期表示)は全部を対象にする。
+      let visibleIds: Set<string> | null = null;
+      if (map.getSource(SOURCE_ID) && map.isSourceLoaded(SOURCE_ID)) {
+        visibleIds = new Set(
+          map
+            .querySourceFeatures(SOURCE_ID, { filter: ["!", ["has", "point_count"]] })
+            .map((f) => String(f.properties?.id)),
+        );
+      }
+      const list = spotsRef.current.filter((sp) => !visibleIds || visibleIds.has(sp.id));
       const zoomedEnough = map.getZoom() >= THUMB_MIN_ZOOM;
       const pts = list.map((sp) => map.project([sp.lng, sp.lat]));
       const thumbIds: string[] = [];
+      const shown = new Set<string>();
       list.forEach((sp, i) => {
         let isolated = zoomedEnough;
         for (let j = 0; isolated && j < list.length; j++) {
           if (j !== i && Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) < THUMB_GAP_PX) isolated = false;
         }
-        const el = thumbRefs.current.get(sp.id);
-        if (el) el.style.display = isolated ? "block" : "none";
-        if (isolated) thumbIds.push(sp.id);
+        if (isolated) {
+          thumbIds.push(sp.id);
+          shown.add(sp.id);
+        }
       });
-      // サムネイルにした場所の金色の点は隠す(残りの点だけ描く)。
+      thumbRefs.current.forEach((el, id) => {
+        el.style.display = shown.has(id) ? "block" : "none";
+      });
+      // サムネイルにした場所の金色の点は隠す(残りの点だけ描く)。クラスタは別のレイヤーで描く。
+      const notCluster: maplibregl.FilterSpecification = ["!", ["has", "point_count"]];
       const notThumb: maplibregl.FilterSpecification = ["!", ["in", ["get", "id"], ["literal", thumbIds]]];
-      if (map.getLayer(POINT_LAYER)) map.setFilter(POINT_LAYER, notThumb);
+      if (map.getLayer(POINT_LAYER)) map.setFilter(POINT_LAYER, ["all", notCluster, notThumb]);
       const hasRoute: maplibregl.FilterSpecification = ["!=", ["get", "route"], ""];
-      if (map.getLayer(ROUTE_BG_LAYER)) map.setFilter(ROUTE_BG_LAYER, ["all", hasRoute, notThumb]);
-      if (map.getLayer(ROUTE_TEXT_LAYER)) map.setFilter(ROUTE_TEXT_LAYER, ["all", hasRoute, notThumb]);
-      if (map.getLayer(COUNT_LAYER)) map.setFilter(COUNT_LAYER, ["all", [">", ["get", "count"], 1], notThumb]);
+      if (map.getLayer(ROUTE_BG_LAYER)) map.setFilter(ROUTE_BG_LAYER, ["all", notCluster, hasRoute, notThumb]);
+      if (map.getLayer(ROUTE_TEXT_LAYER)) map.setFilter(ROUTE_TEXT_LAYER, ["all", notCluster, hasRoute, notThumb]);
+      if (map.getLayer(COUNT_LAYER)) map.setFilter(COUNT_LAYER, ["all", notCluster, [">", ["get", "count"], 1], notThumb]);
     };
     map.on("zoom", syncThumbs);
+    map.on("moveend", syncThumbs);
+    map.on("sourcedata", (e) => {
+      if (e.sourceId === SOURCE_ID && e.isSourceLoaded) syncThumbs();
+    });
     syncThumbs();
     // 選択中の枠色は、描画後に反映する(activeIdRefは最新の選択を指す)。
     thumbRefs.current.forEach((el, id) => {
@@ -271,7 +293,14 @@ export function PhotoMap({
     });
 
     map.on("load", () => {
-      map.addSource(SOURCE_ID, { type: "geojson", data: toFeatureCollection(spotsRef.current, routeRef.current) });
+      map.addSource(SOURCE_ID, {
+        type: "geojson",
+        data: toFeatureCollection(spotsRef.current, routeRef.current),
+        // 通常のマップ(/map)と同じ。密集した場所はまとめて数字の丸にし、拡大すると1か所ずつのピンに分かれる。
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 36,
+      });
 
       map.addLayer({
         id: GLOW_LAYER,
@@ -281,9 +310,30 @@ export function PhotoMap({
         paint: { "circle-color": "#fbbf24", "circle-radius": 24, "circle-blur": 0.9, "circle-opacity": 0.55 },
       });
       map.addLayer({
+        id: CLUSTER_LAYER,
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": "#d4a537",
+          "circle-radius": ["step", ["get", "point_count"], 18, 10, 24, 25, 30],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#0b0b0d",
+        },
+      });
+      map.addLayer({
+        id: CLUSTER_COUNT_LAYER,
+        type: "symbol",
+        source: SOURCE_ID,
+        filter: ["has", "point_count"],
+        layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 12, "text-font": ["Noto Sans Regular"] },
+        paint: { "text-color": "#0b0b0d" },
+      });
+      map.addLayer({
         id: POINT_LAYER,
         type: "circle",
         source: SOURCE_ID,
+        filter: ["!", ["has", "point_count"]],
         paint: {
           "circle-color": "#d4a537",
           // 写真が多い場所ほど少し大きく(最大で+4px)。
@@ -323,10 +373,12 @@ export function PhotoMap({
       });
 
 
-      map.on("mouseenter", POINT_LAYER, () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", POINT_LAYER, () => (map.getCanvas().style.cursor = ""));
+      for (const layerId of [POINT_LAYER, CLUSTER_LAYER]) {
+        map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
+        map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
+      }
 
-      // タップ位置の周囲 PIN_TAP_TOLERANCE_PX 以内で一番近いピンを選ぶ。
+      // タップ位置の周囲 PIN_TAP_TOLERANCE_PX 以内で一番近いピンを選ぶ。ピンが無ければクラスタ(数字の丸)を拡大して分解する。
       map.on("click", (e) => {
         const r = PIN_TAP_TOLERANCE_PX;
         const hits = map.queryRenderedFeatures(
@@ -334,21 +386,30 @@ export function PhotoMap({
             [e.point.x - r, e.point.y - r],
             [e.point.x + r, e.point.y + r],
           ],
-          { layers: [POINT_LAYER] },
+          { layers: [POINT_LAYER, CLUSTER_LAYER] },
         );
         if (hits.length === 0) return;
-        let best = hits[0];
-        let bestD = Infinity;
-        for (const f of hits) {
+        const dist = (f: maplibregl.MapGeoJSONFeature) => {
           const c = (f.geometry as GeoJSON.Point).coordinates;
           const p = map.project([c[0], c[1]]);
-          const d = Math.hypot(p.x - e.point.x, p.y - e.point.y);
-          if (d < bestD) {
-            bestD = d;
-            best = f;
-          }
+          return Math.hypot(p.x - e.point.x, p.y - e.point.y);
+        };
+        const pin = hits
+          .filter((f) => f.layer.id === POINT_LAYER)
+          .sort((a, b) => dist(a) - dist(b))[0];
+        if (pin) {
+          focusSpot(String(pin.properties?.id));
+          return;
         }
-        focusSpot(String(best.properties?.id));
+        const cluster = hits.find((f) => f.layer.id === CLUSTER_LAYER);
+        const clusterId = cluster?.properties?.cluster_id;
+        if (!cluster || clusterId === undefined || cluster.geometry.type !== "Point") return;
+        const center = cluster.geometry.coordinates as [number, number];
+        const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId, (err: Error | null | undefined, zoom: number | null | undefined) => {
+          if (err) return;
+          map.easeTo({ center, zoom: zoom ?? map.getZoom() + 2 });
+        });
       });
 
       // 全ピンが入る範囲に合わせる(下はカードに隠れない余白)。1か所だけなら寄せすぎない。
