@@ -113,6 +113,15 @@ export default async function MypagePage() {
     operatorShops = (shopRows ?? []).map((r) => ({ id: r.id, name: r.name }));
   }
 
+  // マイページから管理側の画面へ入る入口(ヘッダーの「管理」ボタンはルート管理者専用のため、それ以外の管理側の立場はここから入る)。
+  const managementLinks: { label: string; href: string }[] = [];
+  if (roles && !roles.super_admin) {
+    if (roles.portal_ids.length > 0) managementLinks.push({ label: "エリア管理", href: "/admin" });
+    for (const shop of postShops) managementLinks.push({ label: `店舗管理: ${shop.name}`, href: `/dashboard/shop/${shop.id}` });
+    if (roles.staff) managementLinks.push({ label: "スタッフ画面", href: "/dashboard/staff" });
+    if (roles.cast) managementLinks.push({ label: "キャスト画面", href: "/dashboard/cast" });
+  }
+
   // 優先予約の履歴リンク: 機能が公開中、または過去に予約がある人だけ。
   let showReservations = reservationEnabled();
   if (!showReservations) {
@@ -158,6 +167,7 @@ export default async function MypagePage() {
       favoriteShops={favoriteShops}
       myComments={myComments}
       postShops={postShops}
+      managementLinks={managementLinks}
       showReservations={showReservations}
       operatorShops={operatorShops}
     />

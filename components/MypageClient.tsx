@@ -68,6 +68,7 @@ export function MypageClient({
   myComments,
   postShops = [],
   operatorShops = [],
+  managementLinks = [],
   showReservations = false,
 }: {
   userId: string;
@@ -81,6 +82,8 @@ export function MypageClient({
   postShops?: PostShop[];
   /** 運営(システム/エリア管理者)が代理で投稿できる店舗の一覧。 */
   operatorShops?: PostShop[];
+  /** 管理側の画面(エリア管理・店舗管理・スタッフ・キャスト)への入口。ルート管理者以外の管理側の立場がここから入る。 */
+  managementLinks?: { label: string; href: string }[];
   /** 優先予約の履歴リンクを出すか。 */
   showReservations?: boolean;
 }) {
@@ -313,6 +316,25 @@ export function MypageClient({
           <span>優先予約の履歴</span>
           <span className="text-tone-500">›</span>
         </Link>
+      )}
+
+      {/* 管理側の立場(エリア管理・店舗管理・スタッフ・キャスト)を持つアカウント向けの、管理画面への入口。 */}
+      {managementLinks.length > 0 && (
+        <section className="mx-4 mt-4 space-y-2 rounded-2xl border border-accent/40 bg-tone-900/60 p-3">
+          <p className="text-xs font-semibold text-muted">管理画面</p>
+          <div className="grid gap-2">
+            {managementLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="flex items-center justify-between rounded-xl border border-main/20 bg-tone-800 px-4 py-3 text-sm font-bold text-main active:scale-95"
+              >
+                <span className="truncate">{l.label}</span>
+                <span className="text-tone-500">›</span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* 店舗管理者向けの投稿ショートカット(通常投稿 / ⚡ブースト投稿)。スマホからすぐ投稿できるよう上部に置く。 */}
