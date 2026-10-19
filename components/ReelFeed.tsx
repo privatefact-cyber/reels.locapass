@@ -877,7 +877,14 @@ export function ReelFeed({
         // 縦向きタブレット(iPad mini 744pxなど、sm=640px以上)はgrid-cols-4のままだと
         // 1枚が小さい割に余白が目立つため、横向き(landscape)とは別に列数を増やす。
         // 判定はmdではなくsm(640px)を起点にする(iPad miniの縦幅744pxはmd=768px未満のため)。
-        <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
+        <div className={nowOnly ? "relative min-h-[70vh]" : "relative"}>
+          {/* NOWタブは、黒い背景の中央に見出しを置く。カードはその上に重なって見えなくなってよい。 */}
+          {nowOnly && (
+            <p aria-hidden className="pointer-events-none absolute inset-x-0 top-[42%] z-0 -translate-y-1/2 select-none text-center text-lg font-bold tracking-widest text-tone-500">
+              {t.feed.nowTitle}
+            </p>
+          )}
+        <div className="relative z-10 grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
           {tiles.slice(0, visibleCount).map((tile, index) => (
             <GridTile
               key={tileKey(tile)}
@@ -889,6 +896,7 @@ export function ReelFeed({
             />
           ))}
           {hasMoreTiles ? <div ref={gridSentinelRef} aria-hidden className="col-span-full h-px" /> : null}
+        </div>
         </div>
       ) : (
         // 縦スワイプのリール一覧。ヘッダー・ボトムナビはページの通常コンテンツとして

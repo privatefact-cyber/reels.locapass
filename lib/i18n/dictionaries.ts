@@ -116,6 +116,7 @@ export type Dictionary = {
   };
   feed: {
     noNowPosts: string;
+    nowTitle: string;
     noResults: string;
     noEvents: string;
     searchPlaceholder: string;
@@ -461,6 +462,7 @@ const ja: Dictionary = {
   },
   feed: {
     noNowPosts: "営業中の店舗の投稿がまだありません。",
+    nowTitle: "現在営業中の店舗",
     noResults: "条件に合う投稿・店舗がありません。",
     noEvents: "条件に合うイベントがありません。",
     searchPlaceholder: "エリア・店名で検索(例: 新宿)",
@@ -805,6 +807,7 @@ const en: Dictionary = {
   },
   feed: {
     noNowPosts: "No posts from shops that are open right now.",
+    nowTitle: "Shops open now",
     noResults: "No posts or shops match your filters.",
     noEvents: "No events match your filters.",
     searchPlaceholder: "Search by area or shop name (e.g. Shinjuku)",
@@ -1149,6 +1152,7 @@ const zh: Dictionary = {
   },
   feed: {
     noNowPosts: "暂无营业中店铺的帖子。",
+    nowTitle: "当前营业中的店铺",
     noResults: "没有符合条件的帖子或店铺。",
     noEvents: "没有符合条件的活动。",
     searchPlaceholder: "按地区・店名搜索(例: 新宿)",
@@ -1494,6 +1498,7 @@ const ar: Dictionary = {
   },
   "feed": {
     "noNowPosts": "لا توجد منشورات من المتاجر المفتوحة حاليًا.",
+    "nowTitle": "المتاجر المفتوحة الآن",
     "noResults": "لا توجد منشورات أو متاجر تطابق معايير التصفية.",
     "noEvents": "لا توجد فعاليات تطابق معايير التصفية.",
     "searchPlaceholder": "البحث حسب المنطقة أو اسم المتجر (مثال: Shinjuku)",
