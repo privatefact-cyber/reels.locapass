@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { geminiGenerateContentUrl } from "@/lib/gemini";
+import { geminiGenerateWithFallback } from "@/lib/gemini";
 import type { Locale } from "@/lib/i18n/locale";
 
 /**
@@ -104,15 +104,17 @@ async function callGemini(items: Record<string, string>[], targets: readonly Tra
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY が設定されていません");
 
-  const res = await fetch(geminiGenerateContentUrl(apiKey), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  // 主モデルが混雑(503)のときは、再試行と予備モデルへの切り替えで乗り切る。
+  const res = await geminiGenerateWithFallback(
+    apiKey,
+    {
       contents: [{ parts: [{ text: `${buildPromptRules(targets)}\n\n${JSON.stringify(items)}` }] }],
       generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
-    }),
-  });
-  if (!res.ok) throw new Error(`翻訳APIエラー: ${res.status} ${await res.text()}`);
+    },
+    "content translation",
+    50_000, // 3言語ぶんの長めの文章を訳すので、画像つきの生成より長く待つ
+  );
+  if (!res) throw new Error("翻訳APIエラー: すべてのモデルで失敗しました");
 
   const json = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";

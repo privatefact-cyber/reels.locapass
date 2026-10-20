@@ -243,6 +243,7 @@ export type Database = {
           site: string
           spot_name: string
           tags: Json
+          translations: Json
           user_name: string
           venue_id: string | null
           video_url: string | null
@@ -263,6 +264,7 @@ export type Database = {
           site?: string
           spot_name: string
           tags?: Json
+          translations?: Json
           user_name: string
           venue_id?: string | null
           video_url?: string | null
@@ -283,6 +285,7 @@ export type Database = {
           site?: string
           spot_name?: string
           tags?: Json
+          translations?: Json
           user_name?: string
           venue_id?: string | null
           video_url?: string | null

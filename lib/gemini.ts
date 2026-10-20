@@ -34,7 +34,7 @@ export const GEMINI_FALLBACK_MODEL = "gemini-2.5-flash";
  * それでもだめなら予備モデルに切り替える。成功したResponseを返し、全部失敗したらnull。
  * (404など恒久的なエラーはやり直さず、すぐ予備に切り替える。)
  */
-export async function geminiGenerateWithFallback(apiKey: string, body: unknown, label: string): Promise<Response | null> {
+export async function geminiGenerateWithFallback(apiKey: string, body: unknown, label: string, timeoutMs = 25_000): Promise<Response | null> {
   const attempts: { model: string; delayMs: number }[] = [
     { model: GEMINI_MODEL, delayMs: 0 },
     { model: GEMINI_MODEL, delayMs: 1200 },
@@ -49,7 +49,7 @@ export async function geminiGenerateWithFallback(apiKey: string, body: unknown, 
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(25_000) },
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs) },
       );
       if (res.ok) return res;
       console.error(`${label}: ${model} ${res.status}`);

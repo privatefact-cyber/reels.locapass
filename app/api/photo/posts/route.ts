@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchMyRoles, hasManagementRole } from "@/lib/auth/roles";
@@ -8,6 +8,8 @@ import { resolveAreaAndVenue } from "@/lib/photo/resolveArea";
 import { photoText, AI_LANGUAGE_NAME } from "@/lib/photo/serverText";
 import { getR2Client, R2_BUCKET, R2_PUBLIC_BASE_URL } from "@/lib/storage/r2";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { translatePostFields } from "@/lib/photo/translate";
+import type { Json } from "@/types/supabase";
 
 export const maxDuration = 60;
 
@@ -165,6 +167,12 @@ export async function POST(request: NextRequest) {
     await admin.storage.from("map-photos").remove([path]);
     return NextResponse.json({ error: t.apiPostFailed }, { status: 502 });
   }
+
+  // 場所名・一言・住所の自動翻訳は、投稿の返事を待たせないよう裏で行う(失敗しても投稿は成功のまま、原文で表示される)。
+  after(async () => {
+    const translations = await translatePostFields({ spot_name: spotName, comment: comment || null, address: address || null });
+    if (translations) await admin.from("area_photo_posts").update({ translations: translations as unknown as Json }).eq("id", inserted.id);
+  });
 
   return NextResponse.json({ id: inserted.id, site, tags: moderation.tags });
 }

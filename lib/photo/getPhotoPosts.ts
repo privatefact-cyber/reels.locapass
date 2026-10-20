@@ -1,4 +1,6 @@
 import { createStaticClient } from "@/lib/supabase/static";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { pickTranslation } from "@/lib/i18n/contentTranslation";
 
 export type PhotoPost = {
   id: string;
@@ -38,7 +40,7 @@ export type PhotoProfile = {
 export const PHOTO_PAGE_SIZE = 90;
 
 export const POST_COLUMNS =
-  "id,member_id,user_name,avatar_url,image_url,latitude,longitude,address,spot_name,comment,tags,created_at,site,place_kind,place_id,place_name,venue_id,video_url";
+  "id,member_id,user_name,avatar_url,image_url,latitude,longitude,address,spot_name,comment,tags,created_at,site,place_kind,place_id,place_name,venue_id,video_url,translations";
 
 type Supabase = ReturnType<typeof createStaticClient>;
 export type PostRow = {
@@ -60,6 +62,7 @@ export type PostRow = {
   place_name: string | null;
   venue_id: string | null;
   video_url: string | null;
+  translations: unknown;
 };
 
 export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<PhotoPost[]> {
@@ -69,6 +72,9 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     const { data: likes } = await supabase.from("area_photo_likes").select("post_id").in("post_id", ids);
     for (const l of likes ?? []) likeCounts.set(l.post_id, (likeCounts.get(l.post_id) ?? 0) + 1);
   }
+  // 閲覧者の言語に合わせて、場所名・一言・住所は翻訳があればそれを出す(無ければ原文)。
+  const locale = await getServerLocale();
+  const tr = (r: PostRow, original: string | null, key: string) => pickTranslation(locale, original, r.translations, key).text;
   return rows.map((r) => ({
     id: r.id,
     memberId: r.member_id,
@@ -77,16 +83,16 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     imageUrl: r.image_url,
     latitude: r.latitude,
     longitude: r.longitude,
-    address: r.address,
-    spotName: r.spot_name,
-    comment: r.comment,
+    address: tr(r, r.address, "address"),
+    spotName: tr(r, r.spot_name, "spot_name") ?? r.spot_name,
+    comment: tr(r, r.comment, "comment"),
     tags: Array.isArray(r.tags) ? (r.tags as unknown[]).filter((t): t is string => typeof t === "string") : [],
     createdAt: r.created_at,
     site: r.site,
     placeKind: r.place_kind === "listed" || r.place_kind === "spot" || r.place_kind === "free" ? r.place_kind : null,
     placeId: r.place_id,
     venueId: r.venue_id,
-    placeName: r.place_name,
+    placeName: r.place_name === r.spot_name ? (tr(r, r.place_name, "spot_name") ?? r.place_name) : r.place_name,
     videoUrl: r.video_url,
     likeCount: likeCounts.get(r.id) ?? 0,
   }));
