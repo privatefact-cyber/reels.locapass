@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Maximize2, MapPin, Navigation, Play } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search } from "lucide-react";
 import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoSpotList } from "@/components/photo/PhotoSpotList";
@@ -57,7 +57,45 @@ export function PhotoFeed({
   const { t, locale } = useLocale();
   // 削除した写真はその場で一覧から外す(本人とルート管理者だけに削除ボタンが出る)。
   const [deleted, setDeleted] = useState<Set<string>>(new Set());
-  const posts = allPosts.filter((p) => !deleted.has(p.id));
+  const visiblePosts = useMemo(() => allPosts.filter((p) => !deleted.has(p.id)), [allPosts, deleted]);
+
+  // 検索(虫眼鏡)とタグでの絞り込み。グリッド・マップ・穴場のどのビューでも同じ条件を使う。
+  // タグは投稿時にAIが自動で付けたもの。複数選ぶと、どれかに当てはまる写真を出す。
+  const [keyword, setKeyword] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const tagChoices = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of visiblePosts) for (const tag of p.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([tag]) => tag);
+  }, [visiblePosts]);
+  const posts = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    return visiblePosts.filter((p) => {
+      if (activeTags.length > 0 && !p.tags.some((tag) => activeTags.includes(tag))) return false;
+      if (!q) return true;
+      const haystack = [p.spotName, p.placeName, p.comment, p.address, p.userName, ...p.tags.map((tag) => tagLabel(tag, t.photo)), ...p.tags]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [visiblePosts, keyword, activeTags, t]);
+  const anyFilterActive = keyword.trim() !== "" || activeTags.length > 0;
+  const resetFilters = () => {
+    setKeyword("");
+    setActiveTags([]);
+  };
+  const toggleTag = (tag: string) => setActiveTags((prev) => (prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag]));
+  // 検索パネルはEscで閉じる。
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchOpen]);
   const [viewer, setViewer] = useState<{ posts: PhotoPost[]; index: number; title: string | null; mode: "grid" | "detail" } | null>(() => {
     if (!initialPostId) return null;
     const index = posts.findIndex((p) => p.id === initialPostId);
@@ -223,36 +261,84 @@ export function PhotoFeed({
 
   return (
     <div className="space-y-3">
-      {areas.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto px-3 pt-2">
-          <Link href="/photo" className={chip(!areaSlug)}>
-            {t.photo.allAreas}
-          </Link>
-          {areas.map((a) => (
-            <Link key={a.slug} href={`/photo?area=${encodeURIComponent(a.slug)}`} className={chip(areaSlug === a.slug)}>
-              {areaLabel(a, locale, t.photo)}
-            </Link>
-          ))}
-        </div>
-      ) : null}
-
-      {hideToolbar ? null : (
-      <div className="flex items-center gap-2 px-3">
-          <button type="button" onClick={() => setView("grid")} className={chip(view === "grid")}>
-            {t.photo.viewGrid}
-          </button>
-          <button type="button" onClick={() => setView("map")} className={chip(view === "map")}>
-            {t.photo.viewMap}
-          </button>
-          <button type="button" onClick={() => setView("spots")} className={chip(view === "spots")}>
-            {t.photo.viewSpots}
-          </button>
-          <Link
-            href="/photo/new"
-            className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
+      {/* 検索(虫眼鏡)・タグ・表示切り替えは、ヘッダー直下に固定する。グリッド・マップ・穴場のどれでも使える。 */}
+      <div className="sticky top-[calc(81px+env(safe-area-inset-top))] z-30 -mx-0 space-y-2 border-b border-main/5 bg-tone-950/90 px-1 py-2 backdrop-blur-md">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            aria-label={t.nav.search}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition hover:border-accent hover:text-accent ${
+              keyword.trim() ? "border-accent text-accent" : "border-tone-700 text-tone-300"
+            }`}
           >
-            {t.photo.postButton}
-          </Link>
+            <Search size={16} />
+          </button>
+          <div className="flex flex-1 gap-2 overflow-x-auto no-scrollbar">
+            {keyword.trim() ? (
+              <button type="button" onClick={() => setKeyword("")} className={`${chip(true)} inline-flex items-center gap-1 whitespace-nowrap`}>
+                {keyword.trim()}
+                <span aria-hidden>✕</span>
+              </button>
+            ) : null}
+            {tagChoices.map((tag) => (
+              <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`${chip(activeTags.includes(tag))} whitespace-nowrap`}>
+                {tagLabel(tag, t.photo)}
+              </button>
+            ))}
+          </div>
+        </div>
+        {hideToolbar ? null : (
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setView("grid")} className={chip(view === "grid")}>
+              {t.photo.viewGrid}
+            </button>
+            <button type="button" onClick={() => setView("map")} className={chip(view === "map")}>
+              {t.photo.viewMap}
+            </button>
+            <button type="button" onClick={() => setView("spots")} className={chip(view === "spots")}>
+              {t.photo.viewSpots}
+            </button>
+            <Link
+              href="/photo/new"
+              className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
+            >
+              {t.photo.postButton}
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {searchOpen && (
+        // 背景のどこをタップしても閉じる。パネル内のタップは背景に伝えない(入力中に閉じないように)。
+        <div onClick={() => setSearchOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-main/10 bg-surface/95 p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-main">{t.nav.search}</h2>
+              <button type="button" onClick={() => setSearchOpen(false)} aria-label={t.common.close} className="text-muted hover:text-main">
+                ✕
+              </button>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-tone-700 bg-main/5 px-3 py-2">
+              <Search size={16} className="shrink-0 text-muted" />
+              <input
+                autoFocus
+                type="search"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") setSearchOpen(false);
+                }}
+                placeholder={t.feed.searchPlaceholder}
+                className="w-full min-w-0 bg-transparent text-[16px] text-main placeholder:text-tone-500 focus:outline-none"
+              />
+            </div>
+            {anyFilterActive && (
+              <button type="button" onClick={resetFilters} className="mx-auto mt-3 block text-xs text-accent underline">
+                {t.feed.resetFilters}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

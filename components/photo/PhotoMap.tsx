@@ -530,7 +530,7 @@ export function PhotoMap({
   }
 
   return (
-    <div className="relative" style={{ height: "calc(100dvh - 9.5rem)", minHeight: 480 }}>
+    <div className="relative" style={{ height: "calc(100dvh - 11rem)", minHeight: 440 }}>
       {/* maplibre-gl.cssが .maplibregl-map{position:relative} を後勝ちで当てるため、インラインで確実に勝たせる */}
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
