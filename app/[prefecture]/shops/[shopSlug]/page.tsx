@@ -24,6 +24,7 @@ import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { InquiryButton } from "@/components/InquiryButton";
 import { ShopAccordion } from "@/components/ShopAccordion";
 import { reservationEnabled, shopCanTakeReservations } from "@/lib/reservation/config";
+import { ShopYoutube } from "@/components/shop/ShopYoutube";
 import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
@@ -218,6 +219,9 @@ export default async function ShopDetailPage({
     galleryImageUrls: shopRow.gallery_image_urls ?? [],
   };
   // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
+  // 動画紹介(YouTube)。生成済みの型に列が無いため、小さな別クエリで取る(未設定ならnull)。
+  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("youtube_video_id").eq("id", shopRow.id).maybeSingle();
+  const youtubeVideoId: string | null = ytRow?.youtube_video_id ?? null;
   const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
 
   const { data: activeStoryCastIds } = castIds.length
@@ -533,6 +537,13 @@ export default async function ShopDetailPage({
               ))}
             </div>
         </section>
+        )}
+
+        {/* 動画紹介(YouTube)。URLが未設定なら何も出さない。 */}
+        {youtubeVideoId && (
+          <section className="space-y-2">
+            <ShopYoutube videoId={youtubeVideoId} title={`${shopRow.name}の動画紹介`} />
+          </section>
         )}
 
         {/* 3. 店舗基本情報 */}
