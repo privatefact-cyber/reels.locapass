@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
@@ -48,7 +50,7 @@ export default async function ShopReelsPage({
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
-      `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled, posted_by_staff_id, author_name, author_icon_url, cast_members:locapass_public_casts ( name, avatar_url, issue_no ), shop_staff_members:locapass_shop_staff_members ( name, avatar_url, issue_no )`,
+      `id, caption, translations, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled, posted_by_staff_id, author_name, author_icon_url, cast_members:locapass_public_casts ( name, avatar_url, issue_no ), shop_staff_members:locapass_shop_staff_members ( name, avatar_url, issue_no )`,
     )
     .eq("shop_id", shop.id)
     .eq("status", "publish")
@@ -56,6 +58,7 @@ export default async function ShopReelsPage({
     .eq("reel_type", "permanent")
     .order("published_at", { ascending: false });
 
+  const reelLocale = await getServerLocale();
   const reels: ReelItem[] = (reelRows ?? []).map((row) => {
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
     const staff = Array.isArray(row.shop_staff_members)
@@ -63,7 +66,7 @@ export default async function ShopReelsPage({
       : row.shop_staff_members;
     return {
       id: row.id,
-      caption: row.caption,
+      caption: pickTranslation(reelLocale, row.caption, row.translations, "caption").text,
       media: toReelMedia(row),
       likesCount: row.like_count,
       castId: row.cast_id,

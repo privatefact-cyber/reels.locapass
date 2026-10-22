@@ -238,7 +238,7 @@ const GridTile = memo(function GridTile({
               : "bg-main/20 text-main"
         }`}
       >
-        {tile.kind === "cast" ? "ICON" : tile.kind === "ad" ? "PR" : "SHOP"}
+        {tile.kind === "cast" ? "FACES" : tile.kind === "ad" ? "PR" : "SHOP"}
       </span>
 
       <span className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-4">
@@ -707,7 +707,7 @@ export function ReelFeed({
           closing={reelGateClosing}
           entering={reelGateEntering}
           optionA={{ label: "SHOP REEL", onClick: () => selectReelAuthorFromGate("shop") }}
-          optionB={{ label: "ICON REEL", onClick: () => selectReelAuthorFromGate("cast") }}
+          optionB={{ label: "FACES REEL", onClick: () => selectReelAuthorFromGate("cast") }}
         />
       )}
 
@@ -779,7 +779,7 @@ export function ReelFeed({
           {!nowOnly && (
             <>
               <button type="button" onClick={() => toggleType("cast")} className={pillClass(activeTypes.includes("cast"))}>
-                ICON
+                FACES
               </button>
               <button type="button" onClick={() => toggleType("shop")} className={pillClass(activeTypes.includes("shop"))}>
                 SHOP

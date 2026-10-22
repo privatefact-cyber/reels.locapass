@@ -96,6 +96,10 @@ export default async function LocapassShopSettingsPage({
   }
 
   // 本家shopsの列名に揃える(category→genre, tel→phone, url→website_url, cover_url→cover_image_url)。
+  // YouTube動画ID(型に列が無いため別クエリ)。
+  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("youtube_video_id").eq("id", currentShop.id).maybeSingle();
+  const youtubeVideoId: string | null = ytRow?.youtube_video_id ?? null;
+
   const shop = {
     name: shopRow.name,
     area: shopRow.area,
@@ -111,6 +115,7 @@ export default async function LocapassShopSettingsPage({
     hero_media_type: shopRow.hero_media_type,
     website_url: shopRow.url,
     usage_notes: shopRow.usage_notes,
+    youtube_url: youtubeVideoId ? `https://www.youtube.com/watch?v=${youtubeVideoId}` : "",
     sns_links: (shopRow.sns_links ?? {}) as { x?: string; instagram?: string; line?: string },
     shop_code: shopRow.shop_code,
     line_url: shopRow.line_url,
@@ -356,6 +361,16 @@ export default async function LocapassShopSettingsPage({
               placeholder="https://"
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500">YouTube動画(任意)</label>
+            <input
+              name="youtube_url"
+              defaultValue={shop.youtube_url}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            />
+            <p className="mt-1 text-[11px] text-slate-500">入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。(YouTubeで埋め込みを許可している動画のみ再生できます)</p>
           </div>
           <div className="sm:col-span-2">
             <label className="block text-xs font-semibold text-slate-500">営業時間カレンダー</label>

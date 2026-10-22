@@ -59,7 +59,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
 
           {/* お知らせバー */}
           <div className="relative border-b border-main/5 px-4 py-1.5 text-center text-[11px] text-tone-300">
-            繋がる広がるリールメディア LOCAPASS【ロカパス】
+            {t.nav.tagline}
           </div>
 
           {/* メインヘッダー行 */}
@@ -72,7 +72,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
                 {t.nav.events}
               </Link>
               <Link href="/support" className="transition hover:text-accent">
-                ヘルプ
+                {t.nav.help}
               </Link>
               <Link href={inPortal ? `/${firstSegment}/boost` : "/boost"} className="font-bold text-amber-400 transition hover:text-amber-300">
                 ⚡ BOOST

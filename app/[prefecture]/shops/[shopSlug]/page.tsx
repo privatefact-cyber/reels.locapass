@@ -25,6 +25,7 @@ import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { InquiryButton } from "@/components/InquiryButton";
 import { ShopAccordion } from "@/components/ShopAccordion";
 import { reservationEnabled, shopCanTakeReservations } from "@/lib/reservation/config";
+import { ShopYoutube } from "@/components/shop/ShopYoutube";
 import { ShopSectionNav } from "@/components/ShopSectionNav";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
@@ -60,7 +61,7 @@ async function resolveShop(params: PageParams) {
   const supabase = await createClient();
   const { data: portal } = await supabase
     .from("locapass_portals")
-    .select("id, slug, name, theme")
+    .select("id, slug, name, name_en, theme")
     .eq("slug", params.prefecture)
     .maybeSingle();
 
@@ -90,11 +91,15 @@ export async function generateMetadata({
     return { title: "店舗が見つかりません | LOCAPASS" };
   }
 
-  const title = `${shopRow.name}｜${shopRow.category ?? "掲載店舗"}情報 - LOCAPASS`;
-  const description =
-    shopRow.tagline ||
-    (shopRow.description ? shopRow.description.slice(0, 120) : null) ||
-    `「${shopRow.name}」の店舗情報・リールを今すぐチェック。`;
+  const metaLocale = await getServerLocale();
+  const isJa = metaLocale === "ja";
+  // カテゴリは自由入力の日本語なので、日本語以外では付けない
+  const title = isJa ? `${shopRow.name}｜${shopRow.category ?? "掲載店舗"}情報 - LOCAPASS` : shopRow.name;
+  const description = isJa
+    ? shopRow.tagline ||
+      (shopRow.description ? shopRow.description.slice(0, 120) : null) ||
+      `「${shopRow.name}」の店舗情報・リールを今すぐチェック。`
+    : `${shopRow.name} — shop info and reels on LOCAPASS.`;
   const url = `https://locapass.net${shopPath(portal.slug, shopRow.slug)}`;
   const image = shopRow.cover_url ?? shopRow.icon_url ?? undefined;
 
@@ -227,6 +232,9 @@ export default async function ShopDetailPage({
     galleryImageUrls: shopRow.gallery_image_urls ?? [],
   };
   // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
+  // 動画紹介(YouTube)。生成済みの型に列が無いため、小さな別クエリで取る(未設定ならnull)。
+  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("youtube_video_id").eq("id", shopRow.id).maybeSingle();
+  const youtubeVideoId: string | null = ytRow?.youtube_video_id ?? null;
   const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
 
   const { data: activeStoryCastIds } = castIds.length
@@ -387,7 +395,7 @@ export default async function ShopDetailPage({
           className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-full border border-main/20 bg-black/40 px-3 py-1.5 text-xs font-medium text-main/90 shadow-lg backdrop-blur-md transition hover:border-main/40 hover:bg-black/60 hover:text-main sm:left-6 sm:top-6"
         >
           <ChevronLeft size={14} />
-          <span>{site.name}</span>
+          <span>{locale !== "ja" && site.name_en ? site.name_en : site.name}</span>
         </Link>
 
         <ShopHeroMedia
@@ -555,13 +563,20 @@ export default async function ShopDetailPage({
         {userPhotos.length > 0 && (
           <section id="user-photos" className="scroll-mt-24 space-y-3">
             <SectionHeading eyebrow="PHOTOS" title={t.shop.userPhotosTitle} icon={<Camera size={14} />} />
-            <ShopUserPhotoGrid posts={userPhotos.slice(0, 6)} />
+            <ShopUserPhotoGrid posts={userPhotos.slice(0, 10)} layout="slider" shareUrl={shopPhotosPath(site.slug, shopRow.slug)} />
             <Link href={shopPhotosPath(site.slug, shopRow.slug)} className="block text-center text-xs text-accent underline">
               {t.shop.userPhotosAll}({t.shop.userPhotosCount(userPhotos.length)})
             </Link>
             <Link href={`/photo/new?shop=${shopRow.id}`} className="block text-center text-xs text-tone-400 underline">
               {t.photo.postButton}
             </Link>
+          </section>
+        )}
+
+        {/* 動画紹介(YouTube)。URLが未設定なら何も出さない。 */}
+        {youtubeVideoId && (
+          <section className="space-y-2">
+            <ShopYoutube videoId={youtubeVideoId} title={`${shopRow.name}の動画紹介`} />
           </section>
         )}
 

@@ -13,6 +13,8 @@ export type Dictionary = {
     menu: string;
     now: string;
     nowShort: string;
+    help: string;
+    tagline: string;
     search: string;
     map: string;
   };
@@ -384,6 +386,8 @@ const ja: Dictionary = {
     menu: "メニュー",
     now: "営業中の店舗",
     nowShort: "NOW",
+    help: "ヘルプ",
+    tagline: "繋がる広がるリールメディア LOCAPASS【ロカパス】",
     search: "検索",
     map: "マップ",
   },
@@ -461,7 +465,7 @@ const ja: Dictionary = {
     areaNotSet: "エリア未設定",
     genreNotSet: "ジャンル未設定",
     archiveTitle: "ストック",
-    userPhotosTitle: "みんなの写真",
+    userPhotosTitle: "ユーザーPHOTO",
     userPhotosAll: "すべて見る →",
     userPhotosEmpty: "まだ写真の投稿がありません",
     userPhotosCount: (n: number) => `${n}枚`,
@@ -754,6 +758,8 @@ const en: Dictionary = {
     menu: "Menu",
     now: "Open now",
     nowShort: "NOW",
+    help: "Help",
+    tagline: "Connecting reels media — LOCAPASS",
     search: "Search",
     map: "Map",
   },
@@ -831,7 +837,7 @@ const en: Dictionary = {
     areaNotSet: "Area not set",
     genreNotSet: "Genre not set",
     archiveTitle: "Archive",
-    userPhotosTitle: "Photos from visitors",
+    userPhotosTitle: "User PHOTO",
     userPhotosAll: "See all →",
     userPhotosEmpty: "No photos posted yet",
     userPhotosCount: (n: number) => `${n} ${n === 1 ? "photo" : "photos"}`,
@@ -1124,6 +1130,8 @@ const zh: Dictionary = {
     menu: "菜单",
     now: "营业中的店铺",
     nowShort: "NOW",
+    help: "帮助",
+    tagline: "连接与扩展的短视频媒体 LOCAPASS",
     search: "搜索",
     map: "地图",
   },
@@ -1201,7 +1209,7 @@ const zh: Dictionary = {
     areaNotSet: "地区未设置",
     genreNotSet: "类型未设置",
     archiveTitle: "存档",
-    userPhotosTitle: "大家的照片",
+    userPhotosTitle: "用户PHOTO",
     userPhotosAll: "查看全部 →",
     userPhotosEmpty: "暂无照片投稿",
     userPhotosCount: (n: number) => `${n}张`,
@@ -1495,6 +1503,8 @@ const ar: Dictionary = {
     "menu": "القائمة",
     "now": "المتاجر المفتوحة الآن",
     "nowShort": "NOW",
+    "help": "مساعدة",
+    "tagline": "منصة ريلز تربط وتوسّع — LOCAPASS",
     "search": "بحث",
     "map": "الخريطة"
   },
@@ -1573,7 +1583,7 @@ const ar: Dictionary = {
     "areaNotSet": "المنطقة غير محددة",
     "genreNotSet": "الفئة غير محددة",
     "archiveTitle": "الأرشيف",
-    "userPhotosTitle": "صور الزوار",
+    "userPhotosTitle": "صور المستخدمين PHOTO",
     "userPhotosAll": "عرض الكل ←",
     "userPhotosEmpty": "لا توجد صور بعد",
     "userPhotosCount": (n: number) => `${n}`,

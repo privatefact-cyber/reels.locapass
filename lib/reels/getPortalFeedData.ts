@@ -2,11 +2,15 @@ import { createClient } from "@/lib/supabase/server";
 import { EXCLUDE_OFFICIAL_FILTER } from "@/lib/shop/genres";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import type { Locale } from "@/lib/i18n/locale";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
 export type ReelRow = {
   id: string;
   caption: string | null;
+  translations?: unknown;
   video_url: string | null;
   images: unknown;
   poster_url: string | null;
@@ -28,7 +32,7 @@ export type ReelRow = {
   locapass_shop_staff_members: { name: string; avatar_url: string | null; issue_no: number } | { name: string; avatar_url: string | null; issue_no: number }[] | null;
 };
 
-export function toReelItem(row: ReelRow): ReelItem | null {
+export function toReelItem(row: ReelRow, locale: Locale = "ja"): ReelItem | null {
   const shop = Array.isArray(row.locapass_shops) ? row.locapass_shops[0] : row.locapass_shops;
   const cast = Array.isArray(row.locapass_cast_members) ? row.locapass_cast_members[0] : row.locapass_cast_members;
   const staff = Array.isArray(row.locapass_shop_staff_members)
@@ -55,7 +59,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
 
   return {
     id: row.id,
-    caption: row.caption,
+    caption: pickTranslation(locale, row.caption, row.translations, "caption").text,
     media,
     likesCount: row.like_count,
     castId: row.cast_id,
@@ -78,7 +82,7 @@ export function toReelItem(row: ReelRow): ReelItem | null {
 }
 
 export const REEL_SELECT =
-  "id, caption, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, posted_by_staff_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url, issue_no )";
+  "id, caption, translations, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, posted_by_staff_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url, issue_no )";
 
 export type PortalFeedData = {
   reels: ReelItem[];
@@ -93,6 +97,7 @@ export type PortalFeedData = {
  */
 export async function getPortalFeedData(siteId: number | null): Promise<PortalFeedData> {
   const supabase = await createClient();
+  const locale = await getServerLocale();
 
   let shopsQuery = supabase
     .from("locapass_shops")
@@ -121,7 +126,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
       .eq("is_active", true),
   ]);
 
-  const reels: ReelItem[] = (reelRows ?? []).flatMap((row) => toReelItem(row) ?? []);
+  const reels: ReelItem[] = (reelRows ?? []).flatMap((row) => toReelItem(row, locale) ?? []);
 
   const shopItems: ShopGridItem[] = (shops ?? []).flatMap((s) => {
     const portal = Array.isArray(s.portal) ? s.portal[0] : s.portal;

@@ -27,7 +27,7 @@ async function resolvePortal(slug: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("locapass_portals")
-    .select("id, name, tagline, description, hero_media_type, hero_media_url, hero_link_url, theme")
+    .select("id, name, name_en, tagline, description, hero_media_type, hero_media_url, hero_link_url, theme")
     .eq("slug", slug)
     .maybeSingle();
   return data;
@@ -51,7 +51,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
       {/* このポータルで選んだ配色テーマ(未設定ならサイト全体の配色) */}
       <PortalThemeScope theme={isSiteTheme(portal.theme) ? portal.theme : null} />
       <PortalHero
-        name={portal.name}
+        name={locale !== "ja" && portal.name_en ? portal.name_en : portal.name}
         tagline={portal.tagline}
         description={portal.description}
         heroMediaType={portal.hero_media_type}

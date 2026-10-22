@@ -329,3 +329,18 @@ export async function issueCastLoginPin(shopId: string, castId: string): Promise
   revalidatePath(castPath(shopId, castId));
   return { pin: data };
 }
+
+/** FACESのアイコンを差し替える。店舗管理者のみ。0件更新(権限・店舗違い)は成功扱いにせずエラーにする。 */
+export async function setCastAvatar(shopId: string, castId: string, url: string) {
+  const supabase = await requireShopAdmin(shopId);
+  if (!/^https:\/\//.test(url)) throw new Error("画像URLが不正です");
+  const { data, error } = await supabase
+    .from("locapass_cast_members")
+    .update({ avatar_url: url })
+    .eq("id", castId)
+    .eq("shop_id", shopId)
+    .select("id");
+  if (error) throw new Error(`アイコンの保存に失敗しました: ${error.message}`);
+  if (!data || data.length === 0) throw new Error("アイコンを保存できませんでした(対象のFACESが見つかりません)");
+  revalidatePath(castPath(shopId, castId));
+}

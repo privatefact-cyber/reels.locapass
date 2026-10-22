@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
@@ -65,7 +67,7 @@ export default async function CastReelsPage({
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
-      `id, caption, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled`,
+      `id, caption, translations, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled`,
     )
     .eq("cast_id", cast.id!)
     .eq("status", "publish")
@@ -74,9 +76,10 @@ export default async function CastReelsPage({
     .order("pinned_at", { ascending: false, nullsFirst: false })
     .order("published_at", { ascending: false });
 
+  const reelLocale = await getServerLocale();
   const reels: ReelItem[] = (reelRows ?? []).map((row) => ({
     id: row.id,
-    caption: row.caption,
+    caption: pickTranslation(reelLocale, row.caption, row.translations, "caption").text,
     media: toReelMedia(row),
     likesCount: row.like_count,
     castId: row.cast_id,

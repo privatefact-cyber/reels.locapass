@@ -1,3 +1,4 @@
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { createClient } from "@/lib/supabase/server";
 import { getJstNow } from "@/lib/reels/nowWorking";
 import { isOpenNow, sanitizeWeekly } from "@/lib/shop/businessHours";
@@ -11,6 +12,7 @@ import type { ReelItem } from "@/lib/reels/types";
  */
 export async function getNowReels(siteId: number | null): Promise<ReelItem[]> {
   const supabase = await createClient();
+  const locale = await getServerLocale();
 
   let shopsQuery = supabase
     .from("locapass_shops")
@@ -40,7 +42,7 @@ export async function getNowReels(siteId: number | null): Promise<ReelItem[]> {
   const out: ReelItem[] = [];
   for (const row of rows ?? []) {
     if (!row.shop_id || seen.has(row.shop_id)) continue;
-    const item = toReelItem(row);
+    const item = toReelItem(row, locale);
     if (!item) continue;
     seen.add(row.shop_id);
     out.push(item);

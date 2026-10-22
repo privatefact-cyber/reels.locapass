@@ -6,5 +6,7 @@
  */
 export function requestReelTags(reelId: string | null | undefined): void {
   if (!reelId) return;
+  // 投稿文の多言語翻訳も一緒に頼む(失敗しても投稿には影響しない)
+  void fetch(`/api/reels/${reelId}/translate`, { method: "POST", keepalive: true }).catch(() => undefined);
   void fetch(`/api/reels/${reelId}/tags`, { method: "POST", keepalive: true }).catch(() => undefined);
 }

@@ -1899,6 +1899,7 @@ export type Database = {
           caption: string | null
           caption_avoid_zone: string
           caption_en: string | null
+          translations: Json
           caption_status: string | null
           captions_generated_at: string | null
           cast_id: string | null
@@ -1938,6 +1939,7 @@ export type Database = {
           caption?: string | null
           caption_avoid_zone?: string
           caption_en?: string | null
+          translations?: Json
           caption_status?: string | null
           captions_generated_at?: string | null
           cast_id?: string | null
@@ -1977,6 +1979,7 @@ export type Database = {
           caption?: string | null
           caption_avoid_zone?: string
           caption_en?: string | null
+          translations?: Json
           caption_status?: string | null
           captions_generated_at?: string | null
           cast_id?: string | null

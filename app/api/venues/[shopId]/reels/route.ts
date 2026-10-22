@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import { VENUE_CACHE_HEADERS } from "@/lib/map/cacheHeaders";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { toReelItem, REEL_SELECT } from "@/lib/reels/getPortalFeedData";
 import type { ReelItem } from "@/lib/reels/types";
 
@@ -34,7 +35,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const reels: ReelItem[] = (rows ?? []).flatMap((row) => toReelItem(row) ?? []);
+  const locale = await getServerLocale();
+  const reels: ReelItem[] = (rows ?? []).flatMap((row) => toReelItem(row, locale) ?? []);
 
   return NextResponse.json({ reels }, { headers: VENUE_CACHE_HEADERS });
 }

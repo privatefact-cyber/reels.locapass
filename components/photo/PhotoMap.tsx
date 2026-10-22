@@ -56,8 +56,16 @@ function distanceM(lat1: number, lng1: number, lat2: number, lng2: number) {
   return 2 * 6371000 * Math.asin(Math.sqrt(a));
 }
 
+/** 場所名の表記ゆれ(空白・記号・全角半角・大文字小文字)をならす。 */
+const normName = (s: string) => s.normalize("NFKC").toLowerCase().replace(/[\s　・･\-ー_()（）「」【】&＆×.,'’"]/g, "");
+/** 手入力などで名前が同じ(または一方が他方を含む)とき、同じ場所とみなす距離(m)。 */
+const SAME_NAME_RADIUS_M = 40;
+
+// 掲載店として選んだ投稿(listed)だけ、店のID(venue_id)でまとめる。
+// それ以外の投稿には、投稿時に「150m以内の一番近い掲載店」が自動で付いているだけで、
+// 実際の場所とは別の店のことがある(例: 129m離れた別の店)。それでまとめると、別の場所の写真が1枚のカードに混ざってしまう。
 function placeKey(post: PhotoPost) {
-  return post.venueId
+  return post.placeKind === "listed" && post.venueId
     ? `v:${post.venueId}`
     : post.placeId
       ? `g:${post.placeId}`
@@ -87,7 +95,16 @@ function buildSpots(posts: PhotoPost[]): Spot[] {
   const spots: Spot[] = [];
   const sorted = Array.from(places.values()).sort((a, b) => b.items.length - a.items.length);
   for (const place of sorted) {
-    const near = spots.find((s) => distanceM(s.lat, s.lng, place.lat, place.lng) <= MERGE_RADIUS_M);
+    const placeNorm = normName(place.name);
+    const near = spots.find((s) => {
+      const d = distanceM(s.lat, s.lng, place.lat, place.lng);
+      if (d <= MERGE_RADIUS_M) return true;
+      if (d > SAME_NAME_RADIUS_M || !placeNorm) return false;
+      return s.names.some((n) => {
+        const m = normName(n);
+        return m.length > 0 && (m.includes(placeNorm) || placeNorm.includes(m));
+      });
+    });
     if (near) {
       near.posts.push(...place.items);
       if (!near.names.includes(place.name)) near.names.push(place.name);

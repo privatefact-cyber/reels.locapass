@@ -7,7 +7,8 @@ import { MapPin, Search } from "lucide-react";
 import { geocodeAddress } from "@/lib/map/addressGeocode";
 import { updateShopPin } from "@/app/dashboard/shop/[shopId]/actions";
 
-const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+// 管理画面は位置合わせで道や建物が見える必要があるので、明るい地図にする(公開側の地図はダークのまま)
+const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 
 type Props = {
   shopId: string;

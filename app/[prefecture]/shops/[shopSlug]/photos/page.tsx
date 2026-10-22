@@ -16,7 +16,7 @@ export const revalidate = 60;
 type PageParams = { prefecture: string; shopSlug: string };
 
 export const metadata: Metadata = {
-  title: "みんなの写真 - LOCAPASS",
+  title: "ユーザーPHOTO - LOCAPASS",
   // 一覧の派生ページなので検索結果には出さない(店舗ページ本体を正とする)。
   robots: { index: false, follow: true },
 };
@@ -63,7 +63,7 @@ export default async function ShopUserPhotosPage({ params }: { params: Promise<P
       {posts.length === 0 ? (
         <p className="px-3 py-10 text-center text-sm text-tone-500">{t.shop.userPhotosEmpty}</p>
       ) : (
-        <ShopUserPhotoGrid posts={posts} />
+        <ShopUserPhotoGrid posts={posts} layout="grid" shareUrl={`/${portal.slug}/shops/${shop.slug}/photos`} />
       )}
     </div>
   );

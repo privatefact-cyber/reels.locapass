@@ -101,6 +101,12 @@ export function PhotoFeed({
     const index = posts.findIndex((p) => p.id === initialPostId);
     return index >= 0 ? { posts, index, title: null, mode: "detail" } : null;
   });
+  // ビューアは開いた時点の投稿を持つので、言語切替で届いた最新の翻訳版に差し替えて表示する
+  const latestById = useMemo(() => new Map(allPosts.map((p) => [p.id, p])), [allPosts]);
+  const viewerPosts = useMemo(
+    () => (viewer ? viewer.posts.map((p) => latestById.get(p.id) ?? p) : []),
+    [viewer, latestById],
+  );
   const [view, setView] = useState<"grid" | "map" | "spots">(initialView);
   // フルスクリーン表示中の写真(ビューアの並びの中の番号)。nullなら閉じている。
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
@@ -131,10 +137,10 @@ export function PhotoFeed({
         </button>
         <p className="px-3 text-sm font-medium text-main">
           {viewer.title}
-          <span className="ml-2 text-xs font-normal text-tone-500">{t.photo.count(viewer.posts.length)}</span>
+          <span className="ml-2 text-xs font-normal text-tone-500">{t.photo.count(viewerPosts.length)}</span>
         </p>
         <div className="grid grid-cols-3 gap-[1px] sm:landscape:grid-cols-4 sm:portrait:grid-cols-6 md:landscape:grid-cols-6 md:gap-[2px] md:max-w-7xl md:mx-auto lg:landscape:grid-cols-8">
-          {viewer.posts.map((post, index) => (
+          {viewerPosts.map((post, index) => (
             <button
               key={post.id}
               type="button"
@@ -167,7 +173,7 @@ export function PhotoFeed({
           {viewer.title ? t.photo.backToList : t.photo.backToGrid}
         </button>
         {viewer.title ? <p className="px-3 text-sm font-medium text-main">{viewer.title}</p> : null}
-        {viewer.posts.map((post, index) => (
+        {viewerPosts.map((post, index) => (
           <article key={post.id} ref={index === viewer.index ? openRef : undefined} className="scroll-mt-[104px]">
             {/* アイコン・名前をタップすると、その人のページ(投稿一覧とプロフィール)へ。 */}
             {post.memberId ? (
@@ -244,7 +250,7 @@ export function PhotoFeed({
         ))}
         {fullscreenIndex !== null ? (
           <PhotoFullscreen
-            posts={viewer.posts}
+            posts={viewerPosts}
             index={fullscreenIndex}
             onIndexChange={setFullscreenIndex}
             onClose={() => setFullscreenIndex(null)}

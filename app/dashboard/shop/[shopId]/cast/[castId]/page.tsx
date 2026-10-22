@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { InviteCastButton } from "@/components/locapass-dashboard/InviteCastButton";
 import { DeleteMemberButton } from "@/components/locapass-dashboard/DeleteMemberButton";
+import { CastAvatarEditor } from "@/components/locapass-dashboard/CastAvatarEditor";
 import { CastPhotoUploader } from "@/components/locapass-dashboard/CastPhotoUploader";
 import { CastLoginLinkCard } from "@/components/locapass-dashboard/CastLoginLinkCard";
 import { CastIdentityFields } from "@/components/locapass-dashboard/CastIdentityFields";
@@ -45,7 +46,7 @@ export default async function LocapassCastEditPage({
   const { data: cast } = await supabase
     .from("locapass_cast_members")
     .select(
-      "id, name, age, pr_text, sizes, shop_id, user_id, legal_name, legal_name_kana, birth_date, phone, address, id_check_match_level, id_check_hit_count, id_checked_at, id_document_path",
+      "id, name, avatar_url, age, pr_text, sizes, shop_id, user_id, legal_name, legal_name_kana, birth_date, phone, address, id_check_match_level, id_check_hit_count, id_checked_at, id_document_path",
     )
     .eq("id", castId)
     .eq("shop_id", shop.id)
@@ -259,6 +260,14 @@ export default async function LocapassCastEditPage({
           issuePin={issueCastLoginPin.bind(null, shop.id, castId)}
         />
       )}
+
+      <CastAvatarEditor
+        shopId={shop.id}
+        castId={castId}
+        castName={cast.name}
+        avatarUrl={cast.avatar_url}
+        photoUrls={(media ?? []).map((m) => m.url)}
+      />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">写真</h2>

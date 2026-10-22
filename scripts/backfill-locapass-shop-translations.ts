@@ -35,7 +35,7 @@ async function main() {
   });
   const { data: shops, error } = await supabase
     .from("locapass_shops")
-    .select("id, name, description, tagline, business_hours, translations")
+    .select("id, name, description, tagline, business_hours, price_info, usage_notes, translations")
     .eq("portal_id", siteId)
     .eq("status", "active")
     .order("name");
@@ -46,6 +46,8 @@ async function main() {
       description: shop.description,
       tagline: shop.tagline,
       business_hours: shop.business_hours,
+      price_info: shop.price_info,
+      usage_notes: shop.usage_notes,
     };
     return Object.values(fields).some((value) => value?.trim()) && needsTranslation(fields, shop.translations);
   });
@@ -58,6 +60,8 @@ async function main() {
       description: shop.description,
       tagline: shop.tagline,
       business_hours: shop.business_hours,
+      price_info: shop.price_info,
+      usage_notes: shop.usage_notes,
     })));
     for (let j = 0; j < batch.length; j += 1) {
       const result = translated[j];
