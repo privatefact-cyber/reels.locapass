@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { path: "", label: "店舗情報" },
   { path: "/cast", label: "FACES管理" },
   { path: "/staff", label: "スタッフ管理" },
+  { path: "/admins", label: "管理者ID" },
   { path: "/reels", label: "リール投稿" },
   { path: "/boost", label: "⚡ブースト" },
   { path: "/reservations", label: "優先予約" },
