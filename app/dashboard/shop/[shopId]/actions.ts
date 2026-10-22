@@ -1,6 +1,6 @@
 "use server";
 
-import { parseYoutubeId } from "@/lib/youtube";
+import { parseVideoUrl } from "@/lib/video";
 import { revalidatePath } from "next/cache";
 import { sanitizeWeekly, type WeeklyHours } from "@/lib/shop/businessHours";
 import { saveSchedule } from "@/lib/schedules/saveSchedule";
@@ -69,10 +69,10 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   const heroMediaType = String(formData.get("hero_media_url_type") ?? "").trim() === "video" ? "video" : "image";
   const usageNotes = String(formData.get("usage_notes") ?? "").trim() || null;
   const priceInfo = String(formData.get("price_info") ?? "").trim() || null;
-  // YouTubeのURLは動画IDだけを保存する。空なら削除(店舗ページから「動画紹介」が消える)。URLが貼られたのにIDが取れないときは保存せずエラーにする。
-  const youtubeRaw = String(formData.get("youtube_url") ?? "").trim();
-  const youtubeVideoId = youtubeRaw ? parseYoutubeId(youtubeRaw) : null;
-  if (youtubeRaw && !youtubeVideoId) throw new Error("YouTubeのURLが正しくありません(例: https://www.youtube.com/watch?v=… / https://youtu.be/…)");
+  // 動画のURLは、サイトの種類と動画の識別子だけを保存する。空なら削除(店舗ページから「動画紹介」が消える)。URLが貼られたのに判別できないときは、保存せずエラーにする。
+  const videoRaw = String(formData.get("video_url") ?? "").trim();
+  const video = videoRaw ? parseVideoUrl(videoRaw) : null;
+  if (videoRaw && !video) throw new Error("動画のURLを判別できません。YouTube・TikTok・Instagram(投稿・リール)のURLを、ブラウザのアドレスバーからコピーして貼ってください(TikTokの短縮URLは使えません)");
 
   if (!name) throw new Error("店舗名は必須です");
 
@@ -151,13 +151,18 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
     throw new Error("店舗情報の更新に失敗しました(対象の店舗が見つからないか、権限がありません)");
   }
 
-  // 動画紹介のYouTube ID(型に列が無いため別の更新にする)。RLSで0件更新でもエラーにならないので.select()で確認する。
+  // 動画紹介(型に列が無いため別の更新にする)。youtube_video_id は古い版との互換のため、YouTubeのときだけ書く。
+  // RLSで0件更新でもエラーにならないので.select()で確認する。
   const { data: ytData, error: ytError } = await (supabase as any)
     .from("locapass_shops")
-    .update({ youtube_video_id: youtubeVideoId })
+    .update({
+      video_provider: video?.provider ?? null,
+      video_ref: video?.ref ?? null,
+      youtube_video_id: video?.provider === "youtube" ? video.ref : null,
+    })
     .eq("id", shopId)
     .select("id");
-  if (ytError || !ytData?.length) throw new Error("YouTube動画の保存に失敗しました");
+  if (ytError || !ytData?.length) throw new Error("動画の保存に失敗しました");
 
   revalidateShop(shopId);
 }
