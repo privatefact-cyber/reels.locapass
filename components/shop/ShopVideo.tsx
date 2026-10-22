@@ -1,14 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { ExternalLink, Play } from "lucide-react";
 import { ShopYoutube } from "@/components/shop/ShopYoutube";
 import { VIDEO_PROVIDER_LABEL, videoUrlFor, type VideoProvider } from "@/lib/video";
 
 /**
- * 店舗ページの「動画紹介」。
- *  - YouTube: ページの中でその場再生(終了時にサムネイルへ戻す)。
- *  - TikTok / Instagram: ページの中では再生せず、「動画のリンクカード」にする。タップすると元の投稿が新しいタブで開く。
- *    埋め込みにすると、投稿者名・いいね数・「アプリで見る」などの表示が必ず付き、画面の大半が相手のサービスになって離脱しやすいため。
+ * 店舗ページの「動画紹介」。YouTube は専用の部品(終了時にサムネイルへ戻す)。
+ * TikTok / Instagram は、最初は店舗の写真(無ければ背景)と再生ボタンだけを出し(埋め込みのスクリプトが重いため)、
+ * タップしたときに初めて埋め込みを読み込む。埋め込みが開けない場合に備え、元の投稿を開くリンクも添える。
  */
 export function ShopVideo({
   provider,
@@ -21,31 +21,59 @@ export function ShopVideo({
   title: string;
   posterUrl?: string | null;
 }) {
+  const [playing, setPlaying] = useState(false);
+  // 埋め込み先の読み込みが終わるまで(TikTok/Instagramは数秒〜10秒ほどかかる)、真っ白にならないよう写真と「読み込み中」を重ねる。
+  const [loaded, setLoaded] = useState(false);
   if (provider === "youtube") return <ShopYoutube videoId={videoRef} title={title} />;
 
   const label = VIDEO_PROVIDER_LABEL[provider];
+  const originalUrl = videoUrlFor(provider, videoRef);
+  // 縦長の動画(TikTok/Instagram)は、読み込み前後で高さが変わらないよう、固定の高さの枠にする。
+  const frameClass = `mx-auto w-full ${provider === "tiktok" ? "max-w-[340px] h-[720px]" : "max-w-[420px] h-[700px]"}`;
+
+  const src = provider === "tiktok" ? `https://www.tiktok.com/embed/v2/${videoRef}` : `https://www.instagram.com/${videoRef}/embed/`;
+
   return (
-    <a
-      href={videoUrlFor(provider, videoRef)}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`${title}(${label}で開く)`}
-      className="group relative block aspect-video w-full overflow-hidden rounded-xl bg-black"
-    >
-      {posterUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={posterUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-      ) : (
-        <span className="block h-full w-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black" />
-      )}
-      <span className="absolute inset-0 bg-black/45 transition group-hover:bg-black/30" />
-      <span className="absolute left-3 top-3 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-bold text-white">{label}</span>
-      <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white shadow-lg">
-        <Play size={26} className="ml-0.5 fill-white" />
-      </span>
-      <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-gradient-to-t from-black/80 to-transparent px-3 pb-2 pt-8 text-xs font-bold text-white">
-        {label}で見る <ExternalLink size={12} />
-      </span>
-    </a>
+    <div className="space-y-1.5">
+      <div className={`relative overflow-hidden rounded-xl bg-black ${frameClass}`}>
+        {playing && !loaded && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-zinc-900">
+            {posterUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={posterUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+            )}
+            <span className="relative rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white">読み込み中…</span>
+          </div>
+        )}
+        {playing ? (
+          <iframe
+            src={src}
+            title={title}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+            // iframeのloadは、中身(TikTok/Instagramのアプリ)が描画されるより早く発火するため、少し待ってから「読み込み中」を消す。
+            onLoad={() => setTimeout(() => setLoaded(true), 3500)}
+            className="absolute inset-0 h-full w-full border-0 bg-white"
+          />
+        ) : (
+          <button type="button" onClick={() => setPlaying(true)} aria-label={`${title}(${label})`} className="group absolute inset-0 block h-full w-full">
+            {posterUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={posterUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            ) : (
+              <span className="block h-full w-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black" />
+            )}
+            <span className="absolute inset-0 bg-black/45 transition group-hover:bg-black/30" />
+            <span className="absolute left-3 top-3 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-bold text-white">{label}</span>
+            <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white shadow-lg">
+              <Play size={26} className="ml-0.5 fill-white" />
+            </span>
+          </button>
+        )}
+      </div>
+      <a href={originalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-[11px] text-tone-500 hover:text-accent">
+        {playing ? `表示されない場合は ${label} で見る` : `${label}で見る`} <ExternalLink size={11} />
+      </a>
+    </div>
   );
 }
