@@ -372,7 +372,7 @@ export default async function LocapassShopSettingsPage({
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
             <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-              入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。貼れるのは、YouTube・TikTok・Instagram(公開アカウントの投稿・リール)のURLです(TikTok は、ブラウザのアドレスバーのURLを貼ってください。短縮URLは使えません)。
+              入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。貼れるのは、YouTube・TikTok・Instagram のURLです。YouTube は、ページの中で、その場で再生されます。TikTok と Instagram は、ページの中では再生されず、タップすると、それぞれの投稿が新しいタブで開きます。Instagram は、リールのURLだけです(写真の投稿は不可)。TikTok は、ブラウザのアドレスバーのURLを貼ってください(短縮URLは使えません)。
               <br />
               ご自身のアカウントの動画、または権利のある動画だけを載せてください。投稿者が非公開にしたり埋め込みを許可していない動画は、再生されません。
             </p>

@@ -3,7 +3,7 @@
  * (サイト, 動画の識別子) を取り出す。識別子だけを保存し、URLは保存しない。
  *  - youtube  : 11文字のID
  *  - tiktok   : 数字のID(ブラウザのアドレスバーの `…/@ユーザー/video/数字` のURL。短縮URL(vm.tiktok.com)は不可)
- *  - instagram: `reel/コード` / `p/コード` / `tv/コード`(公開アカウントの投稿・リール)
+ *  - instagram: `reel/コード`(公開アカウントのリールだけ。写真の投稿は不可)
  */
 export type VideoProvider = "youtube" | "tiktok" | "instagram";
 export type VideoRef = { provider: VideoProvider; ref: string };
@@ -47,11 +47,10 @@ export function parseVideoUrl(input: string): VideoRef | null {
     return id && /^\d{8,25}$/.test(id) ? { provider: "tiktok", ref: id } : null;
   }
   if (host === "instagram.com") {
-    // /reel/CODE/ , /p/CODE/ , /tv/CODE/ , /ユーザー/reel/CODE/ , /ユーザー/p/CODE/
-    const i = parts.findIndex((p) => p === "reel" || p === "reels" || p === "p" || p === "tv");
-    const kind = i >= 0 ? (parts[i] === "reels" ? "reel" : parts[i]) : null;
+    // 動画紹介にできるのはリール(/reel/CODE/ , /ユーザー/reel/CODE/)だけ。通常の投稿(/p/)は写真の可能性があるため受け付けない。
+    const i = parts.findIndex((p) => p === "reel" || p === "reels");
     const code = i >= 0 ? parts[i + 1] : null;
-    return kind && code && /^[A-Za-z0-9_-]{5,20}$/.test(code) ? { provider: "instagram", ref: `${kind}/${code}` } : null;
+    return code && /^[A-Za-z0-9_-]{5,20}$/.test(code) ? { provider: "instagram", ref: `reel/${code}` } : null;
   }
   return null;
 }
