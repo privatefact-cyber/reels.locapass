@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- YouTube IFrame Player API は型定義を持ち込まず、使う分だけ any で扱う */
 declare global {
@@ -10,6 +11,10 @@ declare global {
     onYouTubeIframeAPIReady?: () => void;
   }
 }
+
+/** サイトの言語 → YouTubeの画面・字幕の言語。 */
+const YT_HL: Record<string, string> = { ja: "ja", en: "en", zh: "zh-CN", ar: "ar" };
+const YT_CAPTION_LANG: Record<string, string> = { ja: "ja", en: "en", zh: "zh-Hans", ar: "ar" };
 
 let apiPromise: Promise<any> | null = null;
 /** YouTube IFrame Player API を一度だけ読み込む(タップされるまで読み込まない=ページを重くしない)。 */
@@ -43,10 +48,16 @@ function loadYouTubeApi(): Promise<any> {
  * - おすすめは同じチャンネルのものだけ(rel=0)、アノテーションは出さない(iv_load_policy=3)。クッキーを使わないドメイン(youtube-nocookie)で埋め込む。
  * - 一時停止中にYouTube側が出す案内は、YouTubeの仕様で消せない。
  * - IFrame APIが読み込めない環境(広告ブロッカー等)では、通常のiframe埋め込みに切り替える(終了時の処理だけ効かない)。
+ * - 字幕: サイトの言語が日本語以外のときは、その言語の字幕を最初から出すようYouTubeに頼む(cc_load_policy / cc_lang_pref)。
+ *   字幕のデータはYouTube側にあり(言語ごとにSRT/VTTを登録)、その言語の字幕が登録されていなければ出ない。
+ *   見る人は、再生中にプレーヤーの字幕ボタン(CC)から、ほかの言語にも切り替えられる。
  */
 export function ShopYoutube({ videoId, title }: { videoId: string; title: string }) {
+  const { locale } = useLocale();
   const [playing, setPlaying] = useState(false);
   const [fallback, setFallback] = useState(false);
+  const hl = YT_HL[locale] ?? "ja";
+  const captionParams = locale !== "ja" ? { cc_load_policy: 1, cc_lang_pref: YT_CAPTION_LANG[locale] ?? "en" } : {};
   const holder = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,7 +74,7 @@ export function ShopYoutube({ videoId, title }: { videoId: string; title: string
           videoId,
           width: "100%",
           height: "100%",
-          playerVars: { autoplay: 1, playsinline: 1, rel: 0, iv_load_policy: 3, modestbranding: 1, origin: window.location.origin },
+          playerVars: { autoplay: 1, playsinline: 1, rel: 0, iv_load_policy: 3, modestbranding: 1, hl, ...captionParams, origin: window.location.origin },
           events: {
             onReady: (e: any) => e.target.playVideo(),
             onStateChange: (e: any) => {
@@ -85,14 +96,15 @@ export function ShopYoutube({ videoId, title }: { videoId: string; title: string
       }
       if (holder.current) holder.current.innerHTML = "";
     };
-  }, [playing, fallback, videoId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, fallback, videoId, hl, locale]);
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
       {playing ? (
         fallback ? (
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&iv_load_policy=3`}
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&iv_load_policy=3&hl=${hl}${locale !== "ja" ? `&cc_load_policy=1&cc_lang_pref=${captionParams.cc_lang_pref}` : ""}`}
             title={title}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
