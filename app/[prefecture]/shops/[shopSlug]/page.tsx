@@ -1,3 +1,4 @@
+import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { notFound } from "next/navigation";
 import { sanitizeWeekly, weeklyToText } from "@/lib/shop/businessHours";
 import Link from "next/link";
@@ -297,7 +298,8 @@ export default async function ShopDetailPage({
       name: c.name ?? "",
       age: c.age,
       prText: c.pr_text,
-      photoUrl: media[0]?.url,
+      // ギャラリー写真が無いFACESは、本人が設定したアイコン写真(avatar_url)を使う。
+      photoUrl: media[0]?.url ?? sanitizeImageUrl(c.avatar_url),
       isWorkingToday: shiftByCastId.has(castId),
       shiftLabel: shiftByCastId.get(castId) ?? null,
       isNew: c.created_at ? now - new Date(c.created_at).getTime() <= TWO_WEEKS_MS : false,
@@ -507,12 +509,21 @@ export default async function ShopDetailPage({
                 >
                   <div className="rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px] transition group-hover:scale-105">
                     <div className="rounded-full bg-page p-[2px]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={cast.photoUrl || "https://via.placeholder.com/150"}
-                        alt={cast.name}
-                        className="h-14 w-14 rounded-full object-cover"
-                      />
+                      {cast.photoUrl ? (
+
+                        // eslint-disable-next-line @next/next/no-img-element
+
+                        <img src={cast.photoUrl} alt={cast.name} className="h-14 w-14 rounded-full object-cover" />
+
+                      ) : (
+
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tone-800 text-lg font-semibold text-tone-500">
+
+                          {cast.name.slice(0, 1)}
+
+                        </div>
+
+                      )}
                     </div>
                   </div>
                   <span className="max-w-[68px] truncate text-center text-xs text-tone-300 group-hover:text-main">
@@ -538,12 +549,21 @@ export default async function ShopDetailPage({
                 >
                   <div className="relative rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 p-[2px] transition group-hover:scale-105">
                     <div className="rounded-full bg-page p-[2px]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={cast.photoUrl || "https://via.placeholder.com/150"}
-                        alt={cast.name}
-                        className="h-14 w-14 rounded-full object-cover"
-                      />
+                      {cast.photoUrl ? (
+
+                        // eslint-disable-next-line @next/next/no-img-element
+
+                        <img src={cast.photoUrl} alt={cast.name} className="h-14 w-14 rounded-full object-cover" />
+
+                      ) : (
+
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tone-800 text-lg font-semibold text-tone-500">
+
+                          {cast.name.slice(0, 1)}
+
+                        </div>
+
+                      )}
                     </div>
                     {cast.isNew && (
                       <span className="absolute -right-1 -top-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
