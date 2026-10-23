@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import QRCode from "qrcode";
@@ -109,9 +110,15 @@ export default async function StaffDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
   let isOwner = false;
+  let isShopAdmin = false;
   if (user) {
     const { data: viewerStaffId } = await supabase.rpc("locapass_current_staff_member_id");
     isOwner = viewerStaffId === staff.id;
+    // 店長(店舗のオーナー・管理者)が自分のマイページを開いているときは、店舗管理画面への入口を出す。
+    if (isOwner) {
+      const { data: canManage } = await supabase.rpc("locapass_is_shop_admin", { p_shop_id: staff.shop_id });
+      isShopAdmin = canManage === true;
+    }
   }
 
   const { data: reels } = await supabase
@@ -215,6 +222,13 @@ export default async function StaffDetailPage({
           },
         }}
       />
+      {isShopAdmin && (
+        <div className="mx-auto max-w-2xl px-4 pt-3 text-right">
+          <Link href={`/dashboard/shop/${staff.shop_id}`} className="text-xs font-semibold text-accent underline">
+            店舗管理画面へ
+          </Link>
+        </div>
+      )}
       <StaffDashboardClient
         isOwner={isOwner}
         userId={user?.id ?? ""}

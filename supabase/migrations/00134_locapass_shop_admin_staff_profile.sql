@@ -1,0 +1,5 @@
+-- 店長(店舗のオーナー・管理者ID)が、スタッフと同じマイページ(プロフィール・投稿)を使えるようにする。(2026-10-24)
+-- locapass_ensure_my_staff_profile(p_shop_id): 初めてマイページを開いたときに、本人のスタッフプロフィール
+--   (locapass_shop_staff_members)を1件作って紐づける(開くまでは作らない=公開ページも増えない)。その店舗の管理者IDでなければ拒否。
+-- locapass_owner_remove_shop_admin(): 管理者を外したら、その人のスタッフプロフィールも外す(ログインの紐づけを切って、公開ページから消す)。
+-- ※本体はSupabase上に適用済み(MCP apply_migration)。

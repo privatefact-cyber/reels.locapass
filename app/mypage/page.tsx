@@ -129,6 +129,7 @@ export default async function MypagePage() {
   if (roles && !roles.super_admin) {
     if (roles.portal_ids.length > 0) managementLinks.push({ label: "エリア管理", href: "/admin" });
     for (const shop of postShops) managementLinks.push({ label: `店舗管理: ${shop.name}`, href: `/dashboard/shop/${shop.id}` });
+    for (const shop of postShops) managementLinks.push({ label: `店長マイページ: ${shop.name}`, href: `/dashboard/shop/${shop.id}/me` });
     if (roles.staff) managementLinks.push({ label: "スタッフ画面", href: "/dashboard/staff" });
     if (roles.cast) managementLinks.push({ label: "キャスト画面", href: "/dashboard/cast" });
   }
