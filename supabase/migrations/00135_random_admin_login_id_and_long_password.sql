@@ -1,0 +1,6 @@
+-- 新規に発行する店舗管理者IDを、推測されにくくする(発行済みのID・パスワードは変えない)。(2026-10-24)
+--  - 自動で作るログインIDを「店舗コード+@…」から、ランダムな10文字(紛らわしい文字を除く)に。
+--  - 自動で作るパスワードを、16進数10文字から、英数字(大文字小文字・紛らわしい文字を除く)14文字に。
+--  対象: locapass__new_password / locapass__random_login_id(新規)、locapass_grant_shop_admin、locapass_owner_add_shop_admin、
+--        shop_owner_add_admin、admin_create_login_for_shop(ID生成とパスワード生成の部分だけ置換)。
+-- ※本体はSupabase上に適用済み(MCP apply_migration。DO文で既存の関数定義を置換している)。
