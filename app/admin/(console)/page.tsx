@@ -8,6 +8,7 @@ import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusT
 import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
 import { SiteThemeSelector } from "@/components/admin/SiteThemeSelector";
 import { isSiteTheme, resolveSiteTheme } from "@/lib/theme";
+import { LoginUrlCard } from "@/components/locapass-dashboard/LoginUrlCard";
 import { ConciergeBetaMetrics } from "@/components/admin/ConciergeBetaMetrics";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -95,6 +96,8 @@ export default async function AdminShopsPage({
             : "担当ポータルの店舗のみ表示しています。新規店舗の発行、公開/非公開の切り替えを行います。"}
         </p>
       </div>
+
+      <LoginUrlCard url="https://locapass.net/login" />
 
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="全店舗" value={totalCount} />

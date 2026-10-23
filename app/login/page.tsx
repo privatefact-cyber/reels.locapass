@@ -50,10 +50,12 @@ export default function LoginPage() {
           <label className="block text-sm font-medium">メールアドレス / ログインID</label>
           <input
             type="email"
+            name="username"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-black/20 bg-white px-3 py-2 text-sm text-black"
+            className="mt-1 w-full rounded border border-black/20 bg-white px-3 py-2 text-[16px] text-black"
           />
         </div>
         <div>
@@ -61,10 +63,12 @@ export default function LoginPage() {
           <div className="relative mt-1">
             <input
               type={showPassword ? "text" : "password"}
+              name="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded border border-black/20 bg-white px-3 py-2 pr-10 text-sm text-black"
+              className="w-full rounded border border-black/20 bg-white px-3 py-2 pr-10 text-[16px] text-black"
             />
             <button
               type="button"

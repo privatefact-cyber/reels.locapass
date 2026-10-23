@@ -7,9 +7,11 @@ import type { AddAdminState } from "@/app/dashboard/shop/[shopId]/admins/actions
 export function AddShopAdminForm({
   action,
   disabled,
+  loginUrl,
 }: {
   action: (prev: AddAdminState, fd: FormData) => Promise<AddAdminState>;
   disabled: boolean;
+  loginUrl: string;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const [copied, setCopied] = useState(false);
@@ -19,7 +21,7 @@ export function AddShopAdminForm({
   const copy = async () => {
     if (!state?.ok) return;
     try {
-      await navigator.clipboard.writeText(`ID: ${state.email}\nパスワード: ${state.password}`);
+      await navigator.clipboard.writeText(`ログインURL: ${loginUrl}\nID: ${state.email}\nパスワード: ${state.password}`);
       setCopied(true);
     } catch {
       // コピーできない端末では、画面の表示を見て控えてもらう。
@@ -54,11 +56,12 @@ export function AddShopAdminForm({
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm">
           <p className="font-semibold text-emerald-800">発行しました。パスワードはこの画面でしか表示されません。必ず控えて、本人にお伝えください。</p>
           <dl className="mt-2 space-y-1 text-slate-800">
+            <div className="flex gap-2"><dt className="w-24 shrink-0 text-slate-500">ログインURL</dt><dd className="break-all font-mono">{loginUrl}</dd></div>
             <div className="flex gap-2"><dt className="w-24 shrink-0 text-slate-500">ログインID</dt><dd className="break-all font-mono">{state.email}</dd></div>
             <div className="flex gap-2"><dt className="w-24 shrink-0 text-slate-500">パスワード</dt><dd className="font-mono">{state.password}</dd></div>
           </dl>
           <button type="button" onClick={copy} className="mt-3 rounded-lg border border-emerald-400 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800">
-            {copied ? "コピーしました" : "IDとパスワードをコピー"}
+            {copied ? "コピーしました" : "URL・ID・パスワードをコピー"}
           </button>
         </div>
       )}

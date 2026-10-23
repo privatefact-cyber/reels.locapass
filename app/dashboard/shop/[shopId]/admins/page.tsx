@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { createClient } from "@/lib/supabase/server";
+import { LoginUrlCard } from "@/components/locapass-dashboard/LoginUrlCard";
 import { AddShopAdminForm } from "@/components/locapass-dashboard/AddShopAdminForm";
 import { addShopAdmin, removeShopAdmin } from "./actions";
 
@@ -34,13 +35,15 @@ export default async function LocapassShopAdminsPage({ params }: { params: Promi
         </p>
       </div>
 
+      <LoginUrlCard url="https://locapass.net/login" />
+
       {iAmOwner ? (
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-900">
             管理者IDを追加 <span className="font-normal text-slate-500">({admins.length}/{MAX_ADMINS}人)</span>
           </h2>
           {full && <p className="mb-3 text-sm text-amber-700">上限の{MAX_ADMINS}人に達しています。追加するには、使わない管理者を外してください。</p>}
-          <AddShopAdminForm action={addShopAdmin.bind(null, shop.id)} disabled={full} />
+          <AddShopAdminForm action={addShopAdmin.bind(null, shop.id)} disabled={full} loginUrl="https://locapass.net/login" />
         </section>
       ) : (
         <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
