@@ -48,6 +48,7 @@ const CAPTION_BUTTONS: { key: string; label: string; codes: string[] }[] = [
   { key: "zh-s", label: "中文(简体)", codes: ["zh-CN", "zh-Hans"] },
   { key: "zh-t", label: "中文(繁體)", codes: ["zh-TW", "zh-Hant", "zh-HK"] },
   { key: "ar", label: "العربية", codes: ["ar"] },
+  { key: "ko", label: "한국어", codes: ["ko"] },
 ];
 /** サイトの言語 → 最初に出す字幕のボタン(日本語は、字幕を出さない)。 */
 const LOCALE_TO_CAPTION: Record<string, string> = { ja: "off", en: "en", zh: "zh-s", ar: "ar" };
