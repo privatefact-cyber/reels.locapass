@@ -14,7 +14,8 @@ declare global {
 
 /** サイトの言語 → YouTubeの画面・字幕の言語。 */
 const YT_HL: Record<string, string> = { ja: "ja", en: "en", zh: "zh-CN", ar: "ar" };
-const YT_CAPTION_LANG: Record<string, string> = { ja: "ja", en: "en", zh: "zh-Hans", ar: "ar" };
+// 中国語は、zh-Hans より zh-CN のほうが、実際に簡体字の字幕が出た(TEDの多言語動画で確認。zh-Hans では繁体字が出た)。
+const YT_CAPTION_LANG: Record<string, string> = { ja: "ja", en: "en", zh: "zh-CN", ar: "ar" };
 
 let apiPromise: Promise<any> | null = null;
 /** YouTube IFrame Player API を一度だけ読み込む(タップされるまで読み込まない=ページを重くしない)。 */
