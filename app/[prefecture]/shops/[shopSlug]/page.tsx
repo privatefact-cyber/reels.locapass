@@ -298,8 +298,9 @@ export default async function ShopDetailPage({
       name: c.name ?? "",
       age: c.age,
       prText: c.pr_text,
-      // ギャラリー写真が無いFACESは、本人が設定したアイコン写真(avatar_url)を使う。
-      photoUrl: media[0]?.url ?? sanitizeImageUrl(c.avatar_url),
+      // 本人がマイページで設定したアイコン写真(avatar_url)を最優先にする(他の画面のアイコンと同じ写真にそろえる)。
+      // 未設定のときだけ、ギャラリーの1枚目を使う。
+      photoUrl: sanitizeImageUrl(c.avatar_url) ?? media[0]?.url,
       isWorkingToday: shiftByCastId.has(castId),
       shiftLabel: shiftByCastId.get(castId) ?? null,
       isNew: c.created_at ? now - new Date(c.created_at).getTime() <= TWO_WEEKS_MS : false,

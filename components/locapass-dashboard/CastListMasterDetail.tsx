@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 
 interface CastMember {
+  avatar_url?: string | null;
   id: string;
   name: string;
   age: number | null;
@@ -50,7 +51,8 @@ export function CastListMasterDetail({ castMembers, detailBasePath }: CastListMa
               <tbody className="divide-y divide-slate-200">
                 {castMembers.map((cast) => {
                   const isSelected = cast.id === selectedCastId;
-                  const photoUrl = cast.media?.[0]?.url;
+                  // マイページで設定したアイコン写真を最優先(他の画面と同じ写真にそろえる)。未設定ならギャラリーの1枚目。
+                  const photoUrl = cast.avatar_url ?? cast.media?.[0]?.url;
                   return (
                     <tr
                       key={cast.id}

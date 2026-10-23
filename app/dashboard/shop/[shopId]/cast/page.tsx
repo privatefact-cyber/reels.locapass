@@ -26,7 +26,7 @@ export default async function LocapassShopCastPage({
   const supabase = await createClient();
   const { data: castMembers } = await supabase
     .from("locapass_cast_members")
-    .select("id, name, age, pr_text, created_at")
+    .select("id, name, age, pr_text, avatar_url, created_at")
     .eq("shop_id", shop.id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
