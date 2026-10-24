@@ -265,7 +265,9 @@ summary {
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
-  overscroll-behavior: contain;
+  /* 横スクロールの帯の上でマウスホイールを回しても、ページの縦スクロールが止まらないよう、縦は親に引き継ぐ */
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
 }
 
 .no-scrollbar::-webkit-scrollbar {
