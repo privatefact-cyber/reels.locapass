@@ -315,6 +315,7 @@ export type Dictionary = {
     routeAdd: string;
     routeRemove: string;
     routeStart: string;
+    routeDragHint: string;
     routeClear: string;
     profilePosts: string;
     profileLikes: string;
@@ -700,6 +701,7 @@ const ja: Dictionary = {
     routeAdd: "ルートに追加",
     routeRemove: "ルートから外す",
     routeStart: "ルート検索スタート",
+    routeDragHint: "ドラッグで順番を変更できます",
     routeClear: "クリア",
     profilePosts: "投稿",
     profileLikes: "いいね",
@@ -1085,6 +1087,7 @@ const en: Dictionary = {
     routeAdd: "Add to route",
     routeRemove: "Remove from route",
     routeStart: "Start route search",
+    routeDragHint: "Drag to change the order",
     routeClear: "Clear",
     profilePosts: "Posts",
     profileLikes: "Likes",
@@ -1470,6 +1473,7 @@ const zh: Dictionary = {
     routeAdd: "加入路线",
     routeRemove: "从路线移除",
     routeStart: "开始路线搜索",
+    routeDragHint: "拖动可调整顺序",
     routeClear: "清除",
     profilePosts: "投稿",
     profileLikes: "获赞",
@@ -1856,6 +1860,7 @@ const ar: Dictionary = {
     routeAdd: "أضف إلى المسار",
     routeRemove: "إزالة من المسار",
     routeStart: "ابدأ البحث عن المسار",
+    routeDragHint: "اسحب لتغيير الترتيب",
     routeClear: "مسح",
     profilePosts: "المنشورات",
     profileLikes: "الإعجابات",

@@ -500,6 +500,29 @@ export function PhotoMap({
     });
   }, [route]);
 
+  // ルートの並べ替え(A→B→Cの順を、チップのドラッグで変える)。マウスでも指でも動くようPointer Eventsで実装。
+  const [dragId, setDragId] = useState<string | null>(null);
+  const chipRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
+  const onChipMove = (e: React.PointerEvent) => {
+    if (!dragId) return;
+    for (const [id, el] of chipRefs.current) {
+      if (id === dragId) continue;
+      const r = el.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+        setRoute((prev) => {
+          const from = prev.indexOf(dragId);
+          const to = prev.indexOf(id);
+          if (from < 0 || to < 0 || from === to) return prev;
+          const next = prev.slice();
+          next.splice(from, 1);
+          next.splice(to, 0, dragId);
+          return next;
+        });
+        break;
+      }
+    }
+  };
+
   const toggleRoute = (id: string) =>
     setRoute((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
@@ -558,7 +581,25 @@ export function PhotoMap({
               const sp = spots.find((x) => x.id === id);
               if (!sp) return null;
               return (
-                <span key={id} className="inline-flex max-w-[11rem] items-center gap-1 rounded-full border border-hl-400/50 bg-black px-2 py-1 text-[11px] text-main">
+                <span
+                  key={id}
+                  ref={(el) => {
+                    if (el) chipRefs.current.set(id, el);
+                    else chipRefs.current.delete(id);
+                  }}
+                  onPointerDown={(e) => {
+                    if ((e.target as HTMLElement).closest("button")) return; // ×ボタンは並べ替えの対象外
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    setDragId(id);
+                  }}
+                  onPointerMove={onChipMove}
+                  onPointerUp={() => setDragId(null)}
+                  onPointerCancel={() => setDragId(null)}
+                  style={{ touchAction: "none" }}
+                  className={`inline-flex max-w-[11rem] select-none items-center gap-1 rounded-full border bg-black px-2 py-1 text-[11px] text-main transition ${
+                    dragId === id ? "z-10 scale-105 cursor-grabbing border-hl-300 opacity-80 shadow-lg" : "cursor-grab border-hl-400/50"
+                  }`}
+                >
                   <b className="text-hl-300">{routeLetter(i)}</b>
                   <span className="truncate">{sp.names[0]}</span>
                   <button type="button" aria-label={t.photo.routeRemove} onClick={() => toggleRoute(id)} className="text-tone-500 hover:text-main">
@@ -568,6 +609,7 @@ export function PhotoMap({
               );
             })}
           </div>
+          {route.length > 1 ? <p className="px-1 text-[10px] text-tone-500">{t.photo.routeDragHint}</p> : null}
           <div className="flex gap-2">
             <a
               href={routeUrlFor(route.map((id) => spots.find((x) => x.id === id)).filter((x): x is Spot => Boolean(x)))}
