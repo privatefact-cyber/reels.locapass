@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 import { ShopMediaFallback } from "@/components/shop/ShopMediaFallback";
+import { HeroYoutubeBackground } from "@/components/shop/HeroYoutubeBackground";
 
 /**
  * 店舗ページのヒーロー(動画/写真)。写真が無い、または読み込めない(リンク切れ)ときは、真っ黒にせず
@@ -14,16 +15,20 @@ export function ShopHeroMedia({
   alt,
   category,
   seed,
+  youtubeId,
 }: {
   url: string | null;
   type: "image" | "video";
   alt: string;
   category: string | null;
   seed: string;
+  /** 写真が無い/読み込めないとき、店舗の動画紹介(YouTube)があれば背景に流す。 */
+  youtubeId?: string | null;
 }) {
   const [broken, setBroken] = useState(false);
 
   if (!url || broken) {
+    if (youtubeId) return <HeroYoutubeBackground videoId={youtubeId} title={alt} />;
     return <ShopMediaFallback category={category} seed={seed} name={alt} allowVideo />;
   }
   if (type === "video") return <AutoplayVideo src={url} />;

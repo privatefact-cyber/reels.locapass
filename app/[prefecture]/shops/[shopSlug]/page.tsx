@@ -408,6 +408,7 @@ export default async function ShopDetailPage({
           alt={store.name}
           category={store.genre}
           seed={store.id}
+          youtubeId={introVideo?.provider === "youtube" ? introVideo.ref : null}
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-tone-950 via-tone-950/60 to-transparent" />
