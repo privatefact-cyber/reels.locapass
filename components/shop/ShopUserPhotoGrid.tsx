@@ -32,7 +32,7 @@ export function ShopUserPhotoGrid({
   const slider = layout === "slider";
   const listClass = slider
     ? "-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-    : "grid grid-cols-3 gap-[2px] md:grid-cols-[repeat(auto-fill,minmax(80px,1fr))]";
+    : "grid w-full grid-cols-3 gap-[2px] md:mx-auto md:max-w-7xl md:grid-cols-[repeat(auto-fill,minmax(80px,1fr))]";
   const cardClass = slider ? "h-[60px] w-[60px] shrink-0" : "min-w-0";
   const rounded = slider ? "rounded-md" : "";
 
