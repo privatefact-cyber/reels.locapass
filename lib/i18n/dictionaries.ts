@@ -279,6 +279,14 @@ export type Dictionary = {
     spotsSortNew: string;
     spotsEmpty: string;
     postButton: string;
+    shareText: (name: string) => string;
+    shareLine: string;
+    shareX: string;
+    shareCopy: string;
+    shareMore: string;
+    shareFree: string;
+    shareCta: string;
+    viewShop: (name: string) => string;
     empty: string;
     feedIntro: string;
     seeAll: string;
@@ -651,6 +659,14 @@ const ja: Dictionary = {
     spotsSortNew: "新着順",
     spotsEmpty: "まだ穴場の投稿がありません",
     postButton: "＋ 写真を投稿",
+    shareText: (name: string) => `${name} の写真 #LOCAPASS`,
+    shareLine: "LINEで送る",
+    shareX: "Xで投稿",
+    shareCopy: "リンクをコピー",
+    shareMore: "その他のアプリ",
+    shareFree: "写真の投稿は無料です。あなたも、街の写真をシェアしてみませんか?",
+    shareCta: "＋ 写真を投稿する",
+    viewShop: (name: string) => `${name} のページを見る`,
     empty: "まだ投稿がありません。",
     feedIntro: "みんなが投稿した街の写真",
     seeAll: "すべての写真・マップを見る",
@@ -1023,6 +1039,14 @@ const en: Dictionary = {
     spotsSortNew: "Newest",
     spotsEmpty: "No hidden-gem posts yet",
     postButton: "+ Post a photo",
+    shareText: (name: string) => `Photo of ${name} #LOCAPASS`,
+    shareLine: "Send via LINE",
+    shareX: "Post on X",
+    shareCopy: "Copy link",
+    shareMore: "Other apps",
+    shareFree: "Posting photos is free. Why not share your own photos of the city?",
+    shareCta: "+ Post a photo",
+    viewShop: (name: string) => `View ${name}`,
     empty: "No photos yet.",
     feedIntro: "Photos of the area shared by everyone",
     seeAll: "See all photos & map",
@@ -1395,6 +1419,14 @@ const zh: Dictionary = {
     spotsSortNew: "最新",
     spotsEmpty: "暂无秘境投稿",
     postButton: "＋ 发布照片",
+    shareText: (name: string) => `${name} 的照片 #LOCAPASS`,
+    shareLine: "用 LINE 发送",
+    shareX: "发布到 X",
+    shareCopy: "复制链接",
+    shareMore: "其他应用",
+    shareFree: "发布照片是免费的。要不要也来分享你拍的城市照片?",
+    shareCta: "＋ 发布照片",
+    viewShop: (name: string) => `查看 ${name}`,
     empty: "还没有投稿。",
     feedIntro: "大家分享的街头照片",
     seeAll: "查看全部照片和地图",
@@ -1768,6 +1800,14 @@ const ar: Dictionary = {
     spotsSortNew: "الأحدث",
     spotsEmpty: "لا توجد منشورات بعد",
     postButton: "＋ انشر صورة",
+    shareText: (name: string) => `صورة ${name} #LOCAPASS`,
+    shareLine: "إرسال عبر LINE",
+    shareX: "نشر على X",
+    shareCopy: "نسخ الرابط",
+    shareMore: "تطبيقات أخرى",
+    shareFree: "نشر الصور مجاني. شاركنا صورك للمدينة!",
+    shareCta: "＋ انشر صورة",
+    viewShop: (name: string) => `عرض ${name}`,
     empty: "لا توجد صور بعد.",
     feedIntro: "صور المدينة التي شاركها الجميع",
     seeAll: "عرض كل الصور والخريطة",

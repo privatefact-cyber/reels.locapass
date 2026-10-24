@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search, Share2, Store } from "lucide-react";
-import { sharePhoto } from "@/components/photo/sharePhoto";
+import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search, Store } from "lucide-react";
+import { PhotoShareButton } from "@/components/photo/PhotoShareButton";
 import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoSpotList } from "@/components/photo/PhotoSpotList";
@@ -228,10 +228,7 @@ export function PhotoFeed({
                     setFullscreenIndex(null);
                   }}
                 />
-                <button type="button" onClick={() => void sharePhoto(post)} className="flex items-center gap-1 hover:text-main">
-                  <Share2 size={16} />
-                  {t.common.share}
-                </button>
+                <PhotoShareButton post={post} />
                 <a
                   href={photoRouteUrl(post)}
                   target="_blank"
