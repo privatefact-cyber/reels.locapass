@@ -347,6 +347,7 @@ export default async function ShopDetailPage({
   const archiveHref = shopArchivePath(site.slug, shopRow.slug);
   // 訪問者が投稿した写真(みんなの写真)。取得に失敗しても店舗ページ本体は表示する。
   const userPhotos = await getShopPhotoPosts({
+    id: shopRow.id,
     name: shopRow.name,
     venueId: shopRow.venue_id,
     lat: shopRow.lat,

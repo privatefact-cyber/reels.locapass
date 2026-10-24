@@ -39,7 +39,7 @@ export default async function ShopUserPhotosPage({ params }: { params: Promise<P
     .maybeSingle();
   if (!shop) notFound();
 
-  const posts = await getShopPhotoPosts({ name: shop.name, venueId: shop.venue_id, lat: shop.lat, lng: shop.lng });
+  const posts = await getShopPhotoPosts({ id: shop.id, name: shop.name, venueId: shop.venue_id, lat: shop.lat, lng: shop.lng });
 
   return (
     <div className="space-y-4 pb-32">

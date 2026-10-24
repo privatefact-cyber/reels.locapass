@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { path: "/account", label: "アカウント" },
   { path: "/me", label: "マイページ" },
   { path: "/reels", label: "リール投稿" },
+  { path: "/photos", label: "写真の管理" },
   { path: "/boost", label: "⚡ブースト" },
   { path: "/reservations", label: "優先予約" },
   { path: "/messages", label: "お客様へのメッセージ" },

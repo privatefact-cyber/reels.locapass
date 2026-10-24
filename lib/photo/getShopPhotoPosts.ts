@@ -58,11 +58,12 @@ export async function resolveShopVenueIds(shop: {
  * 店舗ページで他店の写真が混ざらないよう、(1)投稿者が掲載店として選んだ写真か、(2)場所名がこの店の名前に似ている写真だけを出す。
  */
 export async function getShopPhotoPosts(
-  shop: { name: string; venueId: string | null; lat: number | null; lng: number | null },
+  shop: { id?: string; name: string; venueId: string | null; lat: number | null; lng: number | null },
   limit = 90,
 ): Promise<PhotoPost[]> {
   const venueIds = await resolveShopVenueIds(shop);
   const supabase = createStaticClient();
+  const { hidden, attached } = await getShopPhotoLinks(shop.id);
 
   const rows: PostRow[] = [];
   if (venueIds.length > 0) {
@@ -95,13 +96,67 @@ export async function getShopPhotoPosts(
       if (nameLike(r.spot_name, shop.name) || nameLike(r.place_name, shop.name)) rows.push(r);
     }
   }
-  if (rows.length === 0) return [];
 
   const seen = new Set<string>();
-  const kept = rows
+  const auto = rows
     .filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)))
-    .filter((r) => r.place_kind === "listed" || nameLike(r.spot_name, shop.name) || nameLike(r.place_name, shop.name))
+    .filter((r) => r.place_kind === "listed" || nameLike(r.spot_name, shop.name) || nameLike(r.place_name, shop.name));
+
+  // 管理者が「この店舗に表示する」と指定した写真は、自動判定に関係なく出す。
+  const attachedRows: PostRow[] = [];
+  if (attached.length > 0) {
+    const { data, error } = await supabase.from("area_photo_posts").select(POST_COLUMNS).in("id", attached);
+    if (error) throw error;
+    for (const r of (data ?? []) as PostRow[]) if (!seen.has(r.id)) attachedRows.push(r);
+  }
+
+  // 「この店舗では出さない」と指定された写真は、自動判定で拾えていても外す。
+  const kept = [...auto, ...attachedRows]
+    .filter((r) => !hidden.includes(r.id))
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
     .slice(0, limit);
+  if (kept.length === 0) return [];
   return toPosts(supabase, kept);
+}
+
+/** 店舗ページの写真に対する管理者の上書き(表示する=attach / 出さない=hide)。 */
+export async function getShopPhotoLinks(shopId: string | undefined): Promise<{ hidden: string[]; attached: string[] }> {
+  if (!shopId) return { hidden: [], attached: [] };
+  const supabase = createStaticClient();
+  const { data } = await (supabase as any).from("locapass_shop_photo_links").select("post_id, mode").eq("shop_id", shopId);
+  const rows = (data ?? []) as { post_id: string; mode: "attach" | "hide" }[];
+  return {
+    hidden: rows.filter((r) => r.mode === "hide").map((r) => r.post_id),
+    attached: rows.filter((r) => r.mode === "attach").map((r) => r.post_id),
+  };
+}
+
+/**
+ * 管理画面用: 店舗ページに出ている写真 / 出さないにした写真 / (ポータル管理者向け)他の候補の写真。
+ * 候補は、その店舗のエリアに投稿された最新の写真のうち、いま出ていない・隠していないもの。
+ */
+export async function getShopPhotoAdminView(
+  shop: { id: string; name: string; venueId: string | null; lat: number | null; lng: number | null },
+  areaSlug: string | null,
+): Promise<{ shown: PhotoPost[]; attachedIds: string[]; hidden: PhotoPost[]; candidates: PhotoPost[] }> {
+  const supabase = createStaticClient();
+  const [shown, links] = await Promise.all([getShopPhotoPosts(shop), getShopPhotoLinks(shop.id)]);
+  const hidden = links.hidden.length
+    ? await (async () => {
+        const { data } = await supabase.from("area_photo_posts").select(POST_COLUMNS).in("id", links.hidden);
+        return toPosts(supabase, (data ?? []) as PostRow[]);
+      })()
+    : [];
+  let candidates: PhotoPost[] = [];
+  if (areaSlug) {
+    const { data } = await supabase
+      .from("area_photo_posts")
+      .select(POST_COLUMNS)
+      .eq("site", areaSlug)
+      .order("created_at", { ascending: false })
+      .limit(80);
+    const skip = new Set([...shown.map((p) => p.id), ...links.hidden]);
+    candidates = await toPosts(supabase, ((data ?? []) as PostRow[]).filter((r) => !skip.has(r.id)));
+  }
+  return { shown, attachedIds: links.attached, hidden, candidates };
 }
