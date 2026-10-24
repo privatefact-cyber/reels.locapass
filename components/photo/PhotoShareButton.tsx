@@ -41,7 +41,10 @@ export function PhotoShareButton({
   const text = t.photo.shareText(post.spotName);
   // 写真ファイルを付けて送れるか(スマホの共有画面)。動画の投稿は対象外(写真ではなく動画の1コマになるため)。
   const [canShareFile, setCanShareFile] = useState(false);
+  // スマホ(タッチ操作の端末)で端末の共有画面が使えるなら、メニューを出さず、押した瞬間にそれを開く(写真とリンクを素直に送れる)。
+  const [directShare, setDirectShare] = useState(false);
   useEffect(() => {
+    setDirectShare(typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches);
     try {
       const probe = new File([new Blob(["x"], { type: "image/jpeg" })], "a.jpg", { type: "image/jpeg" });
       setCanShareFile(!post.videoUrl && typeof navigator.canShare === "function" && navigator.canShare({ files: [probe] }));
@@ -120,7 +123,16 @@ export function PhotoShareButton({
 
   return (
     <span ref={box} className="relative inline-block" onClick={(e) => e.stopPropagation()}>
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label={t.common.share} className={trigger}>
+      <button
+        type="button"
+        onClick={() => {
+          if (directShare) void (canShareFile ? sendWithPhoto() : more());
+          else setOpen((v) => !v);
+        }}
+        aria-expanded={open}
+        aria-label={t.common.share}
+        className={trigger}
+      >
         <Share2 size={variant === "pill" ? 18 : 16} />
         {t.common.share}
       </button>
