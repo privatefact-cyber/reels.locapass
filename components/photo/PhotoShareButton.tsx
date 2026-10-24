@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Link2, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
+import { Check, Download, ImageIcon, Link2, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoShareUrl } from "@/components/photo/sharePhoto";
+import { photoResized } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /**
@@ -14,7 +15,7 @@ export function PhotoShareButton({
   post,
   variant = "text",
 }: {
-  post: Pick<PhotoPost, "id" | "spotName">;
+  post: Pick<PhotoPost, "id" | "spotName" | "imageUrl" | "videoUrl">;
   variant?: "text" | "pill";
 }) {
   const { t } = useLocale();
@@ -38,6 +39,16 @@ export function PhotoShareButton({
   }, [copied]);
 
   const text = t.photo.shareText(post.spotName);
+  // 写真ファイルを付けて送れるか(スマホの共有画面)。動画の投稿は対象外(写真ではなく動画の1コマになるため)。
+  const [canShareFile, setCanShareFile] = useState(false);
+  useEffect(() => {
+    try {
+      const probe = new File([new Blob(["x"], { type: "image/jpeg" })], "a.jpg", { type: "image/jpeg" });
+      setCanShareFile(!post.videoUrl && typeof navigator.canShare === "function" && navigator.canShare({ files: [probe] }));
+    } catch {
+      setCanShareFile(false);
+    }
+  }, [post.videoUrl]);
   const item = "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-main hover:bg-white/10";
 
   async function copy() {
@@ -47,6 +58,50 @@ export function PhotoShareButton({
     } catch {
       // クリップボードが使えない環境では何もしない。
     }
+  }
+
+  /** 写真ファイルを取得する(元の画像形式のまま、幅1600pxに縮小)。 */
+  async function fetchPhotoFile(): Promise<File | null> {
+    try {
+      const src = photoResized(post.imageUrl, 1600, false);
+      const res = await fetch(src.includes("/render/image/") ? `${src}&format=origin` : src);
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      const ext = blob.type.includes("png") ? "png" : "jpg";
+      return new File([blob], `${post.spotName.replace(/[\\/:*?"<>|]/g, "_")}.${ext}`, { type: blob.type || "image/jpeg" });
+    } catch {
+      return null;
+    }
+  }
+
+  async function sendWithPhoto() {
+    const file = await fetchPhotoFile();
+    try {
+      if (file && navigator.canShare?.({ files: [file] })) {
+        // 写真と一緒にURLが落ちる端末があるので、URLは本文にも入れる。
+        await navigator.share({ files: [file], title: `LOCAPASS | ${post.spotName}`, text: `${text}\n${photoShareUrl(post)}` });
+      } else {
+        await navigator.share({ title: `LOCAPASS | ${post.spotName}`, text, url: photoShareUrl(post) });
+      }
+    } catch {
+      // キャンセル等は何もしない。
+    }
+    setOpen(false);
+  }
+
+  async function savePhoto() {
+    const file = await fetchPhotoFile();
+    if (file) {
+      const href = URL.createObjectURL(file);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(href), 10000);
+    }
+    setOpen(false);
   }
 
   async function more() {
@@ -71,6 +126,17 @@ export function PhotoShareButton({
       </button>
       {open ? (
         <div role="menu" className="absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-white/15 bg-tone-900 p-1 shadow-xl">
+          {canShareFile ? (
+            <button type="button" role="menuitem" className={item} onClick={() => void sendWithPhoto()}>
+              <ImageIcon size={16} />
+              {t.photo.shareWithPhoto}
+            </button>
+          ) : !post.videoUrl ? (
+            <button type="button" role="menuitem" className={item} onClick={() => void savePhoto()}>
+              <Download size={16} />
+              {t.photo.savePhoto}
+            </button>
+          ) : null}
           <a
             role="menuitem"
             className={item}

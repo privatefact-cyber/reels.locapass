@@ -284,6 +284,8 @@ export type Dictionary = {
     shareX: string;
     shareCopy: string;
     shareMore: string;
+    shareWithPhoto: string;
+    savePhoto: string;
     shareFree: string;
     shareCta: string;
     viewShop: (name: string) => string;
@@ -664,6 +666,8 @@ const ja: Dictionary = {
     shareX: "Xで投稿",
     shareCopy: "リンクをコピー",
     shareMore: "その他のアプリ",
+    shareWithPhoto: "写真つきで送る",
+    savePhoto: "写真を保存",
     shareFree: "写真の投稿は無料です。あなたも、街の写真をシェアしてみませんか?",
     shareCta: "＋ 写真を投稿する",
     viewShop: (name: string) => `${name} のページを見る`,
@@ -1044,6 +1048,8 @@ const en: Dictionary = {
     shareX: "Post on X",
     shareCopy: "Copy link",
     shareMore: "Other apps",
+    shareWithPhoto: "Send with the photo",
+    savePhoto: "Save photo",
     shareFree: "Posting photos is free. Why not share your own photos of the city?",
     shareCta: "+ Post a photo",
     viewShop: (name: string) => `View ${name}`,
@@ -1424,6 +1430,8 @@ const zh: Dictionary = {
     shareX: "发布到 X",
     shareCopy: "复制链接",
     shareMore: "其他应用",
+    shareWithPhoto: "连同照片一起发送",
+    savePhoto: "保存照片",
     shareFree: "发布照片是免费的。要不要也来分享你拍的城市照片?",
     shareCta: "＋ 发布照片",
     viewShop: (name: string) => `查看 ${name}`,
@@ -1805,6 +1813,8 @@ const ar: Dictionary = {
     shareX: "نشر على X",
     shareCopy: "نسخ الرابط",
     shareMore: "تطبيقات أخرى",
+    shareWithPhoto: "إرسال مع الصورة",
+    savePhoto: "حفظ الصورة",
     shareFree: "نشر الصور مجاني. شاركنا صورك للمدينة!",
     shareCta: "＋ انشر صورة",
     viewShop: (name: string) => `عرض ${name}`,
