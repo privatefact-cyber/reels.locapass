@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search } from "lucide-react";
+import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search, Share2, Store } from "lucide-react";
+import { sharePhoto } from "@/components/photo/sharePhoto";
 import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoSpotList } from "@/components/photo/PhotoSpotList";
@@ -212,7 +213,14 @@ export function PhotoFeed({
             )}
             <div className="space-y-2 px-3 pt-3">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base font-medium text-main">{post.spotName}</p>
+                {post.shop ? (
+                  <Link href={post.shop.href} className="flex items-center gap-1 text-base font-medium text-main underline decoration-main/40 underline-offset-4 hover:decoration-main">
+                    <Store size={16} className="shrink-0" />
+                    {post.spotName}
+                  </Link>
+                ) : (
+                  <p className="text-base font-medium text-main">{post.spotName}</p>
+                )}
                 <PlaceBadge kind={post.placeKind} />
               </div>
               {post.comment ? <p className="whitespace-pre-wrap text-sm text-tone-300">{post.comment}</p> : null}
@@ -235,6 +243,10 @@ export function PhotoFeed({
                     setFullscreenIndex(null);
                   }}
                 />
+                <button type="button" onClick={() => void sharePhoto(post)} className="flex items-center gap-1 hover:text-main">
+                  <Share2 size={16} />
+                  {t.common.share}
+                </button>
                 <a
                   href={photoRouteUrl(post)}
                   target="_blank"

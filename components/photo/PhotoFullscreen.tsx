@@ -125,7 +125,13 @@ export function PhotoFullscreen({
         className="pointer-events-none absolute inset-x-0 text-center text-xs text-white/80"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
       >
-        {post.spotName}
+        {post.shop ? (
+          <a href={post.shop.href} className="pointer-events-auto underline underline-offset-4" onClick={(e) => e.stopPropagation()}>
+            {post.spotName}
+          </a>
+        ) : (
+          post.spotName
+        )}
         {posts.length > 1 ? `　${index + 1} / ${posts.length}` : ""}
       </p>
     </div>,

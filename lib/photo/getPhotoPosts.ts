@@ -1,3 +1,4 @@
+import { resolvePostShops } from "@/lib/photo/resolvePostShops";
 import { createStaticClient } from "@/lib/supabase/static";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
@@ -23,6 +24,8 @@ export type PhotoPost = {
   /** 動画投稿のとき、動画本体(R2)のURL。imageUrlはその1コマ(ポスター)。 */
   videoUrl: string | null;
   likeCount: number;
+  /** 掲載店の写真なら、その店舗ページへのリンク(店名をタップして店舗詳細へ飛ぶため)。 */
+  shop: { name: string; href: string } | null;
 };
 
 export type PhotoArea = { slug: string; name: string; nameEn: string | null };
@@ -72,6 +75,7 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     const { data: likes } = await supabase.from("area_photo_likes").select("post_id").in("post_id", ids);
     for (const l of likes ?? []) likeCounts.set(l.post_id, (likeCounts.get(l.post_id) ?? 0) + 1);
   }
+  const shopByPost = await resolvePostShops(supabase, rows).catch(() => new Map());
   // 閲覧者の言語に合わせて、場所名・一言・住所は翻訳があればそれを出す(無ければ原文)。
   const locale = await getServerLocale();
   const tr = (r: PostRow, original: string | null, key: string) => pickTranslation(locale, original, r.translations, key).text;
@@ -95,6 +99,7 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     placeName: r.place_name === r.spot_name ? (tr(r, r.place_name, "spot_name") ?? r.place_name) : r.place_name,
     videoUrl: r.video_url,
     likeCount: likeCounts.get(r.id) ?? 0,
+    shop: shopByPost.get(r.id) ?? null,
   }));
 }
 
@@ -199,4 +204,13 @@ export async function getLikedPosts(memberId: string, limit: number = PHOTO_PAGE
   const byId = new Map(((rows ?? []) as PostRow[]).map((r) => [r.id, r]));
   const ordered = ids.map((id) => byId.get(id)).filter((r): r is PostRow => Boolean(r));
   return toPosts(supabase, ordered);
+}
+
+/** 写真1枚(共有用の個別ページ)。無ければnull。 */
+export async function getPhotoPostById(id: string): Promise<PhotoPost | null> {
+  const supabase = createStaticClient();
+  const { data: row, error } = await supabase.from("area_photo_posts").select(POST_COLUMNS).eq("id", id).maybeSingle();
+  if (error || !row) return null;
+  const [post] = await toPosts(supabase, [row as PostRow]);
+  return post ?? null;
 }

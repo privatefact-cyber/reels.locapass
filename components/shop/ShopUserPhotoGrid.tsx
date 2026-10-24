@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Play, Share2 } from "lucide-react";
+import { sharePhoto } from "@/components/photo/sharePhoto";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
@@ -37,21 +38,7 @@ export function ShopUserPhotoGrid({
   }, [copiedId]);
 
   async function share(post: PhotoPost) {
-    const url = new URL(shareUrl ?? window.location.pathname, window.location.origin).toString();
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `LOCAPASS | ${post.spotName}`, url });
-      } catch {
-        // キャンセル等は何もしない。
-      }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedId(post.id);
-    } catch {
-      // クリップボードが使えない環境では何もしない。
-    }
+    if (await sharePhoto(post)) setCopiedId(post.id);
   }
 
   const listClass =
