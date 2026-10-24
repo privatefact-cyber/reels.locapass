@@ -174,7 +174,7 @@ export function PhotoShareButton({
       <button
         type="button"
         onClick={() => {
-          if (directShare) void (canShareFile ? sendWithPhoto() : more());
+          if (directShare) void more();
           else setOpen((v) => !v);
         }}
         aria-expanded={open}
