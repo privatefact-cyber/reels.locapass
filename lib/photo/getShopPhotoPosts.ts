@@ -63,18 +63,45 @@ export async function getShopPhotoPosts(
 ): Promise<PhotoPost[]> {
   const venueIds = await resolveShopVenueIds(shop);
   const supabase = createStaticClient();
-  if (venueIds.length === 0) return [];
 
-  const { data: rows, error } = await supabase
-    .from("area_photo_posts")
-    .select(POST_COLUMNS)
-    .in("venue_id", venueIds)
-    .order("created_at", { ascending: false })
-    .limit(limit * 3);
-  if (error) throw error;
+  const rows: PostRow[] = [];
+  if (venueIds.length > 0) {
+    const { data, error } = await supabase
+      .from("area_photo_posts")
+      .select(POST_COLUMNS)
+      .in("venue_id", venueIds)
+      .order("created_at", { ascending: false })
+      .limit(limit * 3);
+    if (error) throw error;
+    rows.push(...((data ?? []) as PostRow[]));
+  }
 
-  const kept = ((rows ?? []) as PostRow[])
+  // 店舗に掲載店(venue)が結び付いていない/別の掲載店に紐付いてしまった投稿も拾う。
+  // 投稿時の自動紐付けは「近くの別の掲載店」になることがあるので、店舗の近く(約150m)で、
+  // 場所名がこの店の名前に似ている投稿だけを、掲載店に関係なく対象にする。
+  if (shop.lat != null && shop.lng != null) {
+    const d = 0.0015;
+    const { data: nearby, error: nearErr } = await supabase
+      .from("area_photo_posts")
+      .select(POST_COLUMNS)
+      .gte("latitude", shop.lat - d)
+      .lte("latitude", shop.lat + d)
+      .gte("longitude", shop.lng - d)
+      .lte("longitude", shop.lng + d)
+      .order("created_at", { ascending: false })
+      .limit(limit * 3);
+    if (nearErr) throw nearErr;
+    for (const r of (nearby ?? []) as PostRow[]) {
+      if (nameLike(r.spot_name, shop.name) || nameLike(r.place_name, shop.name)) rows.push(r);
+    }
+  }
+  if (rows.length === 0) return [];
+
+  const seen = new Set<string>();
+  const kept = rows
+    .filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)))
     .filter((r) => r.place_kind === "listed" || nameLike(r.spot_name, shop.name) || nameLike(r.place_name, shop.name))
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
     .slice(0, limit);
   return toPosts(supabase, kept);
 }
