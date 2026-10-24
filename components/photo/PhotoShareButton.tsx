@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Download, ImageIcon, Link2, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
+import { Check, Copy, Download, ImageIcon, Link2, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoShareUrl } from "@/components/photo/sharePhoto";
 import { photoResized } from "@/components/photo/photoUtils";
@@ -21,6 +21,7 @@ export function PhotoShareButton({
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [photoCopied, setPhotoCopied] = useState(false);
   const box = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -31,6 +32,12 @@ export function PhotoShareButton({
     document.addEventListener("pointerdown", onDown);
     return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
+
+  useEffect(() => {
+    if (!photoCopied) return;
+    const timer = window.setTimeout(() => setPhotoCopied(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [photoCopied]);
 
   useEffect(() => {
     if (!copied) return;
@@ -92,6 +99,25 @@ export function PhotoShareButton({
     setOpen(false);
   }
 
+  /** 写真そのものをクリップボードへ。LINEなどのトーク画面に貼り付ければ、写真として送れる(クリップボードはPNGだけ受け付ける)。 */
+  async function copyPhotoImage() {
+    try {
+      const file = await fetchPhotoFile();
+      if (!file) return;
+      const bitmap = await createImageBitmap(file);
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+      const png = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!png) return;
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
+      setPhotoCopied(true);
+    } catch {
+      // コピーできない環境では、下の「写真を保存」を使ってもらう。
+    }
+  }
+
   async function savePhoto() {
     const file = await fetchPhotoFile();
     if (file) {
@@ -137,17 +163,23 @@ export function PhotoShareButton({
         {t.common.share}
       </button>
       {open ? (
-        <div role="menu" className="absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-white/15 bg-tone-900 p-1 shadow-xl">
+        <div role="menu" className="absolute right-0 top-full z-30 mt-2 w-72 max-w-[85vw] rounded-xl border border-white/15 bg-tone-900 p-1 shadow-xl">
           {canShareFile ? (
             <button type="button" role="menuitem" className={item} onClick={() => void sendWithPhoto()}>
               <ImageIcon size={16} />
               {t.photo.shareWithPhoto}
             </button>
           ) : !post.videoUrl ? (
-            <button type="button" role="menuitem" className={item} onClick={() => void savePhoto()}>
-              <Download size={16} />
-              {t.photo.savePhoto}
-            </button>
+            <>
+              <button type="button" role="menuitem" className={item} onClick={() => void copyPhotoImage()}>
+                {photoCopied ? <Check size={16} /> : <Copy size={16} />}
+                {photoCopied ? t.photo.copyPhotoDone : t.photo.copyPhoto}
+              </button>
+              <button type="button" role="menuitem" className={item} onClick={() => void savePhoto()}>
+                <Download size={16} />
+                {t.photo.savePhoto}
+              </button>
+            </>
           ) : null}
           <a
             role="menuitem"
