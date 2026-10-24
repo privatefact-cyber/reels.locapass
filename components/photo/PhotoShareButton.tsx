@@ -55,10 +55,10 @@ export function PhotoShareButton({
   const text = t.photo.shareText(post.spotName);
   // 写真ファイルを付けて送れるか(スマホの共有画面)。動画の投稿は対象外(写真ではなく動画の1コマになるため)。
   const [canShareFile, setCanShareFile] = useState(false);
-  // スマホ(タッチ操作の端末)で端末の共有画面が使えるなら、メニューを出さず、押した瞬間にそれを開く(写真とリンクを素直に送れる)。
-  const [directShare, setDirectShare] = useState(false);
+  // スマホ(タッチ操作の端末)かどうか。スマホでは、LINEアプリを直接開くリンクを使う。
+  const [touch, setTouch] = useState(false);
   useEffect(() => {
-    setDirectShare(typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches);
+    setTouch(window.matchMedia("(pointer: coarse)").matches);
     try {
       const probe = new File([new Blob(["x"], { type: "image/jpeg" })], "a.jpg", { type: "image/jpeg" });
       // パソコン(Macなど)の共有画面にはLINEが入っていないことが多いので、「写真つきで送る」はスマホ(タッチ端末)だけにする。
@@ -173,10 +173,7 @@ export function PhotoShareButton({
     <span ref={box} className="relative inline-block" onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
-        onClick={() => {
-          if (directShare) void more();
-          else setOpen((v) => !v);
-        }}
+        onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label={t.common.share}
         className={trigger}
@@ -213,7 +210,11 @@ export function PhotoShareButton({
             className={item}
             target="_blank"
             rel="noopener noreferrer"
-            href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(photoShareUrl(post))}&text=${encodeURIComponent(text)}`}
+            href={
+              touch
+                ? `https://line.me/R/msg/text/?${encodeURIComponent(`${text}\n${photoShareUrl(post)}`)}`
+                : `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(photoShareUrl(post))}&text=${encodeURIComponent(text)}`
+            }
             onClick={() => setOpen(false)}
           >
             <MessageCircle size={16} />
