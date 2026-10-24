@@ -159,6 +159,7 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
       video_provider: video?.provider ?? null,
       video_ref: video?.ref ?? null,
       youtube_video_id: video?.provider === "youtube" ? video.ref : null,
+      hero_use_youtube: video?.provider === "youtube" && formData.get("hero_use_youtube") === "on",
     })
     .eq("id", shopId)
     .select("id");

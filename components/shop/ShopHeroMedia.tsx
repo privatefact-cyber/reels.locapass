@@ -16,6 +16,7 @@ export function ShopHeroMedia({
   category,
   seed,
   youtubeId,
+  preferYoutube = false,
 }: {
   url: string | null;
   type: "image" | "video";
@@ -24,9 +25,12 @@ export function ShopHeroMedia({
   seed: string;
   /** 写真が無い/読み込めないとき、店舗の動画紹介(YouTube)があれば背景に流す。 */
   youtubeId?: string | null;
+  /** 店舗がヒーローにYouTubeを選んでいるときは、写真があってもYouTubeを優先する。 */
+  preferYoutube?: boolean;
 }) {
   const [broken, setBroken] = useState(false);
 
+  if (preferYoutube && youtubeId) return <HeroYoutubeBackground videoId={youtubeId} title={alt} />;
   if (!url || broken) {
     if (youtubeId) return <HeroYoutubeBackground videoId={youtubeId} title={alt} />;
     return <ShopMediaFallback category={category} seed={seed} name={alt} allowVideo />;

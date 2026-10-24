@@ -235,7 +235,7 @@ export default async function ShopDetailPage({
   };
   // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
   // 動画紹介(YouTube / TikTok / Instagram / Vimeo)。生成済みの型に列が無いため、小さな別クエリで取る(未設定ならnull)。
-  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id").eq("id", shopRow.id).maybeSingle();
+  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_use_youtube").eq("id", shopRow.id).maybeSingle();
   const introVideo = resolveStoredVideo(ytRow);
   const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
 
@@ -409,6 +409,7 @@ export default async function ShopDetailPage({
           category={store.genre}
           seed={store.id}
           youtubeId={introVideo?.provider === "youtube" ? introVideo.ref : null}
+          preferYoutube={!!ytRow?.hero_use_youtube}
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-tone-950 via-tone-950/60 to-transparent" />
