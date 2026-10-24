@@ -194,6 +194,8 @@ export function PhotoFeed({
                 </div>
               </div>
             )}
+            {/* 写真と操作行を同じ幅の箱に入れる(PCで写真が中央寄せのとき、操作行の右端を写真の右端にそろえる) */}
+            <div className="md:mx-auto md:w-fit">
             {post.videoUrl ? (
               // 動画投稿: 画面に映ったら無音で自動再生(リールと同じ)。全画面・音はプレーヤー標準のコントロール。
               <div className="relative md:mx-auto md:w-fit">
@@ -239,6 +241,7 @@ export function PhotoFeed({
                   {t.photo.directions}
                 </a>
               </div>
+            </div>
             <div className="space-y-2 px-3 pt-3">
               <div className="flex flex-wrap items-center gap-2">
                 {post.shop ? (
