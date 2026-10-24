@@ -287,6 +287,7 @@ export type Dictionary = {
     shareWithPhoto: string;
     savePhoto: string;
     copyPhoto: string;
+    linkAlsoCopied: string;
     copyPhotoDone: string;
     shareFree: string;
     shareCta: string;
@@ -671,6 +672,7 @@ const ja: Dictionary = {
     shareWithPhoto: "写真つきで送る",
     savePhoto: "写真を保存",
     copyPhoto: "写真をコピー(貼り付けて送る)",
+    linkAlsoCopied: "リンクもコピーしました。必要なら貼り付けて送れます",
     copyPhotoDone: "コピーしました。LINEなどに貼り付けてください",
     shareFree: "写真の投稿は無料です。あなたも、街の写真をシェアしてみませんか?",
     shareCta: "＋ 写真を投稿する",
@@ -1055,6 +1057,7 @@ const en: Dictionary = {
     shareWithPhoto: "Send with the photo",
     savePhoto: "Save photo",
     copyPhoto: "Copy photo (paste to send)",
+    linkAlsoCopied: "The link is copied too. Paste it if you need it",
     copyPhotoDone: "Copied. Paste it into LINE or any chat app",
     shareFree: "Posting photos is free. Why not share your own photos of the city?",
     shareCta: "+ Post a photo",
@@ -1439,6 +1442,7 @@ const zh: Dictionary = {
     shareWithPhoto: "连同照片一起发送",
     savePhoto: "保存照片",
     copyPhoto: "复制照片(粘贴后发送)",
+    linkAlsoCopied: "链接也已复制,需要时可以粘贴发送",
     copyPhotoDone: "已复制。请粘贴到 LINE 等聊天应用",
     shareFree: "发布照片是免费的。要不要也来分享你拍的城市照片?",
     shareCta: "＋ 发布照片",
@@ -1824,6 +1828,7 @@ const ar: Dictionary = {
     shareWithPhoto: "إرسال مع الصورة",
     savePhoto: "حفظ الصورة",
     copyPhoto: "نسخ الصورة (الصقها للإرسال)",
+    linkAlsoCopied: "تم نسخ الرابط أيضًا. الصقه عند الحاجة",
     copyPhotoDone: "تم النسخ. الصقها في LINE أو أي تطبيق محادثة",
     shareFree: "نشر الصور مجاني. شاركنا صورك للمدينة!",
     shareCta: "＋ انشر صورة",

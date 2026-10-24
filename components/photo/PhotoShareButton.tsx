@@ -22,6 +22,7 @@ export function PhotoShareButton({
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [photoCopied, setPhotoCopied] = useState(false);
+  const [linkNote, setLinkNote] = useState(false);
   const box = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -32,6 +33,12 @@ export function PhotoShareButton({
     document.addEventListener("pointerdown", onDown);
     return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
+
+  useEffect(() => {
+    if (!linkNote) return;
+    const timer = window.setTimeout(() => setLinkNote(false), 6000);
+    return () => window.clearTimeout(timer);
+  }, [linkNote]);
 
   useEffect(() => {
     if (!photoCopied) return;
@@ -85,6 +92,14 @@ export function PhotoShareButton({
   }
 
   async function sendWithPhoto() {
+    // 写真を付けると、LINEなど多くのアプリは本文(リンク)を無視する。リンクはコピーしておき、必要なら貼り付けて送れるようにする。
+    // (クリックの直後に書き込むため、写真の取得より先に行う)
+    try {
+      await navigator.clipboard.writeText(photoShareUrl(post));
+      setLinkNote(true);
+    } catch {
+      // コピーできない環境では何もしない。
+    }
     const file = await fetchPhotoFile();
     try {
       if (file && navigator.canShare?.({ files: [file] })) {
@@ -166,6 +181,11 @@ export function PhotoShareButton({
         <Share2 size={variant === "pill" ? 18 : 16} />
         {t.common.share}
       </button>
+      {linkNote && !open ? (
+        <div role="status" className="absolute right-0 top-full z-30 mt-2 w-60 rounded-xl border border-white/15 bg-tone-900 px-3 py-2 text-xs text-main shadow-xl">
+          {t.photo.linkAlsoCopied}
+        </div>
+      ) : null}
       {open ? (
         <div role="menu" className="absolute right-0 top-full z-30 mt-2 w-72 max-w-[85vw] rounded-xl border border-white/15 bg-tone-900 p-1 shadow-xl">
           {canShareFile ? (
