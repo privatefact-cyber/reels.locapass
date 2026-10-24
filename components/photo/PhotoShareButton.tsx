@@ -102,15 +102,19 @@ export function PhotoShareButton({
   /** 写真そのものをクリップボードへ。LINEなどのトーク画面に貼り付ければ、写真として送れる(クリップボードはPNGだけ受け付ける)。 */
   async function copyPhotoImage() {
     try {
-      const file = await fetchPhotoFile();
-      if (!file) return;
-      const bitmap = await createImageBitmap(file);
-      const canvas = document.createElement("canvas");
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
-      const png = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-      if (!png) return;
+      // ClipboardItemにPromiseを渡す: クリックの直後にwriteを呼べるので、Safariでも(取得に時間がかかっても)許可される。
+      const png = (async () => {
+        const file = await fetchPhotoFile();
+        if (!file) throw new Error("no photo");
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (!blob) throw new Error("no png");
+        return blob;
+      })();
       await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
       setPhotoCopied(true);
     } catch {
