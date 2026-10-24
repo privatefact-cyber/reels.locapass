@@ -198,15 +198,9 @@ export function PhotoFeed({
               // 動画投稿: 画面に映ったら無音で自動再生(リールと同じ)。全画面・音はプレーヤー標準のコントロール。
               <div className="relative md:mx-auto md:w-fit">
                 <PhotoVideo src={post.videoUrl} poster={photoResized(post.imageUrl, 1080, false)} label={post.spotName} />
-                <button
-                  type="button"
-                  onClick={() => void sharePhoto(post)}
-                  aria-label={t.common.share}
-                  className="absolute right-2 top-2 flex h-9 items-center gap-1 rounded-full bg-black/55 px-3 text-xs text-white backdrop-blur transition hover:bg-black/75"
-                >
-                  <Share2 size={16} />
-                  {t.common.share}
-                </button>
+                <div className="absolute bottom-12 right-2 rounded-full bg-black/55 px-3 py-1.5 text-sm text-white backdrop-blur-sm">
+                  <PhotoLikeButton postId={post.id} initialCount={post.likeCount} />
+                </div>
               </div>
             ) : (
               <div className="relative md:mx-auto md:w-fit">
@@ -220,17 +214,34 @@ export function PhotoFeed({
                 >
                   <Maximize2 size={18} />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void sharePhoto(post)}
-                  aria-label={t.common.share}
-                  className="absolute right-2 top-14 flex h-9 items-center gap-1 rounded-full bg-black/55 px-3 text-xs text-white backdrop-blur transition hover:bg-black/75"
-                >
+                <div className="absolute bottom-2 right-2 rounded-full bg-black/55 px-3 py-1.5 text-sm text-white backdrop-blur-sm">
+                  <PhotoLikeButton postId={post.id} initialCount={post.likeCount} />
+                </div>
+              </div>
+            )}
+            <div className="flex items-center justify-end gap-5 border-b border-tone-800 px-3 py-2.5 text-sm text-tone-300">
+              <PhotoDeleteButton
+                  post={post}
+                  onDeleted={(id) => {
+                    setDeleted((prev) => new Set(prev).add(id));
+                    setViewer(null);
+                    setFullscreenIndex(null);
+                  }}
+                />
+                <button type="button" onClick={() => void sharePhoto(post)} className="flex items-center gap-1 hover:text-main">
                   <Share2 size={16} />
                   {t.common.share}
                 </button>
+                <a
+                  href={photoRouteUrl(post)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 hover:text-main"
+                >
+                  <Navigation size={16} />
+                  {t.photo.directions}
+                </a>
               </div>
-            )}
             <div className="space-y-2 px-3 pt-3">
               <div className="flex flex-wrap items-center gap-2">
                 {post.shop ? (
@@ -253,30 +264,6 @@ export function PhotoFeed({
                   {post.address}
                 </p>
               ) : null}
-              <div className="flex items-center gap-4 pt-1 text-sm text-tone-300">
-                <PhotoLikeButton postId={post.id} initialCount={post.likeCount} />
-                <PhotoDeleteButton
-                  post={post}
-                  onDeleted={(id) => {
-                    setDeleted((prev) => new Set(prev).add(id));
-                    setViewer(null);
-                    setFullscreenIndex(null);
-                  }}
-                />
-                <button type="button" onClick={() => void sharePhoto(post)} className="flex items-center gap-1 hover:text-main">
-                  <Share2 size={16} />
-                  {t.common.share}
-                </button>
-                <a
-                  href={photoRouteUrl(post)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 hover:text-main"
-                >
-                  <Navigation size={16} />
-                  {t.photo.directions}
-                </a>
-              </div>
             </div>
           </article>
         ))}
