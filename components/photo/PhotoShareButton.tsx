@@ -142,7 +142,7 @@ export function PhotoShareButton({
             className={item}
             target="_blank"
             rel="noopener noreferrer"
-            href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(photoShareUrl(post))}`}
+            href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(photoShareUrl(post))}&text=${encodeURIComponent(text)}`}
             onClick={() => setOpen(false)}
           >
             <MessageCircle size={16} />
