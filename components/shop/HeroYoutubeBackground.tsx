@@ -15,6 +15,7 @@ export function HeroYoutubeBackground({ videoId, title }: { videoId: string; tit
         title={title}
         tabIndex={-1}
         loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
         allow="autoplay; encrypted-media"
         className="absolute left-1/2 top-1/2 aspect-video w-[max(100%,534px)] -translate-x-1/2 -translate-y-1/2 border-0 sm:w-[max(100%,676px)]"
       />
