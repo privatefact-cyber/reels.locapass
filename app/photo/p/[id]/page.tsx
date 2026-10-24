@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const post = await getPhotoPostById(id);
   if (!post) return {};
   const title = `${post.spotName} | LOCAPASS`;
-  const description = post.comment ?? post.address ?? "LOCAPASS みんなの写真";
+  const description = post.comment ?? post.address ?? "LOCA SNAP | LOCAPASS";
   const url = `https://locapass.net/photo/p/${id}`;
   return {
     title,

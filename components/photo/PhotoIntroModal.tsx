@@ -43,7 +43,7 @@ export function PhotoIntroModal() {
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-main/10 via-transparent to-transparent" />
 
         <span className="relative rounded-full border border-main/25 bg-main/[0.03] px-4 py-1 text-[11px] font-medium tracking-[0.35em] text-main/70">
-          PHOTO
+          LOCA SNAP
         </span>
 
         <p className="relative text-xl font-light leading-relaxed tracking-[0.12em] text-main">{t.photo.introLead}</p>

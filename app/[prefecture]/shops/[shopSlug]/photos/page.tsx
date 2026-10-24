@@ -16,7 +16,7 @@ export const revalidate = 60;
 type PageParams = { prefecture: string; shopSlug: string };
 
 export const metadata: Metadata = {
-  title: "ユーザーPHOTO - LOCAPASS",
+  title: "LOCA SNAP - LOCAPASS",
   // 一覧の派生ページなので検索結果には出さない(店舗ページ本体を正とする)。
   robots: { index: false, follow: true },
 };

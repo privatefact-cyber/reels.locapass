@@ -786,7 +786,7 @@ export function ReelFeed({
               </button>
               {/* PHOTO: 途中のページを挟まず、そのままフォト(/photo)へ。 */}
               <Link href="/photo" className={pillClass(false)}>
-                PHOTO
+                SNAP
               </Link>
               <Link
                 href={boostHref}

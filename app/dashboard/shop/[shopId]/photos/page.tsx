@@ -40,8 +40,8 @@ export default async function LocapassShopPhotosAdminPage({ params }: { params: 
       <div>
         <h1 className="text-3xl font-bold text-slate-900">写真の管理</h1>
         <p className="mt-1 text-sm text-slate-600">
-          店舗ページの「ユーザーPHOTO」に出る写真を管理します。違う店の写真が出ているときは「この店舗では出さない」にできます。
-          写真そのものは消えず、みんなの写真の一覧には残ります。
+          店舗ページの「LOCA SNAP」に出る写真を管理します。違う店の写真が出ているときは「この店舗では出さない」にできます。
+          写真そのものは消えず、LOCA SNAP の一覧には残ります。
         </p>
       </div>
       <ShopPhotoLinkManager

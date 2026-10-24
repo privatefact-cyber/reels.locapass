@@ -3,7 +3,7 @@ import { getPhotoPostById } from "@/lib/photo/getPhotoPosts";
 
 export const runtime = "nodejs";
 export const revalidate = 3600;
-export const alt = "LOCAPASS みんなのフォト";
+export const alt = "LOCA SNAP | LOCAPASS";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -49,8 +49,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   const { id } = await params;
   const post = UUID.test(id) ? await getPhotoPostById(id) : null;
   const name = post?.spotName ?? "LOCAPASS";
-  const label = "みんなのフォト";
-  const font = await loadFont(`${name}${label}LOCAPASS`);
+  const font = await loadFont(`${name}LOCASNAP`);
   const photo = post ? await loadPhoto(post.imageUrl) : null;
   // フォントが取れなかったときは、文字化け(□)を避けて英数字だけにする。
   const title = font ? name : name.replace(/[^\x20-\x7e]/g, "").trim() || "LOCAPASS";
@@ -64,8 +63,8 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         ) : null}
         <div style={{ position: "absolute", inset: 0, display: "flex", background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.1) 100%)" }} />
         <div style={{ position: "absolute", top: 36, left: 48, display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ display: "flex", fontSize: 40, fontWeight: 700, letterSpacing: 10, color: "#fcd34d" }}>LOCAPASS</div>
-          {font ? <div style={{ display: "flex", fontSize: 26, color: "rgba(255,255,255,0.8)" }}>{label}</div> : null}
+          <div style={{ display: "flex", fontSize: 44, fontWeight: 700, letterSpacing: 10, color: "#fcd34d" }}>LOCA SNAP</div>
+          <div style={{ display: "flex", fontSize: 22, letterSpacing: 6, color: "rgba(255,255,255,0.75)" }}>by LOCAPASS</div>
         </div>
         <div style={{ position: "absolute", left: 48, right: 48, bottom: 44, display: "flex", fontSize: 68, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
           {title}
