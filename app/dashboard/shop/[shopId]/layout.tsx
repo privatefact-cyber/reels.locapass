@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { DashboardSignOutButton } from "@/components/locapass-dashboard/DashboardSignOutButton";
 import { RecoveryInfoGateModal } from "@/components/locapass-dashboard/RecoveryInfoGateModal";
+import { PasswordSetupGate } from "@/components/locapass-dashboard/PasswordSetupGate";
 
 /**
  * LUXELA本家の店舗ダッシュボード(app/dashboard/layout.tsx)と同じ画面構成。
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { path: "/cast", label: "FACES管理" },
   { path: "/staff", label: "スタッフ管理" },
   { path: "/admins", label: "管理者ID" },
+  { path: "/account", label: "アカウント" },
   { path: "/me", label: "マイページ" },
   { path: "/reels", label: "リール投稿" },
   { path: "/boost", label: "⚡ブースト" },
@@ -41,6 +43,7 @@ export default async function LocapassShopDashboardLayout({
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       {viewer.needsRecoverySetup && <RecoveryInfoGateModal />}
+      {!viewer.isOperator && !viewer.needsRecoverySetup && <PasswordSetupGate />}
       {viewer.isOperator && (
         <div className="flex flex-wrap items-center justify-between gap-2 bg-amber-500 px-4 py-2 text-sm font-semibold text-amber-950 sm:px-6">
           <span>運営者として代理閲覧中: {shop.name}(店舗のパスワードは変更されていません)</span>

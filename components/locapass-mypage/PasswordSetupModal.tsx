@@ -73,9 +73,9 @@ export function PasswordSetupModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold">パスワードを設定</h2>
+          <h2 className="text-sm font-semibold">{forced ? "最初に、パスワードを決めてください" : "パスワードを設定"}</h2>
           <button type="button" onClick={handleClose} className="text-sm text-muted">
-            閉じる
+            {forced && !done ? "あとで" : "閉じる"}
           </button>
         </div>
 
@@ -94,7 +94,7 @@ export function PasswordSetupModal({
           <>
             <p className="mb-4 text-xs text-muted">
               {forced
-                ? "店舗が発行したワンタイムパスワードのままです。安全のため、ご自身だけの新しいパスワード(6文字以上)を設定してください。"
+                ? "いまのパスワードは、運営(店舗)が発行した、仮のものです。安全のため、ご自身だけの新しいパスワード(6文字以上)を、いま決めてください。あとからでも、メニューの「アカウント」で変更できます。"
                 : "ログイン用のパスワードを変更できます(6文字以上)。"}
             </p>
             <form onSubmit={handleSubmit} className="space-y-3">

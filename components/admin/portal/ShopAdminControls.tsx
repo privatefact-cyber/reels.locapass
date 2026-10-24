@@ -38,7 +38,7 @@ export function GrantShopAdminForm({ portalId, shopId }: { portalId: number; sho
         <input
           name="email"
           type="email"
-          placeholder="メール(空欄なら自動発行)"
+          placeholder="本人が受け取れるメール(空欄なら自動発行。自動のIDはメールを受け取れません)"
           className="min-w-[200px] flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
         />
         <button

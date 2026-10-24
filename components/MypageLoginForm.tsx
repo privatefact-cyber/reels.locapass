@@ -15,6 +15,8 @@ export function MypageLoginForm() {
   const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  // 店舗管理者に発行したID(…@shop.….local)は、メールを受け取れない。再設定メールを送ったことにせず、別の手順を案内する。
+  const [noMailbox, setNoMailbox] = useState(false);
   const [error, setError] = useState<string | null>(
     searchParams.get("line_error") ? "LINEログインに失敗しました。もう一度お試しください。" : null,
   );
@@ -76,6 +78,11 @@ export function MypageLoginForm() {
       return;
     }
     setError(null);
+    setNoMailbox(false);
+    if (/@[^@]*\.local$/i.test(email.trim())) {
+      setNoMailbox(true);
+      return;
+    }
     setLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -169,6 +176,17 @@ export function MypageLoginForm() {
             className="w-full rounded-full border border-main/20 bg-main/5 px-4 py-3 text-[16px] text-main placeholder:text-tone-500"
           />
           {error && <p className="text-sm text-red-400">{error}</p>}
+          {noMailbox && (
+            <div className="rounded-lg border border-accent/30 bg-main/5 px-3 py-3 text-xs leading-relaxed text-tone-300">
+              <p className="font-semibold text-main">このIDは、メールを受け取れないIDです(店舗に発行されたID)。</p>
+              <p className="mt-1">・ログインできる場合: 店舗管理画面の「アカウント」から、パスワードを変更できます。</p>
+              <p>
+                ・ログインできない場合:{" "}
+                <a href="/shop-recover" className="text-accent underline">こちらから、電話番号などで再設定</a>
+                (登録した電話番号・生年月日・暗証番号が必要です)。
+              </p>
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading}

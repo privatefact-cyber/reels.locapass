@@ -32,7 +32,7 @@ export function AddShopAdminForm({
     <div className="space-y-3">
       <form action={formAction} className="grid gap-3 sm:grid-cols-2">
         <label className="block text-xs font-semibold text-slate-600">
-          ログインID(メールアドレス・空欄なら自動で作ります)
+          ログインID(メールアドレス・空欄なら自動で作ります。本人が受け取れるメールにすると、パスワードを忘れたとき、メールで再設定できます)
           <input name="email" type="email" placeholder="例: manager@example.com" disabled={disabled} className={`${input} mt-1 font-normal`} />
         </label>
         <label className="block text-xs font-semibold text-slate-600">

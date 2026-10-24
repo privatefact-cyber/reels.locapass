@@ -1,6 +1,6 @@
 "use server";
 
-import { parseVideoUrl } from "@/lib/video";
+import { parseVideoUrlWithShortLinks } from "@/lib/video-resolve";
 import { revalidatePath } from "next/cache";
 import { sanitizeWeekly, type WeeklyHours } from "@/lib/shop/businessHours";
 import { saveSchedule } from "@/lib/schedules/saveSchedule";
@@ -71,8 +71,8 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   const priceInfo = String(formData.get("price_info") ?? "").trim() || null;
   // 動画のURLは、サイトの種類と動画の識別子だけを保存する。空なら削除(店舗ページから「動画紹介」が消える)。URLが貼られたのに判別できないときは、保存せずエラーにする。
   const videoRaw = String(formData.get("video_url") ?? "").trim();
-  const video = videoRaw ? parseVideoUrl(videoRaw) : null;
-  if (videoRaw && !video) throw new Error("動画のURLを判別できません。YouTube(おすすめ)・Instagram(リール)・TikTok のURLを、ブラウザのアドレスバーからコピーして貼ってください(Instagramの写真の投稿とTikTokの短縮URLは使えません)");
+  const video = videoRaw ? await parseVideoUrlWithShortLinks(videoRaw) : null;
+  if (videoRaw && !video) throw new Error("動画のURLを判別できません。YouTube(おすすめ)・Instagram(リール)・TikTok のURLを貼ってください(Instagramの写真の投稿は使えません)。TikTok・Instagramの共有リンク(短縮URL)をたどれなかった場合は、ブラウザのアドレスバーに出る動画のURLを貼ってください");
 
   if (!name) throw new Error("店舗名は必須です");
 

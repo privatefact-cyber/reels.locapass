@@ -2,7 +2,7 @@
  * 店舗ページの「動画紹介」に貼れる動画の判別。YouTube / TikTok / Instagram のURLから、
  * (サイト, 動画の識別子) を取り出す。識別子だけを保存し、URLは保存しない。
  *  - youtube  : 11文字のID
- *  - tiktok   : 数字のID(ブラウザのアドレスバーの `…/@ユーザー/video/数字` のURL。短縮URL(vm.tiktok.com)は不可)
+ *  - tiktok   : 数字のID(`…/@ユーザー/video/数字` のURL。短縮URL(vm.tiktok.com など)は、保存時に lib/video-resolve.ts で本来のURLにたどる)
  *  - instagram: `reel/コード`(公開アカウントのリールだけ。写真の投稿は不可)
  */
 export type VideoProvider = "youtube" | "tiktok" | "instagram";
@@ -48,6 +48,8 @@ export function parseVideoUrl(input: string): VideoRef | null {
   }
   if (host === "instagram.com") {
     // 動画紹介にできるのはリール(/reel/CODE/ , /ユーザー/reel/CODE/)だけ。通常の投稿(/p/)は写真の可能性があるため受け付けない。
+    // /share/reel/XXXX の XXXX は、リールのコードではなく共有用のコード。リダイレクトをたどって本来のURLにするまで判別しない。
+    if (parts[0] === "share") return null;
     const i = parts.findIndex((p) => p === "reel" || p === "reels");
     const code = i >= 0 ? parts[i + 1] : null;
     return code && /^[A-Za-z0-9_-]{5,20}$/.test(code) ? { provider: "instagram", ref: `reel/${code}` } : null;

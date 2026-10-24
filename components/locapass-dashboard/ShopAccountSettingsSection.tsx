@@ -24,12 +24,7 @@ export function ShopAccountSettingsSection() {
     (supabase as any).rpc("locapass_my_shop_admin_login_email").then(({ data }: { data: unknown }) => {
       if (typeof data === "string") setLoginEmail(data);
     });
-    supabase.rpc("needs_password_setup").then(({ data }) => {
-      if (data) {
-        setPasswordSetupForced(true);
-        setPasswordModalOpen(true);
-      }
-    });
+    // 初期パスワードのままのときの強制表示は、レイアウトの PasswordSetupGate が行う(二重に出さない)。
   }, []);
 
   return (
