@@ -588,7 +588,7 @@ export default async function ShopDetailPage({
         {userPhotos.length > 0 && (
           <section id="user-photos" className="scroll-mt-24 space-y-3">
             <SectionHeading eyebrow="PHOTOS" title={t.shop.userPhotosTitle} icon={<Camera size={14} />} />
-            <ShopUserPhotoGrid posts={userPhotos.slice(0, 10)} layout="slider" shareUrl={shopPhotosPath(site.slug, shopRow.slug)} />
+            <ShopUserPhotoGrid posts={userPhotos.slice(0, 12)} layout="slider" shareUrl={shopPhotosPath(site.slug, shopRow.slug)} />
             <Link href={shopPhotosPath(site.slug, shopRow.slug)} className="block text-center text-xs text-accent underline">
               {t.shop.userPhotosAll}({t.shop.userPhotosCount(userPhotos.length)})
             </Link>
