@@ -61,7 +61,10 @@ export function PhotoShareButton({
     setDirectShare(typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches);
     try {
       const probe = new File([new Blob(["x"], { type: "image/jpeg" })], "a.jpg", { type: "image/jpeg" });
-      setCanShareFile(!post.videoUrl && typeof navigator.canShare === "function" && navigator.canShare({ files: [probe] }));
+      // パソコン(Macなど)の共有画面にはLINEが入っていないことが多いので、「写真つきで送る」はスマホ(タッチ端末)だけにする。
+      // パソコンでは「写真をコピー」→ LINEに貼り付け、が確実。
+      const touch = window.matchMedia("(pointer: coarse)").matches;
+      setCanShareFile(touch && !post.videoUrl && typeof navigator.canShare === "function" && navigator.canShare({ files: [probe] }));
     } catch {
       setCanShareFile(false);
     }
