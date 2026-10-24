@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
+import { HeroYoutubeBackground } from "@/components/shop/HeroYoutubeBackground";
 
 type Props = {
   name: string;
@@ -9,13 +10,17 @@ type Props = {
   heroMediaType: string;
   heroMediaUrl: string | null;
   heroLinkUrl: string | null;
+  /** あれば、画像/動画より優先してYouTubeを無音で流す。 */
+  heroYoutubeId?: string | null;
 };
 
-export function PortalHero({ name, tagline, description, heroMediaType, heroMediaUrl, heroLinkUrl }: Props) {
-  if (!heroMediaUrl && !tagline && !description) return null;
+export function PortalHero({ name, tagline, description, heroMediaType, heroMediaUrl, heroLinkUrl, heroYoutubeId }: Props) {
+  if (!heroMediaUrl && !heroYoutubeId && !tagline && !description) return null;
   return (
     <section data-surface="media" className="relative isolate min-h-[300px] overflow-hidden bg-page">
-      {heroMediaUrl && (heroMediaType === "video" ? (
+      {heroYoutubeId ? (
+        <HeroYoutubeBackground videoId={heroYoutubeId} title={name} />
+      ) : heroMediaUrl && (heroMediaType === "video" ? (
         <AutoplayVideo src={heroMediaUrl} />
       ) : (
         <img src={heroMediaUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />

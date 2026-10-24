@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { requireAdmin, requireRootAdmin } from "@/lib/admin/require-admin";
 import { isSiteTheme, type SiteTheme } from "@/lib/theme";
+import { parseVideoUrl } from "@/lib/video";
 
 /**
  * ポータル/店舗の発行・権限付与チェーン。
@@ -38,6 +39,8 @@ export async function updatePortalBranding(
     heroMediaType: "image" | "video";
     heroMediaUrl: string | null;
     heroLinkUrl: string | null;
+    /** ヒーローに無音で流すYouTubeの動画URL(空なら使わない)。 */
+    heroYoutubeUrl: string;
     /** このポータルの配色テーマ。null はサイト全体の設定に従う */
     theme: SiteTheme | null;
   },
@@ -47,8 +50,10 @@ export async function updatePortalBranding(
   if (input.heroLinkUrl && !(/^(https?:\/\/|\/|#)/i.test(input.heroLinkUrl))) {
     throw new Error("リンク先は https://、/、# から始まるURLを入力してください");
   }
+  const yt = input.heroYoutubeUrl.trim() ? parseVideoUrl(input.heroYoutubeUrl.trim()) : null;
+  if (input.heroYoutubeUrl.trim() && yt?.provider !== "youtube") throw new Error("ヒーローのYouTube欄には、YouTubeの動画URLを入れてください");
   const supabase = await createClient();
-  const { data: updated, error } = await supabase
+  const { data: updated, error } = await (supabase as any)
     .from("locapass_portals")
     .update({
       name: input.name.trim(),
@@ -57,6 +62,7 @@ export async function updatePortalBranding(
       hero_media_type: input.heroMediaType,
       hero_media_url: input.heroMediaUrl,
       hero_link_url: input.heroLinkUrl?.trim() || null,
+      hero_youtube_id: yt?.ref ?? null,
       theme: input.theme,
     })
     .eq("id", portalId)

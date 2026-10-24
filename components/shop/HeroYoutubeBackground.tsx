@@ -63,7 +63,7 @@ export function HeroYoutubeBackground({ videoId, title }: { videoId: string; tit
 
   const showVideo = playing && !stopped;
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-black" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-black [container-type:size]" aria-hidden="true">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`} alt="" className="absolute inset-0 h-full w-full object-cover" />
       {src && !stopped && (
@@ -74,7 +74,7 @@ export function HeroYoutubeBackground({ videoId, title }: { videoId: string; tit
           tabIndex={-1}
           referrerPolicy="strict-origin-when-cross-origin"
           allow="autoplay; encrypted-media"
-          className={`absolute left-1/2 top-1/2 aspect-video w-[max(100%,534px)] -translate-x-1/2 -translate-y-1/2 border-0 transition-opacity duration-700 sm:w-[max(100%,676px)] ${showVideo ? "opacity-100" : "opacity-0"}`}
+          className={`absolute left-1/2 top-1/2 aspect-video w-[max(100%,177.78cqh)] -translate-x-1/2 -translate-y-1/2 border-0 transition-opacity duration-700 ${showVideo ? "opacity-100" : "opacity-0"}`}
         />
       )}
     </div>

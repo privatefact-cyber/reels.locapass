@@ -38,6 +38,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
   const portal = await resolvePortal(slug);
   if (!portal) notFound();
 
+  const { data: ytPortal } = await (await createClient() as any).from("locapass_portals").select("hero_youtube_id").eq("id", portal.id).maybeSingle();
   const locale = await getServerLocale();
   const featuredShops = await getFeaturedShops(locale);
   const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(portal.id);
@@ -57,6 +58,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
         heroMediaType={portal.hero_media_type}
         heroMediaUrl={portal.hero_media_url}
         heroLinkUrl={portal.hero_link_url}
+        heroYoutubeId={ytPortal?.hero_youtube_id ?? null}
       />
       <FeaturedSection shops={featuredShops} />
       {boosts.length > 0 && (

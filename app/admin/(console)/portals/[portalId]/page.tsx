@@ -36,6 +36,8 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
   const isSuper = scope.portalIds === null;
 
   const supabase = await createClient();
+  const { data: ytRow } = await (supabase as any).from("locapass_portals").select("hero_youtube_id").eq("id", portalId).maybeSingle();
+  const heroYoutubeId: string | null = ytRow?.hero_youtube_id ?? null;
   const [{ data: portal }, { data: shops, error: shopsError }, { data: reelRows }, { data: portalAdmins }, { data: shopAdmins }] =
     await Promise.all([
       supabase
@@ -97,7 +99,7 @@ export default async function AdminPortalPage({ params }: { params: Promise<{ po
         <StatCard label="公開リール数" value={publishedReelCount} />
       </div>
 
-      <PortalBrandingForm portal={portal} />
+      <PortalBrandingForm portal={portal} heroYoutubeId={heroYoutubeId} />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-bold text-slate-900">ポータル管理者(portal_admin)</h2>

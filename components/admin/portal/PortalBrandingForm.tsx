@@ -19,6 +19,7 @@ const THEME_OPTIONS: { value: SiteTheme | null; label: string; swatch: string }[
 ];
 
 type Props = {
+  heroYoutubeId?: string | null;
   portal: {
     id: number;
     name: string;
@@ -34,7 +35,7 @@ type Props = {
 const MAX_BYTES = 50 * 1024 * 1024;
 const ACCEPT = ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"];
 
-export function PortalBrandingForm({ portal }: Props) {
+export function PortalBrandingForm({ portal, heroYoutubeId }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const [name, setName] = useState(portal.name);
@@ -42,6 +43,7 @@ export function PortalBrandingForm({ portal }: Props) {
   const [description, setDescription] = useState(portal.description ?? "");
   const [heroUrl, setHeroUrl] = useState(portal.hero_media_url);
   const [heroType, setHeroType] = useState<"image" | "video">(portal.hero_media_type === "video" ? "video" : "image");
+  const [heroYoutubeUrl, setHeroYoutubeUrl] = useState(heroYoutubeId ? `https://www.youtube.com/watch?v=${heroYoutubeId}` : "");
   const [heroLinkUrl, setHeroLinkUrl] = useState(portal.hero_link_url ?? "");
   const [theme, setTheme] = useState<SiteTheme | null>(isSiteTheme(portal.theme) ? portal.theme : null);
   const [uploading, setUploading] = useState(false);
@@ -90,7 +92,7 @@ export function PortalBrandingForm({ portal }: Props) {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updatePortalBranding(portal.id, { name, tagline, description, heroMediaType: heroType, heroMediaUrl: heroUrl, heroLinkUrl, theme });
+        await updatePortalBranding(portal.id, { name, tagline, description, heroMediaType: heroType, heroMediaUrl: heroUrl, heroLinkUrl, heroYoutubeUrl, theme });
         setMessage("保存しました。公開ポータルに反映されています。");
         router.refresh();
       } catch (e) {
@@ -119,6 +121,7 @@ export function PortalBrandingForm({ portal }: Props) {
             </div>
           </div>
           <input ref={inputRef} type="file" accept={ACCEPT.join(",")} className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload(file); e.target.value = ""; }} />
+          <label className="mt-3 block text-xs font-semibold text-slate-600">ヒーローに流すYouTube動画のURL（任意）<input value={heroYoutubeUrl} onChange={(e) => setHeroYoutubeUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900" /><span className="mt-1 block text-[11px] font-normal text-slate-400">入れると、上の画像・動画より優先して、無音で自動再生します(45秒で止まり、サムネイルが残ります)。空にすると使いません。</span></label>
           {heroUrl && <button type="button" onClick={() => setHeroUrl(null)} className="mt-2 text-xs text-red-600 hover:underline">ヒーロー素材を外す</button>}
         </div>
         <div className="space-y-4">
