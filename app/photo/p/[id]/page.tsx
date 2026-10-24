@@ -41,7 +41,7 @@ export default async function PhotoSharePage({ params }: { params: Promise<{ id:
         <ChevronLeft size={18} />
         {t.backToPhotos}
       </Link>
-      <PhotoFeed posts={[post]} areas={[]} areaSlug={null} hideToolbar />
+      <PhotoFeed posts={[post]} areas={[]} areaSlug={null} hideToolbar initialPostId={post.id} />
     </div>
   );
 }
