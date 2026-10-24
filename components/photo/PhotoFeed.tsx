@@ -196,7 +196,18 @@ export function PhotoFeed({
             )}
             {post.videoUrl ? (
               // 動画投稿: 画面に映ったら無音で自動再生(リールと同じ)。全画面・音はプレーヤー標準のコントロール。
-              <PhotoVideo src={post.videoUrl} poster={photoResized(post.imageUrl, 1080, false)} label={post.spotName} />
+              <div className="relative md:mx-auto md:w-fit">
+                <PhotoVideo src={post.videoUrl} poster={photoResized(post.imageUrl, 1080, false)} label={post.spotName} />
+                <button
+                  type="button"
+                  onClick={() => void sharePhoto(post)}
+                  aria-label={t.common.share}
+                  className="absolute right-2 top-2 flex h-9 items-center gap-1 rounded-full bg-black/55 px-3 text-xs text-white backdrop-blur transition hover:bg-black/75"
+                >
+                  <Share2 size={16} />
+                  {t.common.share}
+                </button>
+              </div>
             ) : (
               <div className="relative md:mx-auto md:w-fit">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -208,6 +219,15 @@ export function PhotoFeed({
                   className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
                 >
                   <Maximize2 size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void sharePhoto(post)}
+                  aria-label={t.common.share}
+                  className="absolute right-2 top-14 flex h-9 items-center gap-1 rounded-full bg-black/55 px-3 text-xs text-white backdrop-blur transition hover:bg-black/75"
+                >
+                  <Share2 size={16} />
+                  {t.common.share}
                 </button>
               </div>
             )}

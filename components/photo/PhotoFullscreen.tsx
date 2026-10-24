@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, X } from "lucide-react";
+import { sharePhoto } from "@/components/photo/sharePhoto";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized } from "@/components/photo/photoUtils";
 import { PhotoDeleteButton } from "@/components/photo/PhotoDeleteButton";
@@ -81,6 +82,20 @@ export function PhotoFullscreen({
         style={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
       >
         <X size={22} />
+      </button>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          void sharePhoto(post);
+        }}
+        aria-label={t.common.share}
+        className="absolute right-[4.25rem] z-10 flex h-11 items-center gap-1.5 rounded-full bg-black/50 px-4 text-sm text-white backdrop-blur"
+        style={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
+      >
+        <Share2 size={18} />
+        {t.common.share}
       </button>
 
       {onDeleted ? <PhotoDeleteButton post={post} onDeleted={onDeleted} variant="icon" /> : null}
