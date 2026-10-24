@@ -36,7 +36,9 @@ export function HeroYoutubeBackground({ videoId, title }: { videoId: string; tit
       if (e.source !== frame.current?.contentWindow || typeof e.data !== "string") return;
       try {
         const msg = JSON.parse(e.data);
-        if (msg.event === "infoDelivery" && msg.info?.playerState === 1 && !timer) {
+        const info = msg.event === "infoDelivery" ? msg.info : null;
+        // 再生状態の通知は最初の1回しか来ないことがあるので、再生位置が進み始めたことでも再生中と判断する。
+        if (info && (info.playerState === 1 || (info.currentTime ?? 0) > 0.3) && !timer) {
           setPlaying(true);
           timer = window.setTimeout(() => {
             frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func: "pauseVideo", args: [] }), "*");
@@ -48,7 +50,12 @@ export function HeroYoutubeBackground({ videoId, title }: { videoId: string; tit
       }
     };
     window.addEventListener("message", onMessage);
+    // プレイヤーの準備が済むまで、通知の購読を繰り返し頼む(早すぎると無視されるため)。
+    const poke = window.setInterval(() => {
+      frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*");
+    }, 700);
     return () => {
+      window.clearInterval(poke);
       window.removeEventListener("message", onMessage);
       if (timer) window.clearTimeout(timer);
     };
@@ -67,7 +74,6 @@ export function HeroYoutubeBackground({ videoId, title }: { videoId: string; tit
           tabIndex={-1}
           referrerPolicy="strict-origin-when-cross-origin"
           allow="autoplay; encrypted-media"
-          onLoad={() => frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*")}
           className={`absolute left-1/2 top-1/2 aspect-video w-[max(100%,534px)] -translate-x-1/2 -translate-y-1/2 border-0 transition-opacity duration-700 sm:w-[max(100%,676px)] ${showVideo ? "opacity-100" : "opacity-0"}`}
         />
       )}
