@@ -43,6 +43,8 @@ export function PhotoFeed({
   initialView = "grid",
   initialPostId,
   hideToolbar = false,
+  onCloseDetail,
+  onPostDeleted,
 }: {
   posts: PhotoPost[];
   areas: PhotoArea[];
@@ -52,6 +54,10 @@ export function PhotoFeed({
   initialPostId?: string;
   /** グリッド/マップの切り替えと「写真を投稿」を出さない(マイページの「いいね写真」など、格子と縦ビューアだけで使うとき)。 */
   hideToolbar?: boolean;
+  /** 店舗ページなど、外側のモーダルから詳細を開いたときの閉じる処理。 */
+  onCloseDetail?: () => void;
+  /** 外側の一覧にも削除結果を反映するときに呼ぶ。 */
+  onPostDeleted?: (postId: string) => void;
 }) {
   // ビューアに出す写真の並び。格子からは全体の中のその1枚から、マップのカードからは
   // そのカード(同じ場所)の写真だけを出す。
@@ -167,11 +173,16 @@ export function PhotoFeed({
       <div className="space-y-6 pb-10">
         <button
           type="button"
-          onClick={() => setViewer(viewer.title ? { ...viewer, mode: "grid" } : null)}
-          className="flex items-center gap-1 px-3 pt-2 text-sm text-tone-300 hover:text-main"
+          onClick={() => {
+            if (onCloseDetail) onCloseDetail();
+            else setViewer(viewer.title ? { ...viewer, mode: "grid" } : null);
+          }}
+          className={`flex items-center gap-1 px-3 pt-2 text-sm text-tone-300 hover:text-main ${
+            onCloseDetail ? "sticky top-0 z-20 w-full bg-page/90 py-3 backdrop-blur-md" : ""
+          }`}
         >
           <ChevronLeft size={18} />
-          {viewer.title ? t.photo.backToList : t.photo.backToGrid}
+          {onCloseDetail ? t.photo.close : viewer.title ? t.photo.backToList : t.photo.backToGrid}
         </button>
         {viewer.title ? <p className="px-3 text-sm font-medium text-main">{viewer.title}</p> : null}
         {viewerPosts.map((post, index) => (
@@ -226,7 +237,9 @@ export function PhotoFeed({
                   post={post}
                   onDeleted={(id) => {
                     setDeleted((prev) => new Set(prev).add(id));
-                    setViewer(null);
+                    onPostDeleted?.(id);
+                    if (onCloseDetail) onCloseDetail();
+                    else setViewer(null);
                     setFullscreenIndex(null);
                   }}
                 />
@@ -275,7 +288,9 @@ export function PhotoFeed({
             onClose={() => setFullscreenIndex(null)}
             onDeleted={(id) => {
               setDeleted((prev) => new Set(prev).add(id));
-              setViewer(null);
+              onPostDeleted?.(id);
+              if (onCloseDetail) onCloseDetail();
+              else setViewer(null);
               setFullscreenIndex(null);
             }}
           />
