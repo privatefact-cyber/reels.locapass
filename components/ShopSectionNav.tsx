@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Calendar, CalendarCheck, Users, Star, MapPin, Phone } from "lucide-react";
+import { Calendar, CalendarCheck, Car, Users, Star, MapPin, Phone } from "lucide-react";
 import { ShopContactModal } from "@/components/ShopContactModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -11,6 +11,7 @@ function getScrollItems(t: Dictionary) {
   return [
     { id: "today", label: t.shop.navSchedule, icon: Calendar },
     { id: "cast", label: t.shop.navCast, icon: Users },
+    { id: "items", label: t.items.navItems, icon: Car },
     { id: "price", label: t.shop.navPrice, icon: Star },
     { id: "access", label: t.shop.navAccess, icon: MapPin },
   ];

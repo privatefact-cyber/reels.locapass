@@ -366,16 +366,15 @@ export default async function LocapassShopSettingsPage({
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-500">
-              動画(任意)
-              <span className="ml-1.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">YouTube がおすすめ</span>
+              YouTube動画(任意)
             </label>
             <input
               name="video_url"
               defaultValue={shop.video_url}
-              placeholder="YouTube の動画URLを貼る(おすすめ)"
+              placeholder="YouTubeの動画URLを貼る"
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
-            <p className="mt-1 text-[11px] text-slate-500">Instagram(リール)・TikTok のURLにも対応しています。入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。</p>
+            <p className="mt-1 text-[11px] text-slate-500">YouTubeの動画URLを入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。</p>
             <label className="mt-2 flex items-start gap-2 text-xs text-slate-600">
               <input type="checkbox" name="hero_use_youtube" defaultChecked={shop.hero_use_youtube} className="mt-0.5 h-4 w-4" />
               <span>
@@ -387,12 +386,9 @@ export default async function LocapassShopSettingsPage({
               <summary className="cursor-pointer font-semibold">くわしい説明</summary>
               <div className="mt-1 space-y-1">
                 <p>
-                  <b>YouTube(おすすめ)</b>: ページの中で、その場で再生されます。終わるとサムネイルに戻り、お客様が外へ移動しにくく、音楽の入った動画も、そのまま再生できます。
+                  <b>YouTube</b>: ページの中で、その場で再生されます。終わるとサムネイルに戻り、お客様が外へ移動しにくく、音楽の入った動画も、そのまま再生できます。
                 </p>
-                <p>
-                  <b>Instagram(リールのURLのみ。写真の投稿は不可)</b>・<b>TikTok(ブラウザのアドレスバーのURL。短縮URLは不可)</b>: タップすると、ページの中で再生されます。再生画面には、投稿者名やいいね数、「Instagramでもっと見る」などが付くため、お客様が各サービスへ移動する場合があります。
-                </p>
-                <p>ご自身のアカウントの動画、または権利のある動画だけを載せてください。投稿者が非公開にした動画や、埋め込みを許可していない動画は、再生されません。</p>
+                <p>ご自身のアカウントの動画、または権利のある動画だけを載せてください。非公開または埋め込みを許可していないYouTube動画は、再生されません。</p>
               </div>
             </details>
           </div>

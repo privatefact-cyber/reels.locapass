@@ -313,7 +313,7 @@ export function ReelCard({
 
       {/* 再生中は画像中央部タップで指定リンク先へ(投稿の任意URL、無ければ既定のリンク先)。
           この後に続くボタン類はDOM順で上に来るため、それぞれのタップは奪わない。 */}
-      {videoUrl && isActive && (
+      {(!videoUrl || isActive) && (
         <Link
           href={ctaUrl}
           aria-label={resolvedCtaText}

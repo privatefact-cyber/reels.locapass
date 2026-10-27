@@ -385,6 +385,31 @@ export type Dictionary = {
     videoEta: (sec: number) => string;
     tags: Record<string, string>;
   };
+  items: {
+    title: string;
+    viewAll: (n: number) => string;
+    officialLatest: string;
+    officialSite: string;
+    count: (n: number) => string;
+    empty: string;
+    backToList: (shop: string) => string;
+    callShop: (shop: string) => string;
+    disclaimer: string;
+    priceAsk: string;
+    statusAvailable: string;
+    statusReserved: string;
+    statusSold: string;
+    specYear: string;
+    specMileage: string;
+    specInspection: string;
+    specColor: string;
+    noImage: string;
+    navItems: string;
+    specModel: string;
+    specDisplacement: string;
+    specFuel: string;
+    specSeats: string;
+  };
   language: {
     switch: string;
   };
@@ -770,6 +795,31 @@ const ja: Dictionary = {
     keepOpen: "アップロード中は、この画面を閉じないでください。",
     videoEta: (sec: number) => `残り約${sec}秒`,
     tags: { "グルメ": "グルメ", "カフェ": "カフェ", "自然・風景": "自然・風景", "夜景": "夜景", "歴史・寺社": "歴史・寺社", "公園": "公園", "建築": "建築", "アート": "アート", "買い物": "買い物", "祭り・イベント": "祭り・イベント", "アクティビティ": "アクティビティ", "スパ・温泉": "スパ・温泉" },
+  },
+  items: {
+    title: "在庫車両",
+    viewAll: (n) => `すべて見る(${n}台) →`,
+    officialLatest: "公式サイトで最新の在庫を見る",
+    officialSite: "公式サイトを見る",
+    count: (n) => `${n}台`,
+    empty: "現在掲載中の車両はありません。",
+    backToList: (shop) => `${shop}の在庫一覧`,
+    callShop: (shop) => `${shop}に電話で問い合わせる`,
+    disclaimer: "価格・状態は掲載時点のものです。最新の情報は店舗にご確認ください。",
+    priceAsk: "価格はお問い合わせください",
+    statusAvailable: "販売中",
+    statusReserved: "商談中",
+    statusSold: "売約済み",
+    specYear: "年式",
+    specMileage: "走行距離",
+    specInspection: "車検",
+    specColor: "色",
+    noImage: "NO IMAGE",
+    navItems: "在庫",
+    specModel: "型式",
+    specDisplacement: "排気量",
+    specFuel: "燃料",
+    specSeats: "乗車定員",
   },
   language: {
     switch: "言語",
@@ -1157,6 +1207,31 @@ const en: Dictionary = {
     videoEta: (sec: number) => `About ${sec}s left`,
     tags: { "グルメ": "Food", "カフェ": "Cafe", "自然・風景": "Nature & scenery", "夜景": "Night view", "歴史・寺社": "History & shrines", "公園": "Park", "建築": "Architecture", "アート": "Art", "買い物": "Shopping", "祭り・イベント": "Festivals & events", "アクティビティ": "Activities", "スパ・温泉": "Spa & hot springs" },
   },
+  items: {
+    title: "Vehicles in stock",
+    viewAll: (n) => `View all (${n}) →`,
+    officialLatest: "See the latest stock on the official site",
+    officialSite: "Visit the official site",
+    count: (n) => `${n} vehicle${n === 1 ? "" : "s"}`,
+    empty: "No vehicles are listed at the moment.",
+    backToList: (shop) => `${shop} - all vehicles`,
+    callShop: (shop) => `Call ${shop}`,
+    disclaimer: "Prices and availability are as of posting. Please confirm the latest details with the shop.",
+    priceAsk: "Price on request",
+    statusAvailable: "Available",
+    statusReserved: "In negotiation",
+    statusSold: "Sold",
+    specYear: "Year",
+    specMileage: "Mileage",
+    specInspection: "Inspection",
+    specColor: "Color",
+    noImage: "NO IMAGE",
+    navItems: "Stock",
+    specModel: "Model code",
+    specDisplacement: "Displacement",
+    specFuel: "Fuel",
+    specSeats: "Seats",
+  },
   language: {
     switch: "Language",
   },
@@ -1542,6 +1617,31 @@ const zh: Dictionary = {
     keepOpen: "上传期间请不要关闭此页面。",
     videoEta: (sec: number) => `约剩余${sec}秒`,
     tags: { "グルメ": "美食", "カフェ": "咖啡馆", "自然・風景": "自然风光", "夜景": "夜景", "歴史・寺社": "历史·寺社", "公園": "公园", "建築": "建筑", "アート": "艺术", "買い物": "购物", "祭り・イベント": "祭典·活动", "アクティビティ": "体验活动", "スパ・温泉": "水疗·温泉" },
+  },
+  items: {
+    title: "在售车辆",
+    viewAll: (n) => `查看全部(${n}辆) →`,
+    officialLatest: "在官方网站查看最新库存",
+    officialSite: "访问官方网站",
+    count: (n) => `${n}辆`,
+    empty: "目前没有在售车辆。",
+    backToList: (shop) => `${shop}的在售车辆`,
+    callShop: (shop) => `致电${shop}咨询`,
+    disclaimer: "价格和状态为发布时的信息,最新情况请向店铺确认。",
+    priceAsk: "价格请咨询",
+    statusAvailable: "在售",
+    statusReserved: "洽谈中",
+    statusSold: "已售出",
+    specYear: "年份",
+    specMileage: "行驶里程",
+    specInspection: "车检",
+    specColor: "颜色",
+    noImage: "NO IMAGE",
+    navItems: "库存",
+    specModel: "型号",
+    specDisplacement: "排量",
+    specFuel: "燃料",
+    specSeats: "乘员",
   },
   language: {
     switch: "语言",
@@ -1929,6 +2029,31 @@ const ar: Dictionary = {
     keepOpen: "يرجى إبقاء هذه الشاشة مفتوحة أثناء الرفع.",
     videoEta: (sec: number) => `المتبقي حوالي ${sec} ثانية`,
     tags: { "グルメ": "طعام", "カフェ": "مقهى", "自然・風景": "طبيعة ومناظر", "夜景": "منظر ليلي", "歴史・寺社": "تاريخ ومعابد", "公園": "حديقة", "建築": "عمارة", "アート": "فن", "買い物": "تسوق", "祭り・イベント": "مهرجانات وفعاليات", "アクティビティ": "أنشطة", "スパ・温泉": "سبا وينابيع ساخنة" },
+  },
+  items: {
+    title: "السيارات المتوفرة",
+    viewAll: (n) => `عرض الكل (${n}) →`,
+    officialLatest: "اطّلع على أحدث المخزون في الموقع الرسمي",
+    officialSite: "زيارة الموقع الرسمي",
+    count: (n) => `${n} سيارة`,
+    empty: "لا توجد سيارات معروضة حاليًا.",
+    backToList: (shop) => `${shop} - جميع السيارات`,
+    callShop: (shop) => `الاتصال بـ ${shop}`,
+    disclaimer: "الأسعار والحالة كما وقت النشر. يرجى التأكد من أحدث التفاصيل مع المتجر.",
+    priceAsk: "السعر عند الطلب",
+    statusAvailable: "متاحة",
+    statusReserved: "قيد التفاوض",
+    statusSold: "تم البيع",
+    specYear: "سنة الصنع",
+    specMileage: "المسافة المقطوعة",
+    specInspection: "الفحص",
+    specColor: "اللون",
+    noImage: "NO IMAGE",
+    navItems: "المخزون",
+    specModel: "رمز الطراز",
+    specDisplacement: "سعة المحرك",
+    specFuel: "الوقود",
+    specSeats: "عدد المقاعد",
   },
   "language": {
     "switch": "اللغة"

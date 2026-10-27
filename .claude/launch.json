@@ -22,6 +22,15 @@
         "3010"
       ],
       "port": 3010
+    },
+    {
+      "name": "r-pilates-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/yes/Downloads/r-pilates-8pilates7 && pnpm dev -- -p 3020"
+      ],
+      "port": 3020
     }
   ]
 }

@@ -25,6 +25,8 @@ import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { InquiryButton } from "@/components/InquiryButton";
 import { ShopAccordion } from "@/components/ShopAccordion";
+import { ShopItemsSection } from "@/components/shop/ShopItemsSection";
+import { ITEM_COLUMNS, type ShopItem } from "@/lib/shop/items";
 import { reservationEnabled, shopCanTakeReservations } from "@/lib/reservation/config";
 import { ShopVideo } from "@/components/shop/ShopVideo";
 import { resolveStoredVideo } from "@/lib/video";
@@ -224,7 +226,7 @@ export default async function ShopDetailPage({
       type: heroType,
       url: heroUrl,
     },
-    tagline: shopRow.tagline,
+    tagline: tr(shopRow.tagline, "tagline"),
     lineContactUrl: shopRow.line_url,
     // 店舗が自前でQR画像をアップロードしていればそれを優先し(公式LINEのブランドQR等)、
     // 無ければ連絡先URLからその場でQRコードを自動生成する(手動アップロードは必須ではない)。
@@ -233,11 +235,11 @@ export default async function ShopDetailPage({
       (shopRow.line_url ? await QRCode.toDataURL(shopRow.line_url, { margin: 1, width: 240 }) : null),
     galleryImageUrls: shopRow.gallery_image_urls ?? [],
   };
-  // 英語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
+  // 英語・アラビア語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
   // 動画紹介(YouTube / TikTok / Instagram / Vimeo)。生成済みの型に列が無いため、小さな別クエリで取る(未設定ならnull)。
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_use_youtube").eq("id", shopRow.id).maybeSingle();
   const introVideo = resolveStoredVideo(ytRow);
-  const addressDisplay = locale === "en" && shopRow.address_en ? shopRow.address_en : store.address;
+  const addressDisplay = (locale === "en" || locale === "ar") && shopRow.address_en ? shopRow.address_en : store.address;
 
   const { data: activeStoryCastIds } = castIds.length
     ? await supabase.rpc("locapass_cast_ids_with_active_story", { p_cast_ids: castIds })
@@ -354,6 +356,16 @@ export default async function ShopDetailPage({
     lng: shopRow.lng,
   }).catch(() => []);
   const totalReels = allReelRows?.length ?? 0;
+
+  // 掲載アイテム(車両の在庫)。登録がある店舗だけ「在庫車両」セクションを出す(売約済みは後ろへ)。
+  const { data: itemRows } = await (supabase as any)
+    .from("locapass_shop_items")
+    .select(ITEM_COLUMNS)
+    .eq("shop_id", shopId)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  const allItems = (itemRows ?? []) as ShopItem[];
+  const shopItems = [...allItems.filter((i) => i.status !== "sold"), ...allItems.filter((i) => i.status === "sold")];
 
   return (
     <ShopSwipeToArchive href={archiveHref}>
@@ -698,6 +710,9 @@ export default async function ShopDetailPage({
           )}
         </section>
 
+        {/* 在庫車両(掲載アイテム) */}
+        <ShopItemsSection items={shopItems} totalCount={shopItems.length} portalSlug={site.slug} shopSlug={shopRow.slug} officialUrl={shopRow.url} locale={locale} t={t.items} />
+
         {/* 料金表・イベント */}
         {hasPriceSection && (
         <section id="price" className="scroll-mt-24 space-y-3">
@@ -770,6 +785,7 @@ export default async function ShopDetailPage({
         sections={[
           ...(todayCasts.length > 0 ? ["today"] : []),
           ...(casts.length > 0 ? ["cast"] : []),
+          ...(shopItems.length > 0 ? ["items"] : []),
           ...(hasPriceSection ? ["price"] : []),
           "access",
         ]}

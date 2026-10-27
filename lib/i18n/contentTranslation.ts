@@ -44,12 +44,12 @@ export function asStoredTranslations(value: unknown): StoredTranslations {
 }
 
 /** 今の日本語に対して、保存済みの翻訳が古い(または無い)か。 */
-export function needsTranslation(fields: SourceFields, stored: unknown): boolean {
+export function needsTranslation(fields: SourceFields, stored: unknown, targets: readonly TranslationTarget[] = TRANSLATION_TARGETS): boolean {
   const st = asStoredTranslations(stored);
   if (st.source_hash !== translationSourceHash(fields)) return true;
   // 翻訳対象の言語が後から増えた(例: アラビア語)場合、日本語が変わっていなくても足りない言語を作る。
   // 訳す文章が1つも無い店舗は、言語が足りなくても対象にしない(毎回引っかかるのを防ぐ)。
-  return Object.keys(nonEmptyFields(fields)).length > 0 && TRANSLATION_TARGETS.some((t) => !st[t]);
+  return Object.keys(nonEmptyFields(fields)).length > 0 && targets.some((t) => !st[t]);
 }
 
 /** 保存済みの翻訳のうち、まだ無い言語だけを返す(その言語だけ作り足すバックフィル用)。 */
@@ -88,8 +88,12 @@ function buildPromptRules(targets: readonly TranslationTarget[]): string {
     "You translate Japanese text written by nightlife venues and restaurants in Japan for their listing pages.",
     `Translate every field of every item into ${langList}.`,
     "Rules:",
-    "- Do not translate proper nouns: shop names, building names, brand names and people's names.",
-    "  In English write them in romaji (or keep the Latin spelling if they already use it); in Chinese and Arabic keep them as written.",
+    "- Do not translate proper nouns: the shop's own name, building names and people's names.",
+    "  In English write them in romaji (or keep the Latin spelling if they already use it); in Chinese keep them as written;",
+    "  in Arabic write them in Latin letters (romaji, or the existing Latin spelling), because Arabic readers cannot read Japanese script.",
+    "- Product brand and model names that are written in Japanese katakana (car makes such as ポルシェ, フェラーリ, ランボルギーニ, プジョー) must not be left in Japanese:",
+    "  write the standard international form (Porsche, Ferrari, Lamborghini, Peugeot) in English, the standard Chinese names (保时捷, 法拉利, 兰博基尼, 标致) in Chinese, and the standard Arabic names (بورشه, فيراري, لامبورغيني, بيجو) in Arabic.",
+    "  Keep model codes and numbers as they are (911, GT3, Type996, E-208).",
     "- Keep every number, time and price exactly (use Western digits 0-9 in Arabic too).",
     "  Write 翌5:00 as \"until 5:00 AM (next day)\" / \"至次日5:00\" / \"حتى الساعة 5:00 صباحًا (اليوم التالي)\".",
     "- 円 becomes \"yen\" in English, \"日元\" in Chinese and \"ين\" in Arabic. 年中無休 means open every day.",

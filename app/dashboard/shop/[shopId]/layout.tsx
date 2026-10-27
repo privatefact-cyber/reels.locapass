@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { DashboardSignOutButton } from "@/components/locapass-dashboard/DashboardSignOutButton";
 import { RecoveryInfoGateModal } from "@/components/locapass-dashboard/RecoveryInfoGateModal";
@@ -41,6 +42,12 @@ export default async function LocapassShopDashboardLayout({
 
   const basePath = `/dashboard/shop/${shop.id}`;
 
+  // ポータルごとの機能(locapass_portals.features)。'items'のポータルだけ「在庫」メニューを出す。
+  const supabase = (await createClient()) as any;
+  const { data: portalRow } = await supabase.from("locapass_portals").select("features").eq("id", shop.portal_id).maybeSingle();
+  const features: string[] = portalRow?.features ?? [];
+  const navItems = features.includes("items") ? [NAV_ITEMS[0], { path: "/items", label: "在庫" }, ...NAV_ITEMS.slice(1)] : NAV_ITEMS;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       {viewer.needsRecoverySetup && <RecoveryInfoGateModal />}
@@ -57,7 +64,7 @@ export default async function LocapassShopDashboardLayout({
         <div className="mx-auto flex max-w-[1400px] items-center gap-1 px-4 py-2 sm:px-6">
           {/* メニューは横スクロール。右の「使い方」「ログアウト」は常に見える位置に固定する。 */}
           <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.path}
                 href={`${basePath}${item.path}`}
