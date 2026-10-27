@@ -15,6 +15,28 @@ export default function StaffDmThreadPage() {
   const [notFoundError, setNotFoundError] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [open, setOpen] = useState(true);
+  const [blockedByMe, setBlockedByMe] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const loadStatus = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.rpc("locapass_dm_thread_status", { p_thread_id: params.threadId });
+    const st = data as { open: boolean; blocked_by_me: boolean } | null;
+    if (st) {
+      setOpen(st.open);
+      setBlockedByMe(st.blocked_by_me);
+    }
+  }, [params.threadId]);
+
+  async function toggleBlock() {
+    if (!blockedByMe && !window.confirm("この相手をブロックしますか?フォローも双方向で外れ、メッセージは送れなくなります。")) return;
+    setBusy(true);
+    const supabase = createClient();
+    await supabase.rpc("locapass_dm_thread_block", { p_thread_id: params.threadId, p_block: !blockedByMe });
+    await loadStatus();
+    setBusy(false);
+  }
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -40,7 +62,8 @@ export default function StaffDmThreadPage() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadStatus();
+  }, [load, loadStatus]);
 
   // 開いている間、スタッフからの新着返信をRealtimeで即時反映する
   // (大規模運用を見据え、ポーリングではなくpush配信にする。RLSはそのまま効く)。
@@ -85,6 +108,9 @@ export default function StaffDmThreadPage() {
     if (!error) {
       setDraft("");
       void load();
+    } else {
+      // フォロー解除・ブロックで送れなくなっていたら、入力欄を閉じて案内に切り替える。
+      void loadStatus();
     }
   }
 
@@ -109,7 +135,10 @@ export default function StaffDmThreadPage() {
         <Link href="/mypage/messages" aria-label="戻る" className="text-muted">
           <ArrowLeft size={18} />
         </Link>
-        <h1 className="text-sm font-bold text-tone-100">メッセージ</h1>
+        <h1 className="flex-1 text-sm font-bold text-tone-100">メッセージ</h1>
+        <button type="button" onClick={toggleBlock} disabled={busy} className="text-[11px] text-red-400 disabled:opacity-50">
+          {blockedByMe ? "ブロック解除" : "ブロック"}
+        </button>
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto">
@@ -131,7 +160,15 @@ export default function StaffDmThreadPage() {
         ))}
       </div>
 
-      <form onSubmit={handleSend} className="mt-3 flex gap-2">
+      {!open && (
+        <p className="mt-3 rounded-xl border border-main/10 bg-surface px-4 py-3 text-xs leading-relaxed text-tone-500">
+          {blockedByMe
+            ? "ブロック中のため、メッセージは送れません。"
+            : "相互フォローではなくなったため、メッセージは送れません。お互いにフォローし直すと再開できます。"}
+        </p>
+      )}
+
+      <form onSubmit={handleSend} className={`mt-3 flex gap-2 ${open ? "" : "hidden"}`}>
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

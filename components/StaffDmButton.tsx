@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MessageCircle, X } from "lucide-react";
@@ -13,12 +13,17 @@ type Message = { id: string; senderType: "user" | "staff"; body: string; created
  * とは違い、登録ユーザー本人とスタッフ本人が直接やり取りする1対1スレッド(locapass_staff_dm_threads)を使う。
  * 未ログインならログインを促すだけで、ゲストのまま送信はできない。
  */
+type DmStatus = { available: boolean; i_follow: boolean; follows_me: boolean; blocked_by_me: boolean; open: boolean };
+
 export function StaffDmButton({
   staffId,
+  castId,
   staffName,
   variant = "button",
 }: {
-  staffId: string;
+  /** スタッフ宛てならstaffId、FACES宛てならcastId(どちらか一方)。 */
+  staffId?: string;
+  castId?: string;
   staffName: string;
   /** "icon": Instagramのプロフィール統計行に置く丸アイコン版。既定は全幅ボタン。 */
   variant?: "button" | "icon";
@@ -33,14 +38,48 @@ export function StaffDmButton({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<DmStatus | null>(null);
+  const [gateOpen, setGateOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const refreshStatus = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.rpc("locapass_dm_status", { p_staff_id: staffId, p_cast_id: castId });
+    const next = (data as DmStatus | null) ?? null;
+    setStatus(next);
+    return next;
+  }, [staffId, castId]);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       setLoggedIn(!!data.user);
       setCheckingAuth(false);
+      if (data.user) void refreshStatus();
     });
-  }, []);
+  }, [refreshStatus]);
+
+  async function toggleFollow() {
+    if (!status) return;
+    setBusy(true);
+    const supabase = createClient();
+    await supabase.rpc("locapass_dm_follow", { p_staff_id: staffId, p_cast_id: castId, p_follow: !status.i_follow });
+    await refreshStatus();
+    setBusy(false);
+  }
+
+  async function toggleBlock() {
+    if (!status) return;
+    if (!status.blocked_by_me && !window.confirm(`${staffName}をブロックしますか?フォローも双方向で外れ、メッセージは送れなくなります。`)) {
+      return;
+    }
+    setBusy(true);
+    const supabase = createClient();
+    await supabase.rpc("locapass_dm_block", { p_staff_id: staffId, p_cast_id: castId, p_block: !status.blocked_by_me });
+    await refreshStatus();
+    setBusy(false);
+    if (!status.blocked_by_me) setOpen(false);
+  }
 
   async function fetchMessages(id: string) {
     const supabase = createClient();
@@ -60,12 +99,19 @@ export function StaffDmButton({
   }
 
   async function handleOpen() {
-    setOpen(true);
     setError(null);
+    // 相互フォローになっていないうちはDMを開かず、フォロー案内を出す。
+    const latest = await refreshStatus();
+    if (!latest?.open) {
+      setGateOpen(true);
+      return;
+    }
+    setOpen(true);
     setLoadingThread(true);
     const supabase = createClient();
-    const { data: id, error: rpcError } = await supabase.rpc("locapass_get_or_create_staff_dm_thread", {
+    const { data: id, error: rpcError } = await supabase.rpc("locapass_get_or_create_dm_thread", {
       p_staff_id: staffId,
+      p_cast_id: castId,
     });
     if (rpcError || !id) {
       setError("メッセージ画面を開けませんでした");
@@ -118,6 +164,13 @@ export function StaffDmButton({
       .single();
     setSending(false);
     if (insertError || !data) {
+      // フォロー解除・ブロックで途中から送れなくなった場合は、案内画面に切り替える。
+      const latest = await refreshStatus();
+      if (!latest?.open) {
+        setOpen(false);
+        setGateOpen(true);
+        return;
+      }
       setError("送信に失敗しました");
       return;
     }
@@ -129,6 +182,7 @@ export function StaffDmButton({
   }
 
   if (checkingAuth) return null;
+  if (loggedIn && status && !status.available) return null;
 
   if (!loggedIn) {
     if (variant === "icon") {
@@ -175,6 +229,67 @@ export function StaffDmButton({
         </button>
       )}
 
+
+      {gateOpen && status && (
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
+          onClick={() => setGateOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-t-2xl border border-line/20 bg-panel-950 p-5 sm:rounded-2xl"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-tone-100">{staffName}にメッセージ</h2>
+              <button type="button" onClick={() => setGateOpen(false)} aria-label="閉じる" className="text-muted">
+                <X size={18} />
+              </button>
+            </div>
+            {status.blocked_by_me ? (
+              <>
+                <p className="mt-3 text-xs leading-relaxed text-tone-500">ブロック中のため、メッセージは送れません。</p>
+                <button
+                  type="button"
+                  onClick={toggleBlock}
+                  disabled={busy}
+                  className="mt-4 w-full rounded-full border border-main/20 px-4 py-2.5 text-sm font-semibold text-tone-100 disabled:opacity-50"
+                >
+                  ブロックを解除する
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-xs leading-relaxed text-tone-500">
+                  メッセージは、お互いにフォローしているときだけ送れます。
+                  {status.i_follow
+                    ? status.follows_me
+                      ? ""
+                      : "フォロー済みです。相手がフォローを返すと送れるようになります。"
+                    : status.follows_me
+                      ? "相手はあなたをフォローしています。フォローを返すと送れるようになります。"
+                      : "まずフォローして、相手がフォローを返すのを待ちましょう。"}
+                </p>
+                <button
+                  type="button"
+                  onClick={toggleFollow}
+                  disabled={busy}
+                  className={`mt-4 w-full rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-50 ${
+                    status.i_follow
+                      ? "border border-main/20 text-tone-100"
+                      : "bg-gradient-to-r from-cta-light to-cta text-on-cta"
+                  }`}
+                >
+                  {status.i_follow ? "フォロー中(タップで解除)" : status.follows_me ? "フォローバックする" : "フォローする"}
+                </button>
+                <button type="button" onClick={toggleBlock} disabled={busy} className="mt-3 w-full text-center text-xs text-red-400">
+                  ブロックする
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {open && (
         <div
           className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
@@ -186,9 +301,14 @@ export function StaffDmButton({
           >
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-tone-100">{staffName}とのメッセージ</h2>
-              <button type="button" onClick={() => setOpen(false)} aria-label="閉じる" className="text-muted">
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={toggleBlock} disabled={busy} className="text-[11px] text-red-400">
+                  ブロック
+                </button>
+                <button type="button" onClick={() => setOpen(false)} aria-label="閉じる" className="text-muted">
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="mt-3 flex-1 space-y-2 overflow-y-auto">

@@ -5,6 +5,7 @@ import { Heart, Pin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CastFollowHeart } from "@/components/CastFollowHeart";
 import { CastFollowBadge } from "@/components/CastFollowBadge";
+import { StaffDmButton } from "@/components/StaffDmButton";
 import { CastPhotoGrid } from "@/components/CastPhotoGrid";
 import { StoryRing } from "@/components/StoryRing";
 import { JsonLd } from "@/components/JsonLd";
@@ -274,6 +275,11 @@ export default async function CastDetailPage({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* DMは相互フォローのときだけ送れる(未達ならフォロー案内が開く)。 */}
+        <div className="mt-4">
+          <StaffDmButton castId={castId} staffName={castName} />
         </div>
 
         {cast.pr_text && (

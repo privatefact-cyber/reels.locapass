@@ -2722,7 +2722,8 @@ export type Database = {
           id: string
           last_message_at: string
           shop_id: string
-          staff_id: string
+          staff_id: string | null
+          cast_id: string | null
           user_id: string
           user_nickname: string
         }
@@ -2731,7 +2732,8 @@ export type Database = {
           id?: string
           last_message_at?: string
           shop_id: string
-          staff_id: string
+          staff_id?: string | null
+          cast_id?: string | null
           user_id: string
           user_nickname?: string
         }
@@ -2740,7 +2742,8 @@ export type Database = {
           id?: string
           last_message_at?: string
           shop_id?: string
-          staff_id?: string
+          staff_id?: string | null
+          cast_id?: string | null
           user_id?: string
           user_nickname?: string
         }
@@ -4932,9 +4935,51 @@ export type Database = {
           status: string
         }[]
       }
-      locapass_get_or_create_staff_dm_thread: {
-        Args: { p_staff_id: string }
+      locapass_get_or_create_dm_thread: {
+        Args: { p_staff_id?: string; p_cast_id?: string }
         Returns: string
+      }
+      locapass_dm_follow: {
+        Args: { p_staff_id?: string; p_cast_id?: string; p_follow?: boolean }
+        Returns: undefined
+      }
+      locapass_dm_block: {
+        Args: { p_staff_id?: string; p_cast_id?: string; p_block?: boolean }
+        Returns: undefined
+      }
+      locapass_follow_back: {
+        Args: { p_user_id: string; p_follow: boolean }
+        Returns: undefined
+      }
+      locapass_block_user: {
+        Args: { p_user_id: string; p_block: boolean }
+        Returns: undefined
+      }
+      locapass_dm_status: {
+        Args: { p_staff_id?: string; p_cast_id?: string }
+        Returns: Json
+      }
+      locapass_dm_thread_status: {
+        Args: { p_thread_id: string }
+        Returns: Json
+      }
+      locapass_dm_thread_block: {
+        Args: { p_thread_id: string; p_block: boolean }
+        Returns: undefined
+      }
+      locapass_my_followers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          nickname: string
+          avatar_url: string | null
+          i_follow_back: boolean
+          followed_at: string
+        }[]
+      }
+      locapass_my_blocked_users: {
+        Args: Record<PropertyKey, never>
+        Returns: { user_id: string; nickname: string }[]
       }
       locapass_get_user_id_by_email: {
         Args: { p_email: string }

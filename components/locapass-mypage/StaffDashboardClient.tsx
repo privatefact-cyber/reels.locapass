@@ -10,6 +10,7 @@ import { SingleImageDropzone, EventGalleryDropzone } from "@/components/locapass
 import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { StaffDmButton } from "@/components/StaffDmButton";
+import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
 import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
@@ -182,6 +183,7 @@ export function StaffDashboardClient({
   // メッセージ(登録ユーザーとのDM)
   const [dmThreads] = useState(initialDmThreads);
   const [openDmThreadId, setOpenDmThreadId] = useState<string | null>(null);
+  const [dmError, setDmError] = useState<string | null>(null);
   const [dmMessages, setDmMessages] = useState<DmMessage[]>([]);
   const [dmLoading, setDmLoading] = useState(false);
   const [dmDraft, setDmDraft] = useState("");
@@ -695,7 +697,11 @@ export function StaffDashboardClient({
       .single();
 
     setDmSending(false);
-    if (insertError || !data) return;
+    if (insertError || !data) {
+      setDmError("送信できませんでした。相互フォローが解除された、またはブロック中の可能性があります。");
+      return;
+    }
+    setDmError(null);
 
     setDmMessages((prev) => [
       ...prev,
@@ -1175,8 +1181,10 @@ export function StaffDashboardClient({
 
       {/* メッセージタブ(登録ユーザーとのDM。匿名お問い合わせとは別) */}
       {tab === "messages" && (
-        <div className="px-4 pt-4">
-          <ul className="space-y-2">
+        <div className="pt-4">
+          <FollowersPanel />
+          <p className="mx-4 mt-4 text-[11px] text-tone-500">メッセージは相互フォローのユーザーとだけやり取りできます。</p>
+          <ul className="mx-4 mt-2 space-y-2">
             {dmThreads.map((t) => (
               <li key={t.id} className="rounded-xl border border-main/10 bg-surface">
                 <button
@@ -1208,6 +1216,7 @@ export function StaffDashboardClient({
                         </div>
                       ))
                     )}
+                    {dmError && <p className="text-xs text-red-400">{dmError}</p>}
                     <div className="flex gap-2 pt-1">
                       <input
                         value={dmDraft}

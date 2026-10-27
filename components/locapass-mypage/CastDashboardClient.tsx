@@ -7,6 +7,8 @@ import { Camera, Pencil, Pin, PinOff, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPanel";
+import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
+import { CastDmPanel } from "@/components/locapass-mypage/CastDmPanel";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
@@ -808,6 +810,9 @@ export function CastDashboardClient({
           まだ投稿がありません。上のボタンから最初の1本を投稿してみましょう。
         </p>
       )}
+
+      <FollowersPanel />
+      <CastDmPanel castId={castId} />
 
       <CastCommentsPanel castId={castId} />
 
