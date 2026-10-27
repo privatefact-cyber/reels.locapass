@@ -239,7 +239,7 @@ export function MypageClient({
         </h1>
         <div className="flex items-center gap-3">
           <NotificationBell size={18} />
-          <Link href="/mypage/messages" aria-label="スタッフとのメッセージ" className="text-main/80">
+          <Link href="/mypage/messages" aria-label="メッセージ" className="text-main/80">
             <MessagesSquare size={18} />
           </Link>
           <Link href="/inquiries" aria-label={t.mypage.inquiryHistory} className="text-main/80">
@@ -324,6 +324,18 @@ export function MypageClient({
       >
         <Camera size={18} />
         {t.photo.postButton}
+      </Link>
+
+      {/* メッセージ(1対1のDM)への入口。フォローし合った相手と、画像も含めてやり取りできる。 */}
+      <Link
+        href="/mypage/messages"
+        className="mx-4 mt-4 flex items-center justify-between rounded-xl border border-main/15 bg-tone-900/60 px-4 py-3 text-sm font-bold text-main"
+      >
+        <span className="flex items-center gap-2">
+          <MessagesSquare size={18} />
+          メッセージ
+        </span>
+        <span className="text-xs font-normal text-tone-500">フォローし合った相手とやり取り</span>
       </Link>
 
       <Link href="/support" className="mx-4 mt-4 flex items-center justify-between rounded-xl border border-main/15 bg-tone-900/60 px-4 py-3 text-sm font-bold text-main">

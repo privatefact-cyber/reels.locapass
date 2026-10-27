@@ -2727,7 +2727,8 @@ export type Database = {
           created_at: string
           id: string
           last_message_at: string
-          shop_id: string
+          shop_id: string | null
+          peer_user_id: string | null
           staff_id: string | null
           cast_id: string | null
           user_id: string
@@ -2737,7 +2738,8 @@ export type Database = {
           created_at?: string
           id?: string
           last_message_at?: string
-          shop_id: string
+          shop_id?: string | null
+          peer_user_id?: string | null
           staff_id?: string | null
           cast_id?: string | null
           user_id: string
@@ -2747,7 +2749,8 @@ export type Database = {
           created_at?: string
           id?: string
           last_message_at?: string
-          shop_id?: string
+          shop_id?: string | null
+          peer_user_id?: string | null
           staff_id?: string | null
           cast_id?: string | null
           user_id?: string
@@ -4946,11 +4949,11 @@ export type Database = {
         Returns: string
       }
       locapass_dm_follow: {
-        Args: { p_staff_id?: string; p_cast_id?: string; p_follow?: boolean }
+        Args: { p_staff_id?: string; p_cast_id?: string; p_follow?: boolean; p_user_id?: string }
         Returns: undefined
       }
       locapass_dm_block: {
-        Args: { p_staff_id?: string; p_cast_id?: string; p_block?: boolean }
+        Args: { p_staff_id?: string; p_cast_id?: string; p_block?: boolean; p_user_id?: string }
         Returns: undefined
       }
       locapass_follow_back: {
@@ -4961,8 +4964,16 @@ export type Database = {
         Args: { p_user_id: string; p_block: boolean }
         Returns: undefined
       }
+      locapass_get_or_create_dm_thread_with_user: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
+      locapass_my_dm_threads: {
+        Args: Record<PropertyKey, never>
+        Returns: { id: string; last_message_at: string; label: string }[]
+      }
       locapass_dm_status: {
-        Args: { p_staff_id?: string; p_cast_id?: string }
+        Args: { p_staff_id?: string; p_cast_id?: string; p_user_id?: string }
         Returns: Json
       }
       locapass_dm_thread_status: {

@@ -52,7 +52,7 @@ export default async function MemberPhotoPage({
         )}
         <div className="min-w-0 flex-1 space-y-2">
           <h1 className="truncate text-lg font-medium text-main">{profile.name}</h1>
-          <PhotoProfileStats memberId={profile.memberId} stats={profile} />
+          <PhotoProfileStats memberId={profile.memberId} name={profile.name} stats={profile} />
         </div>
       </header>
 

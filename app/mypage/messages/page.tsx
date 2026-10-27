@@ -1,57 +1,55 @@
 import Link from "next/link";
 import { requireCurrentUser } from "@/lib/user/current-user";
 import { createClient } from "@/lib/supabase/server";
+import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
 
 export default async function MypageMessagesPage() {
-  const user = await requireCurrentUser("/mypage/messages");
+  await requireCurrentUser("/mypage/messages");
   const supabase = await createClient();
 
-  const { data: threads } = await supabase
-    .from("locapass_staff_dm_threads")
-    .select(
-      "id, last_message_at, locapass_shop_staff_members ( name, locapass_shops ( name ) ), locapass_cast_members ( name, locapass_shops ( name ) )",
-    )
-    .eq("user_id", user.id)
-    .order("last_message_at", { ascending: false });
+  const { data: threads } = await supabase.rpc("locapass_my_dm_threads");
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 py-6">
+    <div className="mx-auto max-w-md space-y-5 px-4 py-6">
       <div>
         <h1 className="text-lg font-bold text-tone-100">メッセージ</h1>
-        <p className="mt-1 text-xs text-tone-500">このアカウントでやり取りしたスタッフ・FACESのメッセージ一覧です。メッセージは相互フォローのときだけ送れます。</p>
+        <p className="mt-1 text-xs leading-relaxed text-tone-500">
+          友達・スタッフ・FACESと、1対1でやり取りできます。画像も送れます。
+        </p>
       </div>
 
-      {threads && threads.length > 0 ? (
-        <ul className="divide-y divide-main/10 rounded-xl border border-main/10 bg-surface">
-          {threads.map((t) => {
-            const staffRaw = Array.isArray(t.locapass_shop_staff_members)
-              ? t.locapass_shop_staff_members[0]
-              : t.locapass_shop_staff_members;
-            const castRaw = Array.isArray(t.locapass_cast_members) ? t.locapass_cast_members[0] : t.locapass_cast_members;
-            const staff = staffRaw ?? castRaw;
-            const peerLabel = staffRaw ? "スタッフ" : "FACES";
-            const shop = staff ? (Array.isArray(staff.locapass_shops) ? staff.locapass_shops[0] : staff.locapass_shops) : null;
-            return (
+      {/* 使い方: お互いにフォローするとメッセージが開く */}
+      <div className="rounded-xl border border-main/10 bg-surface p-4 text-xs leading-relaxed text-tone-300">
+        <p className="font-semibold text-tone-100">メッセージを送るには</p>
+        <ol className="mt-2 list-decimal space-y-1 pl-4">
+          <li>送りたい相手のプロフィールを開いて、フォローします</li>
+          <li>相手もあなたをフォローすると、お互いにメッセージが送れるようになります</li>
+          <li>下の「フォロワー」から、フォローを返してそのままメッセージも送れます</li>
+        </ol>
+        <p className="mt-2 text-tone-500">どちらかがフォローを外すか、ブロックすると、メッセージは送れなくなります。</p>
+      </div>
+
+      <section>
+        <h2 className="mb-2 text-sm font-bold text-tone-100">メッセージ一覧</h2>
+        {threads && threads.length > 0 ? (
+          <ul className="divide-y divide-main/10 rounded-xl border border-main/10 bg-surface">
+            {threads.map((t) => (
               <li key={t.id}>
                 <Link href={`/mypage/messages/${t.id}`} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-tone-100">
-                      {shop?.name ?? "LOCAPASS"}({staff?.name ?? peerLabel})
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-xs text-tone-500">
-                    {new Date(t.last_message_at).toLocaleString("ja-JP")}
-                  </span>
+                  <p className="min-w-0 truncate text-sm font-semibold text-tone-100">{t.label}</p>
+                  <span className="shrink-0 text-xs text-tone-500">{new Date(t.last_message_at).toLocaleString("ja-JP")}</span>
                 </Link>
               </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="rounded-xl border border-main/10 bg-surface p-6 text-center text-sm text-tone-500">
-          まだメッセージはありません。
-        </p>
-      )}
+            ))}
+          </ul>
+        ) : (
+          <p className="rounded-xl border border-main/10 bg-surface p-6 text-center text-sm text-tone-500">
+            まだメッセージはありません。
+          </p>
+        )}
+      </section>
+
+      <FollowersPanel flush />
     </div>
   );
 }

@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { usePhotoViewer } from "@/components/photo/useViewer";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { StaffDmButton } from "@/components/StaffDmButton";
 
 type Stats = { postCount: number; likesReceived: number; followerCount: number; followingCount: number };
 
 /** プロフィールの数字(投稿・いいね・フォロワー・フォロー中)と、フォローするボタン。自分のページにはボタンを出さない。 */
-export function PhotoProfileStats({ memberId, stats }: { memberId: string; stats: Stats }) {
+export function PhotoProfileStats({ memberId, name, stats }: { memberId: string; name: string; stats: Stats }) {
   const { t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -65,6 +66,7 @@ export function PhotoProfileStats({ memberId, stats }: { memberId: string; stats
         {item(stats.followingCount, t.photo.profileFollowing)}
       </dl>
       {isSelf ? null : (
+        <>
         <button
           type="button"
           onClick={toggle}
@@ -75,6 +77,9 @@ export function PhotoProfileStats({ memberId, stats }: { memberId: string; stats
         >
           {following ? t.photo.profileFollowing : t.photo.follow}
         </button>
+        {/* メッセージ: お互いにフォローしているときだけ送れる(未達ならフォロー案内が開く)。 */}
+        <StaffDmButton userId={memberId} staffName={name} />
+        </>
       )}
     </div>
   );

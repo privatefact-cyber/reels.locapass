@@ -20,15 +20,19 @@ export default function StaffDmThreadPage() {
   const [sending, setSending] = useState(false);
   const [open, setOpen] = useState(true);
   const [blockedByMe, setBlockedByMe] = useState(false);
+  const [meSender, setMeSender] = useState<"user" | "staff">("user");
+  const [label, setLabel] = useState("メッセージ");
   const [busy, setBusy] = useState(false);
 
   const loadStatus = useCallback(async () => {
     const supabase = createClient();
     const { data } = await supabase.rpc("locapass_dm_thread_status", { p_thread_id: params.threadId });
-    const st = data as { open: boolean; blocked_by_me: boolean } | null;
+    const st = data as { open: boolean; blocked_by_me: boolean; me_sender: "user" | "staff"; label: string } | null;
     if (st) {
       setOpen(st.open);
       setBlockedByMe(st.blocked_by_me);
+      setMeSender(st.me_sender);
+      setLabel(st.label);
     }
   }, [params.threadId]);
 
@@ -106,7 +110,7 @@ export default function StaffDmThreadPage() {
     const supabase = createClient();
     const { error } = await supabase
       .from("locapass_staff_dm_messages")
-      .insert({ thread_id: params.threadId, sender_type: "user", body: draft.trim() });
+      .insert({ thread_id: params.threadId, sender_type: meSender, body: draft.trim() });
 
     setSending(false);
     if (!error) {
@@ -139,7 +143,7 @@ export default function StaffDmThreadPage() {
         <Link href="/mypage/messages" aria-label="戻る" className="text-muted">
           <ArrowLeft size={18} />
         </Link>
-        <h1 className="flex-1 text-sm font-bold text-tone-100">メッセージ</h1>
+        <h1 className="min-w-0 flex-1 truncate text-sm font-bold text-tone-100">{label}</h1>
         <button type="button" onClick={toggleBlock} disabled={busy} className="text-[11px] text-red-400 disabled:opacity-50">
           {blockedByMe ? "ブロック解除" : "ブロック"}
         </button>
@@ -153,9 +157,9 @@ export default function StaffDmThreadPage() {
           <div
             key={m.id}
             className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
-              m.senderType === "staff"
-                ? "ml-0 bg-panel-800 text-tone-100"
-                : "ml-auto bg-gradient-to-r from-hl-400 to-hl-500 text-panel-950"
+              m.senderType === meSender
+                ? "ml-auto bg-gradient-to-r from-hl-400 to-hl-500 text-panel-950"
+                : "ml-0 bg-panel-800 text-tone-100"
             }`}
           >
             <p><DmMessageContent body={m.body} imagePath={m.imagePath} /></p>
@@ -175,7 +179,7 @@ export default function StaffDmThreadPage() {
       <form onSubmit={handleSend} className={`mt-3 flex items-center gap-2 ${open ? "" : "hidden"}`}>
         <DmAttachButtons
           threadId={params.threadId}
-          senderType="user"
+          senderType={meSender}
           onSent={() => void load()}
           onError={() => void loadStatus()}
         />

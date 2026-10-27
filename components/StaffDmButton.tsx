@@ -21,12 +21,15 @@ type DmStatus = { available: boolean; i_follow: boolean; follows_me: boolean; bl
 export function StaffDmButton({
   staffId,
   castId,
+  userId,
   staffName,
   variant = "button",
 }: {
-  /** スタッフ宛てならstaffId、FACES宛てならcastId(どちらか一方)。 */
+  /** スタッフ宛てならstaffId、FACES宛てならcastId、ユーザー宛てならuserId(どれか1つ)。 */
   staffId?: string;
   castId?: string;
+  /** 一般ユーザー宛て(写真投稿者ページなど)。 */
+  userId?: string;
   staffName: string;
   /** "icon": Instagramのプロフィール統計行に置く丸アイコン版。既定は全幅ボタン。 */
   variant?: "button" | "icon";
@@ -43,15 +46,16 @@ export function StaffDmButton({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<DmStatus | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
+  const [meSender, setMeSender] = useState<"user" | "staff">("user");
   const [busy, setBusy] = useState(false);
 
   const refreshStatus = useCallback(async () => {
     const supabase = createClient();
-    const { data } = await supabase.rpc("locapass_dm_status", { p_staff_id: staffId, p_cast_id: castId });
+    const { data } = await supabase.rpc("locapass_dm_status", { p_staff_id: staffId, p_cast_id: castId, p_user_id: userId });
     const next = (data as DmStatus | null) ?? null;
     setStatus(next);
     return next;
-  }, [staffId, castId]);
+  }, [staffId, castId, userId]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -66,7 +70,7 @@ export function StaffDmButton({
     if (!status) return;
     setBusy(true);
     const supabase = createClient();
-    await supabase.rpc("locapass_dm_follow", { p_staff_id: staffId, p_cast_id: castId, p_follow: !status.i_follow });
+    await supabase.rpc("locapass_dm_follow", { p_staff_id: staffId, p_cast_id: castId, p_user_id: userId, p_follow: !status.i_follow });
     await refreshStatus();
     setBusy(false);
   }
@@ -78,7 +82,7 @@ export function StaffDmButton({
     }
     setBusy(true);
     const supabase = createClient();
-    await supabase.rpc("locapass_dm_block", { p_staff_id: staffId, p_cast_id: castId, p_block: !status.blocked_by_me });
+    await supabase.rpc("locapass_dm_block", { p_staff_id: staffId, p_cast_id: castId, p_user_id: userId, p_block: !status.blocked_by_me });
     await refreshStatus();
     setBusy(false);
     if (!status.blocked_by_me) setOpen(false);
@@ -113,16 +117,18 @@ export function StaffDmButton({
     setOpen(true);
     setLoadingThread(true);
     const supabase = createClient();
-    const { data: id, error: rpcError } = await supabase.rpc("locapass_get_or_create_dm_thread", {
-      p_staff_id: staffId,
-      p_cast_id: castId,
-    });
+    const { data: id, error: rpcError } = userId
+      ? await supabase.rpc("locapass_get_or_create_dm_thread_with_user", { p_user_id: userId })
+      : await supabase.rpc("locapass_get_or_create_dm_thread", { p_staff_id: staffId, p_cast_id: castId });
     if (rpcError || !id) {
       setError("メッセージ画面を開けませんでした");
       setLoadingThread(false);
       return;
     }
     setThreadId(id);
+    // ユーザー同士では、相手が先に作ったスレッドだと自分は「相手側(staff)」として送る。
+    const { data: st } = await supabase.rpc("locapass_dm_thread_status", { p_thread_id: id });
+    setMeSender((st as { me_sender?: "user" | "staff" } | null)?.me_sender ?? "user");
     await fetchMessages(id);
     setLoadingThread(false);
   }
@@ -163,7 +169,7 @@ export function StaffDmButton({
     const supabase = createClient();
     const { data, error: insertError } = await supabase
       .from("locapass_staff_dm_messages")
-      .insert({ thread_id: threadId, sender_type: "user", body: draft.trim() })
+      .insert({ thread_id: threadId, sender_type: meSender, body: draft.trim() })
       .select("id, sender_type, body, image_path, created_at")
       .single();
     setSending(false);
@@ -180,7 +186,7 @@ export function StaffDmButton({
     }
     setMessages((prev) => [
       ...prev,
-      { id: data.id, senderType: "user", body: data.body, imagePath: data.image_path, createdAt: data.created_at },
+      { id: data.id, senderType: meSender, body: data.body, imagePath: data.image_path, createdAt: data.created_at },
     ]);
     setDraft("");
   }
@@ -325,7 +331,7 @@ export function StaffDmButton({
                   <div
                     key={m.id}
                     className={`max-w-[80%] rounded-2xl px-3 py-1.5 text-sm ${
-                      m.senderType === "user"
+                      m.senderType === meSender
                         ? "ml-auto bg-gradient-to-r from-cta-light to-cta text-on-cta"
                         : "mr-auto bg-main/10 text-tone-100"
                     }`}
@@ -342,12 +348,12 @@ export function StaffDmButton({
               {threadId && (
                 <DmAttachButtons
                   threadId={threadId}
-                  senderType="user"
+                  senderType={meSender}
                   onSent={(m) =>
                     setMessages((prev) =>
                       prev.some((x) => x.id === m.id)
                         ? prev
-                        : [...prev, { id: m.id, senderType: "user", body: m.body, imagePath: m.image_path, createdAt: m.created_at }],
+                        : [...prev, { id: m.id, senderType: meSender, body: m.body, imagePath: m.image_path, createdAt: m.created_at }],
                     )
                   }
                   onError={async (message) => {
