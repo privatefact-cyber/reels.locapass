@@ -1536,6 +1536,7 @@ export type Database = {
           body: string | null
           created_at: string
           id: string
+          image_path: string | null
           push_dispatched_at: string | null
           read_at: string | null
           shop_id: string | null
@@ -1548,6 +1549,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          image_path?: string | null
           push_dispatched_at?: string | null
           read_at?: string | null
           shop_id?: string | null
@@ -1560,6 +1562,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          image_path?: string | null
           push_dispatched_at?: string | null
           read_at?: string | null
           shop_id?: string | null
@@ -5149,7 +5152,7 @@ export type Database = {
         Returns: number
       }
       locapass_send_shop_message: {
-        Args: { p_body: string; p_shop_id: string; p_target_user_id?: string }
+        Args: { p_body: string; p_shop_id: string; p_target_user_id?: string; p_image_path?: string }
         Returns: number
       }
       locapass_set_cast_login_pin: {

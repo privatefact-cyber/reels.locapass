@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { createClient } from "@/lib/supabase/server";
-import { sendShopMessage } from "./actions";
+import { ShopMessageForm } from "./ShopMessageForm";
 
 /**
  * LUXELA本家のお客様へのメッセージ画面(app/dashboard/messages/page.tsx)と同じ画面。
@@ -27,46 +27,11 @@ export default async function LocapassShopMessagesPage({
       <div>
         <h1 className="text-3xl font-bold text-slate-900">お気に入りユーザーへのメッセージ</h1>
         <p className="mt-1 text-sm text-slate-600">
-          {shop.name}をお気に入り登録中のユーザー({favoriteUsers.length}人)にプッシュ通知とお知らせを送れます。
+          {shop.name}をお気に入り登録中のユーザー({favoriteUsers.length}人)にプッシュ通知とお知らせを送れます。割引チケットなどの画像も添付できます。
         </p>
       </div>
 
-      <form action={sendShopMessage.bind(null, shop.id)} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
-        <div>
-          <label className="block text-sm font-semibold text-slate-700">送信先</label>
-          <select
-            name="target_user_id"
-            defaultValue=""
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
-          >
-            <option value="" className="text-slate-900">お気に入り登録者 全員({favoriteUsers.length}人)</option>
-            {favoriteUsers.map((u) => (
-              <option key={u.userId} value={u.userId} className="text-slate-900">
-                {u.nickname}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-slate-700">本文</label>
-          <textarea
-            name="body"
-            required
-            rows={4}
-            maxLength={500}
-            placeholder="今週末はイベント開催中です！ぜひ遊びに来てください。"
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:outline-none"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-        >
-          送信する
-        </button>
-      </form>
+      <ShopMessageForm shopId={shop.id} favoriteUsers={favoriteUsers} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ type Notification = {
   title: string;
   body: string | null;
   url: string | null;
+  image_path: string | null;
   read_at: string | null;
   created_at: string;
 };
@@ -33,6 +34,26 @@ const ICONS: Record<string, typeof Bell> = {
 };
 
 const TABLE = "locapass_notifications";
+
+/** 店舗からのメッセージに添付された画像(割引チケットなど)。非公開バケットなので署名URLで表示する。 */
+function NotificationImage({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    createClient()
+      .storage.from("locapass-shop-messages")
+      .createSignedUrl(path, 60 * 60)
+      .then(({ data }) => {
+        if (!cancelled) setUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [path]);
+  if (!url) return <div className="mt-2 h-24 w-40 animate-pulse rounded-lg bg-main/10" />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={url} alt="添付画像" className="mt-2 max-h-72 w-full rounded-lg object-contain" />;
+}
 /** 左スワイプでゴミ箱ボタンが現れる幅(px)。 */
 const REVEAL_WIDTH = 76;
 
@@ -108,7 +129,8 @@ function NotificationRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-tone-100">{n.title}</p>
-        {n.body && <p className="mt-0.5 truncate text-xs text-muted">{n.body}</p>}
+        {n.body && <p className={`mt-0.5 text-xs text-muted ${n.image_path ? "" : "truncate"}`}>{n.body}</p>}
+        {n.image_path && <NotificationImage path={n.image_path} />}
         <p className="mt-1 text-[11px] text-tone-500">{new Date(n.created_at).toLocaleString("ja-JP")}</p>
       </div>
     </div>
@@ -198,7 +220,7 @@ export function NotificationsList() {
 
       const { data: rows } = await supabase
         .from(TABLE)
-        .select("id, type, title, body, url, read_at, created_at")
+        .select("id, type, title, body, url, image_path, read_at, created_at")
         .eq("user_id", uid)
         .order("created_at", { ascending: false })
         .limit(50);
