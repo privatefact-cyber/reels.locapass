@@ -5,8 +5,10 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
+import { DmMessageContent } from "@/components/dm/DmMessageContent";
 
-type Message = { id: string; senderType: "user" | "staff"; body: string; createdAt: string };
+type Message = { id: string; senderType: "user" | "staff"; body: string; imagePath: string | null; stamp: string | null; createdAt: string };
 
 /** 登録ユーザー本人とスタッフのDMスレッド。本人以外はRLSで弾かれる。 */
 export default function StaffDmThreadPage() {
@@ -42,7 +44,7 @@ export default function StaffDmThreadPage() {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("locapass_staff_dm_messages")
-      .select("id, sender_type, body, created_at")
+      .select("id, sender_type, body, image_path, stamp, created_at")
       .eq("thread_id", params.threadId)
       .order("created_at", { ascending: true });
 
@@ -55,6 +57,8 @@ export default function StaffDmThreadPage() {
         id: m.id,
         senderType: m.sender_type as "user" | "staff",
         body: m.body,
+        imagePath: m.image_path,
+        stamp: m.stamp,
         createdAt: m.created_at,
       })),
     );
@@ -80,10 +84,10 @@ export default function StaffDmThreadPage() {
           filter: `thread_id=eq.${params.threadId}`,
         },
         (payload) => {
-          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; created_at: string };
+          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; image_path: string | null; stamp: string | null; created_at: string };
           setMessages((prev) =>
             prev && !prev.some((existing) => existing.id === m.id)
-              ? [...prev, { id: m.id, senderType: m.sender_type, body: m.body, createdAt: m.created_at }]
+              ? [...prev, { id: m.id, senderType: m.sender_type, body: m.body, imagePath: m.image_path, stamp: m.stamp, createdAt: m.created_at }]
               : prev,
           );
         },
@@ -154,7 +158,7 @@ export default function StaffDmThreadPage() {
                 : "ml-auto bg-gradient-to-r from-hl-400 to-hl-500 text-panel-950"
             }`}
           >
-            <p className="whitespace-pre-wrap">{m.body}</p>
+            <p><DmMessageContent body={m.body} stamp={m.stamp} imagePath={m.imagePath} /></p>
             <p className="mt-1 text-[10px] opacity-60">{new Date(m.createdAt).toLocaleString("ja-JP")}</p>
           </div>
         ))}
@@ -168,7 +172,14 @@ export default function StaffDmThreadPage() {
         </p>
       )}
 
-      <form onSubmit={handleSend} className={`mt-3 flex gap-2 ${open ? "" : "hidden"}`}>
+      <form onSubmit={handleSend} className={`mt-3 flex items-center gap-2 ${open ? "" : "hidden"}`}>
+        <DmAttachButtons
+          threadId={params.threadId}
+          senderType="user"
+          canAttachImage={false}
+          onSent={() => void load()}
+          onError={() => void loadStatus()}
+        />
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

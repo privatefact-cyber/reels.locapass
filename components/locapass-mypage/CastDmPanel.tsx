@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
+import { DmMessageContent } from "@/components/dm/DmMessageContent";
 
 type Thread = { id: string; userNickname: string; lastMessageAt: string };
-type Message = { id: string; senderType: "user" | "staff"; body: string; createdAt: string };
+type Message = { id: string; senderType: "user" | "staff"; body: string; imagePath: string | null; stamp: string | null; createdAt: string };
 
 /** FACES本人の画面のDM。相互フォローのユーザーだけがスレッドを作れ、フォローが外れる/ブロックすると返信できなくなる。 */
 export function CastDmPanel({ castId }: { castId: string }) {
@@ -32,7 +34,7 @@ export function CastDmPanel({ castId }: { castId: string }) {
     const supabase = createClient();
     const { data } = await supabase
       .from("locapass_staff_dm_messages")
-      .select("id, sender_type, body, created_at")
+      .select("id, sender_type, body, image_path, stamp, created_at")
       .eq("thread_id", threadId)
       .order("created_at", { ascending: true });
     setMessages(
@@ -40,6 +42,8 @@ export function CastDmPanel({ castId }: { castId: string }) {
         id: m.id,
         senderType: m.sender_type as "user" | "staff",
         body: m.body,
+        imagePath: m.image_path,
+        stamp: m.stamp,
         createdAt: m.created_at,
       })),
     );
@@ -55,9 +59,9 @@ export function CastDmPanel({ castId }: { castId: string }) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "locapass_staff_dm_messages", filter: `thread_id=eq.${openId}` },
         (payload) => {
-          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; created_at: string };
+          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; image_path: string | null; stamp: string | null; created_at: string };
           setMessages((prev) =>
-            prev.some((x) => x.id === m.id) ? prev : [...prev, { id: m.id, senderType: m.sender_type, body: m.body, createdAt: m.created_at }],
+            prev.some((x) => x.id === m.id) ? prev : [...prev, { id: m.id, senderType: m.sender_type, body: m.body, imagePath: m.image_path, stamp: m.stamp, createdAt: m.created_at }],
           );
         },
       )
@@ -87,7 +91,7 @@ export function CastDmPanel({ castId }: { castId: string }) {
     const { data, error: insertError } = await supabase
       .from("locapass_staff_dm_messages")
       .insert({ thread_id: threadId, sender_type: "staff", body: draft.trim() })
-      .select("id, sender_type, body, created_at")
+      .select("id, sender_type, body, image_path, stamp, created_at")
       .single();
     setSending(false);
     if (insertError || !data) {
@@ -95,7 +99,7 @@ export function CastDmPanel({ castId }: { castId: string }) {
       return;
     }
     setMessages((prev) =>
-      prev.some((x) => x.id === data.id) ? prev : [...prev, { id: data.id, senderType: "staff", body: data.body, createdAt: data.created_at }],
+      prev.some((x) => x.id === data.id) ? prev : [...prev, { id: data.id, senderType: "staff", body: data.body, imagePath: data.image_path, stamp: data.stamp, createdAt: data.created_at }],
     );
     setDraft("");
   }
@@ -128,12 +132,25 @@ export function CastDmPanel({ castId }: { castId: string }) {
                           m.senderType === "staff" ? "ml-auto bg-brand text-main" : "mr-auto bg-main/10 text-tone-200"
                         }`}
                       >
-                        {m.body}
+                        <DmMessageContent body={m.body} stamp={m.stamp} imagePath={m.imagePath} />
                       </div>
                     ))
                   )}
                   {error && <p className="text-xs text-red-400">{error}</p>}
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex items-center gap-2 pt-1">
+                    <DmAttachButtons
+                      threadId={t.id}
+                      senderType="staff"
+                      canAttachImage
+                      onSent={(m) =>
+                        setMessages((prev) =>
+                          prev.some((x) => x.id === m.id)
+                            ? prev
+                            : [...prev, { id: m.id, senderType: "staff", body: m.body, imagePath: m.image_path, stamp: m.stamp, createdAt: m.created_at }],
+                        )
+                      }
+                      onError={() => setError("送信できませんでした。相互フォローが解除された、またはブロック中の可能性があります。")}
+                    />
                     <input
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}

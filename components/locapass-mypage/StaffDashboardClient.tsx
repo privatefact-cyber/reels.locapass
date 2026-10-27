@@ -11,6 +11,8 @@ import { TimeOfDaySelect } from "@/components/locapass-dashboard/TimeOfDaySelect
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { StaffDmButton } from "@/components/StaffDmButton";
 import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
+import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
+import { DmMessageContent } from "@/components/dm/DmMessageContent";
 import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
@@ -64,7 +66,7 @@ export type DmThreadRow = {
 };
 
 type ThreadMessage = { senderType: "customer" | "shop"; body: string; createdAt: string };
-type DmMessage = { id: string; senderType: "user" | "staff"; body: string; createdAt: string };
+type DmMessage = { id: string; senderType: "user" | "staff"; body: string; imagePath: string | null; stamp: string | null; createdAt: string };
 type ReelComment = { id: string; authorType: "customer" | "staff"; body: string; createdAt: string };
 
 function parseTimeOfDay(value: string): string | null {
@@ -224,10 +226,10 @@ export function StaffDashboardClient({
           filter: `thread_id=eq.${openDmThreadId}`,
         },
         (payload) => {
-          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; created_at: string };
+          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; image_path: string | null; stamp: string | null; created_at: string };
           setDmMessages((prev) => (prev.some((existing) => existing.id === m.id) ? prev : [
             ...prev,
-            { id: m.id, senderType: m.sender_type, body: m.body, createdAt: m.created_at },
+            { id: m.id, senderType: m.sender_type, body: m.body, imagePath: m.image_path, stamp: m.stamp, createdAt: m.created_at },
           ]));
         },
       )
@@ -662,7 +664,7 @@ export function StaffDashboardClient({
     const supabase = createClient();
     const { data } = await supabase
       .from("locapass_staff_dm_messages")
-      .select("id, sender_type, body, created_at")
+      .select("id, sender_type, body, image_path, stamp, created_at")
       .eq("thread_id", threadId)
       .order("created_at", { ascending: true });
     setDmMessages(
@@ -670,6 +672,8 @@ export function StaffDashboardClient({
         id: m.id,
         senderType: m.sender_type as "user" | "staff",
         body: m.body,
+        imagePath: m.image_path,
+        stamp: m.stamp,
         createdAt: m.created_at,
       })),
     );
@@ -693,7 +697,7 @@ export function StaffDashboardClient({
     const { data, error: insertError } = await supabase
       .from("locapass_staff_dm_messages")
       .insert({ thread_id: threadId, sender_type: "staff", body: dmDraft.trim() })
-      .select("id, sender_type, body, created_at")
+      .select("id, sender_type, body, image_path, stamp, created_at")
       .single();
 
     setDmSending(false);
@@ -705,7 +709,7 @@ export function StaffDashboardClient({
 
     setDmMessages((prev) => [
       ...prev,
-      { id: data.id, senderType: "staff", body: data.body, createdAt: data.created_at },
+      { id: data.id, senderType: "staff", body: data.body, imagePath: data.image_path, stamp: data.stamp, createdAt: data.created_at },
     ]);
     setDmDraft("");
   }
@@ -1212,12 +1216,26 @@ export function StaffDashboardClient({
                               : "mr-auto bg-main/10 text-tone-200"
                           }`}
                         >
-                          {m.body}
+                          <DmMessageContent body={m.body} stamp={m.stamp} imagePath={m.imagePath} />
                         </div>
                       ))
                     )}
                     {dmError && <p className="text-xs text-red-400">{dmError}</p>}
-                    <div className="flex gap-2 pt-1">
+                    <div className="flex items-center gap-2 pt-1">
+                      <DmAttachButtons
+                        threadId={t.id}
+                        senderType="staff"
+                        canAttachImage
+                        onSent={(m) => {
+                          setDmError(null);
+                          setDmMessages((prev) =>
+                            prev.some((x) => x.id === m.id)
+                              ? prev
+                              : [...prev, { id: m.id, senderType: "staff", body: m.body, imagePath: m.image_path, stamp: m.stamp, createdAt: m.created_at }],
+                          );
+                        }}
+                        onError={() => setDmError("送信できませんでした。相互フォローが解除された、またはブロック中の可能性があります。")}
+                      />
                       <input
                         value={dmDraft}
                         onChange={(e) => setDmDraft(e.target.value)}

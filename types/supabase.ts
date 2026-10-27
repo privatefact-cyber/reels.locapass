@@ -2689,21 +2689,27 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          image_path: string | null
           sender_type: string
+          stamp: string | null
           thread_id: string
         }
         Insert: {
           body: string
           created_at?: string
           id?: string
+          image_path?: string | null
           sender_type: string
+          stamp?: string | null
           thread_id: string
         }
         Update: {
           body?: string
           created_at?: string
           id?: string
+          image_path?: string | null
           sender_type?: string
+          stamp?: string | null
           thread_id?: string
         }
         Relationships: [
