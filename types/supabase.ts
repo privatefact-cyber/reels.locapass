@@ -5151,6 +5151,10 @@ export type Database = {
         Args: { p_body?: string; p_title: string; p_url?: string }
         Returns: number
       }
+      locapass_send_cast_message: {
+        Args: { p_body: string; p_image_path?: string; p_target_user_id?: string }
+        Returns: number
+      }
       locapass_send_shop_message: {
         Args: { p_body: string; p_shop_id: string; p_target_user_id?: string; p_image_path?: string }
         Returns: number

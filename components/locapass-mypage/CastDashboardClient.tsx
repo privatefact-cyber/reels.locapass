@@ -9,6 +9,7 @@ import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { CastCommentsPanel } from "@/components/locapass-mypage/CastCommentsPanel";
 import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
 import { CastDmPanel } from "@/components/locapass-mypage/CastDmPanel";
+import { CastBroadcastPanel } from "@/components/locapass-mypage/CastBroadcastPanel";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { validateReelFile } from "@/lib/reels/prepareReelFile";
@@ -813,6 +814,7 @@ export function CastDashboardClient({
 
       <FollowersPanel />
       <CastDmPanel castId={castId} />
+      <CastBroadcastPanel castId={castId} />
 
       <CastCommentsPanel castId={castId} />
 
