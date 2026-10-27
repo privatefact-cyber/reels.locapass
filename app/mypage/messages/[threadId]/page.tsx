@@ -23,6 +23,7 @@ export default function StaffDmThreadPage() {
   const [meSender, setMeSender] = useState<"user" | "staff">("user");
   const [label, setLabel] = useState("メッセージ");
   const [busy, setBusy] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     const supabase = createClient();
@@ -138,7 +139,7 @@ export default function StaffDmThreadPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-56px)] max-w-md flex-col px-4 py-4">
+    <div className="mx-auto flex min-h-[calc(100dvh-56px)] max-w-md flex-col px-4 pb-28 pt-4 md:pb-4">
       <div className="mb-3 flex items-center gap-2">
         <Link href="/mypage/messages" aria-label="戻る" className="text-muted">
           <ArrowLeft size={18} />
@@ -176,12 +177,20 @@ export default function StaffDmThreadPage() {
         </p>
       )}
 
+      {sendError && <p className="mt-2 text-xs text-red-400">{sendError}</p>}
+
       <form onSubmit={handleSend} className={`mt-3 flex items-center gap-2 ${open ? "" : "hidden"}`}>
         <DmAttachButtons
           threadId={params.threadId}
           senderType={meSender}
-          onSent={() => void load()}
-          onError={() => void loadStatus()}
+          onSent={() => {
+            setSendError(null);
+            void load();
+          }}
+          onError={(message) => {
+            setSendError(message);
+            void loadStatus();
+          }}
         />
         <DmEmojiButton onPick={(e) => setDraft((d) => d + e)} />
         <input

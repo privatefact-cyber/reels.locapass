@@ -150,7 +150,8 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
         <MenuButton home={home} />
       </nav>
 
-      <AiInquiryWidget placement={mapImmersive ? "map" : "floating"} />
+      {/* DMのスレッド画面では、右下のAIボタンが送信ボタンに重なって押せなくなるため出さない。 */}
+      {!/^\/mypage\/messages\/[^/]+/.test(pathname ?? "") && <AiInquiryWidget placement={mapImmersive ? "map" : "floating"} />}
     </>
   );
 }

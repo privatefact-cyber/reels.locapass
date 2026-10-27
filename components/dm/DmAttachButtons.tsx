@@ -15,6 +15,12 @@ export type DmSentMessage = {
 
 const SELECT = "id, sender_type, body, image_path, created_at";
 
+// crypto.randomUUID は古いiOS(15.4未満)に無いので、無ければ乱数で代用する。
+function newId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 /**
  * 入力欄の横に置く「画像を送る」ボタン(ユーザー・スタッフ・FACESの全員が使える)。
  * 画像は縮小して非公開バケットにアップロードしてから、画像つきメッセージとして送る。
@@ -41,7 +47,7 @@ export function DmAttachButtons({
     try {
       const blob = await prepareDmImage(file);
       const supabase = createClient();
-      const path = `${threadId}/${crypto.randomUUID()}.jpg`;
+      const path = `${threadId}/${newId()}.jpg`;
       const { error: uploadError } = await supabase.storage.from("locapass-dm").upload(path, blob, { contentType: "image/jpeg" });
       if (uploadError) throw new Error("画像を送信できませんでした。相互フォローが解除された可能性があります。");
       const { data, error } = await supabase
@@ -52,6 +58,7 @@ export function DmAttachButtons({
       if (error || !data) throw new Error("送信できませんでした");
       onSent(data);
     } catch (e) {
+      console.error("dm image send failed", e);
       onError(e instanceof Error ? e.message : "送信できませんでした");
     } finally {
       setBusy(false);
