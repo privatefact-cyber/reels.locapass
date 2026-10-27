@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
 import { DmMessageContent } from "@/components/dm/DmMessageContent";
 
-type Message = { id: string; senderType: "user" | "staff"; body: string; imagePath: string | null; stamp: string | null; createdAt: string };
+type Message = { id: string; senderType: "user" | "staff"; body: string; imagePath: string | null; createdAt: string };
 
 /**
  * スタッフ公開ページのDMボタン。ログイン不要の匿名お問い合わせ(InquiryButton/locapass_shop_inquiries)
@@ -87,7 +87,7 @@ export function StaffDmButton({
     const supabase = createClient();
     const { data } = await supabase
       .from("locapass_staff_dm_messages")
-      .select("id, sender_type, body, image_path, stamp, created_at")
+      .select("id, sender_type, body, image_path, created_at")
       .eq("thread_id", id)
       .order("created_at", { ascending: true });
     setMessages(
@@ -96,7 +96,6 @@ export function StaffDmButton({
         senderType: m.sender_type as "user" | "staff",
         body: m.body,
         imagePath: m.image_path,
-        stamp: m.stamp,
         createdAt: m.created_at,
       })),
     );
@@ -143,10 +142,10 @@ export function StaffDmButton({
           filter: `thread_id=eq.${threadId}`,
         },
         (payload) => {
-          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; image_path: string | null; stamp: string | null; created_at: string };
+          const m = payload.new as { id: string; sender_type: "user" | "staff"; body: string; image_path: string | null; created_at: string };
           setMessages((prev) => (prev.some((existing) => existing.id === m.id) ? prev : [
             ...prev,
-            { id: m.id, senderType: m.sender_type, body: m.body, imagePath: m.image_path, stamp: m.stamp, createdAt: m.created_at },
+            { id: m.id, senderType: m.sender_type, body: m.body, imagePath: m.image_path, createdAt: m.created_at },
           ]));
         },
       )
@@ -164,7 +163,7 @@ export function StaffDmButton({
     const { data, error: insertError } = await supabase
       .from("locapass_staff_dm_messages")
       .insert({ thread_id: threadId, sender_type: "user", body: draft.trim() })
-      .select("id, sender_type, body, image_path, stamp, created_at")
+      .select("id, sender_type, body, image_path, created_at")
       .single();
     setSending(false);
     if (insertError || !data) {
@@ -180,7 +179,7 @@ export function StaffDmButton({
     }
     setMessages((prev) => [
       ...prev,
-      { id: data.id, senderType: "user", body: data.body, imagePath: data.image_path, stamp: data.stamp, createdAt: data.created_at },
+      { id: data.id, senderType: "user", body: data.body, imagePath: data.image_path, createdAt: data.created_at },
     ]);
     setDraft("");
   }
@@ -330,7 +329,7 @@ export function StaffDmButton({
                         : "mr-auto bg-main/10 text-tone-100"
                     }`}
                   >
-                    <DmMessageContent body={m.body} stamp={m.stamp} imagePath={m.imagePath} />
+                    <DmMessageContent body={m.body} imagePath={m.imagePath} />
                   </div>
                 ))
               )}
@@ -343,12 +342,11 @@ export function StaffDmButton({
                 <DmAttachButtons
                   threadId={threadId}
                   senderType="user"
-                  canAttachImage={false}
                   onSent={(m) =>
                     setMessages((prev) =>
                       prev.some((x) => x.id === m.id)
                         ? prev
-                        : [...prev, { id: m.id, senderType: "user", body: m.body, imagePath: m.image_path, stamp: m.stamp, createdAt: m.created_at }],
+                        : [...prev, { id: m.id, senderType: "user", body: m.body, imagePath: m.image_path, createdAt: m.created_at }],
                     )
                   }
                   onError={async (message) => {

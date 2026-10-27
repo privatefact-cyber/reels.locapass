@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-/** DMの吹き出しの中身。本文・スタンプ・画像(非公開バケットの署名URL)を出し分ける。 */
-export function DmMessageContent({ body, stamp, imagePath }: { body: string; stamp: string | null; imagePath: string | null }) {
+/** DMの吹き出しの中身。本文と画像(非公開バケットの署名URL)を出し分ける。 */
+export function DmMessageContent({ body, imagePath }: { body: string; imagePath: string | null }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,7 +32,6 @@ export function DmMessageContent({ body, stamp, imagePath }: { body: string; sta
         ) : (
           <div className="mb-1 h-24 w-40 animate-pulse rounded-lg bg-main/10" />
         ))}
-      {stamp && <span className="block text-4xl leading-tight">{stamp}</span>}
       {body.trim() && <span className="whitespace-pre-wrap">{body}</span>}
     </>
   );
