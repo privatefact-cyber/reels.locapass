@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
+import { DmEmojiButton } from "@/components/dm/DmEmojiButton";
 import { DmMessageContent } from "@/components/dm/DmMessageContent";
 
 type Thread = { id: string; userNickname: string; lastMessageAt: string };
@@ -149,6 +150,7 @@ export function CastDmPanel({ castId }: { castId: string }) {
                       }
                       onError={() => setError("送信できませんでした。相互フォローが解除された、またはブロック中の可能性があります。")}
                     />
+                    <DmEmojiButton onPick={(e) => setDraft((d) => d + e)} />
                     <input
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}

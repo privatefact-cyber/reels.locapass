@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
+import { DmEmojiButton } from "@/components/dm/DmEmojiButton";
 import { DmMessageContent } from "@/components/dm/DmMessageContent";
 
 type Message = { id: string; senderType: "user" | "staff"; body: string; imagePath: string | null; createdAt: string };
@@ -178,6 +179,7 @@ export default function StaffDmThreadPage() {
           onSent={() => void load()}
           onError={() => void loadStatus()}
         />
+        <DmEmojiButton onPick={(e) => setDraft((d) => d + e)} />
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

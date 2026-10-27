@@ -12,6 +12,7 @@ import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { StaffDmButton } from "@/components/StaffDmButton";
 import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
 import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
+import { DmEmojiButton } from "@/components/dm/DmEmojiButton";
 import { DmMessageContent } from "@/components/dm/DmMessageContent";
 import { PasswordSetupModal } from "@/components/locapass-mypage/PasswordSetupModal";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
@@ -1234,6 +1235,7 @@ export function StaffDashboardClient({
                         }}
                         onError={() => setDmError("送信できませんでした。相互フォローが解除された、またはブロック中の可能性があります。")}
                       />
+                      <DmEmojiButton onPick={(e) => setDmDraft((d) => d + e)} />
                       <input
                         value={dmDraft}
                         onChange={(e) => setDmDraft(e.target.value)}

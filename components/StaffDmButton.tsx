@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { MessageCircle, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DmAttachButtons } from "@/components/dm/DmAttachButtons";
+import { DmEmojiButton } from "@/components/dm/DmEmojiButton";
 import { DmMessageContent } from "@/components/dm/DmMessageContent";
 
 type Message = { id: string; senderType: "user" | "staff"; body: string; imagePath: string | null; createdAt: string };
@@ -360,6 +361,7 @@ export function StaffDmButton({
                   }}
                 />
               )}
+              <DmEmojiButton onPick={(e) => setDraft((d) => d + e)} />
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
