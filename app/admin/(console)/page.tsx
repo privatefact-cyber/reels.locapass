@@ -74,17 +74,30 @@ export default async function AdminShopsPage({
 
   // 登録ユーザー数(locapass_members)。会員はポータルに紐づかず、運営者でも本人の行しかRLSで読めないため、
   // 件数だけをサーバー側の管理用クライアントで数える。全体の数字なので担当ポータルが限られる管理者には出さない。
-  let memberCount: number | null = null;
-  let memberCount7d: number | null = null;
+  // ログインすると店舗スタッフ・キャスト・運営者にも会員の行ができるので、何らかの役割を持つ人は「店舗・運営側」として分けて数える。
+  let generalMemberCount: number | null = null;
+  let staffSideMemberCount = 0;
+  let generalMemberCount7d = 0;
   if (scope.portalIds === null) {
     const admin = createAdminClient();
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ count: total }, { count: recent }] = await Promise.all([
+    const [{ count: total }, { data: roleRows }, { data: recentMembers }] = await Promise.all([
       admin.from("locapass_members").select("id", { count: "exact", head: true }),
-      admin.from("locapass_members").select("id", { count: "exact", head: true }).gte("created_at", since7d),
+      (admin as any).from("locapass_user_roles").select("user_id").neq("role", "user"),
+      admin.from("locapass_members").select("id").gte("created_at", since7d),
     ]);
-    memberCount = total ?? 0;
-    memberCount7d = recent ?? 0;
+    const roleUserIds: string[] = Array.from(new Set<string>((roleRows ?? []).map((r: { user_id: string }) => r.user_id)));
+    // 役割を持つ人のうち会員の行もある人数。URLが長くなりすぎないよう100件ずつ数える。
+    for (let i = 0; i < roleUserIds.length; i += 100) {
+      const { count } = await admin
+        .from("locapass_members")
+        .select("id", { count: "exact", head: true })
+        .in("id", roleUserIds.slice(i, i + 100));
+      staffSideMemberCount += count ?? 0;
+    }
+    const roleSet = new Set(roleUserIds);
+    generalMemberCount = (total ?? 0) - staffSideMemberCount;
+    generalMemberCount7d = (recentMembers ?? []).filter((m) => !roleSet.has(m.id)).length;
   }
 
   const totalCount = allShops?.length ?? 0;
@@ -121,10 +134,11 @@ export default async function AdminShopsPage({
         <StatCard label="非公開" value={inactiveCount} accent="text-red-600" />
       </div>
 
-      {memberCount !== null && (
-        <div className="grid grid-cols-2 gap-4">
-          <StatCard label="登録ユーザー" value={memberCount} accent="text-indigo-600" />
-          <StatCard label="直近7日の新規登録" value={memberCount7d ?? 0} />
+      {generalMemberCount !== null && (
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard label="登録ユーザー(一般)" value={generalMemberCount} accent="text-indigo-600" />
+          <StatCard label="店舗・運営側の会員" value={staffSideMemberCount} />
+          <StatCard label="直近7日の新規(一般)" value={generalMemberCount7d} />
         </div>
       )}
 
