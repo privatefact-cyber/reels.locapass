@@ -33,3 +33,21 @@ grant execute on function public.locapass_member_card(uuid) to authenticated;
 update public.locapass_notifications
 set url = '/photo/u/' || substring(url from 'by=([0-9a-f-]{36})') || '?by=' || substring(url from 'by=([0-9a-f-]{36})')
 where type = 'photo_follow' and url ~ 'by=[0-9a-f-]{36}';
+
+-- マイページの「フォロー中」に、フォローしている会員(キャスト以外)も出すための一覧。
+create or replace function public.locapass_my_following_members()
+returns table (user_id uuid, nickname text, avatar_url text)
+language sql stable security definer set search_path = public as $$
+  with f as (
+    select followee_member_id as uid, created_at from area_photo_follows where follower_member_id = auth.uid()
+    union all
+    select followee_id, created_at from locapass_user_follows where follower_id = auth.uid()
+  )
+  select f.uid, coalesce(m.nickname, 'ゲスト'), m.avatar_url
+  from f left join locapass_members m on m.id = f.uid
+  where auth.uid() is not null and not public.locapass_is_blocked_between(auth.uid(), f.uid)
+  group by f.uid, m.nickname, m.avatar_url
+  order by max(f.created_at) desc;
+$$;
+revoke all on function public.locapass_my_following_members() from public, anon;
+grant execute on function public.locapass_my_following_members() to authenticated;

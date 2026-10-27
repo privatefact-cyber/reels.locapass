@@ -4964,6 +4964,10 @@ export type Database = {
         Args: { p_user_id: string; p_block: boolean }
         Returns: undefined
       }
+      locapass_my_following_members: {
+        Args: Record<PropertyKey, never>
+        Returns: { user_id: string; nickname: string; avatar_url: string | null }[]
+      }
       locapass_member_card: {
         Args: { p_member_id: string }
         Returns: { nickname: string; avatar_url: string | null }[]

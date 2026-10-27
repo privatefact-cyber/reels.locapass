@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
+import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StreamVideo } from "@/components/video/StreamVideo";
 import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
@@ -57,7 +58,9 @@ export type MyComment = {
 
 export type PostShop = { id: string; name: string };
 
-type Tab = "reels" | "casts" | "shops" | "photos" | "liked" | "comments";
+type Tab = "reels" | "casts" | "followers" | "shops" | "photos" | "liked" | "comments";
+
+type FollowingMember = { userId: string; nickname: string; avatarUrl: string | null };
 
 
 
@@ -100,6 +103,7 @@ export function MypageClient({
   const TABS: { key: Tab; label: string }[] = [
     { key: "reels", label: t.mypage.tabReels },
     { key: "casts", label: t.mypage.tabCasts },
+    { key: "followers", label: "フォロワー" },
     { key: "shops", label: t.mypage.tabShops },
     { key: "photos", label: t.mypage.tabPhotos },
     { key: "liked", label: t.mypage.tabLikedPhotos },
@@ -113,6 +117,24 @@ export function MypageClient({
   const [comments, setComments] = useState(myComments);
   const [followedCasts, setFollowedCasts] = useState(initialFollowedCasts);
   const [favoriteShops, setFavoriteShops] = useState(initialFavoriteShops);
+  // フォロー中の会員(キャスト以外)と、フォロワー数。メッセージの相手探しに使う。
+  const [followingMembers, setFollowingMembers] = useState<FollowingMember[]>([]);
+  const [followerCount, setFollowerCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.rpc("locapass_my_following_members").then(({ data }) =>
+      setFollowingMembers((data ?? []).map((r) => ({ userId: r.user_id, nickname: r.nickname, avatarUrl: r.avatar_url }))),
+    );
+    supabase.rpc("locapass_my_followers").then(({ data }) => setFollowerCount((data ?? []).length));
+  }, []);
+
+  async function handleUnfollowMember(userId: string) {
+    setFollowingMembers((prev) => prev.filter((m) => m.userId !== userId));
+    await createClient().rpc("locapass_follow_back", { p_user_id: userId, p_follow: false });
+    const { data } = await createClient().rpc("locapass_my_followers");
+    setFollowerCount((data ?? []).length);
+  }
 
   const [editOpen, setEditOpen] = useState(false);
   const [editNickname, setEditNickname] = useState(initialNickname);
@@ -301,10 +323,14 @@ export function MypageClient({
           {t.mypage.editProfile}
         </button>
 
-        <div className="mt-5 flex justify-center gap-8">
+        <div className="mt-5 flex justify-center gap-6">
           <button type="button" onClick={() => setTab("casts")} className="text-center">
-            <p className="text-base font-bold">{followedCasts.length}</p>
+            <p className="text-base font-bold">{followedCasts.length + followingMembers.length}</p>
             <p className="text-[11px] text-muted">{t.mypage.following}</p>
+          </button>
+          <button type="button" onClick={() => setTab("followers")} className="text-center">
+            <p className="text-base font-bold">{followerCount ?? "-"}</p>
+            <p className="text-[11px] text-muted">フォロワー</p>
           </button>
           <button type="button" onClick={() => setTab("shops")} className="text-center">
             <p className="text-base font-bold">{favoriteShops.length}</p>
@@ -525,8 +551,44 @@ export function MypageClient({
           )
         )}
 
+        {tab === "followers" && <FollowersPanel flush />}
+
+        {tab === "casts" && followingMembers.length > 0 && (
+          <div className="mb-5">
+            <p className="mb-2 text-xs font-semibold text-tone-500">ユーザー</p>
+            <ul className="space-y-3">
+              {followingMembers.map((m) => (
+                <li key={m.userId} className="flex items-center gap-2">
+                  <Link
+                    href={`/photo/u/${m.userId}`}
+                    className="flex flex-1 items-center gap-3 rounded-lg border border-main/10 bg-main/[0.03] p-3"
+                  >
+                    {m.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tone-800 text-tone-500">
+                        {m.nickname.slice(0, 1)}
+                      </div>
+                    )}
+                    <p className="flex-1 truncate text-sm font-medium">{m.nickname}</p>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleUnfollowMember(m.userId)}
+                    aria-label={t.mypage.unfollow}
+                    className="shrink-0 rounded-full border border-main/20 p-2 text-muted transition hover:border-red-400/60 hover:text-red-400"
+                  >
+                    <X size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {tab === "casts" && (
-          followedCasts.length === 0 ? (
+          followedCasts.length === 0 && followingMembers.length > 0 ? null : followedCasts.length === 0 ? (
             <EmptyState text={t.mypage.noFollowedCasts} />
           ) : (
             <ul className="space-y-3">
