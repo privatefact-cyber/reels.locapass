@@ -1533,6 +1533,7 @@ export type Database = {
       }
       locapass_notifications: {
         Row: {
+          cast_id: string | null
           body: string | null
           created_at: string
           id: string
@@ -1548,6 +1549,7 @@ export type Database = {
         Insert: {
           body?: string | null
           created_at?: string
+          cast_id?: string | null
           id?: string
           image_path?: string | null
           push_dispatched_at?: string | null
@@ -1561,6 +1563,7 @@ export type Database = {
         Update: {
           body?: string | null
           created_at?: string
+          cast_id?: string | null
           id?: string
           image_path?: string | null
           push_dispatched_at?: string | null

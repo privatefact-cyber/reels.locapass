@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, Calendar, CalendarCheck, Film, Heart, MessageSquare, Megaphone, Trash2, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -14,6 +15,7 @@ type Notification = {
   body: string | null;
   url: string | null;
   image_path: string | null;
+  cast_id: string | null;
   read_at: string | null;
   created_at: string;
 };
@@ -34,6 +36,76 @@ const ICONS: Record<string, typeof Bell> = {
 };
 
 const TABLE = "locapass_notifications";
+
+/**
+ * FACESからの一括メッセージへの「返信する」。相互フォローなら1対1のDMを開く。
+ * まだなら、何が足りないかを案内する(返信はFACESがフォローを返すと開く)。
+ */
+function ReplyButton({ castId }: { castId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [needFollow, setNeedFollow] = useState(false);
+
+  async function check(): Promise<{ open: boolean; i_follow: boolean; blocked_by_me: boolean } | null> {
+    const { data } = await createClient().rpc("locapass_dm_status", { p_cast_id: castId });
+    return data as { open: boolean; i_follow: boolean; blocked_by_me: boolean } | null;
+  }
+
+  async function handleReply() {
+    setBusy(true);
+    setNotice(null);
+    const st = await check();
+    if (st?.open) {
+      const { data: id } = await createClient().rpc("locapass_get_or_create_dm_thread", { p_cast_id: castId });
+      if (id) {
+        router.push(`/mypage/messages/${id}`);
+        return;
+      }
+      setNotice("メッセージを開けませんでした");
+    } else if (st?.blocked_by_me) {
+      setNotice("ブロック中のため、返信できません。");
+    } else if (st && !st.i_follow) {
+      setNeedFollow(true);
+      setNotice("返信するには、まずフォローしてください。相手もフォローを返すと、お互いにメッセージできます。");
+    } else {
+      setNotice("お互いにフォローしているときだけ返信できます。相手がフォローを返すと、返信できるようになります。");
+    }
+    setBusy(false);
+  }
+
+  async function handleFollow() {
+    setBusy(true);
+    await createClient().rpc("locapass_dm_follow", { p_cast_id: castId, p_follow: true });
+    setNeedFollow(false);
+    setNotice("フォローしました。相手がフォローを返すと、返信できるようになります。");
+    setBusy(false);
+  }
+
+  return (
+    <div className="pb-3 pl-[3.75rem] pr-3">
+      <button
+        type="button"
+        onClick={handleReply}
+        disabled={busy}
+        className="rounded-full border border-main/25 px-4 py-1.5 text-xs font-semibold text-tone-100 transition hover:bg-main/10 disabled:opacity-50"
+      >
+        返信する
+      </button>
+      {notice && <p className="mt-2 text-[11px] leading-relaxed text-tone-500">{notice}</p>}
+      {needFollow && (
+        <button
+          type="button"
+          onClick={handleFollow}
+          disabled={busy}
+          className="mt-2 rounded-full bg-gradient-to-r from-cta-light to-cta px-4 py-1.5 text-xs font-semibold text-on-cta disabled:opacity-50"
+        >
+          フォローする
+        </button>
+      )}
+    </div>
+  );
+}
 
 /** 店舗からのメッセージに添付された画像(割引チケットなど)。非公開バケットなので署名URLで表示する。 */
 function NotificationImage({ path }: { path: string }) {
@@ -184,6 +256,9 @@ function NotificationRow({
           Row
         )}
 
+        {/* FACESからの一括メッセージには、返信ボタン(相互フォローならDMが開く)。 */}
+        {n.cast_id && <ReplyButton castId={n.cast_id} />}
+
         {/* PC: マウスを乗せると右端にゴミ箱ボタンを出す(スワイプできないため)。 */}
         <button
           type="button"
@@ -220,7 +295,7 @@ export function NotificationsList() {
 
       const { data: rows } = await supabase
         .from(TABLE)
-        .select("id, type, title, body, url, image_path, read_at, created_at")
+        .select("id, type, title, body, url, image_path, cast_id, read_at, created_at")
         .eq("user_id", uid)
         .order("created_at", { ascending: false })
         .limit(50);
