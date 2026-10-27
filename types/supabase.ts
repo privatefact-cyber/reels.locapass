@@ -4964,6 +4964,10 @@ export type Database = {
         Args: { p_user_id: string; p_block: boolean }
         Returns: undefined
       }
+      locapass_member_card: {
+        Args: { p_member_id: string }
+        Returns: { nickname: string; avatar_url: string | null }[]
+      }
       locapass_get_or_create_dm_thread_with_user: {
         Args: { p_user_id: string }
         Returns: string

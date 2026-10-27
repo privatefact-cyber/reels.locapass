@@ -76,14 +76,12 @@ export async function notifyPhotoFollow(followerId: string, followeeId: string) 
   const admin = createAdminClient();
   if (followerId === followeeId) return;
   const name = await actorName(admin, followerId);
-  // フォローした人のページは、写真を1枚でも投稿していないと存在しない。無ければ自分のページへ。
-  const { count } = await admin.from("area_photo_posts").select("id", { count: "exact", head: true }).eq("member_id", followerId);
-  const target = count && count > 0 ? followerId : followeeId;
+  // 通知は常にフォローした人のページへ飛ばす(投稿がない人のページも、関係のある相手には開ける)。
   await insertOnce(admin, {
     userId: followeeId,
     type: "photo_follow",
     title: `${name}さんがあなたをフォローしました`,
     body: null,
-    url: `/photo/u/${target}?by=${followerId}`,
+    url: `/photo/u/${followerId}?by=${followerId}`,
   });
 }

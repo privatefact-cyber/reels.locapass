@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { PhotoProfileStats } from "@/components/photo/PhotoProfileStats";
+import { RelatedMemberProfile } from "@/components/photo/RelatedMemberProfile";
 import { getMemberPhotos } from "@/lib/photo/getPhotoPosts";
 import { photoText } from "@/lib/photo/serverText";
 
@@ -31,7 +32,18 @@ export default async function MemberPhotoPage({
   const { post } = await searchParams;
   if (!UUID.test(memberId)) notFound();
   const data = await getMemberPhotos(memberId);
-  if (!data) notFound();
+  // 投稿のない会員のページは、関係のある相手(フォロー通知の相手など)にだけ名前とアイコンを見せる。
+  if (!data) {
+    return (
+      <div className="space-y-4">
+        <Link href="/photo" className="flex items-center gap-1 px-3 pt-3 text-sm text-tone-300 hover:text-main">
+          <ChevronLeft size={18} />
+          {t.backToPhotos}
+        </Link>
+        <RelatedMemberProfile memberId={memberId} />
+      </div>
+    );
+  }
   const { profile, posts } = data;
 
   return (
