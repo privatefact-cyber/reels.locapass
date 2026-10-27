@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { CreatePortalForm } from "@/components/admin/portal/CreatePortalForm";
 import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShopForm";
 import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
@@ -71,6 +72,21 @@ export default async function AdminShopsPage({
   const machiNoKoeEnabled = settings?.locapass_machi_no_koe_beta_enabled ?? false;
   const siteTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
+  // 登録ユーザー数(locapass_members)。会員はポータルに紐づかず、運営者でも本人の行しかRLSで読めないため、
+  // 件数だけをサーバー側の管理用クライアントで数える。全体の数字なので担当ポータルが限られる管理者には出さない。
+  let memberCount: number | null = null;
+  let memberCount7d: number | null = null;
+  if (scope.portalIds === null) {
+    const admin = createAdminClient();
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const [{ count: total }, { count: recent }] = await Promise.all([
+      admin.from("locapass_members").select("id", { count: "exact", head: true }),
+      admin.from("locapass_members").select("id", { count: "exact", head: true }).gte("created_at", since7d),
+    ]);
+    memberCount = total ?? 0;
+    memberCount7d = recent ?? 0;
+  }
+
   const totalCount = allShops?.length ?? 0;
   const activeCount = allShops?.filter((s) => s.status === "active").length ?? 0;
   const inactiveCount = totalCount - activeCount;
@@ -104,6 +120,13 @@ export default async function AdminShopsPage({
         <StatCard label="公開中" value={activeCount} accent="text-emerald-600" />
         <StatCard label="非公開" value={inactiveCount} accent="text-red-600" />
       </div>
+
+      {memberCount !== null && (
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard label="登録ユーザー" value={memberCount} accent="text-indigo-600" />
+          <StatCard label="直近7日の新規登録" value={memberCount7d ?? 0} />
+        </div>
+      )}
 
       {scope.portalIds === null && (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
