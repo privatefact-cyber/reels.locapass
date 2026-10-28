@@ -605,7 +605,7 @@ export default async function ShopDetailPage({
               {t.shop.userPhotosAll}({t.shop.userPhotosCount(userPhotos.length)})
             </Link>
             <Link href={`/photo/new?shop=${shopRow.id}`} className="block text-center text-xs text-tone-400 underline">
-              {t.photo.postButton}
+              {t.photo.postToShopButton}
             </Link>
           </section>
         )}

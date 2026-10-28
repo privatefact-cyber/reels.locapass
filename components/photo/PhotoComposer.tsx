@@ -215,7 +215,19 @@ async function extractPoster(file: File): Promise<PosterResult> {
 }
 
 /** 店舗ページから来たとき、その店を最初から「掲載店」として選んだ状態にするための指定。 */
-export type PhotoComposerPreset = { venueId: string; name: string; address: string | null };
+/**
+ * 店舗ページの「このお店の写真を投稿」から来たときの初期値。shopId・lat・lngがあれば「その店に固定」で、
+ * 位置(ピン)も場所名も店のものを使い、写真の位置情報や住所の入力はしない。無ければ、掲載店を選択済みにするだけ。
+ */
+export type PhotoComposerPreset = {
+  venueId: string | null;
+  name: string;
+  address: string | null;
+  shopId?: string;
+  lat?: number;
+  lng?: number;
+  backHref?: string;
+};
 
 export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; preset?: PhotoComposerPreset }) {
   const { t } = useLocale();
@@ -223,10 +235,12 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const lockedCoords = preset?.shopId && preset.lat != null && preset.lng != null ? { lat: preset.lat, lng: preset.lng } : null;
+  const locked = lockedCoords !== null;
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(lockedCoords);
   const [coordsNote, setCoordsNote] = useState<string | null>(null);
   const [needAddress, setNeedAddress] = useState(false);
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(locked ? (preset?.address ?? "") : "");
   // 投稿者が住所欄を自分で書き換えたか。自動入力(逆引き・候補選択)は、書き換えていないときだけ上書きする。
   const [addressDirty, setAddressDirtyState] = useState(false);
   const addressDirtyRef = useRef(false);
@@ -236,7 +250,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
   }
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   // 店舗ページから来たときは、その店を選択済みにしておく(写真を選び直しても保たれる)。
-  const presetPick: Candidate | null = preset
+  const presetPick: Candidate | null = preset?.venueId
     ? { kind: "listed", name: preset.name, address: preset.address, distance_m: 0, venue_id: preset.venueId }
     : null;
   const [pick, setPick] = useState<Candidate | null>(presetPick);
@@ -320,9 +334,15 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     setPreviewUrl(URL.createObjectURL(f));
     setCandidates([]);
     setPick(presetPick);
-    setCoords(null);
-    setAddress("");
+    setCoords(lockedCoords);
+    setAddress(locked ? (preset?.address ?? "") : "");
     setAddressDirty(false);
+    // 店に固定の投稿は、位置も住所も店のものを使う(動画の位置情報は読まない)。
+    if (locked) {
+      setNeedAddress(false);
+      setCoordsNote(null);
+      return;
+    }
     // 動画の管理情報(moov)にある撮影場所を読む。無ければ住所・地名の入力に進む。
     const gps = await readVideoGps(f);
     if (gps) {
@@ -354,10 +374,15 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     setPreviewUrl(URL.createObjectURL(f));
     setCandidates([]);
     setPick(presetPick);
-    setCoords(null);
-    setAddress("");
+    setCoords(lockedCoords);
+    setAddress(locked ? (preset?.address ?? "") : "");
     setAddressDirty(false);
     setNeedAddress(false);
+    // 店に固定の投稿は、位置も住所も店のものを使う(写真の位置情報は読まない)。
+    if (locked) {
+      setCoordsNote(null);
+      return;
+    }
     setCoordsNote(t.photo.gpsChecking);
     try {
       const gps = await exifr.gps(f);
@@ -405,7 +430,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
       } else {
         // 店名・一言とも、入力欄に実際の値として入れる(生成のあとも、投稿者が自由に直せる)。
         // 掲載店を選んでいるときは、店名はそのまま残す。
-        if (data.spotName && !pick) setSpotName(data.spotName);
+        if (data.spotName && !pick && !locked) setSpotName(data.spotName);
         if (data.comment) {
           setComment(data.comment);
           setAiComment(null);
@@ -481,6 +506,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     body.append("spot_name", spotName);
     body.append("comment", comment.trim() || aiComment || "");
     body.append("address", address);
+    if (locked && preset?.shopId) body.append("shop_id", preset.shopId);
     body.append("latitude", String(postCoords.lat));
     body.append("longitude", String(postCoords.lng));
     if (pick) {
@@ -505,7 +531,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
         setBusy(false);
         return;
       }
-      router.push("/photo");
+      router.push(locked && preset?.backHref ? preset.backHref : "/photo");
       router.refresh();
     } catch {
       setError(t.photo.errNetwork);
@@ -520,11 +546,11 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-3">
-      <Link href="/photo" className="flex items-center gap-1 text-sm text-tone-300 hover:text-main">
+      <Link href={locked && preset?.backHref ? preset.backHref : "/photo"} className="flex items-center gap-1 text-sm text-tone-300 hover:text-main">
         <ChevronLeft size={18} />
         {t.photo.backToPhotos}
       </Link>
-      <h1 className="text-lg font-medium text-main">{t.photo.composeTitle}</h1>
+      <h1 className="text-lg font-medium text-main">{locked ? t.photo.composeShopTitle : t.photo.composeTitle}</h1>
 
       {isVideo && previewUrl ? (
         <div className="space-y-2">
@@ -583,14 +609,14 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
         </p>
       ) : null}
 
-      {coordsNote ? (
+      {coordsNote && !locked ? (
         <p className="flex items-start gap-1 text-xs text-tone-500">
           <MapPin size={12} className="mt-0.5 shrink-0" />
           {coordsNote}
         </p>
       ) : null}
 
-      {file ? (
+      {file && !locked ? (
         <div className="space-y-1">
           <span className="text-xs text-tone-500">{t.photo.addressLabel}</span>
           <div className="flex gap-2">
@@ -611,23 +637,25 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
         </div>
       ) : null}
 
-      {preset && pick?.venue_id === preset.venueId ? (
+      {preset && (locked || (preset.venueId && pick?.venue_id === preset.venueId)) ? (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-hl-400/50 bg-tone-900/60 px-3 py-2 text-sm text-main">
           <span className="min-w-0 truncate">📍 {t.photo.postingTo(preset.name)}</span>
-          <button
-            type="button"
-            onClick={() => {
-              setPick(null);
-              setSpotName("");
-            }}
-            className="shrink-0 text-xs text-tone-400 underline"
-          >
-            {t.photo.postingToClear}
-          </button>
+          {locked ? null : (
+            <button
+              type="button"
+              onClick={() => {
+                setPick(null);
+                setSpotName("");
+              }}
+              className="shrink-0 text-xs text-tone-400 underline"
+            >
+              {t.photo.postingToClear}
+            </button>
+          )}
         </div>
       ) : null}
 
-      {candidates.length > 0 ? (
+      {candidates.length > 0 && !locked ? (
         <div className="space-y-2">
           <p className="text-xs text-tone-500">{t.photo.nearbyTitle}</p>
           <div className="flex flex-wrap gap-2">
@@ -651,10 +679,12 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
         </div>
       ) : null}
 
-      <label className="block space-y-1">
-        <span className="text-xs text-tone-500">{t.photo.spotLabel}</span>
-        <input value={spotName} onChange={(e) => setSpotName(e.target.value)} required maxLength={100} className={input} placeholder={t.photo.spotPlaceholder} />
-      </label>
+      {locked ? null : (
+        <label className="block space-y-1">
+          <span className="text-xs text-tone-500">{t.photo.spotLabel}</span>
+          <input value={spotName} onChange={(e) => setSpotName(e.target.value)} required maxLength={100} className={input} placeholder={t.photo.spotPlaceholder} />
+        </label>
+      )}
       <label className="block space-y-1">
         <span className="text-xs text-tone-500">{t.photo.commentLabel}</span>
         <textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} rows={3} className={input} placeholder={aiComment ?? t.photo.commentPlaceholder} />

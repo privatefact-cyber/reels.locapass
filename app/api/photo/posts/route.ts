@@ -9,6 +9,7 @@ import { photoText, AI_LANGUAGE_NAME } from "@/lib/photo/serverText";
 import { getR2Client, R2_BUCKET, R2_PUBLIC_BASE_URL } from "@/lib/storage/r2";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { translatePostFields } from "@/lib/photo/translate";
+import { resolveShopVenueIds } from "@/lib/photo/getShopPhotoPosts";
 import type { Json } from "@/types/supabase";
 
 export const maxDuration = 60;
@@ -46,16 +47,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: t.errTooLarge15 }, { status: 400 });
   }
 
-  const spotName = text(form.get("spot_name"), 100);
+  let spotName = text(form.get("spot_name"), 100);
   const comment = text(form.get("comment"), 500);
-  const address = text(form.get("address"), 200);
-  const latitude = Number(form.get("latitude"));
-  const longitude = Number(form.get("longitude"));
+  let address = text(form.get("address"), 200);
+  let latitude = Number(form.get("latitude"));
+  let longitude = Number(form.get("longitude"));
+
+  const admin = createAdminClient();
+
+  // 店舗ページの「このお店の写真を投稿」から来た投稿は、その店に固定する。場所名・位置(ピン)・住所は
+  // ブラウザから届いた値ではなく店の登録情報を使い、写真の位置情報やほかの店への紐づけは受け付けない。
+  const shopIdParam = text(form.get("shop_id"), 40);
+  let lockedShop: { name: string; venueId: string | null } | null = null;
+  if (shopIdParam) {
+    const { data: shop } = /^[0-9a-f-]{36}$/i.test(shopIdParam)
+      ? await admin
+          .from("locapass_shops")
+          .select("name, address, lat, lng, venue_id")
+          .eq("id", shopIdParam)
+          .eq("status", "active")
+          .maybeSingle()
+      : { data: null };
+    if (!shop || shop.lat == null || shop.lng == null) {
+      return NextResponse.json({ error: t.apiBadInput }, { status: 400 });
+    }
+    spotName = shop.name.slice(0, 100);
+    address = (shop.address ?? "").slice(0, 200);
+    latitude = shop.lat;
+    longitude = shop.lng;
+    const [venueId] = shop.venue_id
+      ? [shop.venue_id]
+      : await resolveShopVenueIds({ name: shop.name, venueId: null, lat: shop.lat, lng: shop.lng });
+    lockedShop = { name: shop.name, venueId: venueId ?? null };
+  }
+
   if (!spotName || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
     return NextResponse.json({ error: t.apiBadInput }, { status: 400 });
   }
-
-  const admin = createAdminClient();
 
   // 連投の制限(AIの利用料金と荒らし対策)。
   const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
@@ -88,6 +116,12 @@ export async function POST(request: NextRequest) {
         pickedVenueId = venue.id;
       }
     }
+  }
+
+  if (lockedShop) {
+    placeId = null;
+    pickedVenueId = lockedShop.venueId;
+    placeKind = lockedShop.venueId ? "listed" : "free";
   }
 
   // 動画投稿: 動画本体はブラウザからR2へ直接送信済み。ここでは「自分のフォルダのURLか」「実在して、

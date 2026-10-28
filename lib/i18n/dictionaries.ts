@@ -279,6 +279,8 @@ export type Dictionary = {
     spotsSortNew: string;
     spotsEmpty: string;
     postButton: string;
+    postToShopButton: string;
+    composeShopTitle: string;
     shareText: (name: string) => string;
     shareLine: string;
     shareX: string;
@@ -693,6 +695,8 @@ const ja: Dictionary = {
     spotsSortNew: "新着順",
     spotsEmpty: "まだ穴場の投稿がありません",
     postButton: "＋ 写真を投稿",
+    postToShopButton: "＋ このお店の写真を投稿",
+    composeShopTitle: "このお店の写真を投稿",
     shareText: (name: string) => `${name} の写真 #LOCASNAP #LOCAPASS`,
     shareLine: "LINEで送る",
     shareX: "Xで投稿",
@@ -1107,6 +1111,8 @@ const en: Dictionary = {
     spotsSortNew: "Newest",
     spotsEmpty: "No hidden-gem posts yet",
     postButton: "+ Post a photo",
+    postToShopButton: "+ Post a photo of this shop",
+    composeShopTitle: "Post a photo of this shop",
     shareText: (name: string) => `Photo of ${name} #LOCASNAP #LOCAPASS`,
     shareLine: "Send via LINE",
     shareX: "Post on X",
@@ -1521,6 +1527,8 @@ const zh: Dictionary = {
     spotsSortNew: "最新",
     spotsEmpty: "暂无秘境投稿",
     postButton: "＋ 发布照片",
+    postToShopButton: "＋ 发布这家店的照片",
+    composeShopTitle: "发布这家店的照片",
     shareText: (name: string) => `${name} 的照片 #LOCASNAP #LOCAPASS`,
     shareLine: "用 LINE 发送",
     shareX: "发布到 X",
@@ -1936,6 +1944,8 @@ const ar: Dictionary = {
     spotsSortNew: "الأحدث",
     spotsEmpty: "لا توجد منشورات بعد",
     postButton: "＋ انشر صورة",
+    postToShopButton: "＋ انشر صورة لهذا المتجر",
+    composeShopTitle: "انشر صورة لهذا المتجر",
     shareText: (name: string) => `صورة ${name} #LOCASNAP #LOCAPASS`,
     shareLine: "إرسال عبر LINE",
     shareX: "نشر على X",

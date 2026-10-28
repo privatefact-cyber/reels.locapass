@@ -53,7 +53,7 @@ export default async function ShopUserPhotosPage({ params }: { params: Promise<P
           href={`/photo/new?shop=${shop.id}`}
           className="shrink-0 rounded-full bg-cta-light px-3 py-1 text-[11px] font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
         >
-          {t.photo.postButton}
+          {t.photo.postToShopButton}
         </Link>
       </div>
       <div className="px-3 text-center">

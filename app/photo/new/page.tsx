@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchMyRoles, hasManagementRole } from "@/lib/auth/roles";
 import { PhotoComposer, type PhotoComposerPreset } from "@/components/photo/PhotoComposer";
 import { resolveShopVenueIds } from "@/lib/photo/getShopPhotoPosts";
+import { shopPhotosPath } from "@/lib/locapass/publicUrls";
 import { photoText } from "@/lib/photo/serverText";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,7 +29,7 @@ export default async function NewPhotoPage({ searchParams }: { searchParams: Pro
   if (shopId) {
     const { data: shop } = await supabase
       .from("locapass_shops")
-      .select("name, address, venue_id, lat, lng")
+      .select("name, slug, address, venue_id, lat, lng, portal:locapass_portals ( slug )")
       .eq("id", shopId)
       .eq("status", "active")
       .maybeSingle();
@@ -36,7 +37,24 @@ export default async function NewPhotoPage({ searchParams }: { searchParams: Pro
       const [venueId] = shop.venue_id
         ? [shop.venue_id]
         : await resolveShopVenueIds({ name: shop.name, venueId: null, lat: shop.lat, lng: shop.lng });
-      if (venueId) preset = { venueId, name: shop.name, address: shop.address };
+      const portal = Array.isArray(shop.portal) ? shop.portal[0] : shop.portal;
+      // 位置が登録されている店なら「この店の写真」として固定する(ピンも店の位置)。位置が無い店は従来どおりの選択式。
+      const lockToShop = shop.lat != null && shop.lng != null;
+      if (venueId || lockToShop) {
+        preset = {
+          venueId: venueId ?? null,
+          name: shop.name,
+          address: shop.address,
+          ...(lockToShop && shop.lat != null && shop.lng != null
+            ? {
+                shopId,
+                lat: shop.lat,
+                lng: shop.lng,
+                backHref: portal ? shopPhotosPath(portal.slug, shop.slug) : undefined,
+              }
+            : {}),
+        };
+      }
     }
   }
   return <PhotoComposer canOperator={canOperator} preset={preset} />;
