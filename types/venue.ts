@@ -26,6 +26,11 @@ export interface VenuePin {
   isSponsored: boolean;
   /** 拡大したときに丸いサムネイルとして出す店舗の画像(軽量版)。画像が無い店舗・Google写真の店舗はnull(点のまま)。 */
   thumbUrl: string | null;
+  /**
+   * 同じ場所(雑居ビルの別フロアなど)に店舗が複数あるとき、ピンは「一番情報が新しい店」1つにまとめる。
+   * そのときの、まとめた店舗すべてのID(代表の店も含む)。まとめていないピンでは未指定。
+   */
+  memberIds?: string[];
 }
 
 export interface VenueCardData {

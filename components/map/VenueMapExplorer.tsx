@@ -153,6 +153,13 @@ export function VenueMapExplorer({
     [pins, genre],
   );
 
+  // 選択中の店が、同じ場所のピンにまとめられた店(代表ではない店)のときは、代表のピンを選択中として光らせる。
+  const activePinId = useMemo(() => {
+    if (!activeId) return null;
+    const pin = pins.find((p) => p.id === activeId || p.memberIds?.includes(activeId));
+    return pin?.id ?? activeId;
+  }, [activeId, pins]);
+
   const visibleVenues = useMemo(
     () => (genre === "all" ? cards : cards.filter((v) => v.genre === genre)),
     [cards, genre],
@@ -695,12 +702,12 @@ export function VenueMapExplorer({
 
   // 選択中の店舗のサムネイルは枠を金色にする。
   useEffect(() => {
-    activeIdRef.current = activeId;
+    activeIdRef.current = activePinId;
     thumbMarkers.current.forEach(({ el }, id) => {
-      el.style.borderColor = id === activeId ? "#fbbf24" : "#fff";
-      el.style.zIndex = id === activeId ? "2" : "1";
+      el.style.borderColor = id === activePinId ? "#fbbf24" : "#fff";
+      el.style.zIndex = id === activePinId ? "2" : "1";
     });
-  }, [activeId]);
+  }, [activePinId]);
 
   const focusVenue = useCallback(
     (id: string, opts?: { fromMap?: boolean }) => {
@@ -765,14 +772,14 @@ export function VenueMapExplorer({
     const map = mapRef.current;
     if (!map || !mapReady) return;
     const radiusFor = (base: number, focused: number) =>
-      ["case", ["==", ["get", "id"], activeId ?? ""], focused, base] as unknown as maplibregl.ExpressionSpecification;
+      ["case", ["==", ["get", "id"], activePinId ?? ""], focused, base] as unknown as maplibregl.ExpressionSpecification;
     // 一度大きめに膨らませてから落ち着かせる(paint transitionで補間されて、ポンと弾むように見える)。
     map.setPaintProperty(POINT_LAYER, "circle-radius", radiusFor(8, 17));
     map.setPaintProperty(SPONSORED_LAYER, "circle-radius", radiusFor(12, 21));
     map.setFilter(ACTIVE_GLOW_LAYER, [
       "all",
       ["!", ["has", "point_count"]],
-      ["==", ["get", "id"], activeId ?? ""],
+      ["==", ["get", "id"], activePinId ?? ""],
     ] as unknown as maplibregl.FilterSpecification);
     map.setPaintProperty(ACTIVE_GLOW_LAYER, "circle-radius", 34);
     const settle = window.setTimeout(() => {
@@ -781,7 +788,7 @@ export function VenueMapExplorer({
       map.setPaintProperty(ACTIVE_GLOW_LAYER, "circle-radius", 24);
     }, 200);
     return () => window.clearTimeout(settle);
-  }, [activeId, mapReady]);
+  }, [activePinId, mapReady]);
 
   // プレビュー動画は中央に来ているカードだけを再生する(モバイル回線・端末負荷の配慮)。
   // <video autoPlay>はマウント時にしか効かないため、アクティブカードの切り替えに合わせて

@@ -129,6 +129,35 @@ async function latestReelStillsByShop(shopIds: string[]): Promise<Map<string, st
   return stills;
 }
 
+/** 店舗ごとの、最新の通常リールの投稿日時(ISO文字列)。リールの無い店は含めない。 */
+async function latestReelDatesByShop(shopIds: string[]): Promise<Map<string, string>> {
+  const dates = new Map<string, string>();
+  const ids = shopIds.slice(0, REEL_STILL_LOOKUP_LIMIT);
+  if (ids.length === 0) return dates;
+  const supabase = mapClient();
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      supabase
+        .from("locapass_reels")
+        .select("shop_id, published_at")
+        .in("shop_id", chunk)
+        .eq("status", "publish")
+        .eq("reel_type", "permanent")
+        .not("published_at", "is", null)
+        .order("published_at", { ascending: false })
+        .limit(400),
+    ),
+  );
+  for (const { data } of results) {
+    for (const r of data ?? []) {
+      if (r.shop_id && r.published_at && !dates.has(r.shop_id)) dates.set(r.shop_id, r.published_at);
+    }
+  }
+  return dates;
+}
+
 /**
  * 地図に打つピンだけの軽量データ。動画URLは含めない。
  * 広域ズームでクラスタを描くのはこちらだけを使う。
@@ -137,7 +166,7 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
   const supabase = mapClient();
   const { data } = await supabase
     .from("locapass_shops")
-    .select("id, lat, lng, category, cover_url, icon_url")
+    .select("id, lat, lng, category, cover_url, icon_url, updated_at")
     .eq("status", "active")
     .not("lat", "is", null)
     .not("lng", "is", null)
@@ -147,15 +176,38 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
     .lte("lng", bounds.maxLng)
     .limit(Math.min(limit, MAX_PIN_LIMIT));
 
-  const pins = (data ?? []).map((s) => ({
-    id: s.id,
-    lat: s.lat as number,
-    lng: s.lng as number,
-    genre: s.category,
-    // 現状locapass_shopsは全店舗plan="free"でスポンサー枠が無いため常にfalse。
-    isSponsored: false,
-    thumbUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
-  }));
+  const rows = data ?? [];
+
+  // 同じ場所(約10m四方)の店は、1つのピンにまとめる。雑居ビルの3階・4階のように座標が同じ店が多いため。
+  // 代表は「一番情報が新しい店」(店舗情報の更新日と、最新リールの投稿日の新しい方)。
+  // 丸い写真のピンを出したい店は、情報を更新すればよい、という考え方。
+  const groups = new Map<string, typeof rows>();
+  for (const s of rows) {
+    const key = `${(s.lat as number).toFixed(4)},${(s.lng as number).toFixed(4)}`;
+    const list = groups.get(key);
+    if (list) list.push(s);
+    else groups.set(key, [s]);
+  }
+  const crowdedIds = Array.from(groups.values())
+    .filter((g) => g.length > 1)
+    .flatMap((g) => g.map((s) => s.id));
+  const latestReelAt = await latestReelDatesByShop(crowdedIds);
+  const freshness = (s: (typeof rows)[number]) =>
+    Math.max(Date.parse(s.updated_at ?? "") || 0, Date.parse(latestReelAt.get(s.id) ?? "") || 0);
+
+  const pins: VenuePin[] = Array.from(groups.values()).map((g) => {
+    const s = g.length === 1 ? g[0] : [...g].sort((a, b) => freshness(b) - freshness(a) || a.id.localeCompare(b.id))[0];
+    return {
+      id: s.id,
+      lat: s.lat as number,
+      lng: s.lng as number,
+      genre: s.category,
+      // 現状locapass_shopsは全店舗plan="free"でスポンサー枠が無いため常にfalse。
+      isSponsored: false,
+      thumbUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
+      ...(g.length > 1 ? { memberIds: g.map((m) => m.id) } : {}),
+    };
+  });
 
   // 表紙もアイコンも無い店は、点のままだと見つけにくいので、最新リールの写真をサムネイルにする。
   const noPhotoIds = pins.filter((p) => !p.thumbUrl).map((p) => p.id);
