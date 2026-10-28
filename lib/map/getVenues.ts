@@ -83,6 +83,52 @@ function pinThumbUrl(url: string | null | undefined): string | null {
   return gridThumb(clean, 120) ?? null;
 }
 
+/** リール1本から、地図用の静止画を取り出す(動画ならポスター、写真ならその1枚目)。無ければundefined。 */
+function reelStillUrl(row: { poster_url: string | null; images: unknown }): string | undefined {
+  const images = Array.isArray(row.images) ? (row.images as { url?: unknown }[]) : [];
+  for (const img of images) {
+    const clean = typeof img?.url === "string" ? sanitizeImageUrl(img.url) : undefined;
+    if (clean) return clean;
+  }
+  return sanitizeImageUrl(row.poster_url) ?? undefined;
+}
+
+/** 写真(表紙・アイコン)が無い店の代わりに、最新の通常リールの静止画を探す件数の上限。URLが長くなりすぎないよう100件ずつ引く。 */
+const REEL_STILL_LOOKUP_LIMIT = 300;
+
+/**
+ * 表紙もアイコンも無い店のために、最新の通常リール(ストーリーではないもの)の静止画を、店ごとに1枚返す。
+ * 写真のある店には影響しない(呼び出し側は、写真が無い店のIDだけを渡す)。
+ */
+async function latestReelStillsByShop(shopIds: string[]): Promise<Map<string, string>> {
+  const stills = new Map<string, string>();
+  const ids = shopIds.slice(0, REEL_STILL_LOOKUP_LIMIT);
+  if (ids.length === 0) return stills;
+  const supabase = mapClient();
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      supabase
+        .from("locapass_reels")
+        .select("shop_id, poster_url, images, published_at")
+        .in("shop_id", chunk)
+        .eq("status", "publish")
+        .eq("reel_type", "permanent")
+        .order("published_at", { ascending: false })
+        .limit(400),
+    ),
+  );
+  for (const { data } of results) {
+    for (const r of data ?? []) {
+      if (!r.shop_id || stills.has(r.shop_id)) continue;
+      const url = reelStillUrl(r);
+      if (url) stills.set(r.shop_id, url);
+    }
+  }
+  return stills;
+}
+
 /**
  * 地図に打つピンだけの軽量データ。動画URLは含めない。
  * 広域ズームでクラスタを描くのはこちらだけを使う。
@@ -101,7 +147,7 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
     .lte("lng", bounds.maxLng)
     .limit(Math.min(limit, MAX_PIN_LIMIT));
 
-  return (data ?? []).map((s) => ({
+  const pins = (data ?? []).map((s) => ({
     id: s.id,
     lat: s.lat as number,
     lng: s.lng as number,
@@ -110,6 +156,16 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
     isSponsored: false,
     thumbUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
   }));
+
+  // 表紙もアイコンも無い店は、点のままだと見つけにくいので、最新リールの写真をサムネイルにする。
+  const noPhotoIds = pins.filter((p) => !p.thumbUrl).map((p) => p.id);
+  if (noPhotoIds.length > 0) {
+    const stills = await latestReelStillsByShop(noPhotoIds);
+    for (const p of pins) {
+      if (!p.thumbUrl) p.thumbUrl = pinThumbUrl(stills.get(p.id));
+    }
+  }
+  return pins;
 }
 
 /**
@@ -164,7 +220,7 @@ export async function getVenueCards(
   const [{ data: reelRows }, { data: chosenReels }, { data: castRows }] = await Promise.all([
     supabase
       .from("locapass_reels")
-      .select("shop_id, video_url, preview_url, reel_type, published_at")
+      .select("shop_id, video_url, preview_url, poster_url, images, reel_type, published_at")
       .in("shop_id", shopIds)
       .eq("status", "publish")
       .order("published_at", { ascending: false }),
@@ -184,9 +240,15 @@ export async function getVenueCards(
 
   const reelCountByShopId = new Map<string, number>();
   const latestVideoByShopId = new Map<string, string>();
+  // 表紙もアイコンも無い店の代わりに使う、最新の通常リールの静止画。
+  const latestStillByShopId = new Map<string, string>();
   for (const r of reelRows ?? []) {
     if (!r.shop_id) continue;
     reelCountByShopId.set(r.shop_id, (reelCountByShopId.get(r.shop_id) ?? 0) + 1);
+    if (r.reel_type === "permanent" && !latestStillByShopId.has(r.shop_id)) {
+      const still = reelStillUrl(r);
+      if (still) latestStillByShopId.set(r.shop_id, still);
+    }
     if (r.reel_type === "permanent" && r.video_url && !latestVideoByShopId.has(r.shop_id)) {
       latestVideoByShopId.set(r.shop_id, r.preview_url ?? r.video_url);
     }
@@ -256,7 +318,8 @@ export async function getVenueCards(
       },
       distanceMeter: Math.round(s.distance),
       previewVideoUrl: videoUrl,
-      imageUrl: heroImage ?? s.cover_url ?? s.icon_url ?? null,
+      // 写真が無い店は、最新リールの静止画を、表示サイズに合わせた軽い版にして使う。
+      imageUrl: heroImage ?? s.cover_url ?? s.icon_url ?? gridThumb(latestStillByShopId.get(s.id), 720) ?? latestStillByShopId.get(s.id) ?? null,
       imageAttribution:
         !heroImage && isPlacePhotoUrl(s.cover_url)
           ? (s.cover_image_attribution as { name?: string; uri?: string | null } | null)
