@@ -24,6 +24,34 @@ function rateLimited(key: string): boolean {
 
 type Turn = { role: "user" | "ai"; text: string };
 
+const SUPPORT_URL = "https://locapass.net/support";
+const JOURNAL_URL = "https://locapass.net/journal";
+
+// 答えられないときの定型の案内。無理に答えず、読める場所(サポートページとJournal)のURLを渡す。
+// Journalは日本語の記事だけなので、他の言語でもそう添える。
+const FALLBACK: Record<string, { text: string; support: string; journal: string }> = {
+  ja: {
+    text: "その点は、こちらでは分かりかねます。\n詳しくは、サポートページか、Journalの記事をご覧ください。",
+    support: "サポートページ",
+    journal: "Journal(使い方・お知らせ)",
+  },
+  en: {
+    text: "I'm sorry, I can't answer that here.\nPlease check the Support page or the Journal (articles are in Japanese) for details.",
+    support: "Support page",
+    journal: "Journal (Japanese)",
+  },
+  zh: {
+    text: "抱歉，这个问题我在这里无法回答。\n详细内容请查看“支持页面”或 Journal（文章为日语）。",
+    support: "支持页面",
+    journal: "Journal（日语）",
+  },
+  ar: {
+    text: "عذرًا، لا أستطيع الإجابة عن ذلك هنا.\nللتفاصيل، يُرجى الاطلاع على صفحة الدعم أو Journal (المقالات باليابانية).",
+    support: "صفحة الدعم",
+    journal: "Journal (باليابانية)",
+  },
+};
+
 /**
  * サポートAI(使い方の案内)。機能カード(lib/support/docs.ts)の範囲だけで答え、載っていないことは
  * 「分かりません」と返して、答えられなかった質問をログに残す(足りないマニュアルを見つけるため)。
@@ -62,7 +90,7 @@ export async function POST(req: Request) {
 下の【機能カード】に書かれている内容だけを根拠に、ユーザーの質問に答えてください。
 
 ルール:
-- 機能カードに書かれていないこと、確証が持てないことは、推測で答えない。その場合は answered を false にし、「その点は分かりかねます。下の『運営に質問を送る』からお送りください」と案内する(ボタンは画面側に出る)。
+- 機能カードに書かれていないこと、確証が持てないことは、推測で答えない。「表示されない」「送れない」などの困りごとで、カードに原因や手順が載っていないときも同じ。その場合は answered を false にし、answer は短く「その点は分かりかねます」とだけ書く(サポートページとJournalへの案内は、システム側で付ける)。
 - 手順は短い番号付きで、やさしく具体的に。長くしすぎない(目安300文字以内)。
 - 回答は ${LANG_NAME[locale] ?? "日本語"} で書く。ただし、ユーザーが別の言語で質問した場合は、その言語に合わせる。
 - 店舗の管理機能の質問は、機能カードに店舗向けの内容がある場合だけ答える。無い場合は「店舗の管理機能は、店舗管理画面の『使い方』でご案内しています」と伝える(この画面では詳しく答えない)。
@@ -109,6 +137,19 @@ ${message}`;
     .from("locapass_support_questions")
     .insert({ question: message, answered, audience: isShop ? "shop" : "user", path: path || null, locale })
     .then(() => undefined);
+
+  // 答えられなかったときは、無理に答えず、サポートページとJournalのURLを案内する(「運営に質問を送る」は、画面側に残る)。
+  if (!answered) {
+    const fb = FALLBACK[locale] ?? FALLBACK.ja;
+    return NextResponse.json({
+      reply: `${fb.text}\n\n・${fb.support}: ${SUPPORT_URL}\n・${fb.journal}: ${JOURNAL_URL}`,
+      answered: false,
+      links: [
+        { title: fb.support, url: "/support" },
+        { title: fb.journal, url: "/journal" },
+      ],
+    });
+  }
 
   const allowed = new Set(docs.map((d) => d.id));
   const links = docIds
