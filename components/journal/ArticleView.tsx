@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Cover } from "@/components/journal/Cover";
 import { PostBody } from "@/components/journal/PostBody";
-import { JOURNAL_CATEGORY_LABELS, formatJournalDate, type JournalPost } from "@/lib/journal/posts";
+import { JOURNAL_CATEGORY_LABELS, formatJournalDate, isSafeLinkUrl, type JournalPost } from "@/lib/journal/posts";
 
 /** 記事の見た目(表紙・見出し・導入・本文)。公開ページと、編集画面のプレビューで同じものを使う。 */
 export function ArticleView({ post, linkCategory = true }: { post: JournalPost; linkCategory?: boolean }) {
@@ -24,6 +24,27 @@ export function ArticleView({ post, linkCategory = true }: { post: JournalPost; 
         {post.lead ? <p className="text-base leading-8 text-tone-200">{post.lead}</p> : null}
       </header>
       <PostBody blocks={post.body} />
+      {post.link && isSafeLinkUrl(post.link.url) ? (
+        <div className="pt-4 text-center">
+          {post.link.url.startsWith("/") ? (
+            <Link
+              href={post.link.url}
+              className="inline-block rounded-full bg-cta-light px-6 py-3 text-sm font-bold text-on-cta-gold transition hover:bg-cta-hover"
+            >
+              {post.link.label}
+            </Link>
+          ) : (
+            <a
+              href={post.link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-full bg-cta-light px-6 py-3 text-sm font-bold text-on-cta-gold transition hover:bg-cta-hover"
+            >
+              {post.link.label}
+            </a>
+          )}
+        </div>
+      ) : null}
     </>
   );
 }

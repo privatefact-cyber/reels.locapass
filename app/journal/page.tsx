@@ -27,9 +27,8 @@ export default async function JournalIndexPage({ searchParams }: { searchParams:
   return (
     <main className="mx-auto max-w-3xl space-y-7 px-4 pb-28 pt-6 md:pt-8">
       <header className="space-y-2 text-center">
-        <p className="text-[11px] tracking-[0.3em] text-hl-400/60">── JOURNAL ──</p>
-        <h1 className="font-display bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-3xl font-bold text-transparent">
-          LOCAPASS Journal
+        <h1 className="font-display bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-4xl font-bold text-transparent">
+          Journal
         </h1>
         <p className="text-sm text-muted">街とお店の、ちょっといい話。</p>
       </header>

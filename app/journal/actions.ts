@@ -8,6 +8,7 @@ import {
   JOURNAL_RESERVED_SLUGS,
   JOURNAL_SLUG_PATTERN,
   isSafeImageSrc,
+  isSafeLinkUrl,
   parseJournalBody,
   type JournalCategory,
 } from "@/lib/journal/posts";
@@ -24,6 +25,8 @@ export type SaveJournalInput = {
   bodyText: string;
   status: "draft" | "published";
   publishedOn: string;
+  linkUrl: string;
+  linkLabel: string;
 };
 
 export type SaveJournalResult = { ok: true; slug: string; status: "draft" | "published" } | { ok: false; error: string };
@@ -49,6 +52,8 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
   const description = input.description.trim();
   const lead = input.lead.trim();
   const coverUrl = input.coverUrl.trim();
+  const linkUrl = input.linkUrl.trim();
+  const linkLabel = input.linkLabel.trim();
   if (!title || title.length > 200) return { ok: false, error: "タイトルは1〜200文字で入力してください。" };
   if (!JOURNAL_SLUG_PATTERN.test(slug) || JOURNAL_RESERVED_SLUGS.includes(slug)) {
     return { ok: false, error: "URL名は、半角の英小文字・数字・ハイフンで、3〜80文字にしてください(new、editors は使えません)。" };
@@ -57,6 +62,8 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.publishedOn)) return { ok: false, error: "公開日を入力してください。" };
   if (description.length > 400 || lead.length > 400) return { ok: false, error: "要約と導入文は、400文字以内にしてください。" };
   if (coverUrl && !isSafeImageSrc(coverUrl)) return { ok: false, error: "表紙の写真のURLが正しくありません。" };
+  if (linkUrl && !isSafeLinkUrl(linkUrl)) return { ok: false, error: "下のリンクのURLは、https:// か http:// で始まるもの、または / で始まるサイト内のパスにしてください(空白は入れられません)。" };
+  if (linkLabel.length > 60) return { ok: false, error: "リンクのボタンの文字は、60文字以内にしてください。" };
   if (input.bodyText.length > 50000) return { ok: false, error: "本文が長すぎます。" };
 
   const body = parseJournalBody(input.bodyText);
@@ -74,6 +81,8 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
     body,
     status: input.status,
     published_on: input.publishedOn,
+    link_url: linkUrl || null,
+    link_label: linkUrl && linkLabel ? linkLabel : null,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

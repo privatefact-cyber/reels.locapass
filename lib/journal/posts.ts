@@ -28,6 +28,8 @@ export type JournalPost = {
   /** 表紙の写真(URL、または public/ 以下のパス)。無ければ飾りの表紙になる */
   cover?: { src: string; alt: string };
   body: JournalBlock[];
+  /** 記事の一番下に出す任意のリンク。url が空なら、何も出さない */
+  link?: { url: string; label: string };
   status?: "draft" | "published";
 };
 
@@ -44,6 +46,13 @@ export function formatJournalDate(date: string): string {
   const [y, m, d] = date.split("-").map(Number);
   return `${y}年${m}月${d}日`;
 }
+
+/** リンク先として許すもの。サイト内のパス(/journal/…)か、http(s)のURL(空白なし)。 */
+export function isSafeLinkUrl(url: string): boolean {
+  return /^\/[^\s]*$/.test(url) || /^https?:\/\/[^\s]+$/.test(url);
+}
+
+export const JOURNAL_DEFAULT_LINK_LABEL = "詳しくはこちら";
 
 /** 写真のURLとして許すもの。サイト内のパス(/journal/…)か、https のURL。 */
 export function isSafeImageSrc(src: string): boolean {
@@ -153,6 +162,8 @@ type PostRow = {
   body: unknown;
   status: string;
   published_on: string;
+  link_url?: string | null;
+  link_label?: string | null;
 };
 
 export function rowToJournalPost(r: PostRow): JournalPost {
@@ -166,6 +177,9 @@ export function rowToJournalPost(r: PostRow): JournalPost {
     ...(r.lead ? { lead: r.lead } : {}),
     ...(r.cover_url && isSafeImageSrc(r.cover_url) ? { cover: { src: r.cover_url, alt: r.cover_alt || "" } } : {}),
     body: sanitizeJournalBlocks(r.body),
+    ...(r.link_url && isSafeLinkUrl(r.link_url)
+      ? { link: { url: r.link_url, label: r.link_label?.trim() || JOURNAL_DEFAULT_LINK_LABEL } }
+      : {}),
     status: r.status === "published" ? "published" : "draft",
   };
 }

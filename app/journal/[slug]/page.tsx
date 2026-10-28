@@ -6,8 +6,9 @@ import { Cover } from "@/components/journal/Cover";
 import { EditorBar } from "@/components/journal/EditorBar";
 import { getPublishedJournalPost, listPublishedJournalPosts } from "@/lib/journal/queries";
 
-// 記事は保存のたびに作り直される(保存の処理が一覧と記事のキャッシュを捨てる)。念のため1時間でも作り直す。
-export const revalidate = 3600;
+// 記事は保存のたびに作り直される(保存の処理が一覧と記事のキャッシュを捨てる)。
+// 下書きのURLを開いたときの「ページなし」が残らないよう、短い間隔(60秒)でも作り直す。
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

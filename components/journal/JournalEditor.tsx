@@ -3,11 +3,18 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { ImagePlus, Link as LinkIcon, Loader2 } from "lucide-react";
 import { ArticleView } from "@/components/journal/ArticleView";
 import { deleteJournalPost, saveJournalPost } from "@/app/journal/actions";
 import { uploadJournalImage } from "@/lib/storage/uploadToR2";
-import { JOURNAL_CATEGORY_LABELS, parseJournalBody, type JournalCategory, type JournalPost } from "@/lib/journal/posts";
+import {
+  JOURNAL_CATEGORY_LABELS,
+  JOURNAL_DEFAULT_LINK_LABEL,
+  isSafeLinkUrl,
+  parseJournalBody,
+  type JournalCategory,
+  type JournalPost,
+} from "@/lib/journal/posts";
 
 export type JournalEditorInitial = {
   id?: string;
@@ -21,7 +28,12 @@ export type JournalEditorInitial = {
   bodyText: string;
   status: "draft" | "published";
   publishedOn: string;
+  linkUrl: string;
+  linkLabel: string;
 };
+
+/** 本文のリンク先に選べる、ほかの記事(下書きも含む)。 */
+export type JournalLinkTarget = { slug: string; title: string };
 
 const input =
   "w-full rounded-xl border border-main/15 bg-panel-950 px-3 py-2.5 text-sm text-main placeholder:text-tone-600 focus:border-hl-400/60 focus:outline-none";
@@ -29,7 +41,7 @@ const label = "block space-y-1";
 const labelText = "text-xs text-tone-500";
 
 /** 記事を書く・直す画面。ルート管理者と投稿担当だけが開ける(開けるかどうかは、ページ側で確認している)。 */
-export function JournalEditor({ initial }: { initial: JournalEditorInitial }) {
+export function JournalEditor({ initial, articles = [] }: { initial: JournalEditorInitial; articles?: JournalLinkTarget[] }) {
   const router = useRouter();
   const isNew = !initial.id;
   const [f, setF] = useState(initial);
@@ -39,6 +51,14 @@ export function JournalEditor({ initial }: { initial: JournalEditorInitial }) {
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
   const coverFileRef = useRef<HTMLInputElement | null>(null);
   const bodyFileRef = useRef<HTMLInputElement | null>(null);
+  // 本文に入れるリンク: 選んでいる文字を、ほかの記事や好きなURLへのリンクにする。
+  const [linkPanel, setLinkPanel] = useState<{ open: boolean; selStart: number; selEnd: number; articleSlug: string; url: string }>({
+    open: false,
+    selStart: 0,
+    selEnd: 0,
+    articleSlug: "",
+    url: "",
+  });
 
   const set = <K extends keyof JournalEditorInitial>(k: K, v: JournalEditorInitial[K]) => setF((p) => ({ ...p, [k]: v }));
 
@@ -114,7 +134,31 @@ export function JournalEditor({ initial }: { initial: JournalEditorInitial }) {
     ...(f.lead ? { lead: f.lead } : {}),
     ...(f.coverUrl ? { cover: { src: f.coverUrl, alt: f.coverAlt } } : {}),
     body: parseJournalBody(f.bodyText),
+    ...(f.linkUrl.trim() && isSafeLinkUrl(f.linkUrl.trim())
+      ? { link: { url: f.linkUrl.trim(), label: f.linkLabel.trim() || JOURNAL_DEFAULT_LINK_LABEL } }
+      : {}),
   };
+
+  function openLinkPanel() {
+    const ta = bodyRef.current;
+    setLinkPanel({ open: true, selStart: ta?.selectionStart ?? 0, selEnd: ta?.selectionEnd ?? 0, articleSlug: "", url: "" });
+  }
+
+  function applyLink() {
+    const target = linkPanel.articleSlug ? articles.find((a) => a.slug === linkPanel.articleSlug) : null;
+    const url = target ? `/journal/${target.slug}` : linkPanel.url.trim().replace(/\)/g, "%29");
+    if (!url || !isSafeLinkUrl(url)) {
+      setMessage({ kind: "error", text: "リンク先は、記事を選ぶか、https:// から始まるURLを入れてください。" });
+      return;
+    }
+    const selected = f.bodyText.slice(linkPanel.selStart, linkPanel.selEnd).replace(/[\[\]\n]/g, " ").trim();
+    const text = selected || target?.title.replace(/[\[\]]/g, "") || url;
+    const before = f.bodyText.slice(0, linkPanel.selStart);
+    const after = f.bodyText.slice(linkPanel.selEnd);
+    set("bodyText", `${before}[${text}](${url})${after}`);
+    setLinkPanel((p) => ({ ...p, open: false }));
+    setMessage(null);
+  }
 
   const working = busy !== null;
   return (
@@ -213,6 +257,16 @@ export function JournalEditor({ initial }: { initial: JournalEditorInitial }) {
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
           <span className={labelText}>本文</span>
+          <div className="flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            disabled={working}
+            onClick={openLinkPanel}
+            className="inline-flex items-center gap-1.5 rounded-full border border-main/15 px-3 py-1.5 text-xs text-tone-300 hover:text-main disabled:opacity-50"
+          >
+            <LinkIcon size={14} />
+            選んだ文字にリンクをつける
+          </button>
           <button
             type="button"
             disabled={working}
@@ -222,7 +276,49 @@ export function JournalEditor({ initial }: { initial: JournalEditorInitial }) {
             {busy === "upload" ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
             カーソルの位置に写真を入れる
           </button>
+          </div>
         </div>
+        {linkPanel.open ? (
+          <div className="space-y-2 rounded-2xl border border-hl-400/40 bg-panel-950 p-3">
+            <p className="text-[11px] leading-5 text-tone-400">
+              先に、本文のリンクにしたい文字を選んでおいてください(選ばずに押すと、記事のタイトルやURLが文字になります)。
+            </p>
+            <label className={label}>
+              <span className={labelText}>ほかの記事にリンクする</span>
+              <select
+                value={linkPanel.articleSlug}
+                onChange={(e) => setLinkPanel((p) => ({ ...p, articleSlug: e.target.value, url: "" }))}
+                className={input}
+              >
+                <option value="">(記事を選ばない)</option>
+                {articles
+                  .filter((a) => a.slug !== f.slug)
+                  .map((a) => (
+                    <option key={a.slug} value={a.slug}>
+                      {a.title}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label className={label}>
+              <span className={labelText}>または、好きなURLにリンクする</span>
+              <input
+                value={linkPanel.url}
+                onChange={(e) => setLinkPanel((p) => ({ ...p, url: e.target.value, articleSlug: "" }))}
+                className={input}
+                placeholder="https://example.com/"
+              />
+            </label>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={applyLink} className="rounded-full bg-cta-light px-4 py-2 text-xs font-bold text-on-cta-gold hover:bg-cta-hover">
+                リンクをつける
+              </button>
+              <button type="button" onClick={() => setLinkPanel((p) => ({ ...p, open: false }))} className="text-xs text-tone-400 underline">
+                やめる
+              </button>
+            </div>
+          </div>
+        ) : null}
         <textarea
           ref={bodyRef}
           value={f.bodyText}
@@ -232,7 +328,7 @@ export function JournalEditor({ initial }: { initial: JournalEditorInitial }) {
           placeholder={"## 見出し\n\nここに文章を書きます。空行で段落が分かれます。\n\n- 箇条書きは、行の先頭に「- 」\n- 続けて書くと1つのリストになります\n\n![写真の説明](写真のURL)"}
         />
         <p className="text-[11px] leading-5 text-tone-600">
-          書き方: 「## 」で見出し、「- 」で箇条書き、空行で段落。写真は上のボタンで入れると、「![写真の説明](URL)」が入るので、[ ]の中を書き換えると、写真の下に説明が出ます。
+          書き方: 「## 」で見出し、「- 」で箇条書き、空行で段落。リンクは「[表示する文字](リンク先)」で、上のボタンでも入れられます。写真は上のボタンで入れると、「![写真の説明](URL)」が入るので、[ ]の中を書き換えると、写真の下に説明が出ます。
         </p>
         <input
           ref={bodyFileRef}
@@ -244,6 +340,23 @@ export function JournalEditor({ initial }: { initial: JournalEditorInitial }) {
             e.target.value = "";
             if (file) void insertImage(file);
           }}
+        />
+      </div>
+
+      <div className="space-y-2 rounded-2xl border border-main/10 p-3">
+        <span className={labelText}>記事の一番下のリンク(任意。URLを空にすると、何も出ません)</span>
+        <input
+          value={f.linkUrl}
+          onChange={(e) => set("linkUrl", e.target.value)}
+          className={input}
+          placeholder="https://example.com/ または /journal/記事のURL名"
+        />
+        <input
+          value={f.linkLabel}
+          onChange={(e) => set("linkLabel", e.target.value)}
+          maxLength={60}
+          className={input}
+          placeholder={`ボタンの文字(空なら「${JOURNAL_DEFAULT_LINK_LABEL}」)`}
         />
       </div>
 

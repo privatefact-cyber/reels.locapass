@@ -11,9 +11,14 @@ function todayJst(): string {
 }
 
 export default async function NewJournalPostPage() {
-  const { user, isEditor } = await getJournalAccess();
+  const { supabase, user, isEditor } = await getJournalAccess();
   if (!user) redirect("/mypage/login?redirect=" + encodeURIComponent("/journal/new"));
   if (!isEditor) notFound();
+
+  // 本文からリンクできる、ほかの記事(下書きも含む。書ける人の権限で読む)。
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: rows } = await (supabase as any).from("locapass_journal_posts").select("slug, title").order("created_at", { ascending: false });
+  const articles = (rows ?? []) as { slug: string; title: string }[];
 
   const date = todayJst();
   return (
@@ -29,7 +34,10 @@ export default async function NewJournalPostPage() {
         bodyText: "",
         status: "draft",
         publishedOn: date,
+        linkUrl: "",
+        linkLabel: "",
       }}
+      articles={articles}
     />
   );
 }

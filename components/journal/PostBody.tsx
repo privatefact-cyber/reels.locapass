@@ -1,4 +1,36 @@
-import type { JournalBlock } from "@/lib/journal/posts";
+import Link from "next/link";
+import { isSafeLinkUrl, type JournalBlock } from "@/lib/journal/posts";
+
+// 文章の中の [表示する文字](リンク先) を、リンクにする。リンク先は、サイト内のパス(/journal/…)かhttp(s)のURLだけ。
+// それ以外(javascript: など)は、リンクにせず、書いたままの文字で出す。
+const INLINE_LINK = /\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+
+function InlineText({ text }: { text: string }) {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  for (const m of text.matchAll(INLINE_LINK)) {
+    const [whole, label, url] = m;
+    const index = m.index ?? 0;
+    if (!isSafeLinkUrl(url)) continue;
+    if (index > last) parts.push(text.slice(last, index));
+    const cls = "text-hl-200 underline decoration-hl-400/50 underline-offset-4 hover:text-hl-100";
+    parts.push(
+      url.startsWith("/") ? (
+        <Link key={key++} href={url} className={cls}>
+          {label}
+        </Link>
+      ) : (
+        <a key={key++} href={url} target="_blank" rel="noopener noreferrer" className={cls}>
+          {label}
+        </a>
+      ),
+    );
+    last = index + whole.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
 
 /** Journal記事の本文(見出し・段落・箇条書き・写真)を、読み物らしくゆったり描画する。 */
 export function PostBody({ blocks }: { blocks: JournalBlock[] }) {
@@ -16,7 +48,9 @@ export function PostBody({ blocks }: { blocks: JournalBlock[] }) {
           return (
             <ul key={i} className="list-disc space-y-2 pl-5 marker:text-hl-400/70">
               {b.items.map((item, j) => (
-                <li key={j}>{item}</li>
+                <li key={j}>
+                  <InlineText text={item} />
+                </li>
               ))}
             </ul>
           );
@@ -32,7 +66,7 @@ export function PostBody({ blocks }: { blocks: JournalBlock[] }) {
         }
         return (
           <p key={i} className="whitespace-pre-line">
-            {b.text}
+            <InlineText text={b.text} />
           </p>
         );
       })}
