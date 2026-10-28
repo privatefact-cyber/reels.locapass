@@ -21,7 +21,7 @@ export async function syncShopToGbp(db: Db, shopId: string): Promise<SyncResult>
 
   const { data: shop } = await db
     .from("locapass_shops")
-    .select("tel, description, business_hours_weekly, is_temporarily_closed")
+    .select("name, address, tel, description, business_hours_weekly, is_temporarily_closed")
     .eq("id", shopId)
     .maybeSingle();
   if (!shop) return { shopId, status: "skipped", message: "店舗が見つかりません" };
@@ -30,6 +30,8 @@ export async function syncShopToGbp(db: Db, shopId: string): Promise<SyncResult>
     sync_hours: link.sync_hours,
     sync_phone: link.sync_phone,
     sync_description: link.sync_description,
+    sync_name: link.sync_name,
+    sync_address: link.sync_address,
   });
   if (!patch.updateMask) {
     return record(db, shopId, "error", "送る項目がありません(営業時間・電話・説明文が未記入、または全てオフ)", patch);

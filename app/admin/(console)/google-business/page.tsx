@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { gbpConfigured } from "@/lib/gbp/client";
+import { cleanShopName } from "@/lib/gbp/mapper";
 import { addGbpLink, fetchGbpReviewsNow, postGbpNow, removeGbpLink, sendGbpPhotosNow, syncGbpNow, updateGbpLink } from "./actions";
 
 type Link = {
@@ -11,6 +12,8 @@ type Link = {
   sync_phone: boolean;
   sync_description: boolean;
   sync_reviews: boolean;
+  sync_name: boolean;
+  sync_address: boolean;
   sync_photos: boolean;
   photos_consent_at: string | null;
   photos_consent_note: string | null;
@@ -122,6 +125,16 @@ export default async function GoogleBusinessPage() {
                 <label className="flex items-center gap-1.5">
                   <input type="checkbox" name="sync_description" defaultChecked={l.sync_description} /> 説明文(Google側の文章を上書き)
                 </label>
+                <label className="flex items-center gap-1.5">
+                  <input type="checkbox" name="sync_name" defaultChecked={l.sync_name} /> 店名(Googleの店名をlocapassの店名で上書き)
+                </label>
+                <label className="flex items-center gap-1.5">
+                  <input type="checkbox" name="sync_address" defaultChecked={l.sync_address} /> 住所(Googleの住所をlocapassの住所で上書き)
+                </label>
+                <p className="w-full text-xs text-slate-500">
+                  Googleに送る店名: <span className="font-semibold text-slate-800">{cleanShopName(nameById.get(l.shop_id) ?? null) ?? "(送れません)"}</span>
+                  ※括弧書きの読み仮名は取り除きます。看板の店名と違う場合は、オンにする前にlocapassの店名を直してください。
+                </p>
                 <label className="flex items-center gap-1.5">
                   <input type="checkbox" name="sync_reviews" defaultChecked={l.sync_reviews} /> 口コミを取り込んで店舗に通知
                 </label>

@@ -48,6 +48,8 @@ export async function updateGbpLink(formData: FormData) {
     sync_phone: formData.get("sync_phone") === "on",
     sync_description: formData.get("sync_description") === "on",
     sync_reviews: formData.get("sync_reviews") === "on",
+    sync_name: formData.get("sync_name") === "on",
+    sync_address: formData.get("sync_address") === "on",
     updated_at: new Date().toISOString(),
   };
 
