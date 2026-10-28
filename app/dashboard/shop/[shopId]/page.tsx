@@ -306,6 +306,10 @@ export default async function LocapassShopSettingsPage({
         <p className="-mt-2 mb-3 text-xs text-slate-500">
           お店紹介文・営業時間・利用説明は、保存すると英語・中国語に自動翻訳されて海外のお客さんにも表示されます。
         </p>
+        <p className="-mt-1 mb-3 text-xs text-slate-500">
+          Googleマップとの連携をご利用の場合、ここに入力した店名・住所・電話番号・営業時間は、入力したとおりにGoogleマップへ送られます。
+          Googleには、看板どおりの店名を入力してください。Googleから修正の連絡があったときは、お店の側で対応をお願いします。
+        </p>
         <SaveForm action={updateShopProfile.bind(null, currentShop.id)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-semibold text-slate-500">店舗名</label>

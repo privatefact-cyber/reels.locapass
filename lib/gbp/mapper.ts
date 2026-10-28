@@ -64,14 +64,12 @@ export function normalizePhone(tel: string | null): string | null {
   return v.replace(/\D/g, "").length >= 9 ? v : null;
 }
 
-const NAME_MAX = 100;
-
 /**
- * Googleに送る店名。locapassの店名にある括弧書き(読み仮名・補足)は、Googleの店名ルール(実際の看板どおり)に合わないので取り除く。
- * 例: 「RECOCO（レココ）渋谷店」→「RECOCO渋谷店」。空になる場合はnull(送らない)。
+ * Googleに送る店名。店舗オーナーが入力した店名を、そのまま送る(運営側では整形しない)。
+ * 入力内容の責任は、オーナーにある。空ならnull(送らない)。
  */
-export function cleanShopName(raw: string | null): string | null {
-  const v = (raw ?? "").replace(/[（(][^）)]*[）)]/g, "").replace(/\s+/g, " ").trim().slice(0, NAME_MAX);
+export function shopTitle(raw: string | null): string | null {
+  const v = (raw ?? "").trim();
   return v || null;
 }
 
@@ -106,7 +104,7 @@ export function buildPatch(shop: GbpShopInput, toggles: GbpToggles): GbpPatch {
     }
   }
   if (toggles.sync_name) {
-    const title = cleanShopName(shop.name);
+    const title = shopTitle(shop.name);
     if (title) {
       mask.push("title");
       location.title = title;

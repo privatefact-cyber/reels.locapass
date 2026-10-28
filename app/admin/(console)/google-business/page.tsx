@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { gbpConfigured } from "@/lib/gbp/client";
-import { cleanShopName } from "@/lib/gbp/mapper";
 import { addGbpLink, fetchGbpReviewsNow, postGbpNow, removeGbpLink, sendGbpPhotosNow, syncGbpNow, updateGbpLink } from "./actions";
 
 type Link = {
@@ -68,6 +67,7 @@ export default async function GoogleBusinessPage() {
         <p className="text-xs text-slate-500">
           事前に、店舗のGoogleビジネスプロフィールで運営のGoogleアカウントを「管理者」として招待してもらってください。
           ロケーションIDは、運営アカウントで管理画面(Business Profile)を開いて確認できる数字です。
+          連携を始める前に、店舗オーナーへ「店名・住所・電話番号・営業時間は、入力したとおりにGoogleへ送られること」「Google側の修正対応はお店の責任であること」を確認してください。
         </p>
         <div className="flex flex-wrap gap-3">
           <select name="shopId" required defaultValue="" className="min-w-[16rem] flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900">
@@ -126,15 +126,11 @@ export default async function GoogleBusinessPage() {
                   <input type="checkbox" name="sync_description" defaultChecked={l.sync_description} /> 説明文(Google側の文章を上書き)
                 </label>
                 <label className="flex items-center gap-1.5">
-                  <input type="checkbox" name="sync_name" defaultChecked={l.sync_name} /> 店名(Googleの店名をlocapassの店名で上書き)
+                  <input type="checkbox" name="sync_name" defaultChecked={l.sync_name} /> 店名(Googleの店名を、オーナーが入力した店名で上書き)
                 </label>
                 <label className="flex items-center gap-1.5">
-                  <input type="checkbox" name="sync_address" defaultChecked={l.sync_address} /> 住所(Googleの住所をlocapassの住所で上書き)
+                  <input type="checkbox" name="sync_address" defaultChecked={l.sync_address} /> 住所(Googleの住所を、オーナーが入力した住所で上書き)
                 </label>
-                <p className="w-full text-xs text-slate-500">
-                  Googleに送る店名: <span className="font-semibold text-slate-800">{cleanShopName(nameById.get(l.shop_id) ?? null) ?? "(送れません)"}</span>
-                  ※括弧書きの読み仮名は取り除きます。看板の店名と違う場合は、オンにする前にlocapassの店名を直してください。
-                </p>
                 <label className="flex items-center gap-1.5">
                   <input type="checkbox" name="sync_reviews" defaultChecked={l.sync_reviews} /> 口コミを取り込んで店舗に通知
                 </label>
