@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Home, Map as MapIcon, PartyPopper, User } from "lucide-react";
 import { MenuButton } from "@/components/MenuButton";
+import { MenuSheet } from "@/components/MenuSheet";
 import { SearchButton } from "@/components/SearchButton";
 import { NowButton } from "@/components/NowButton";
 import { AiInquiryWidget } from "@/components/AiInquiryWidget";
@@ -34,6 +36,7 @@ function isExcludedPath(pathname: string): boolean {
 export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasManagement = false, accountHref = "/mypage" }: Props) {
   const pathname = usePathname();
   const { t } = useLocale();
+  const [menuOpen, setMenuOpen] = useState(false);
   if (isExcludedPath(pathname ?? "")) return null;
   const mapImmersive = FULL_BLEED_PATTERN.test(pathname ?? "");
   // 子ポータル(/mito, /mito/events 等)の中にいる間は、イベントをそのポータル限定のページへ向ける。
@@ -116,7 +119,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
                 )}
               </Link>
               <div className="hidden md:block">
-                <MenuButton home={home} />
+                <MenuButton onOpen={() => setMenuOpen(true)} />
               </div>
             </div>
           </div>
@@ -147,8 +150,17 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
           <span className="text-[10px] leading-none">{t.nav.map}</span>
         </Link>
         <SearchButton home={home} />
-        <MenuButton home={home} />
+        <MenuButton onOpen={() => setMenuOpen(true)} />
       </nav>
+
+      <MenuSheet
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        home={home}
+        boostHref={inPortal ? `/${firstSegment}/boost` : "/boost"}
+        accountHref={accountHref}
+        hasManagement={hasManagement}
+      />
 
       {/* DMのスレッド画面では、右下のAIボタンが送信ボタンに重なって押せなくなるため出さない。 */}
       {!/^\/mypage\/messages\/[^/]+/.test(pathname ?? "") && <AiInquiryWidget placement={mapImmersive ? "map" : "floating"} />}

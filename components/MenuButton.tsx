@@ -1,32 +1,19 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
-import { OPEN_FEED_GATE_EVENT } from "@/lib/reels/events";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /**
- * ボトムナビ右端のハンバーガーメニュー。
- * トップページではCAST/SHOP選択モーダルをその場で再度開き、他ページからは
- * トップへ遷移した上で開く(?menu=1をReelFeed側で拾う)。
+ * ボトムナビ右端(PCではヘッダー右端)のメニューボタン(☰)。押すと、下からメニューのシート(MenuSheet)が出る。
+ * シートの開閉の状態は SiteChrome が持つ。
  */
-export function MenuButton({ home = "/" }: { home?: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
+export function MenuButton({ onOpen }: { onOpen: () => void }) {
   const { t } = useLocale();
-
-  function handleClick() {
-    if (pathname === home) {
-      window.dispatchEvent(new Event(OPEN_FEED_GATE_EVENT));
-    } else {
-      router.push(`${home}?menu=1`);
-    }
-  }
 
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={onOpen}
       aria-label={t.nav.menu}
       className="flex h-7 w-7 items-center justify-center rounded-full border border-accent/60 bg-tone-800 text-accent"
     >

@@ -12,7 +12,7 @@ import { ShopMediaFallback } from "@/components/shop/ShopMediaFallback";
 import { ReelCard } from "@/components/ReelCard";
 import { PreloadNextVideo } from "@/components/video/PreloadNextVideo";
 import type { AdItem, ReelItem, ShopGridItem } from "@/lib/reels/types";
-import { OPEN_FEED_GATE_EVENT, OPEN_SEARCH_EVENT, TOGGLE_NOW_EVENT } from "@/lib/reels/events";
+import { FEED_KINDS, OPEN_FEED_GATE_EVENT, OPEN_SEARCH_EVENT, SELECT_FEED_EVENT, TOGGLE_NOW_EVENT, type FeedKind } from "@/lib/reels/events";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { setAiSelectedContext } from "@/lib/aiContext";
@@ -361,6 +361,26 @@ export function ReelFeed({
       window.history.replaceState(null, "", window.location.pathname);
     }
 
+    // メニューのシートで選ばれた「見るもの」を反映する(他ページからは ?feed=... で受け取る)。
+    function applyFeed(kind: FeedKind) {
+      if (kind === "shop") {
+        setActiveTypes(["shop"]);
+        setReelAuthorFilter(null);
+      } else {
+        setActiveTypes(["cast"]);
+        setReelAuthorFilter(kind === "shop-reel" ? "shop" : "cast");
+      }
+    }
+    const feedParam = new URLSearchParams(window.location.search).get("feed");
+    if (feedParam && (FEED_KINDS as string[]).includes(feedParam)) {
+      applyFeed(feedParam as FeedKind);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    function handleSelectFeed(e: Event) {
+      const kind = (e as CustomEvent<FeedKind>).detail;
+      if (FEED_KINDS.includes(kind)) applyFeed(kind);
+    }
+
     function handleToggleGate() {
       if (gateOpenRef.current) {
         closeGate();
@@ -375,10 +395,12 @@ export function ReelFeed({
       setNowOnly(!nowOnlyRef.current);
     }
     window.addEventListener(OPEN_FEED_GATE_EVENT, handleToggleGate);
+    window.addEventListener(SELECT_FEED_EVENT, handleSelectFeed);
     window.addEventListener(OPEN_SEARCH_EVENT, handleToggleSearch);
     window.addEventListener(TOGGLE_NOW_EVENT, handleToggleNow);
     return () => {
       window.removeEventListener(OPEN_FEED_GATE_EVENT, handleToggleGate);
+      window.removeEventListener(SELECT_FEED_EVENT, handleSelectFeed);
       window.removeEventListener(OPEN_SEARCH_EVENT, handleToggleSearch);
       window.removeEventListener(TOGGLE_NOW_EVENT, handleToggleNow);
     };

@@ -17,6 +17,10 @@ export type Dictionary = {
     tagline: string;
     search: string;
     map: string;
+    menuBrowse: string;
+    menuServices: string;
+    menuAccount: string;
+    menuPost: string;
   };
   map: {
     searchPlaceholder: string;
@@ -434,6 +438,10 @@ const ja: Dictionary = {
     tagline: "繋がる広がるリールメディア LOCAPASS【ロカパス】",
     search: "検索",
     map: "マップ",
+    menuBrowse: "見る",
+    menuServices: "サービス",
+    menuAccount: "アカウント",
+    menuPost: "写真・動画を投稿",
   },
   map: {
     searchPlaceholder: "住所・エリア名で検索",
@@ -850,6 +858,10 @@ const en: Dictionary = {
     tagline: "Connecting reels media — LOCAPASS",
     search: "Search",
     map: "Map",
+    menuBrowse: "Browse",
+    menuServices: "Services",
+    menuAccount: "Account",
+    menuPost: "Post a photo or video",
   },
   map: {
     searchPlaceholder: "Search by address or area",
@@ -1266,6 +1278,10 @@ const zh: Dictionary = {
     tagline: "连接与扩展的短视频媒体 LOCAPASS",
     search: "搜索",
     map: "地图",
+    menuBrowse: "浏览",
+    menuServices: "服务",
+    menuAccount: "账户",
+    menuPost: "发布照片/视频",
   },
   map: {
     searchPlaceholder: "按地址或区域搜索",
@@ -1682,7 +1698,11 @@ const ar: Dictionary = {
     "help": "مساعدة",
     "tagline": "منصة ريلز تربط وتوسّع — LOCAPASS",
     "search": "بحث",
-    "map": "الخريطة"
+    "map": "الخريطة",
+    "menuBrowse": "تصفح",
+    "menuServices": "الخدمات",
+    "menuAccount": "الحساب",
+    "menuPost": "انشر صورة أو فيديو"
   },
   "map": {
     "sameBuilding": (count: number) => `${count} متاجر أخرى في نفس المبنى`,
