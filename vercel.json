@@ -1,6 +1,7 @@
 {
   "regions": ["hnd1"],
   "crons": [
-    { "path": "/api/cron/translations", "schedule": "0 18 * * *" }
+    { "path": "/api/cron/translations", "schedule": "0 18 * * *" },
+    { "path": "/api/cron/gbp-sync", "schedule": "30 18 * * *" }
   ]
 }
