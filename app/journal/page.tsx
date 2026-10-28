@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Cover } from "@/components/journal/Cover";
-import {
-  JOURNAL_CATEGORY_LABELS,
-  JOURNAL_POSTS,
-  formatJournalDate,
-  type JournalCategory,
-} from "@/lib/journal/posts";
+import { EditorBar } from "@/components/journal/EditorBar";
+import { listPublishedJournalPosts } from "@/lib/journal/queries";
+import { JOURNAL_CATEGORY_LABELS, formatJournalDate, type JournalCategory } from "@/lib/journal/posts";
 
 export const metadata: Metadata = {
   title: "Journal",
@@ -19,7 +16,8 @@ const CATEGORIES: JournalCategory[] = ["topics", "tips"];
 export default async function JournalIndexPage({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {
   const { cat } = await searchParams;
   const active = CATEGORIES.find((c) => c === cat) ?? null;
-  const posts = active ? JOURNAL_POSTS.filter((p) => p.category === active) : JOURNAL_POSTS;
+  const all = await listPublishedJournalPosts();
+  const posts = active ? all.filter((p) => p.category === active) : all;
 
   const tab = (current: boolean) =>
     `rounded-full border px-3.5 py-1.5 text-xs transition ${
@@ -35,6 +33,8 @@ export default async function JournalIndexPage({ searchParams }: { searchParams:
         </h1>
         <p className="text-sm text-muted">街とお店の、ちょっといい話。</p>
       </header>
+
+      <EditorBar />
 
       <nav className="flex flex-wrap justify-center gap-2" aria-label="カテゴリ">
         <Link href="/journal" className={tab(!active)}>

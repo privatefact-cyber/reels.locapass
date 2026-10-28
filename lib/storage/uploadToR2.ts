@@ -78,3 +78,37 @@ export async function uploadVideoToR2(file: File, context: UploadContext = {}): 
 export async function uploadPosterToR2(blob: Blob, context: UploadContext = {}): Promise<string> {
   return uploadToR2({ data: blob, ext: "jpg", contentType: "image/jpeg", ...context });
 }
+
+/**
+ * Journalの記事用: 画像を長辺1600pxのJPEGに縮めて、R2へ直接送り、公開URLを返す(ルート管理者・投稿担当だけが使える)。
+ * 縮めるのは、サイズの上限(5MB)に収めて、読み込みも軽くするため。
+ */
+export async function uploadJournalImage(file: File): Promise<string> {
+  let blob: Blob = file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const jpeg = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
+    if (jpeg) blob = jpeg;
+  } catch {
+    // 縮小できない形式は、そのまま送る(5MBを超えるとサーバー側で断られる)。
+  }
+  const contentType = blob.type || "image/jpeg";
+  const created = await fetch("/api/r2/presigned-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ context: "journal_editor", contentType, size: blob.size }),
+  });
+  if (!created.ok) {
+    const body = await created.json().catch(() => ({}));
+    throw new Error(body.error ?? "アップロードURLの発行に失敗しました");
+  }
+  const { uploadURL, publicUrl } = (await created.json()) as { uploadURL: string; publicUrl: string };
+  const put = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": contentType }, body: blob });
+  if (!put.ok) throw new Error(`アップロードに失敗しました(status: ${put.status})`);
+  return publicUrl;
+}

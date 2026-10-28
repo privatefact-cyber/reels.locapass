@@ -4,12 +4,13 @@ import { createStaticClient } from "@/lib/supabase/static";
 import { PREFECTURE_SLUG, listAreaCategorySlugs } from "@/lib/seo/area";
 import { genreToSlug } from "@/lib/shop/genres";
 import { shopPath, castPath } from "@/lib/locapass/publicUrls";
-import { JOURNAL_POSTS } from "@/lib/journal/posts";
+import { listPublishedJournalPosts } from "@/lib/journal/queries";
 
 const BASE_URL = "https://locapass.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createStaticClient();
+  const journalPosts = await listPublishedJournalPosts();
 
   const [{ data: shops }, { data: castRows }] = await Promise.all([
     supabase
@@ -25,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE_URL, changeFrequency: "hourly", priority: 1 },
     { url: `${BASE_URL}/events`, changeFrequency: "daily", priority: 0.6 },
     { url: `${BASE_URL}/journal`, changeFrequency: "weekly", priority: 0.5 },
-    ...JOURNAL_POSTS.map((p) => ({
+    ...journalPosts.map((p) => ({
       url: `${BASE_URL}/journal/${p.slug}`,
       lastModified: new Date(p.date),
       changeFrequency: "monthly" as const,

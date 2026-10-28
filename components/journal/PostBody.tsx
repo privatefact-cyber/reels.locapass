@@ -30,7 +30,11 @@ export function PostBody({ blocks }: { blocks: JournalBlock[] }) {
             </figure>
           );
         }
-        return <p key={i}>{b.text}</p>;
+        return (
+          <p key={i} className="whitespace-pre-line">
+            {b.text}
+          </p>
+        );
       })}
     </div>
   );

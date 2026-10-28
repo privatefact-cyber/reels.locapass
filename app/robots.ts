@@ -18,6 +18,8 @@ export default function robots(): MetadataRoute.Robots {
         "/cast/login",
         "/staff/login",
         "/admin/login",
+        "/journal/new",
+        "/journal/editors",
         "/api/",
       ],
     },

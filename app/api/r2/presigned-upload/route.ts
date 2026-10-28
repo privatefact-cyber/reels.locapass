@@ -28,6 +28,27 @@ export async function POST(request: Request) {
   const { ext, contentType, context, castId: targetCastId, shopId: targetShopId } = body ?? {};
   const safeExt = typeof ext === "string" && /^[a-zA-Z0-9]{1,8}$/.test(ext) ? ext : "mp4";
 
+  // Journalの写真: ルート管理者と投稿担当だけが、journal/ 以下に画像を送れる(5MBまで)。
+  if (context === "journal_editor") {
+    const { data: isEditor } = await supabase.rpc("locapass_is_journal_editor" as never);
+    if (isEditor !== true) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const size = Number(body?.size);
+    const type = typeof contentType === "string" ? contentType : "";
+    const extByType: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+    const imgExt = extByType[type];
+    if (!imgExt) return NextResponse.json({ error: "JPEG / PNG / WebP の画像を選んでください" }, { status: 400 });
+    if (!Number.isFinite(size) || size <= 0 || size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: "画像は5MB以下にしてください" }, { status: 400 });
+    }
+    const key = `journal/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${imgExt}`;
+    const uploadURL = await getSignedUrl(
+      client,
+      new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, ContentType: type, CacheControl: "public, max-age=31536000, immutable" }),
+      { expiresIn: 600 },
+    );
+    return NextResponse.json({ uploadURL, publicUrl: `${R2_PUBLIC_BASE_URL}/${key}` });
+  }
+
   // エリアフォトの動画投稿: ログイン中の会員なら誰でも、自分のフォルダ(photo/<自分のID>/)にだけ送れる。
   // 申告サイズで上限を確認し、実際の大きさは投稿を作る時に(/api/photo/posts)R2へのHEADで再確認する。
   if (context === "photo_user") {

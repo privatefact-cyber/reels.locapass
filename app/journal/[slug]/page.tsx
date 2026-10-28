@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArticleView } from "@/components/journal/ArticleView";
 import { Cover } from "@/components/journal/Cover";
-import { PostBody } from "@/components/journal/PostBody";
-import { JOURNAL_CATEGORY_LABELS, JOURNAL_POSTS, formatJournalDate, getJournalPost } from "@/lib/journal/posts";
+import { EditorBar } from "@/components/journal/EditorBar";
+import { getPublishedJournalPost, listPublishedJournalPosts } from "@/lib/journal/queries";
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return JOURNAL_POSTS.map((p) => ({ slug: p.slug }));
-}
+// 記事は保存のたびに作り直される(保存の処理が一覧と記事のキャッシュを捨てる)。念のため1時間でも作り直す。
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getJournalPost(slug);
+  const post = await getPublishedJournalPost(slug);
   if (!post) return {};
   const url = `https://locapass.net/journal/${post.slug}`;
+  const image = post.cover ? (post.cover.src.startsWith("/") ? `https://locapass.net${post.cover.src}` : post.cover.src) : null;
   return {
     title: post.title,
     description: post.description,
@@ -26,17 +25,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: post.title,
       description: post.description,
       publishedTime: post.date,
-      ...(post.cover ? { images: [{ url: `https://locapass.net${post.cover.src}`, alt: post.cover.alt }] } : {}),
+      ...(image && post.cover ? { images: [{ url: image, alt: post.cover.alt }] } : {}),
     },
   };
 }
 
 export default async function JournalPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getJournalPost(slug);
+  const post = await getPublishedJournalPost(slug);
   if (!post) notFound();
 
-  const more = JOURNAL_POSTS.filter((p) => p.slug !== post.slug).slice(0, 2);
+  const more = (await listPublishedJournalPosts()).filter((p) => p.slug !== post.slug).slice(0, 2);
+  const image = post.cover ? (post.cover.src.startsWith("/") ? `https://locapass.net${post.cover.src}` : post.cover.src) : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -47,28 +47,19 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
     inLanguage: "ja",
     mainEntityOfPage: `https://locapass.net/journal/${post.slug}`,
     publisher: { "@type": "Organization", name: "LOCAPASS" },
-    ...(post.cover ? { image: `https://locapass.net${post.cover.src}` } : {}),
+    ...(image ? { image } : {}),
   };
 
   return (
     <article className="mx-auto max-w-2xl space-y-6 px-4 pb-28 pt-6 md:pt-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Link href="/journal" className="text-xs text-muted hover:text-main">
-        ← Journal
-      </Link>
-      <Cover post={post} eager className="aspect-[16/10] rounded-2xl" />
-      <header className="space-y-3">
-        <div className="flex items-center gap-2 text-[11px] text-tone-500">
-          <Link href={`/journal?cat=${post.category}`} className="text-hl-400/80 hover:text-hl-200">
-            {JOURNAL_CATEGORY_LABELS[post.category]}
-          </Link>
-          <span aria-hidden>·</span>
-          <time dateTime={post.date}>{formatJournalDate(post.date)}</time>
-        </div>
-        <h1 className="text-2xl font-bold leading-snug text-main">{post.title}</h1>
-        {post.lead ? <p className="text-base leading-8 text-tone-200">{post.lead}</p> : null}
-      </header>
-      <PostBody blocks={post.body} />
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/journal" className="text-xs text-muted hover:text-main">
+          ← Journal
+        </Link>
+        <EditorBar editSlug={post.slug} />
+      </div>
+      <ArticleView post={post} />
 
       {more.length > 0 ? (
         <section className="space-y-4 border-t border-main/10 pt-8">
