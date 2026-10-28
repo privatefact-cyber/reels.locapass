@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { syncAllToGbp } from "@/lib/gbp/sync";
+import { runGbpDaily } from "@/lib/gbp/daily";
 import { gbpConfigured } from "@/lib/gbp/client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * 同期がオンの店舗の営業時間・電話などを、毎日Googleビジネスプロフィールへ送る(vercel.json の crons から呼ばれる)。
- * Google未接続(GBP_*の環境変数なし)のあいだは送信せず、何もしない。
+ * 毎日、Googleビジネスプロフィールとの連携をまとめて処理する(vercel.json の crons から呼ばれる)。
+ * 営業情報の送信 / 口コミの取り込みと通知 / 同意済み店舗の写真の送信。
+ * Google未接続(GBP_*の環境変数なし)のあいだは何もしない。
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -16,10 +16,5 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   if (!gbpConfigured()) return NextResponse.json({ skipped: "GBP credentials not set" });
-  const { results } = await syncAllToGbp(createAdminClient());
-  return NextResponse.json({
-    total: results.length,
-    ok: results.filter((r) => r.status === "ok").length,
-    error: results.filter((r) => r.status === "error").length,
-  });
+  return NextResponse.json(await runGbpDaily());
 }

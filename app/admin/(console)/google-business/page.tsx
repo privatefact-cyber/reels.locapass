@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { gbpConfigured } from "@/lib/gbp/client";
-import { addGbpLink, removeGbpLink, syncGbpNow, updateGbpLink } from "./actions";
+import { addGbpLink, fetchGbpReviewsNow, postGbpNow, removeGbpLink, sendGbpPhotosNow, syncGbpNow, updateGbpLink } from "./actions";
 
 type Link = {
   shop_id: string;
@@ -10,6 +10,10 @@ type Link = {
   sync_hours: boolean;
   sync_phone: boolean;
   sync_description: boolean;
+  sync_reviews: boolean;
+  sync_photos: boolean;
+  photos_consent_at: string | null;
+  photos_consent_note: string | null;
   last_synced_at: string | null;
   last_status: "ok" | "dry_run" | "error" | null;
   last_error: string | null;
@@ -118,6 +122,24 @@ export default async function GoogleBusinessPage() {
                 <label className="flex items-center gap-1.5">
                   <input type="checkbox" name="sync_description" defaultChecked={l.sync_description} /> 説明文(Google側の文章を上書き)
                 </label>
+                <label className="flex items-center gap-1.5">
+                  <input type="checkbox" name="sync_reviews" defaultChecked={l.sync_reviews} /> 口コミを取り込んで店舗に通知
+                </label>
+                <fieldset className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded border border-slate-200 p-3">
+                  <legend className="px-1 text-xs font-semibold text-slate-600">写真の自動送信(店舗が登録した写真だけ。店舗の同意が必要)</legend>
+                  <label className="flex items-center gap-1.5">
+                    <input type="checkbox" name="photos_consent" defaultChecked={!!l.photos_consent_at} /> 店舗から同意を得た
+                  </label>
+                  <input
+                    name="photos_consent_note"
+                    defaultValue={l.photos_consent_note ?? ""}
+                    placeholder="どう確認したか(例: 2026-11-01 LINEで確認)"
+                    className="min-w-[16rem] flex-1 rounded border border-slate-300 px-2 py-1 text-xs text-slate-900 placeholder-slate-500"
+                  />
+                  <label className="flex items-center gap-1.5">
+                    <input type="checkbox" name="sync_photos" defaultChecked={l.sync_photos} /> 写真を毎日送る
+                  </label>
+                </fieldset>
                 <input
                   name="locationId"
                   defaultValue={l.gbp_location_id.replace("locations/", "")}
@@ -137,6 +159,18 @@ export default async function GoogleBusinessPage() {
                     {connected ? "今すぐ送る" : "送る内容を確認"}
                   </button>
                 </form>
+                <form action={fetchGbpReviewsNow}>
+                  <input type="hidden" name="shopId" value={l.shop_id} />
+                  <button type="submit" className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:border-slate-500">
+                    口コミを取り込む
+                  </button>
+                </form>
+                <form action={sendGbpPhotosNow}>
+                  <input type="hidden" name="shopId" value={l.shop_id} />
+                  <button type="submit" className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:border-slate-500">
+                    写真を今送る
+                  </button>
+                </form>
                 <form action={removeGbpLink}>
                   <input type="hidden" name="shopId" value={l.shop_id} />
                   <button type="submit" className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
@@ -144,6 +178,19 @@ export default async function GoogleBusinessPage() {
                   </button>
                 </form>
               </div>
+
+              <details className="text-xs text-slate-600">
+                <summary className="cursor-pointer">Googleに「最新情報」を投稿する</summary>
+                <form action={postGbpNow} className="mt-2 space-y-2">
+                  <input type="hidden" name="shopId" value={l.shop_id} />
+                  <textarea name="summary" required maxLength={1500} rows={4} placeholder="投稿の文章(1500文字まで)" className="w-full rounded border border-slate-300 px-2 py-1 text-sm text-slate-900 placeholder-slate-500" />
+                  <input name="linkUrl" placeholder="リンク先URL(https://…・任意)" className="w-full rounded border border-slate-300 px-2 py-1 text-xs text-slate-900 placeholder-slate-500" />
+                  <input name="photoUrl" placeholder="写真のURL(https://…・任意。店舗が登録した写真を使ってください)" className="w-full rounded border border-slate-300 px-2 py-1 text-xs text-slate-900 placeholder-slate-500" />
+                  <button type="submit" className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">
+                    {connected ? "投稿する" : "投稿内容を確認(Googleには送られません)"}
+                  </button>
+                </form>
+              </details>
 
               {l.last_payload != null && (
                 <details className="text-xs text-slate-600">

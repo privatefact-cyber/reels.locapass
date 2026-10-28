@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { path: "/messages", label: "お客様へのメッセージ" },
   { path: "/applicants", label: "応募者管理" },
   { path: "/inquiries", label: "お問い合わせ" },
+  { path: "/google-reviews", label: "Googleの口コミ" },
 ];
 
 
