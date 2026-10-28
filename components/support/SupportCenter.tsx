@@ -7,7 +7,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SAMPLE_QUESTIONS, supportText } from "@/lib/support/text";
 
 type Doc = { id: string; audience: "user" | "shop"; title: string; body: string };
-type Msg = { role: "user" | "ai"; text: string; links?: { title: string; url: string }[]; unanswered?: boolean; question?: string };
+type Msg = { role: "user" | "ai"; text: string; links?: { title: string; url: string }[]; unanswered?: boolean; question?: string; qid?: string | null };
 
 /** audience="user": 一般向け(/support)。audience="shop": 店舗管理画面の中のサポート。画面・AI・ガイドは完全に別。 */
 export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user" | "shop" }) {
@@ -18,6 +18,8 @@ export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user
   const [loading, setLoading] = useState(false);
   const [contact, setContact] = useState("");
   const [sent, setSent] = useState<Record<number, boolean>>({});
+  // 返事ごとの評価(役に立った=1 / 立たなかった=-1)。送ったあとは、お礼だけを出す。
+  const [rated, setRated] = useState<Record<number, 1 | -1>>({});
   const endRef = useRef<HTMLDivElement>(null);
 
   async function ask(text: string) {
@@ -34,7 +36,7 @@ export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user
         body: JSON.stringify({ message: q, history, path: "/support", audience }),
       });
       const data = await res.json();
-      setMsgs((p) => [...p, { role: "ai", text: data?.reply ?? "エラーが発生しました。", links: data?.links, unanswered: data?.answered === false, question: q }]);
+      setMsgs((p) => [...p, { role: "ai", text: data?.reply ?? "エラーが発生しました。", links: data?.links, unanswered: data?.answered === false, question: q, qid: data?.qid ?? null }]);
     } catch {
       setMsgs((p) => [...p, { role: "ai", text: "通信に失敗しました。もう一度お試しください。" }]);
     } finally {
@@ -46,6 +48,15 @@ export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user
   async function escalate(i: number, question: string) {
     const res = await fetch("/api/support/escalate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: question, contact, audience }) });
     if (res.ok) setSent((p) => ({ ...p, [i]: true }));
+  }
+
+  async function rate(i: number, qid: string, value: 1 | -1) {
+    setRated((p) => ({ ...p, [i]: value }));
+    try {
+      await fetch("/api/support/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: qid, value }) });
+    } catch {
+      // 評価が送れなくても、画面はそのまま(お礼は出ている)。
+    }
   }
 
   const samples = SAMPLE_QUESTIONS[audience];
@@ -80,6 +91,22 @@ export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user
                 <div dir="auto" className={`max-w-[90%] whitespace-pre-wrap rounded-xl border px-3 py-2 text-sm leading-relaxed ${m.role === "user" ? "border-main/20 bg-main/15" : "border-main/10 bg-main/5 text-tone-200"}`}>
                   {m.text}
                 </div>
+                {m.role === "ai" && m.qid ? (
+                  <div className="flex items-center gap-2 text-xs text-tone-500">
+                    {rated[i] ? (
+                      <span>{t.thanks}</span>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => void rate(i, m.qid!, 1)} className="rounded-full border border-tone-700 px-2.5 py-1 hover:border-accent hover:text-accent">
+                          👍 {t.helpful}
+                        </button>
+                        <button type="button" onClick={() => void rate(i, m.qid!, -1)} className="rounded-full border border-tone-700 px-2.5 py-1 hover:border-accent hover:text-accent">
+                          👎 {t.notHelpful}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : null}
                 {m.links && m.links.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span className="text-tone-500">{t.links}:</span>

@@ -5,6 +5,7 @@ import { fetchMyRoles, hasManagementRole } from "@/lib/auth/roles";
 import { GEMINI_MODEL, geminiGenerateContentUrl } from "@/lib/gemini";
 import { docsFor, SUPPORT_DOCS } from "@/lib/support/docs";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { maskPersonalInfo } from "@/lib/support/mask";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,36 @@ function rateLimited(key: string): boolean {
 }
 
 type Turn = { role: "user" | "ai"; text: string };
+
+/** 質問・AIの返事・使った機能カードを記録して、記録のIDを返す(評価ボタンが、このIDで評価を送る)。失敗しても、返答は返す。 */
+async function logQuestion(row: {
+  question: string;
+  answered: boolean;
+  audience: "user" | "shop";
+  path: string | null;
+  locale: string;
+  reply: string;
+  docIds: string[];
+}): Promise<string | null> {
+  try {
+    const { data } = await (createAdminClient() as any)
+      .from("locapass_support_questions")
+      .insert({
+        question: maskPersonalInfo(row.question),
+        answered: row.answered,
+        audience: row.audience,
+        path: row.path,
+        locale: row.locale,
+        reply: row.reply.slice(0, 2000),
+        doc_ids: row.docIds.slice(0, 10),
+      })
+      .select("id")
+      .maybeSingle();
+    return (data?.id as string | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
 
 const SUPPORT_URL = "https://locapass.net/support";
 const JOURNAL_URL = "https://locapass.net/journal";
@@ -132,17 +163,16 @@ ${message}`;
   }
   if (!answer) return NextResponse.json({ reply: "うまく答えられませんでした。言い方を変えてお試しください。", answered: true, links: [] });
 
-  // 答えられなかった質問を記録(個人を特定する情報は保存しない)。失敗しても返答は返す。
-  void (createAdminClient() as any)
-    .from("locapass_support_questions")
-    .insert({ question: message, answered, audience: isShop ? "shop" : "user", path: path || null, locale })
-    .then(() => undefined);
-
   // 答えられなかったときは、無理に答えず、サポートページとJournalのURLを案内する(「運営に質問を送る」は、画面側に残る)。
+  const audienceLabel: "user" | "shop" = isShop ? "shop" : "user";
+  const knownDocIds = docIds.filter((id) => docs.some((d) => d.id === id));
   if (!answered) {
     const fb = FALLBACK[locale] ?? FALLBACK.ja;
+    const fallbackReply = `${fb.text}\n\n・${fb.support}: ${SUPPORT_URL}\n・${fb.journal}: ${JOURNAL_URL}`;
+    const qid = await logQuestion({ question: message, answered: false, audience: audienceLabel, path: path || null, locale, reply: fallbackReply, docIds: knownDocIds });
     return NextResponse.json({
-      reply: `${fb.text}\n\n・${fb.support}: ${SUPPORT_URL}\n・${fb.journal}: ${JOURNAL_URL}`,
+      reply: fallbackReply,
+      qid,
       answered: false,
       links: [
         { title: fb.support, url: "/support" },
@@ -159,5 +189,6 @@ ${message}`;
     .slice(0, 3)
     .map((d) => ({ title: d.title, url: d.path! }));
 
-  return NextResponse.json({ reply: answer, answered, links });
+  const qid = await logQuestion({ question: message, answered: true, audience: audienceLabel, path: path || null, locale, reply: answer, docIds: knownDocIds });
+  return NextResponse.json({ reply: answer, qid, answered, links });
 }
