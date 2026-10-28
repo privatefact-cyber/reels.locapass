@@ -610,6 +610,18 @@ export default async function ShopDetailPage({
           </section>
         )}
 
+        {/* 投稿写真がまだ0枚の店は、見出しや空の枠は出さず、最初の1枚を投稿する入口だけを小さく出す。 */}
+        {userPhotos.length === 0 && (
+          <section id="user-photos" className="scroll-mt-24">
+            <Link
+              href={`/photo/new?shop=${shopRow.id}`}
+              className="block rounded-2xl border border-dashed border-main/20 px-4 py-3 text-center text-xs text-tone-400 transition hover:border-hl-400/50 hover:text-main"
+            >
+              {t.photo.postToShopButton}
+            </Link>
+          </section>
+        )}
+
         {/* 動画紹介(YouTube / TikTok / Instagram / Vimeo)。未設定なら何も出さない。 */}
         {introVideo && (
           <section className="space-y-2">
