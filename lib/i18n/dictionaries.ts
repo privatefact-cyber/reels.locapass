@@ -332,6 +332,9 @@ export type Dictionary = {
     gpsFromAddress: string;
     addressPlaceholder: string;
     checkLocation: string;
+    addressLabel: string;
+    addressFixHint: string;
+    errAddressStale: string;
     nearbyTitle: string;
     spotLabel: string;
     spotPlaceholder: string;
@@ -743,6 +746,9 @@ const ja: Dictionary = {
     gpsFromAddress: "入力した場所から位置を設定しました。",
     addressPlaceholder: "例: 東京都渋谷区神宮前5-3-12",
     checkLocation: "位置を確認",
+    addressLabel: "撮影場所の住所",
+    addressFixHint: "自動で入力しています。違う場合は直して「位置を確認」を押してください。",
+    errAddressStale: "住所から位置を特定できませんでした。住所を直してから、もう一度お試しください。",
     nearbyTitle: "近くの場所から選ぶ",
     spotLabel: "おすすめの場所・店名（必須）",
     spotPlaceholder: "例: 千波湖の桜並木",
@@ -1154,6 +1160,9 @@ const en: Dictionary = {
     gpsFromAddress: "Location set from the place you entered.",
     addressPlaceholder: "e.g. 5-3-12 Jingumae, Shibuya, Tokyo",
     checkLocation: "Check location",
+    addressLabel: "Address of this spot",
+    addressFixHint: "Filled in automatically. If it is wrong, edit it and tap \"Check location\".",
+    errAddressStale: "We could not find that address. Please correct it and try again.",
     nearbyTitle: "Pick a nearby place",
     spotLabel: "Place or shop name (required)",
     spotPlaceholder: "e.g. Cherry blossoms along the lake",
@@ -1565,6 +1574,9 @@ const zh: Dictionary = {
     gpsFromAddress: "已根据输入的地点设置位置。",
     addressPlaceholder: "例：东京都涩谷区神宫前5-3-12",
     checkLocation: "确认位置",
+    addressLabel: "拍摄地点的地址",
+    addressFixHint: "已自动填写。如不正确，请修改后点击“确认位置”。",
+    errAddressStale: "无法根据该地址确定位置。请修改地址后再试。",
     nearbyTitle: "从附近地点中选择",
     spotLabel: "推荐的地点/店名（必填）",
     spotPlaceholder: "例：湖畔的樱花道",
@@ -1977,6 +1989,9 @@ const ar: Dictionary = {
     gpsFromAddress: "تم تحديد الموقع من المكان الذي أدخلته.",
     addressPlaceholder: "مثال: 5-3-12 Jingumae, Shibuya, Tokyo",
     checkLocation: "تحقق من الموقع",
+    addressLabel: "عنوان هذا المكان",
+    addressFixHint: "تمت تعبئته تلقائيًا. إذا كان خاطئًا، عدّله ثم اضغط \"تحقق من الموقع\".",
+    errAddressStale: "تعذر العثور على هذا العنوان. يرجى تصحيحه والمحاولة مرة أخرى.",
     nearbyTitle: "اختر مكانًا قريبًا",
     spotLabel: "اسم المكان أو المتجر (مطلوب)",
     spotPlaceholder: "مثال: أشجار الكرز بجانب البحيرة",

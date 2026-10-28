@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ImagePlus, Loader2, MapPin, Sparkles } from "lucide-react";
 import exifr from "exifr";
-import { geocode } from "@/lib/map/geocode";
+import { geocode, reverseGeocode } from "@/lib/map/geocode";
 import { PHOTO_MAX_BYTES } from "@/lib/photo/tags";
 import { uploadPhotoVideoToR2 } from "@/lib/storage/uploadToR2";
 import { readVideoGps } from "@/lib/photo/videoGps";
@@ -227,6 +227,13 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
   const [coordsNote, setCoordsNote] = useState<string | null>(null);
   const [needAddress, setNeedAddress] = useState(false);
   const [address, setAddress] = useState("");
+  // 投稿者が住所欄を自分で書き換えたか。自動入力(逆引き・候補選択)は、書き換えていないときだけ上書きする。
+  const [addressDirty, setAddressDirtyState] = useState(false);
+  const addressDirtyRef = useRef(false);
+  function setAddressDirty(v: boolean) {
+    addressDirtyRef.current = v;
+    setAddressDirtyState(v);
+  }
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   // 店舗ページから来たときは、その店を選択済みにしておく(写真を選び直しても保たれる)。
   const presetPick: Candidate | null = preset
@@ -277,6 +284,12 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     }
   }
 
+  // 写真/動画から取れた位置を住所にして入力欄に入れる(投稿者が直し始めていなければ)。取れなくても手入力で進められる。
+  async function fillAddressFromCoords(c: { lat: number; lng: number }) {
+    const found = await reverseGeocode(c.lat, c.lng);
+    if (found) setAddress((cur) => (addressDirtyRef.current && cur ? cur : found));
+  }
+
   async function handleVideo(f: File) {
     if (f.size > VIDEO_MAX_BYTES) {
       setError(t.photo.errVideoTooLarge);
@@ -308,12 +321,15 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     setCandidates([]);
     setPick(presetPick);
     setCoords(null);
+    setAddress("");
+    setAddressDirty(false);
     // 動画の管理情報(moov)にある撮影場所を読む。無ければ住所・地名の入力に進む。
     const gps = await readVideoGps(f);
     if (gps) {
       setCoords(gps);
       setCoordsNote(t.photo.gpsFoundVideo);
       void loadCandidates(gps);
+      void fillAddressFromCoords(gps);
       return;
     }
     setCoordsNote(t.photo.gpsNoneVideo);
@@ -339,6 +355,8 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     setCandidates([]);
     setPick(presetPick);
     setCoords(null);
+    setAddress("");
+    setAddressDirty(false);
     setNeedAddress(false);
     setCoordsNote(t.photo.gpsChecking);
     try {
@@ -348,6 +366,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
         setCoords(c);
         setCoordsNote(t.photo.gpsFound);
         void loadCandidates(c);
+        void fillAddressFromCoords(c);
         return;
       }
     } catch {
@@ -366,6 +385,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
       return;
     }
     setCoords(hit);
+    setAddressDirty(false);
     setCoordsNote(t.photo.gpsFromAddress);
     void loadCandidates(hit);
   }
@@ -404,7 +424,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     }
     setPick(c);
     setSpotName(c.name);
-    if (c.address && !address) setAddress(c.address);
+    if (c.address && (!address || !addressDirty)) setAddress(c.address);
   }
 
   async function submit(e: React.FormEvent) {
@@ -412,6 +432,19 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     if (!file || !coords || busy) return;
     setBusy(true);
     setError(null);
+    // 住所を書き換えたまま「位置を確認」を押していなければ、ここで位置を取り直す(ピンの位置と住所がずれたまま投稿されないように)。
+    let postCoords = coords;
+    if (addressDirty && address.trim()) {
+      const hit = await geocode(address);
+      if (!hit) {
+        setError(t.photo.errAddressStale);
+        setBusy(false);
+        return;
+      }
+      postCoords = hit;
+      setCoords(hit);
+      setAddressDirty(false);
+    }
     // 動画: まず動画本体をR2へ直接送る(Vercelのサイズ制限を受けない)。画像(1コマ)は従来どおりAPIへ。
     let videoUrl: string | null = null;
     if (isVideo) {
@@ -448,8 +481,8 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     body.append("spot_name", spotName);
     body.append("comment", comment.trim() || aiComment || "");
     body.append("address", address);
-    body.append("latitude", String(coords.lat));
-    body.append("longitude", String(coords.lng));
+    body.append("latitude", String(postCoords.lat));
+    body.append("longitude", String(postCoords.lng));
     if (pick) {
       body.append("place_kind", pick.kind);
       if (pick.kind === "listed" && pick.venue_id) body.append("venue_id", pick.venue_id);
@@ -557,17 +590,24 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
         </p>
       ) : null}
 
-      {needAddress ? (
-        <div className="flex gap-2">
-          <input
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder={t.photo.addressPlaceholder}
-            className={input}
-          />
-          <button type="button" onClick={lookupAddress} className="shrink-0 rounded-xl border border-main/15 px-3 text-xs text-tone-300 hover:text-main">
-            {t.photo.checkLocation}
-          </button>
+      {file ? (
+        <div className="space-y-1">
+          <span className="text-xs text-tone-500">{t.photo.addressLabel}</span>
+          <div className="flex gap-2">
+            <input
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                setAddressDirty(true);
+              }}
+              placeholder={t.photo.addressPlaceholder}
+              className={input}
+            />
+            <button type="button" onClick={lookupAddress} className="shrink-0 rounded-xl border border-main/15 px-3 text-xs text-tone-300 hover:text-main">
+              {t.photo.checkLocation}
+            </button>
+          </div>
+          {coords && !needAddress ? <p className="text-[11px] text-tone-500">{t.photo.addressFixHint}</p> : null}
         </div>
       ) : null}
 

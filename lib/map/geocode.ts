@@ -58,3 +58,37 @@ async function geocodeNominatim(query: string): Promise<GeocodeResult | null> {
   const hit = hits?.[0];
   return hit?.lat && hit?.lon ? { lat: Number(hit.lat), lng: Number(hit.lon) } : null;
 }
+
+/**
+ * 座標 → 住所(日本語表記)。投稿画面で「写真から検出した位置」を住所で見せて、直せるようにするために使う。
+ * Nominatim(OSM)の逆引きを使う。番地まで出ない場所もあるので、取れた分だけを都道府県→市区→町丁目→番地の順につなぐ。
+ * 取れなかったら null(呼び出し側は入力欄を空のままにして、手入力してもらう)。
+ */
+const PREFECTURE_BY_JIS: Record<number, string> = {
+  1: "北海道", 2: "青森県", 3: "岩手県", 4: "宮城県", 5: "秋田県", 6: "山形県", 7: "福島県", 8: "茨城県", 9: "栃木県", 10: "群馬県",
+  11: "埼玉県", 12: "千葉県", 13: "東京都", 14: "神奈川県", 15: "新潟県", 16: "富山県", 17: "石川県", 18: "福井県", 19: "山梨県", 20: "長野県",
+  21: "岐阜県", 22: "静岡県", 23: "愛知県", 24: "三重県", 25: "滋賀県", 26: "京都府", 27: "大阪府", 28: "兵庫県", 29: "奈良県", 30: "和歌山県",
+  31: "鳥取県", 32: "島根県", 33: "岡山県", 34: "広島県", 35: "山口県", 36: "徳島県", 37: "香川県", 38: "愛媛県", 39: "高知県", 40: "福岡県",
+  41: "佐賀県", 42: "長崎県", 43: "熊本県", 44: "大分県", 45: "宮崎県", 46: "鹿児島県", 47: "沖縄県",
+};
+
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&accept-language=ja&lat=${lat}&lon=${lng}`,
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { address?: Record<string, string> };
+    const a = data.address;
+    if (!a) return null;
+    // Nominatimは日本だと都道府県名を返さないことがあるので、ISOコード(JP-13など)から補う。
+    const iso = /^JP-(\d{2})$/.exec(a["ISO3166-2-lvl4"] ?? "");
+    const prefecture = a.state ?? a.province ?? (iso ? PREFECTURE_BY_JIS[Number(iso[1])] : undefined);
+    const parts = [prefecture, a.city ?? a.town ?? a.village, a.city_district, a.suburb, a.quarter, a.neighbourhood, a.house_number];
+    // 「神宮前」と「神宮前一丁目」のように、前の要素が後ろの要素に含まれているときは前を省く。
+    const clean = parts.filter((p, i): p is string => !!p && !parts.slice(i + 1).some((q) => q && q.includes(p)));
+    return clean.length ? clean.join("") : null;
+  } catch {
+    return null;
+  }
+}
