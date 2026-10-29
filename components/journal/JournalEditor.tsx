@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Link as LinkIcon, Loader2 } from "lucide-react";
+import { ImagePlus, Link as LinkIcon, Loader2, Trash2 } from "lucide-react";
 import { ArticleView } from "@/components/journal/ArticleView";
 import { deleteJournalPost, saveJournalPost } from "@/app/journal/actions";
 import { uploadJournalImage } from "@/lib/storage/uploadToR2";
@@ -35,6 +35,53 @@ export type JournalEditorInitial = {
 /** 本文のリンク先に選べる、ほかの記事(下書きも含む)。 */
 export type JournalLinkTarget = { slug: string; title: string };
 
+/**
+ * 本文の写真。編集画面の本文には「【写真1】」だけを出し、写真のURLや説明は下の一覧で扱う
+ * (保存・プレビューのときに、「![説明](URL)」の書式に直す。URLを手で書く必要はない)。
+ */
+type Photo = { n: number; url: string; caption: string };
+const IMG_LINE = /^!\[([^\]]*)\]\((\S+)\)$/;
+const PH_LINE = /^【写真(\d+)】$/;
+
+/** 保存済みの本文(![説明](URL) の行を含む)  →  編集画面の本文(【写真n】)と写真の一覧。 */
+function toEditorText(md: string): { text: string; photos: Photo[] } {
+  const photos: Photo[] = [];
+  const text = md
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((raw) => {
+      const m = IMG_LINE.exec(raw.trim());
+      if (!m) return raw;
+      const n = photos.length + 1;
+      photos.push({ n, url: m[2], caption: m[1].trim() });
+      return `【写真${n}】`;
+    })
+    .join("\n");
+  return { text, photos };
+}
+
+/** 編集画面の本文  →  保存する書式。一覧に無い【写真n】があれば unknown に入れる。 */
+function toMarkdown(text: string, photos: Photo[]): { md: string; unknown: number[] } {
+  const byN = new Map(photos.map((p) => [p.n, p]));
+  const unknown: number[] = [];
+  const md = text
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((raw) => {
+      const m = PH_LINE.exec(raw.trim());
+      if (!m) return raw;
+      const photo = byN.get(Number(m[1]));
+      if (!photo) {
+        unknown.push(Number(m[1]));
+        return raw;
+      }
+      return `![${photo.caption.replace(/[\[\]\n]/g, " ").trim()}](${photo.url})`;
+    })
+    .join("\n");
+  return { md, unknown };
+}
+
+
 const input =
   "w-full rounded-xl border border-main/15 bg-panel-950 px-3 py-2.5 text-sm text-main placeholder:text-tone-600 focus:border-hl-400/60 focus:outline-none";
 const label = "block space-y-1";
@@ -44,7 +91,10 @@ const labelText = "text-xs text-tone-500";
 export function JournalEditor({ initial, articles = [] }: { initial: JournalEditorInitial; articles?: JournalLinkTarget[] }) {
   const router = useRouter();
   const isNew = !initial.id;
-  const [f, setF] = useState(initial);
+  const [initialBody] = useState(() => toEditorText(initial.bodyText));
+  const [f, setF] = useState({ ...initial, bodyText: initialBody.text });
+  const [photos, setPhotos] = useState<Photo[]>(initialBody.photos);
+  const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState<"draft" | "published" | "delete" | "upload" | null>(null);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [preview, setPreview] = useState(false);
@@ -63,9 +113,14 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
   const set = <K extends keyof JournalEditorInitial>(k: K, v: JournalEditorInitial[K]) => setF((p) => ({ ...p, [k]: v }));
 
   async function save(status: "draft" | "published") {
+    const { md, unknown } = toMarkdown(f.bodyText, photos);
+    if (unknown.length > 0) {
+      setMessage({ kind: "error", text: `本文の「【写真${unknown[0]}】」に対応する写真がありません。消すか、写真をドラッグして入れ直してください。` });
+      return;
+    }
     setBusy(status);
     setMessage(null);
-    const res = await saveJournalPost({ ...f, status });
+    const res = await saveJournalPost({ ...f, bodyText: md, status });
     setBusy(null);
     if (!res.ok) {
       setMessage({ kind: "error", text: res.error });
@@ -106,23 +161,67 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
     setBusy(null);
   }
 
-  // 本文のカーソルの位置に、写真を入れる(説明は、[ ]の中を書き換える)。
-  async function insertImage(file: File) {
+  // 本文のカーソルの位置に、写真を入れる(複数まとめてOK)。ドラッグ&ドロップ・貼り付け・ボタンのどれからでも使う。
+  async function insertImages(files: File[]) {
+    const images = files.filter((file) => /^image\/(jpeg|png|webp)$/.test(file.type));
+    if (images.length === 0) {
+      if (files.length > 0) setMessage({ kind: "error", text: "写真は、JPEG・PNG・WebP の形式を入れてください。" });
+      return;
+    }
     setBusy("upload");
     setMessage(null);
-    try {
-      const url = await uploadJournalImage(file);
-      const ta = bodyRef.current;
-      const pos = ta ? ta.selectionStart : f.bodyText.length;
-      const before = f.bodyText.slice(0, pos);
-      const after = f.bodyText.slice(pos);
+    const pos = bodyRef.current ? bodyRef.current.selectionStart : f.bodyText.length;
+    const uploaded: string[] = [];
+    let failed: string | null = null;
+    for (const file of images) {
+      try {
+        uploaded.push(await uploadJournalImage(file));
+      } catch (e) {
+        failed = e instanceof Error ? e.message : "アップロードに失敗しました。";
+        break;
+      }
+    }
+    if (uploaded.length > 0) {
+      const base = photos.reduce((m, p) => Math.max(m, p.n), 0);
+      const added: Photo[] = uploaded.map((url, i) => ({ n: base + i + 1, url, caption: "" }));
+      setPhotos((p) => [...p, ...added]);
+      setF((p) => {
+        const at = Math.min(pos, p.bodyText.length);
+        const before = p.bodyText.slice(0, at);
+        const after = p.bodyText.slice(at);
+        const lead = before && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : "";
+        const tail = after && !after.startsWith("\n\n") ? (after.startsWith("\n") ? "\n" : "\n\n") : "";
+        const tokens = added.map((a) => `【写真${a.n}】`).join("\n\n");
+        return { ...p, bodyText: `${before}${lead}${tokens}${tail}${after}` };
+      });
+    }
+    if (failed) setMessage({ kind: "error", text: uploaded.length > 0 ? `${uploaded.length}枚は入りましたが、残りは失敗しました: ${failed}` : failed });
+    setBusy(null);
+  }
+
+  function removePhoto(n: number) {
+    setPhotos((p) => p.filter((x) => x.n !== n));
+    // 本文の【写真n】の行も消す。
+    setF((p) => ({
+      ...p,
+      bodyText: p.bodyText
+        .split("\n")
+        .filter((line) => line.trim() !== `【写真${n}】`)
+        .join("\n")
+        .replace(/\n{3,}/g, "\n\n"),
+    }));
+  }
+
+  function insertExistingPhoto(n: number) {
+    const pos = bodyRef.current ? bodyRef.current.selectionStart : f.bodyText.length;
+    setF((p) => {
+      const at = Math.min(pos, p.bodyText.length);
+      const before = p.bodyText.slice(0, at);
+      const after = p.bodyText.slice(at);
       const lead = before && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : "";
       const tail = after && !after.startsWith("\n\n") ? (after.startsWith("\n") ? "\n" : "\n\n") : "";
-      set("bodyText", `${before}${lead}![写真の説明](${url})${tail}${after}`);
-    } catch (e) {
-      setMessage({ kind: "error", text: e instanceof Error ? e.message : "アップロードに失敗しました。" });
-    }
-    setBusy(null);
+      return { ...p, bodyText: `${before}${lead}【写真${n}】${tail}${after}` };
+    });
   }
 
   const draftPost: JournalPost = {
@@ -133,7 +232,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
     description: f.description,
     ...(f.lead ? { lead: f.lead } : {}),
     ...(f.coverUrl ? { cover: { src: f.coverUrl, alt: f.coverAlt } } : {}),
-    body: parseJournalBody(f.bodyText),
+    body: parseJournalBody(toMarkdown(f.bodyText, photos).md),
     ...(f.linkUrl.trim() && isSafeLinkUrl(f.linkUrl.trim())
       ? { link: { url: f.linkUrl.trim(), label: f.linkLabel.trim() || JOURNAL_DEFAULT_LINK_LABEL } }
       : {}),
@@ -319,26 +418,90 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
             </div>
           </div>
         ) : null}
-        <textarea
-          ref={bodyRef}
-          value={f.bodyText}
-          onChange={(e) => set("bodyText", e.target.value)}
-          rows={18}
-          className={`${input} font-mono leading-7`}
-          placeholder={"## 見出し\n\nここに文章を書きます。空行で段落が分かれます。\n\n- 箇条書きは、行の先頭に「- 」\n- 続けて書くと1つのリストになります\n\n![写真の説明](写真のURL)"}
-        />
+        <div className="relative">
+          <textarea
+            ref={bodyRef}
+            value={f.bodyText}
+            onChange={(e) => set("bodyText", e.target.value)}
+            onDragOver={(e) => {
+              if (Array.from(e.dataTransfer.types).includes("Files")) {
+                e.preventDefault();
+                setDragging(true);
+              }
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              setDragging(false);
+              const files = Array.from(e.dataTransfer.files);
+              if (files.length === 0) return;
+              e.preventDefault();
+              void insertImages(files);
+            }}
+            onPaste={(e) => {
+              const files = Array.from(e.clipboardData.files).filter((file) => file.type.startsWith("image/"));
+              if (files.length === 0) return;
+              e.preventDefault();
+              void insertImages(files);
+            }}
+            rows={18}
+            className={`${input} font-mono leading-7 ${dragging ? "border-hl-400 ring-2 ring-hl-400/40" : ""}`}
+            placeholder={"## 見出し\n\nここに文章を書きます。空行で段落が分かれます。\n\n- 箇条書きは、行の先頭に「- 」\n- 続けて書くと1つのリストになります\n\n写真は、この欄にドラッグ&ドロップ(貼り付けもOK)"}
+          />
+          {dragging ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/60 text-sm font-bold text-hl-200">
+              ここに写真をドロップ(カーソルの位置に入ります)
+            </div>
+          ) : null}
+        </div>
+        {photos.length > 0 ? (
+          <div className="space-y-2 rounded-2xl border border-main/10 p-3">
+            <span className={labelText}>本文の写真(説明は、写真の下に小さく出ます。空でもOK)</span>
+            {photos.map((ph) => {
+              const inBody = f.bodyText.split("\n").some((line) => line.trim() === `【写真${ph.n}】`);
+              return (
+                <div key={ph.n} className="flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ph.url} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-[11px] text-tone-500">
+                      【写真{ph.n}】{" "}
+                      {inBody ? (
+                        "本文に入っています"
+                      ) : (
+                        <button type="button" onClick={() => insertExistingPhoto(ph.n)} className="text-amber-300 underline">
+                          本文にありません(カーソルの位置に入れる)
+                        </button>
+                      )}
+                    </p>
+                    <input
+                      value={ph.caption}
+                      onChange={(e) => setPhotos((p) => p.map((x) => (x.n === ph.n ? { ...x, caption: e.target.value } : x)))}
+                      maxLength={100}
+                      className={input}
+                      placeholder="写真の説明(例: 写真はイメージです)"
+                    />
+                  </div>
+                  <button type="button" onClick={() => removePhoto(ph.n)} aria-label={`写真${ph.n}を削除`} className="shrink-0 rounded-full p-2 text-tone-400 hover:text-red-300">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
         <p className="text-[11px] leading-5 text-tone-600">
-          書き方: 「## 」で見出し、「- 」で箇条書き、空行で段落。リンクは「[表示する文字](リンク先)」で、上のボタンでも入れられます。写真は上のボタンで入れると、「![写真の説明](URL)」が入るので、[ ]の中を書き換えると、写真の下に説明が出ます。
+          書き方: 「## 」で見出し、「- 」で箇条書き、空行で段落。リンクは「[表示する文字](リンク先)」で、上のボタンでも入れられます。写真は、本文の欄にドラッグ&ドロップ(貼り付けや、上のボタンもOK)。「【写真1】」の行が写真になります。行ごと切り取って動かすと、場所を変えられます。
         </p>
         <input
           ref={bodyFileRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
+          multiple
           className="hidden"
           onChange={(e) => {
-            const file = e.target.files?.[0];
+            const files = Array.from(e.target.files ?? []);
             e.target.value = "";
-            if (file) void insertImage(file);
+            if (files.length > 0) void insertImages(files);
           }}
         />
       </div>
