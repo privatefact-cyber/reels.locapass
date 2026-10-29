@@ -123,6 +123,24 @@ export function MenuSheet({ open, onClose, home, boostHref, accountHref, hasMana
         </section>
 
         <section className="mb-4">
+          <p className={sectionTitle}>掲載店・代理店募集</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href="/lp/shop"
+              className="flex items-center justify-center rounded-2xl border border-accent/50 bg-accent/10 px-3 py-3.5 text-center text-sm tracking-wide text-accent transition hover:bg-accent/20"
+            >
+              掲載店として参加
+            </Link>
+            <Link
+              href="/lp/agency"
+              className="flex items-center justify-center rounded-2xl border border-main/15 bg-main/5 px-3 py-3.5 text-center text-sm tracking-wide text-main transition hover:bg-main/10"
+            >
+              代理店として参加
+            </Link>
+          </div>
+        </section>
+
+        <section className="mb-4">
           <p className={sectionTitle}>{t.nav.menuServices.toUpperCase()}</p>
           <Link href={boostHref} className={`${row} font-bold text-amber-400`}>
             <Zap size={18} />
