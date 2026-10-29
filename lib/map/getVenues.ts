@@ -221,7 +221,7 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
             shop: {
               name: live.name ?? "",
               href: portal && live.slug ? shopPath(portal.slug, live.slug) : "/map",
-              imageUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
+              imageUrl: pinThumbUrl(s.icon_url ?? s.cover_url),
               genre: s.category,
             },
           },

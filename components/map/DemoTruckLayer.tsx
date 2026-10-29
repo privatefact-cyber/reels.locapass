@@ -1,30 +1,48 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import * as maplibregl from "maplibre-gl";
 import { DEMO_TRUCK_ROUTES } from "@/lib/map/demoTruckRoutes";
 import type { VenuePin } from "@/types/venue";
 
 /**
  * デモ用の「走る広告トラック」。出店予定のあるデモ店が、決めた出発地から次の出店場所まで道路沿いに走り、
- * 着地して少し止まり、また出発地から走り出す、をループする。実際の運行ルートではなく、時計から位置を計算しているだけ。
+ * 着地して止まり、また出発地から走り出す、をループする。実際の運行ルートではなく、時計から位置を計算しているだけ。
+ * 見た目は、ピカピカ光る店舗のアイコン(✨付き)。タップするとその店舗の詳細ページへ行く。
  * ルートが登録されている店・場所(lib/map/demoTruckRoutes.ts)でだけ動く。
  */
-const DRIVE_MS = 16_000; // 出発地から着地まで
-const HOLD_MS = 4_500; // 着地して止まっている時間(最後の0.6秒で消えて、次の出発へ)
-const SOURCE_ID = "demo-truck-routes";
-const LAYER_ID = "demo-truck-routes-line";
+const SPEED_MPS = 50_000 / 3600; // 時速50km(幹線道路を走る実速に近い。広い範囲を走るので、1周は約6〜10分)
+const HOLD_MS = 8_000; // 着地して止まっている時間(最後の0.6秒で消えて、次の出発へ)
+const STAGGER_MS = 150_000; // 2台目以降は、出発をこれだけずらす
+const STYLE_ID = "demo-truck-style";
 
-type Run = { id: string; coords: [number, number][]; cum: number[]; total: number; offset: number };
+type Run = { id: string; coords: [number, number][]; cum: number[]; total: number; driveMs: number; offset: number; name: string; href: string; imageUrl: string | null };
 
-function buildRun(id: string, coords: [number, number][], offset: number): Run {
+function metersBetween(a: [number, number], b: [number, number]): number {
+  const R = 6_371_000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b[1] - a[1]);
+  const dLng = toRad(b[0] - a[0]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function buildRun(pin: VenuePin, coords: [number, number][], offset: number): Run {
   const cum = [0];
-  for (let i = 1; i < coords.length; i++) {
-    const dx = (coords[i][0] - coords[i - 1][0]) * Math.cos((coords[i][1] * Math.PI) / 180);
-    const dy = coords[i][1] - coords[i - 1][1];
-    cum.push(cum[i - 1] + Math.hypot(dx, dy));
-  }
-  return { id, coords, cum, total: cum[cum.length - 1], offset };
+  for (let i = 1; i < coords.length; i++) cum.push(cum[i - 1] + metersBetween(coords[i - 1], coords[i]));
+  const total = cum[cum.length - 1];
+  return {
+    id: pin.id,
+    coords,
+    cum,
+    total,
+    driveMs: (total / SPEED_MPS) * 1000,
+    offset,
+    name: pin.spot?.shop?.name ?? "",
+    href: pin.spot?.shop?.href ?? "/map",
+    imageUrl: pin.spot?.shop?.imageUrl ?? null,
+  };
 }
 
 /** 道のりの割合(0〜1)から、位置と進行方向(東向きか)を求める。 */
@@ -39,7 +57,19 @@ function positionAt(run: Run, ratio: number): { lngLat: [number, number]; east: 
   return { lngLat: [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f], east: b[0] >= a[0] };
 }
 
+function ensureStyle() {
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = `
+@keyframes demoTruckGlow { 0%,100% { box-shadow: 0 0 6px 2px rgba(249,115,22,.65), 0 0 16px 5px rgba(251,191,36,.35); } 50% { box-shadow: 0 0 14px 6px rgba(251,191,36,.95), 0 0 30px 12px rgba(249,115,22,.55); } }
+@keyframes demoTruckTwinkle { 0%,100% { opacity: .15; transform: scale(.5) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(25deg); } }`;
+  document.head.appendChild(style);
+}
+
 export function DemoTruckLayer({ map, pins }: { map: maplibregl.Map | null; pins: VenuePin[] }) {
+  const router = useRouter();
+
   useEffect(() => {
     if (!map) return;
     const now0 = Date.now();
@@ -47,26 +77,28 @@ export function DemoTruckLayer({ map, pins }: { map: maplibregl.Map | null; pins
     for (const p of pins) {
       if (!p.spot || Date.parse(p.spot.endsAt) < now0) continue;
       const route = DEMO_TRUCK_ROUTES[p.id]?.[`${p.lat.toFixed(4)},${p.lng.toFixed(4)}`];
-      if (route) runs.push(buildRun(p.id, route, runs.length * 5_500));
+      if (route) runs.push(buildRun(p, route, runs.length * STAGGER_MS));
     }
     if (runs.length === 0) return;
-
-    // 走るルートの点線(薄いオレンジ)
-    const data = {
-      type: "FeatureCollection" as const,
-      features: runs.map((r) => ({ type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: r.coords } })),
-    };
-    const existing = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-    if (existing) existing.setData(data);
-    else {
-      map.addSource(SOURCE_ID, { type: "geojson", data });
-      map.addLayer({ id: LAYER_ID, type: "line", source: SOURCE_ID, layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#f97316", "line-width": 3, "line-opacity": 0.55, "line-dasharray": [1.5, 2] } });
-    }
+    ensureStyle();
 
     const markers = runs.map((run) => {
       const el = document.createElement("div");
-      el.style.cssText = "width:34px;height:34px;pointer-events:none;z-index:4;transition:opacity .25s;";
-      el.innerHTML = `<div data-ring style="width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid #f97316;box-sizing:border-box;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.45);"><span data-emoji style="font-size:18px;line-height:1;display:inline-block;">🚚</span></div>`;
+      el.setAttribute("role", "link");
+      el.setAttribute("aria-label", run.name);
+      el.title = run.name;
+      el.style.cssText = "width:46px;height:46px;cursor:pointer;z-index:4;transition:opacity .25s;";
+      // style="..." の中なので、url() の引用符はシングルにする(ダブルだと属性が壊れる)。
+      const photo = run.imageUrl ? `background:#fff center/cover no-repeat url('${encodeURI(run.imageUrl).replace(/'/g, "%27")}');` : "background:#fff;";
+      el.innerHTML =
+        `<div data-ring style="position:relative;width:46px;height:46px;border-radius:50%;border:3px solid #f97316;box-sizing:border-box;${photo}animation:demoTruckGlow 1.4s ease-in-out infinite;display:flex;align-items:center;justify-content:center;font-size:22px;">${run.imageUrl ? "" : "🚚"}</div>` +
+        `<span style="position:absolute;right:-9px;bottom:-5px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #f97316;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;"><span data-emoji style="display:inline-block;">🚚</span></span>` +
+        `<span style="position:absolute;left:-10px;top:-8px;font-size:14px;animation:demoTruckTwinkle 1.1s ease-in-out infinite;">✨</span>` +
+        `<span style="position:absolute;right:-6px;top:-12px;font-size:11px;animation:demoTruckTwinkle 1.1s ease-in-out .5s infinite;">✨</span>`;
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        router.push(run.href);
+      });
       const marker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat(run.coords[0]).addTo(map);
       return { run, el, marker };
     });
@@ -75,9 +107,9 @@ export function DemoTruckLayer({ map, pins }: { map: maplibregl.Map | null; pins
     const tick = () => {
       const t = Date.now();
       for (const { run, el, marker } of markers) {
-        const phase = (t + run.offset) % (DRIVE_MS + HOLD_MS);
-        const driving = phase < DRIVE_MS;
-        const { lngLat, east } = positionAt(run, driving ? phase / DRIVE_MS : 1);
+        const phase = (t + run.offset) % (run.driveMs + HOLD_MS);
+        const driving = phase < run.driveMs;
+        const { lngLat, east } = positionAt(run, driving ? phase / run.driveMs : 1);
         marker.setLngLat(lngLat);
         // 東へ走るときは、左向きの絵文字を反転する。
         const emoji = el.querySelector<HTMLElement>("[data-emoji]");
@@ -85,7 +117,7 @@ export function DemoTruckLayer({ map, pins }: { map: maplibregl.Map | null; pins
         const ring = el.querySelector<HTMLElement>("[data-ring]");
         if (ring) ring.style.borderColor = driving ? "#f97316" : "#22c55e";
         // 着地して止まったあと、次の出発の直前に消える。出発の瞬間にまた現れる。
-        el.style.opacity = !driving && phase > DRIVE_MS + HOLD_MS - 600 ? "0" : "1";
+        el.style.opacity = !driving && phase > run.driveMs + HOLD_MS - 600 ? "0" : "1";
       }
       raf = requestAnimationFrame(tick);
     };
@@ -94,10 +126,8 @@ export function DemoTruckLayer({ map, pins }: { map: maplibregl.Map | null; pins
     return () => {
       cancelAnimationFrame(raf);
       markers.forEach(({ marker }) => marker.remove());
-      const src = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-      src?.setData({ type: "FeatureCollection", features: [] });
     };
-  }, [map, pins]);
+  }, [map, pins, router]);
 
   return null;
 }
