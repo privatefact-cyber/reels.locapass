@@ -8,6 +8,8 @@ import { genreToSlug, slugToGenre } from "@/lib/shop/genres";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { latestReelStillsByShop } from "@/lib/map/getVenues";
+import { hasRealPhoto, sinkWithoutPhoto } from "@/lib/shop/sinkWithoutPhoto";
 
 // この動的ルートは generateStaticParams を持たない(=ビルド時の事前レンダリング対象に
 // 含めない)。店舗詳細・キャスト詳細ページと同じく、初回アクセス時にオンデマンドで
@@ -63,10 +65,14 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
     .eq("category", genre)
     .order("created_at", { ascending: false });
 
-  const shops = (shopRows ?? []).map((s) => ({
+  // 表紙の無い店は最新リールの画像を使い、それも無い店(写真なし)は後ろへ回す。リールを投稿すれば元の位置に戻る。
+  const reelStills = await latestReelStillsByShop((shopRows ?? []).filter((s) => !s.cover_image_url).map((s) => s.id)).catch(() => new Map<string, string>());
+  const shopsRaw = (shopRows ?? []).map((s) => ({
     ...s,
+    cover_image_url: s.cover_image_url ?? reelStills.get(s.id) ?? null,
     portal: Array.isArray(s.portal) ? s.portal[0] : s.portal,
   }));
+  const shops = sinkWithoutPhoto(shopsRaw, (s) => hasRealPhoto(s.cover_image_url));
   if (shops.length === 0) notFound();
 
   const shopIds = shops.map((s) => s.id);

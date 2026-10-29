@@ -6,6 +6,7 @@ import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { gridThumb } from "@/lib/images/thumb";
 import { mergeLiveSpots } from "@/lib/map/liveSpots";
+import { hasRealPhoto } from "@/lib/shop/sinkWithoutPhoto";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
 /**
@@ -102,7 +103,7 @@ const REEL_STILL_LOOKUP_LIMIT = 300;
  * 表紙もアイコンも無い店のために、最新の通常リール(ストーリーではないもの)の静止画を、店ごとに1枚返す。
  * 写真のある店には影響しない(呼び出し側は、写真が無い店のIDだけを渡す)。
  */
-async function latestReelStillsByShop(shopIds: string[]): Promise<Map<string, string>> {
+export async function latestReelStillsByShop(shopIds: string[]): Promise<Map<string, string>> {
   const stills = new Map<string, string>();
   const ids = shopIds.slice(0, REEL_STILL_LOOKUP_LIMIT);
   if (ids.length === 0) return stills;
@@ -117,6 +118,8 @@ async function latestReelStillsByShop(shopIds: string[]): Promise<Map<string, st
         .in("shop_id", chunk)
         .eq("status", "publish")
         .eq("reel_type", "permanent")
+        // スクリプトで作った仮のリール(イメージ写真)は、店が投稿した写真ではないので使わない。
+        .eq("is_placeholder", false)
         .order("published_at", { ascending: false })
         .limit(400),
     ),
@@ -297,7 +300,7 @@ export async function getVenueCards(
   const [{ data: reelRows }, { data: chosenReels }, { data: castRows }] = await Promise.all([
     supabase
       .from("locapass_reels")
-      .select("shop_id, video_url, preview_url, poster_url, images, reel_type, published_at")
+      .select("shop_id, video_url, preview_url, poster_url, images, reel_type, published_at, is_placeholder")
       .in("shop_id", shopIds)
       .eq("status", "publish")
       .order("published_at", { ascending: false }),
@@ -316,12 +319,15 @@ export async function getVenueCards(
   ]);
 
   const reelCountByShopId = new Map<string, number>();
+  // 並び順には、店が実際に投稿したリール(仮のイメージリールを除く)の本数を使う。
+  const realReelCountByShopId = new Map<string, number>();
   const latestVideoByShopId = new Map<string, string>();
   // 表紙もアイコンも無い店の代わりに使う、最新の通常リールの静止画。
   const latestStillByShopId = new Map<string, string>();
   for (const r of reelRows ?? []) {
     if (!r.shop_id) continue;
     reelCountByShopId.set(r.shop_id, (reelCountByShopId.get(r.shop_id) ?? 0) + 1);
+    if (!r.is_placeholder) realReelCountByShopId.set(r.shop_id, (realReelCountByShopId.get(r.shop_id) ?? 0) + 1);
     if (r.reel_type === "permanent" && !latestStillByShopId.has(r.shop_id)) {
       const still = reelStillUrl(r);
       if (still) latestStillByShopId.set(r.shop_id, still);
@@ -411,7 +417,12 @@ export async function getVenueCards(
     };
   });
 
-  venues.sort((a, b) => b.reelCount - a.reelCount);
+  // 実際に投稿したリールの多い順。同じ本数のときは、写真のある店を先にする(写真が無くて黒い/イメージ写真のカードは後ろへ)。
+  venues.sort(
+    (a, b) =>
+      (realReelCountByShopId.get(b.id) ?? 0) - (realReelCountByShopId.get(a.id) ?? 0) ||
+      Number(hasRealPhoto(b.imageUrl)) - Number(hasRealPhoto(a.imageUrl)),
+  );
 
   return venues;
 }

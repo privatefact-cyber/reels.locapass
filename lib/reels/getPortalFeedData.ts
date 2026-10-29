@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { EXCLUDE_OFFICIAL_FILTER } from "@/lib/shop/genres";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
+import { latestReelStillsByShop } from "@/lib/map/getVenues";
+import { hasRealPhoto, sinkWithoutPhoto } from "@/lib/shop/sinkWithoutPhoto";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import type { Locale } from "@/lib/i18n/locale";
@@ -128,7 +130,11 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
 
   const reels: ReelItem[] = (reelRows ?? []).flatMap((row) => toReelItem(row, locale) ?? []);
 
-  const shopItems: ShopGridItem[] = (shops ?? []).flatMap((s) => {
+  // 表紙もアイコンも無い店は、最新リールの画像をタイルに使う(無ければイメージ写真になり、後ろへ回す)。
+  const noOwnPhotoIds = (shops ?? []).filter((s) => !sanitizeImageUrl(s.cover_url ?? s.icon_url)).map((s) => s.id);
+  const reelStills = await latestReelStillsByShop(noOwnPhotoIds).catch(() => new Map<string, string>());
+
+  const shopItemsRaw: ShopGridItem[] = (shops ?? []).flatMap((s) => {
     const portal = Array.isArray(s.portal) ? s.portal[0] : s.portal;
     if (!portal) return [];
     return [
@@ -140,13 +146,16 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
         area: null, // locapass_shopsに店舗単位のエリア列は無い(エリアはportal_idで分かれる)
         address: s.address,
         genre: s.category,
-        coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url) ?? null,
+        coverImageUrl: sanitizeImageUrl(s.cover_url ?? s.icon_url) ?? sanitizeImageUrl(reelStills.get(s.id)) ?? null,
         coverAttribution: isPlacePhotoUrl(s.cover_url)
           ? (s.cover_image_attribution as { name?: string; uri?: string | null } | null)
           : null,
       },
     ];
   });
+
+  // 写真のない店(後ろへ)。リールを投稿すると写真ありになり、元の位置に戻る。
+  const shopItems = sinkWithoutPhoto(shopItemsRaw, (s) => hasRealPhoto(s.coverImageUrl));
 
   const genreChoices = Array.from(
     new Set((shops ?? []).map((s) => s.category).filter((g): g is string => !!g)),
