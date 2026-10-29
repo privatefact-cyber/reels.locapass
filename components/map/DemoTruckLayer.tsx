@@ -15,7 +15,7 @@ import type { VenuePin } from "@/types/venue";
 const SPEED_MPS = 50_000 / 3600; // 時速50km(幹線道路を走る実速に近い。広い範囲を走るので、1周は約6〜10分)
 const HOLD_MS = 8_000; // 着地して止まっている時間(最後の0.6秒で消えて、次の出発へ)
 const STAGGER_MS = 150_000; // 2台目以降は、出発をこれだけずらす
-const STYLE_ID = "demo-truck-style";
+const STYLE_ID = "demo-truck-style-v2";
 
 type Run = { id: string; coords: [number, number][]; cum: number[]; total: number; driveMs: number; offset: number; name: string; href: string; imageUrl: string | null };
 
@@ -62,7 +62,7 @@ function ensureStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-@keyframes demoTruckGlow { 0%,100% { box-shadow: 0 0 6px 2px rgba(249,115,22,.65), 0 0 16px 5px rgba(251,191,36,.35); } 50% { box-shadow: 0 0 14px 6px rgba(251,191,36,.95), 0 0 30px 12px rgba(249,115,22,.55); } }
+@keyframes demoTruckHalo { 0%,100% { opacity: .55; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.12); } }
 @keyframes demoTruckTwinkle { 0%,100% { opacity: .15; transform: scale(.5) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(25deg); } }`;
   document.head.appendChild(style);
 }
@@ -90,11 +90,13 @@ export function DemoTruckLayer({ map, pins }: { map: maplibregl.Map | null; pins
       el.style.cssText = "width:46px;height:46px;cursor:pointer;z-index:4;transition:opacity .25s;";
       // style="..." の中なので、url() の引用符はシングルにする(ダブルだと属性が壊れる)。
       const photo = run.imageUrl ? `background:#fff center/cover no-repeat url('${encodeURI(run.imageUrl).replace(/'/g, "%27")}');` : "background:#fff;";
+      // アイコンの中は、はっきり見せる(白い枠だけ)。ぼわっと光るのは、後ろに敷いたぼかしの輪(halo)だけ。
       el.innerHTML =
-        `<div data-ring style="position:relative;width:46px;height:46px;border-radius:50%;border:3px solid #f97316;box-sizing:border-box;${photo}animation:demoTruckGlow 1.4s ease-in-out infinite;display:flex;align-items:center;justify-content:center;font-size:22px;">${run.imageUrl ? "" : "🚚"}</div>` +
-        `<span style="position:absolute;right:-9px;bottom:-5px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #f97316;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;"><span data-emoji style="display:inline-block;">🚚</span></span>` +
-        `<span style="position:absolute;left:-10px;top:-8px;font-size:14px;animation:demoTruckTwinkle 1.1s ease-in-out infinite;">✨</span>` +
-        `<span style="position:absolute;right:-6px;top:-12px;font-size:11px;animation:demoTruckTwinkle 1.1s ease-in-out .5s infinite;">✨</span>`;
+        `<div style="position:absolute;left:-14px;top:-14px;width:74px;height:74px;border-radius:50%;pointer-events:none;background:radial-gradient(circle, rgba(251,191,36,0) 50%, rgba(251,191,36,.6) 62%, rgba(249,115,22,.4) 76%, rgba(249,115,22,0) 100%);filter:blur(4px);animation:demoTruckHalo 1.6s ease-in-out infinite;"></div>` +
+        `<div data-ring style="position:relative;width:46px;height:46px;border-radius:50%;border:3px solid #f97316;box-sizing:border-box;${photo}box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:22px;">${run.imageUrl ? "" : "🚚"}</div>` +
+        `<span style="position:absolute;right:-11px;bottom:-6px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #f97316;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;"><span data-emoji style="display:inline-block;">🚚</span></span>` +
+        `<span style="position:absolute;left:-18px;top:-12px;font-size:13px;pointer-events:none;animation:demoTruckTwinkle 1.1s ease-in-out infinite;">✨</span>` +
+        `<span style="position:absolute;right:-14px;top:-16px;font-size:11px;pointer-events:none;animation:demoTruckTwinkle 1.1s ease-in-out .5s infinite;">✨</span>`;
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         router.push(run.href);
