@@ -1,11 +1,11 @@
 /**
  * サイト全体の配色テーマ。<html data-theme> に入れた値で app/globals.css の色が一括で切り替わる。
  *
- * - 手動: 管理画面の「サイトの配色テーマ」(platform_settings.site_theme)で default / christmas / beauty / nature に固定。
+ * - 手動: 管理画面の「サイトの配色テーマ」(platform_settings.site_theme)で default / christmas / beauty / nature / cafe に固定。
  * - 自動: 未設定(null)なら、日本時間の12/1〜12/25は christmas、それ以外は default。
  * - 管理画面・店舗ダッシュボード・スタッフ画面は常に default(配色を変えない)。
  */
-export const SITE_THEMES = ["default", "christmas", "beauty", "nature"] as const;
+export const SITE_THEMES = ["default", "christmas", "beauty", "nature", "cafe"] as const;
 export type SiteTheme = (typeof SITE_THEMES)[number];
 
 export function isSiteTheme(value: unknown): value is SiteTheme {

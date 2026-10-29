@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { translateFieldsBatch } from "@/lib/i18n/contentTranslation";
+import type { Json } from "@/types/supabase";
 
 /**
  * 移動販売の「今日の出店」。位置つきイベント(locapass_shop_events の lat/lng/address)を作る・終える・消す。
@@ -69,7 +71,17 @@ export async function createSpots(shopId: string, inputs: SpotInput[]) {
       address: address || null,
     };
   });
-  const { error } = await supabase.from("locapass_shop_events").insert(rows);
+  // 表示言語ごとの翻訳(タイトル・ひとこと・住所)。同じ内容の組は1回だけ訳す。失敗しても登録は続け、翻訳は夜間の拾い直しに任せる。
+  const keyOf = (r: (typeof rows)[number]) => JSON.stringify([r.title, r.body, r.address]);
+  const unique = [...new Map(rows.map((r) => [keyOf(r), r])).values()];
+  const translated = new Map<string, Json>();
+  try {
+    const results = await translateFieldsBatch(unique.map((r) => ({ title: r.title, body: r.body, address: r.address })));
+    unique.forEach((r, i) => translated.set(keyOf(r), (results[i] ?? {}) as unknown as Json));
+  } catch (e) {
+    console.error("出店予定の翻訳に失敗しました(夜間の拾い直しで再試行されます):", e);
+  }
+  const { error } = await supabase.from("locapass_shop_events").insert(rows.map((r) => ({ ...r, translations: translated.get(keyOf(r)) ?? {} })));
   if (error) throw new Error(`登録に失敗しました: ${error.message}`);
   revalidateAll(shopId);
 }

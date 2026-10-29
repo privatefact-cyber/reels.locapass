@@ -23,9 +23,11 @@ const BATCH_SIZE = 5;
 type Row = { id: string; translations: unknown } & Record<string, unknown>;
 
 type Target = {
-  table: "locapass_shops" | "locapass_shop_items" | "locapass_reels" | "official_site_content" | "official_posts";
+  table: "locapass_shops" | "locapass_shop_items" | "locapass_reels" | "locapass_shop_events" | "locapass_shop_price_items" | "official_site_content" | "official_posts";
   label: string;
   select: string;
+  /** 翻訳を入れる列。未指定は translations。 */
+  translationsCol?: string;
   /** 行を特定する列(更新のとき使う)。 */
   idCols?: string[];
   /** 店舗で絞るときの列名(特定の店舗の分だけ翻訳したいとき)。 */
@@ -67,6 +69,26 @@ const TARGETS: Target[] = [
     shopCol: "shop_id",
     query: (q) => q.eq("status", "publish").not("caption", "is", null).order("published_at", { ascending: false }).limit(2000),
     fieldsOf: (r) => ({ caption: r.caption as string | null }),
+  },
+  {
+    // 出店予定・イベント(タイトル・本文・住所)。移動販売の出店予定は住所も訳す(英語表示で日本語の住所が出ないように)。
+    table: "locapass_shop_events",
+    label: "events",
+    select: "id, title, body, address, translations, ends_at",
+    shopCol: "shop_id",
+    // 終わったイベントは訳さない(費用を抑える)。
+    query: (q) => q.or("ends_at.is.null,ends_at.gte.now()").limit(2000),
+    fieldsOf: (r) => ({ title: r.title as string | null, body: r.body as string | null, address: r.address as string | null }),
+  },
+  {
+    // 料金表・メニューの項目名(別の列 name_translations に入れる)。
+    table: "locapass_shop_price_items",
+    label: "price_items",
+    select: "id, name, name_translations",
+    translationsCol: "name_translations",
+    shopCol: "shop_id",
+    query: (q) => q.limit(3000),
+    fieldsOf: (r) => ({ name: r.name as string | null }),
   },
   {
     // 公式サイトの文言。日本語(ひらがな・カタカナ・漢字)を含む値だけ訳す(英語だけの見出し「Drive」などは、全言語でそのまま使う)。
@@ -117,7 +139,7 @@ export async function sweepTranslations(
     const stale = rows.filter((r) => {
       const fields = target.fieldsOf(r);
       const hasText = Object.values(fields).some((v) => typeof v === "string" && v.trim());
-      return hasText && needsTranslation(fields, r.translations, target.targets);
+      return hasText && needsTranslation(fields, r[target.translationsCol ?? "translations"], target.targets);
     });
     stat.stale = stale.length;
 
@@ -143,7 +165,7 @@ export async function sweepTranslations(
           stat.failed += 1;
           continue;
         }
-        let uq = db.from(target.table).update({ translations: result as unknown as Json });
+        let uq = db.from(target.table).update({ [target.translationsCol ?? "translations"]: result as unknown as Json });
         for (const c of target.idCols ?? ["id"]) uq = uq.eq(c, batch[j][c]);
         const { error: upErr } = await uq;
         if (upErr) stat.failed += 1;

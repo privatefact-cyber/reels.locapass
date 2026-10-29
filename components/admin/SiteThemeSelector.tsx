@@ -10,9 +10,10 @@ const OPTIONS: { value: SiteTheme | null; label: string; swatch: string }[] = [
   { value: "christmas", label: "クリスマス", swatch: "linear-gradient(135deg, #881337 50%, #fde68a 50%)" },
   { value: "beauty", label: "ビューティー", swatch: "linear-gradient(135deg, #faf7f5 50%, #e879a0 50%)" },
   { value: "nature", label: "ネイチャー", swatch: "linear-gradient(135deg, #4a5d23 50%, #d4af6a 50%)" },
+  { value: "cafe", label: "地中海カフェ(白・明るい)", swatch: "linear-gradient(135deg, #ffffff 50%, #1b2a5c 50%)" },
 ];
 
-const LABELS: Record<SiteTheme, string> = { default: "通常(ゴールド)", christmas: "クリスマス", beauty: "ビューティー", nature: "ネイチャー" };
+const LABELS: Record<SiteTheme, string> = { default: "通常(ゴールド)", christmas: "クリスマス", beauty: "ビューティー", nature: "ネイチャー", cafe: "地中海カフェ" };
 
 /** サイト全体の配色テーマを選ぶ運営専用の切り替え。押すと公開サイトに即時反映される。 */
 export function SiteThemeSelector({ current, effective }: { current: SiteTheme | null; effective: SiteTheme }) {

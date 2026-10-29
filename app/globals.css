@@ -153,6 +153,77 @@
   --tone-300: 60 30 42;
 }
 
+/*
+ * 地中海カフェ(純白の明るい配色。キッチンカー・飲食向け。テーマID は cafe)。
+ * 白い漆喰の壁、深いネイビーのヘッダー・見出し、テラコッタ(瓦の色)のボタン、ネイビー系の文字。
+ * 白地テーマなので beauty と同じ作り: tone/panel/hl は「小さい数字ほど濃い(文字色)」向きに並べ替えてある。
+ * tone-950 / panel-950 はページ背景(bg-base)と同じ白にそろえる(ヒーロー下のグラデーションが背景と溶け合うため)。
+ */
+[data-theme="cafe"] {
+  --cta-300: 232 140 108; --cta-400: 214 98 62; --cta-500: 190 72 48; --cta-600: 156 52 34;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 176 62 40; --cta-gold-light: 214 98 62; --cta-gold-dark: 140 44 28;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 250 204 21;
+  --color-glow-2-scale: 0.4;
+  --color-on-accent: 255 255 255;
+  --color-header: 20 34 80; /* 深いネイビーのヘッダー(すりガラス60%) */
+  --color-header-glow-1: 48 72 140;
+  --color-header-glow-2: 255 255 255;
+  --color-header-glow-3: 150 165 205;
+  --color-bg-base: 255 255 255; /* 純白 */
+  --color-bg-surface: 245 245 245; /* ごく薄いグレー(#F5F5F5) */
+  --color-text-main: 18 28 56; /* 深いネイビー */
+  --color-text-muted: 100 112 140;
+  --color-accent: 27 42 92;
+  --color-accent-light: 48 72 140;
+  --color-accent-dark: 14 24 62;
+  --color-border: 60 80 130;
+  --color-border-scale: 1.4;
+  --color-glow: 48 72 140;
+  --color-glow-scale: 1;
+
+  --tone-50: 22 36 58; --tone-100: 34 50 74; --tone-200: 55 72 98; --tone-300: 84 100 124;
+  --tone-500: 130 146 166; --tone-600: 165 178 194; --tone-700: 214 222 232; --tone-800: 235 235 235; --tone-950: 255 255 255;
+  --panel-400: 100 116 139; --panel-500: 130 146 166; --panel-600: 165 178 194; --panel-700: 214 222 232;
+  --panel-800: 235 235 235; --panel-900: 245 245 245; --panel-950: 255 255 255;
+  --hl-50: 8 14 40; --hl-100: 14 24 62; --hl-200: 20 34 80; --hl-300: 27 42 92; --hl-400: 36 56 116;
+  --hl-500: 48 72 140; --hl-600: 100 120 180; --hl-700: 150 165 205; --hl-800: 196 206 230; --hl-900: 226 231 244; --hl-950: 240 243 250;
+}
+
+/* ネイビーのヘッダー上は、ロゴ・リンクを白系にして読みやすく(beauty と同じ考え方)。 */
+/* 白地の上ですりガラス(60%)だと、ネイビーが灰色がかって見えるので、cafe のヘッダーだけ濃く(95%)する。 */
+[data-theme="cafe"] header[data-surface="header"] {
+  background-color: rgb(var(--color-header) / 0.96);
+}
+[data-theme="cafe"] [data-surface="header"] {
+  --color-accent: 238 241 250;
+  --color-accent-light: 255 255 255;
+  --color-accent-dark: 196 206 230;
+  --color-on-accent: 18 28 56; /* 明るいアクセント(言語切り替えの選択中など)の上の文字は濃紺 */
+  --color-text-main: 255 255 255;
+  --tone-300: 226 231 244;
+}
+
+/* cafe の写真・動画の上(カードのサムネ、リール、地図)は、白地テーマでも文字は白、暗い配色のまま(beauty と同じ考え方)。 */
+[data-theme="cafe"] [data-surface="media"],
+[data-theme="cafe"][data-surface="media"] {
+  --color-bg-base: 0 0 0;
+  --color-bg-surface: 23 23 23;
+  --color-text-main: 255 255 255;
+  --color-text-muted: 163 163 163;
+  --color-accent: 160 175 215;
+  --color-accent-light: 226 231 244;
+  --color-accent-dark: 48 72 140;
+  --color-on-accent: 0 0 0;
+  --tone-50: 250 250 250; --tone-100: 245 245 245; --tone-200: 229 229 229; --tone-300: 212 212 212;
+  --tone-500: 115 115 115; --tone-600: 82 82 82; --tone-700: 64 64 64; --tone-800: 38 38 38; --tone-950: 10 10 10;
+  --panel-400: 161 161 170; --panel-500: 113 113 122; --panel-600: 82 82 91; --panel-700: 63 63 70;
+  --panel-800: 39 39 42; --panel-900: 24 24 27; --panel-950: 9 9 11;
+  --hl-50: 240 243 250; --hl-100: 226 231 244; --hl-200: 196 206 230; --hl-300: 160 175 215; --hl-400: 120 138 190;
+  --hl-500: 72 94 160; --hl-600: 48 72 140; --hl-700: 36 56 116; --hl-800: 27 42 92; --hl-900: 20 34 80; --hl-950: 12 20 50;
+}
+
 /* tone-400 / tone-900 は muted / surface と同じ色 */
 /* 上書きした場所でも追従させるため、変数を持つ要素ごとに解決し直す */
 :root, [data-theme], [data-surface] {

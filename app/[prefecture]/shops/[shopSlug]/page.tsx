@@ -374,13 +374,18 @@ export default async function ShopDetailPage({
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")
-    .select("id, body, address, lat, lng, starts_at, ends_at")
+    .select("id, body, address, lat, lng, starts_at, ends_at, translations")
     .eq("shop_id", shopId)
     .not("lat", "is", null)
     .gte("ends_at", nowIso)
     .order("starts_at", { ascending: true })
     .limit(200);
-  const spotList = (spotRows ?? []) as { id: string; body: string | null; address: string | null; lat: number; lng: number; starts_at: string; ends_at: string }[];
+  const spotList = ((spotRows ?? []) as { id: string; body: string | null; address: string | null; lat: number; lng: number; starts_at: string; ends_at: string; translations: unknown }[]).map((r) => ({
+    ...r,
+    // 住所とひとことは、表示言語の翻訳があればそれを使う(無ければ日本語のまま)。
+    body: pickTranslation(locale, r.body, r.translations, "body").text,
+    address: pickTranslation(locale, r.address, r.translations, "address").text,
+  }));
   const scheduleSpots: ScheduleSpot[] = spotList.map((r) => ({ id: r.id, address: r.address, lat: r.lat, lng: r.lng, startsAt: r.starts_at, endsAt: r.ends_at, note: r.body }));
   // 複数の日にまたがる予定があるときだけ、カレンダーを出す(1〜2件なら「出店場所」カードで足りる)。
   const showCalendar = new Set(spotList.map((r) => r.starts_at.slice(0, 10))).size >= 2;
@@ -531,7 +536,7 @@ export default async function ShopDetailPage({
       {totalReels > 0 && <PageDots current={0} shopHref={shopPath(site.slug, shopRow.slug)} archiveHref={archiveHref} />}
 
       <div className="space-y-10 px-4 sm:px-6">
-        {spot && <ShopSpotCard spot={spot} routeLabel={t.shop.routeGuide} />}
+        {spot && <ShopSpotCard spot={spot} t={t.shop} locale={locale} />}
 
         {showCalendar && <ShopScheduleCalendar spots={scheduleSpots} routeLabel={t.shop.routeGuide} />}
 

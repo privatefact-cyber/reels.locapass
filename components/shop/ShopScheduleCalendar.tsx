@@ -3,19 +3,21 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, Navigation } from "lucide-react";
 
 export type ScheduleSpot = { id: string; address: string | null; lat: number; lng: number; startsAt: string; endsAt: string; note: string | null };
 
-const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
-const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+/** 白地のスキン(cafe・beauty)では明るい地図、それ以外は暗い地図。 */
+const MAP_STYLE_LIGHT = "https://tiles.openfreemap.org/styles/positron";
+const MAP_STYLE_DARK = "https://tiles.openfreemap.org/styles/dark";
 
 /** ISO文字列 → JSTの日付キー(YYYY-MM-DD)。 */
 function jstKey(iso: string | number): string {
   return new Date((typeof iso === "number" ? iso : Date.parse(iso)) + 9 * 3600 * 1000).toISOString().slice(0, 10);
 }
 function jstTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
 }
 
 /**
@@ -24,6 +26,8 @@ function jstTime(iso: string): string {
  * 見せる条件(複数の日にまたがる予定があるとき)は呼び出し側で決める。
  */
 export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpot[]; routeLabel: string }) {
+  const { t } = useLocale();
+  const WEEKDAYS = t.shop.weekdays;
   const todayKey = jstKey(Date.now());
   const byDay = useMemo(() => {
     const m = new Map<string, ScheduleSpot[]>();
@@ -57,7 +61,7 @@ export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpo
   const markers = useRef<maplibregl.Marker[]>([]);
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = new maplibregl.Map({ container: mapEl.current, style: MAP_STYLE_URL, center: [spots[0].lng, spots[0].lat], zoom: 14, attributionControl: false, cooperativeGestures: true });
+    const map = new maplibregl.Map({ container: mapEl.current, style: ["cafe", "beauty"].includes(document.documentElement.getAttribute("data-theme") ?? "") ? MAP_STYLE_LIGHT : MAP_STYLE_DARK, center: [spots[0].lng, spots[0].lat], zoom: 14, attributionControl: false, cooperativeGestures: true });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     const ro = new ResizeObserver(() => map.resize());
     ro.observe(mapEl.current);
@@ -94,18 +98,16 @@ export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpo
           <CalendarDays size={14} />
           ── SCHEDULE ──
         </p>
-        <h2 className="font-display mt-1 bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-2xl font-bold text-transparent">出店スケジュール</h2>
+        <h2 className="font-display mt-1 bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-2xl font-bold text-transparent">{t.shop.scheduleTitle}</h2>
       </div>
 
       <div className="rounded-2xl border border-line/20 bg-panel-900/60 p-4 shadow-2xl backdrop-blur-xl">
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={() => shiftMonth(-1)} aria-label="前の月" className="rounded-full p-1.5 text-tone-300 hover:text-main">
+          <button type="button" onClick={() => shiftMonth(-1)} aria-label={t.shop.calendarPrev} className="rounded-full p-1.5 text-tone-300 hover:text-main">
             <ChevronLeft size={18} />
           </button>
-          <p className="text-sm font-bold text-tone-100">
-            {y}年{mo}月
-          </p>
-          <button type="button" onClick={() => shiftMonth(1)} aria-label="次の月" className="rounded-full p-1.5 text-tone-300 hover:text-main">
+          <p className="text-sm font-bold text-tone-100">{t.shop.calendarMonth(y, mo)}</p>
+          <button type="button" onClick={() => shiftMonth(1)} aria-label={t.shop.calendarNext} className="rounded-full p-1.5 text-tone-300 hover:text-main">
             <ChevronRight size={18} />
           </button>
         </div>
@@ -128,12 +130,12 @@ export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpo
                 disabled={!evs}
                 onClick={() => setSelected(k)}
                 className={`relative mx-auto flex h-9 w-9 flex-col items-center justify-center rounded-full text-sm transition ${
-                  isSel ? "bg-hl-400 font-bold text-black" : evs ? "text-tone-100 hover:bg-white/10" : "text-tone-600"
+                  isSel ? "bg-hl-400 font-bold text-on-accent" : evs ? "text-tone-100 hover:bg-white/10" : "text-tone-600"
                 } ${isToday && !isSel ? "ring-1 ring-hl-400/70" : ""}`}
-                aria-label={`${mo}月${Number(k.slice(8))}日${evs ? `(出店${evs.length}件)` : ""}`}
+                aria-label={t.shop.calendarDay(mo, Number(k.slice(8)), evs?.length ?? 0)}
               >
                 {Number(k.slice(8))}
-                {evs && <span className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${isSel ? "bg-black" : live ? "animate-pulse bg-orange-400" : "bg-hl-400"}`} />}
+                {evs && <span className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${isSel ? "bg-on-accent" : live ? "animate-pulse bg-orange-400" : "bg-hl-400"}`} />}
               </button>
             );
           })}
@@ -144,7 +146,7 @@ export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpo
 
       <div className="space-y-3">
         {dayEvents.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-main/20 px-4 py-6 text-center text-xs text-tone-500">日付を選ぶと、その日の出店場所が出ます</p>
+          <p className="rounded-2xl border border-dashed border-main/20 px-4 py-6 text-center text-xs text-tone-500">{t.shop.scheduleEmpty}</p>
         ) : (
           dayEvents.map((e, i) => {
             const live = Date.parse(e.startsAt) <= nowMs && Date.parse(e.endsAt) >= nowMs;
@@ -153,7 +155,7 @@ export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpo
               <div key={e.id} className="space-y-2 rounded-2xl border border-line/20 bg-panel-900/60 p-4">
                 <p className="flex items-center gap-2 text-[11px] text-tone-400">
                   {dayEvents.length > 1 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[11px] font-extrabold text-black">{i + 1}</span>}
-                  {d.getUTCMonth() + 1}月{d.getUTCDate()}日({WEEKDAYS[d.getUTCDay()]})
+                  {t.shop.dateLabel(d.getUTCMonth() + 1, d.getUTCDate(), WEEKDAYS[d.getUTCDay()])}
                   {live && (
                     <span className="inline-flex items-center gap-1 rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-extrabold text-black">
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" /> OPEN
@@ -162,7 +164,7 @@ export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpo
                 </p>
                 <p className="flex items-start gap-2 text-base font-semibold leading-snug text-tone-100">
                   <MapPin size={16} className="mt-1 shrink-0 text-hl-400/80" />
-                  {e.address ?? "出店場所"}
+                  {e.address ?? t.shop.spotPlaceFallback}
                 </p>
                 <p className="flex items-center gap-2 text-sm text-tone-300">
                   <Clock size={15} className="shrink-0 text-hl-400/80" />

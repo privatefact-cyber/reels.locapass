@@ -36,6 +36,13 @@ export type Dictionary = {
     sameBuilding: (count: number) => string;
     all: string;
     watchReels: string;
+    /** 移動販売(キッチンカー)のピン・一覧 */
+    spotToday: string;
+    spotSheetTitle: (count: number) => string;
+    spotDetails: string;
+    spotZoom: string;
+    spotClose: string;
+    spotOpenUntil: (time: string) => string;
     reelsEnd: string;
     carTime: (minutes: number) => string;
     walkTime: (minutes: number) => string;
@@ -73,6 +80,20 @@ export type Dictionary = {
     usageNotes: string;
     officialSite: string;
     routeGuide: string;
+    /** 移動販売(キッチンカー)の出店場所・出店スケジュール */
+    spotAria: string;
+    spotLive: string;
+    spotNext: string;
+    spotPlaceFallback: string;
+    scheduleTitle: string;
+    scheduleEmpty: string;
+    calendarPrev: string;
+    calendarNext: string;
+    calendarMonth: (year: number, month: number) => string;
+    calendarDay: (month: number, day: number, count: number) => string;
+    /** 日曜〜土曜の順(7つ) */
+    weekdays: string[];
+    dateLabel: (month: number, day: number, weekday: string) => string;
     address: string;
     phone: string;
     businessHours: string;
@@ -457,6 +478,12 @@ const ja: Dictionary = {
     sameBuilding: (count: number) => `同じビルの他店舗 ${count}件`,
     all: "すべて",
     watchReels: "タップでリール",
+    spotToday: "今日",
+    spotSheetTitle: (n) => `🚚 この場所のキッチンカー(${n}台)`,
+    spotDetails: "詳細 →",
+    spotZoom: "地図で拡大して見る",
+    spotClose: "閉じる",
+    spotOpenUntil: (t) => `OPEN〜${t}`,
     reelsEnd: "このエリアのリールは以上です",
     carTime: (minutes) => `車で約${minutes}分`,
     walkTime: (minutes) => `徒歩約${minutes}分`,
@@ -494,6 +521,18 @@ const ja: Dictionary = {
     usageNotes: "ご利用にあたって",
     officialSite: "公式サイト",
     routeGuide: "Googleマップでルート案内",
+    spotAria: "出店場所",
+    spotLive: "NOW OPEN ─ いま営業中",
+    spotNext: "NEXT ─ 次の出店",
+    spotPlaceFallback: "出店場所",
+    scheduleTitle: "出店スケジュール",
+    scheduleEmpty: "日付を選ぶと、その日の出店場所が出ます",
+    calendarPrev: "前の月",
+    calendarNext: "次の月",
+    calendarMonth: (y, m) => `${y}年${m}月`,
+    calendarDay: (m, d, n) => `${m}月${d}日${n > 0 ? `(出店${n}件)` : ""}`,
+    weekdays: ["日", "月", "火", "水", "木", "金", "土"],
+    dateLabel: (m, d, w) => `${m}月${d}日(${w})`,
     address: "住所",
     phone: "電話番号",
     businessHours: "営業時間",
@@ -877,6 +916,12 @@ const en: Dictionary = {
     sameBuilding: (count: number) => `${count} more in this building`,
     all: "ALL",
     watchReels: "Tap for reels",
+    spotToday: "Today",
+    spotSheetTitle: (n) => `🚚 Food trucks here (${n})`,
+    spotDetails: "Details →",
+    spotZoom: "Zoom in on the map",
+    spotClose: "Close",
+    spotOpenUntil: (t) => `OPEN until ${t}`,
     reelsEnd: "That's all the reels in this area",
     carTime: (minutes) => `${minutes} min by car`,
     walkTime: (minutes) => `${minutes} min walk`,
@@ -914,6 +959,18 @@ const en: Dictionary = {
     usageNotes: "Usage Notes",
     officialSite: "Official Site",
     routeGuide: "Directions on Google Maps",
+    spotAria: "Where we're parked",
+    spotLive: "NOW OPEN ─ Serving now",
+    spotNext: "NEXT ─ Next stop",
+    spotPlaceFallback: "Location",
+    scheduleTitle: "Schedule",
+    scheduleEmpty: "Pick a date to see where we'll be",
+    calendarPrev: "Previous month",
+    calendarNext: "Next month",
+    calendarMonth: (y, m) => `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]} ${y}`,
+    calendarDay: (m, d, n) => `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]} ${d}${n > 0 ? ` (${n} stop${n > 1 ? "s" : ""})` : ""}`,
+    weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    dateLabel: (m, d, w) => `${w}, ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]} ${d}`,
     address: "Address",
     phone: "Phone",
     businessHours: "Business Hours",
@@ -1297,6 +1354,12 @@ const zh: Dictionary = {
     sameBuilding: (count: number) => `同栋楼其他店铺 ${count} 家`,
     all: "全部",
     watchReels: "点击观看短视频",
+    spotToday: "今天",
+    spotSheetTitle: (n) => `🚚 这里的餐车(${n}辆)`,
+    spotDetails: "详情 →",
+    spotZoom: "在地图上放大查看",
+    spotClose: "关闭",
+    spotOpenUntil: (t) => `营业至 ${t}`,
     reelsEnd: "此区域的短视频已全部播放",
     carTime: (minutes) => `车程约${minutes}分钟`,
     walkTime: (minutes) => `步行约${minutes}分钟`,
@@ -1334,6 +1397,18 @@ const zh: Dictionary = {
     usageNotes: "使用须知",
     officialSite: "官方网站",
     routeGuide: "在Google地图中查看路线",
+    spotAria: "出摊地点",
+    spotLive: "NOW OPEN ─ 正在营业",
+    spotNext: "NEXT ─ 下一次出摊",
+    spotPlaceFallback: "出摊地点",
+    scheduleTitle: "出摊日程",
+    scheduleEmpty: "选择日期,查看当天的出摊地点",
+    calendarPrev: "上个月",
+    calendarNext: "下个月",
+    calendarMonth: (y, m) => `${y}年${m}月`,
+    calendarDay: (m, d, n) => `${m}月${d}日${n > 0 ? `(出摊${n}次)` : ""}`,
+    weekdays: ["日", "一", "二", "三", "四", "五", "六"],
+    dateLabel: (m, d, w) => `${m}月${d}日(周${w})`,
     address: "地址",
     phone: "电话号码",
     businessHours: "营业时间",
@@ -1720,6 +1795,12 @@ const ar: Dictionary = {
     "details": "التفاصيل",
     "all": "الكل",
     "watchReels": "اضغط لمشاهدة المقاطع القصيرة",
+    "spotToday": "اليوم",
+    "spotSheetTitle": (n: number) => `🚚 عربات الطعام هنا (${n})`,
+    "spotDetails": "التفاصيل ←",
+    "spotZoom": "تكبير الخريطة",
+    "spotClose": "إغلاق",
+    "spotOpenUntil": (t: string) => `مفتوح حتى ${t}`,
     "reelsEnd": "هذه جميع المقاطع القصيرة في هذه المنطقة",
     "walkNow": "على بعد خطوات قليلة"
   },
@@ -1756,6 +1837,18 @@ const ar: Dictionary = {
     "usageNotes": "ملاحظات الاستخدام",
     "officialSite": "الموقع الرسمي",
     "routeGuide": "الاتجاهات على خرائط Google",
+    "spotAria": "موقع الوقوف",
+    "spotLive": "NOW OPEN ─ مفتوح الآن",
+    "spotNext": "NEXT ─ الموقع التالي",
+    "spotPlaceFallback": "الموقع",
+    "scheduleTitle": "جدول المواقع",
+    "scheduleEmpty": "اختر تاريخًا لمعرفة موقعنا في ذلك اليوم",
+    "calendarPrev": "الشهر السابق",
+    "calendarNext": "الشهر التالي",
+    "calendarMonth": (y: number, m: number) => `${m}/${y}`,
+    "calendarDay": (m: number, d: number, n: number) => `${d}/${m}${n > 0 ? ` (${n})` : ""}`,
+    "weekdays": ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+    "dateLabel": (m: number, d: number, w: string) => `${w} ${d}/${m}`,
     "address": "العنوان",
     "phone": "رقم الهاتف",
     "businessHours": "ساعات العمل",
