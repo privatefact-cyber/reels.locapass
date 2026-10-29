@@ -47,7 +47,12 @@ export default async function LocapassShopDashboardLayout({
   const supabase = (await createClient()) as any;
   const { data: portalRow } = await supabase.from("locapass_portals").select("features").eq("id", shop.portal_id).maybeSingle();
   const features: string[] = portalRow?.features ?? [];
-  const navItems = features.includes("items") ? [NAV_ITEMS[0], { path: "/items", label: "在庫" }, ...NAV_ITEMS.slice(1)] : NAV_ITEMS;
+  // 'mobile'(移動販売)のポータルだけ「今日の出店」を出す。
+  const extraNav = [
+    ...(features.includes("items") ? [{ path: "/items", label: "在庫" }] : []),
+    ...(features.includes("mobile") ? [{ path: "/today", label: "🚚 今日の出店" }] : []),
+  ];
+  const navItems = extraNav.length ? [NAV_ITEMS[0], ...extraNav, ...NAV_ITEMS.slice(1)] : NAV_ITEMS;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">

@@ -46,6 +46,69 @@ const THUMB_MIN_ZOOM = 12;
 const THUMB_GAP_PX = 24;
 const THUMB_SIZE_PX = 44;
 
+
+/** カードの左上に出す、移動販売の営業状態(営業中=OPEN、まだ=日時)。終了後は何も出さない。 */
+function SpotBadge({ spot, now }: { spot: NonNullable<VenueCardData["spot"]>; now: number }) {
+  if (Date.parse(spot.endsAt) < now) return <span />;
+  const open = Date.parse(spot.startsAt) <= now;
+  if (open) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded bg-orange-500 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-black">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" /> OPEN
+      </span>
+    );
+  }
+  const d = new Date(spot.startsAt);
+  const sameDay = d.toDateString() === new Date(now).toDateString();
+  const hhmm = d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tokyo" });
+  return (
+    <span className="rounded border border-orange-400/60 bg-black/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-orange-300">
+      🚚 {sameDay ? "今日" : `${d.getMonth() + 1}/${d.getDate()}`} {hhmm}〜
+    </span>
+  );
+}
+
+/** 密集したキッチンカーのまとめ表示。代表1台のアイコンに、台数バッジを重ねる。 */
+function spotClusterHtml(total: number, open: number, active: boolean, repOpen: boolean, repStartsAt: string): string {
+  const base = spotMarkerHtml(repOpen, active, repStartsAt);
+  const badge = `<div style="position:absolute;right:-6px;top:-6px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#111;color:#fff;border:2px solid #fb923c;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;">${total}</div>`;
+  // 営業中が複数あるときは、下のラベルを「N台 OPEN」にして、他にも営業中がいることが分かるようにする。
+  const withLabel = open > 1 ? base.replace(/>OPEN</, `>${open}台 OPEN<`) : base;
+  return withLabel + badge;
+}
+
+/** 移動販売ピンの見た目。営業中=オレンジの丸+光る輪+「OPEN」、予定=暗い丸+日時。 */
+function spotMarkerHtml(open: boolean, active: boolean, startsAt: string): string {
+  const ring = active ? "#fbbf24" : open ? "#fff" : "#fb923c";
+  const circle = open
+    ? `background:linear-gradient(135deg,#f97316,#fbbf24);box-shadow:0 0 0 4px rgba(249,115,22,.35),0 2px 12px rgba(0,0,0,.6);`
+    : `background:#1c1917;box-shadow:0 2px 10px rgba(0,0,0,.6);opacity:.95;`;
+  const d = new Date(startsAt);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const hhmm = d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tokyo" });
+  const label = open ? "OPEN" : `${sameDay ? "今日" : `${d.getMonth() + 1}/${d.getDate()}`} ${hhmm}〜`;
+  const pill = open
+    ? "background:#f97316;color:#000;"
+    : "background:rgba(28,25,23,.92);color:#fdba74;border:1px solid rgba(251,146,60,.6);";
+  return (
+    `<div style="width:42px;height:42px;border-radius:50%;border:2.5px solid ${ring};box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:20px;${circle}">🚚</div>` +
+    `<div style="position:absolute;left:50%;top:44px;transform:translateX(-50%);white-space:nowrap;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:800;letter-spacing:.04em;${pill}">${label}</div>`
+  );
+}
+
+/** 移動販売ピンの密集対策: 画面上でこの距離(px)以内のものは、代表1台のアイコン+台数バッジにまとめ、タップで一覧シートを開く。 */
+const SPOT_CLUSTER_PX = 52;
+
+/** 営業中を先(開始が新しい順)、そのあと予定(開始が早い順)。まとめ表示の代表も、一覧の先頭も、この順で決める。 */
+function compareSpots(a: { open: boolean; pin: VenuePin }, b: { open: boolean; pin: VenuePin }): number {
+  if (a.open !== b.open) return a.open ? -1 : 1;
+  const sa = a.pin.spot!.startsAt;
+  const sb = b.pin.spot!.startsAt;
+  if (sa !== sb) return a.open ? (sa < sb ? 1 : -1) : sa < sb ? -1 : 1;
+  return a.pin.id.localeCompare(b.pin.id);
+}
+
 function toFeatureCollection(pins: VenuePin[]) {
   return {
     type: "FeatureCollection" as const,
@@ -121,6 +184,8 @@ export function VenueMapExplorer({
   const pendingCenterId = useRef<string | null>(null);
   // 丸いサムネイルのマーカー(店舗ID→マーカー)。ピンは地図を動かすたびに入れ替わるので、IDで差分管理する。
   const thumbMarkers = useRef(new Map<string, { marker: maplibregl.Marker; el: HTMLDivElement }>());
+  const syncSpotsRef = useRef<() => void>(() => {});
+  const spotMarkers = useRef(new Map<string, { marker: maplibregl.Marker; el: HTMLDivElement }>());
   const pinsRef = useRef<VenuePin[]>([]);
   const activeIdRef = useRef<string | null>(null);
   const syncThumbsRef = useRef<() => void>(() => {});
@@ -441,6 +506,8 @@ export function VenueMapExplorer({
 
       map.on("zoom", () => syncThumbsRef.current());
       map.on("moveend", () => syncThumbsRef.current());
+      map.on("zoomend", () => syncSpotsRef.current());
+      map.on("moveend", () => syncSpotsRef.current());
       map.on("sourcedata", (e) => {
         if (e.sourceId === SOURCE_ID && e.isSourceLoaded) syncThumbsRef.current();
       });
@@ -474,6 +541,8 @@ export function VenueMapExplorer({
       resizeObserver.disconnect();
       thumbMarkers.current.forEach(({ marker }) => marker.remove());
       thumbMarkers.current.clear();
+      spotMarkers.current.forEach(({ marker }) => marker.remove());
+      spotMarkers.current.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -629,10 +698,83 @@ export function VenueMapExplorer({
     const map = mapRef.current;
     if (!map || !mapReady) return;
     const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-    pinsRef.current = filteredPins;
-    source?.setData(toFeatureCollection(filteredPins));
+    // 移動販売(spot付き)のピンは、点やクラスタには混ぜず、専用のマーカー(下の useEffect)で描く。
+    const regularPins = filteredPins.filter((p) => !p.spot);
+    pinsRef.current = regularPins;
+    source?.setData(toFeatureCollection(regularPins));
     syncThumbsRef.current();
   }, [filteredPins, mapReady]);
+
+  // 移動販売(キッチンカー)のピン。予定を入れた時点から地図に出し、営業中はオレンジの「OPEN」、まだなら日時つきの控えめな表示にする。
+  // 営業中かどうかは、APIの結果(最大1分キャッシュ)ではなく、いまの時刻と開始・終了を比べて決める(30秒ごとに更新)。
+  const [spotNow, setSpotNow] = useState(() => Date.now());
+  // 密集したキッチンカーの一覧シート(開いているときだけ、そのグループのピン)。
+  const [spotSheet, setSpotSheet] = useState<VenuePin[] | null>(null);
+  useEffect(() => {
+    const t = window.setInterval(() => setSpotNow(Date.now()), 30_000);
+    return () => window.clearInterval(t);
+  }, []);
+  // 描画は毎回作り直す(キッチンカーは数が少ないので軽い)。ズーム・移動が終わるたびに、画面上の距離でまとめ直す。
+  syncSpotsRef.current = () => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    spotMarkers.current.forEach(({ marker }) => marker.remove());
+    spotMarkers.current.clear();
+
+    const items = filteredPins
+      .filter((p) => p.spot && Date.parse(p.spot.endsAt) >= spotNow)
+      .map((p) => ({ pin: p, open: Date.parse(p.spot!.startsAt) <= spotNow, pt: map.project([p.lng, p.lat]) }))
+      // 営業中を先に(まとめるときの代表・展開の並びが営業中優先になる)。
+      .sort((a, b) => Number(b.open) - Number(a.open) || a.pin.id.localeCompare(b.pin.id));
+
+    // 画面上でSPOT_CLUSTER_PX以内にあるものを1グループにする。
+    const groups: { items: typeof items; x: number; y: number }[] = [];
+    for (const it of items) {
+      const g = groups.find((g) => Math.hypot(g.x - it.pt.x, g.y - it.pt.y) < SPOT_CLUSTER_PX);
+      if (g) {
+        g.items.push(it);
+        g.x = g.items.reduce((sum, m) => sum + m.pt.x, 0) / g.items.length;
+        g.y = g.items.reduce((sum, m) => sum + m.pt.y, 0) / g.items.length;
+      } else groups.push({ items: [it], x: it.pt.x, y: it.pt.y });
+    }
+
+    const add = (key: string, html: string, lngLat: [number, number], onClick: () => void, offset?: [number, number], z = 2) => {
+      const el = document.createElement("div");
+      el.setAttribute("role", "button");
+      el.style.cssText = `width:42px;height:42px;cursor:pointer;z-index:${z};`;
+      el.innerHTML = html;
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onClick();
+      });
+      const marker = new maplibregl.Marker({ element: el, anchor: "center", offset }).setLngLat(lngLat).addTo(map);
+      spotMarkers.current.set(key, { marker, el });
+    };
+
+    for (const g of groups) {
+      const members = [...g.items].sort(compareSpots);
+      if (members.length === 1) {
+        const { pin, open } = members[0];
+        add(pin.id, spotMarkerHtml(open, pin.id === activePinId, pin.spot!.startsAt), [pin.lng, pin.lat], () => focusVenueRef.current(pin.id, { fromMap: true }), undefined, pin.id === activePinId ? 3 : 2);
+        continue;
+      }
+      const center = map.unproject([g.x, g.y]);
+      const rep = members[0];
+      const openCount = members.filter((m) => m.open).length;
+      const hasActive = members.some((m) => m.pin.id === activePinId);
+      add(
+        `cluster:${members.map((m) => m.pin.id).join(",")}`,
+        spotClusterHtml(members.length, openCount, hasActive, rep.open, rep.pin.spot!.startsAt),
+        [center.lng, center.lat],
+        () => setSpotSheet(members.map((m) => m.pin)),
+        undefined,
+        hasActive ? 3 : 2,
+      );
+    }
+  };
+  useEffect(() => {
+    syncSpotsRef.current();
+  }, [filteredPins, mapReady, spotNow, activePinId]);
 
   // 丸いサムネイルの表示・非表示を、今の表示倍率とクラスタの状態に合わせて更新する。
   // 毎レンダーで差し替えるだけの軽い関数(refだけを読む)。
@@ -1088,6 +1230,8 @@ export function VenueMapExplorer({
                         <span className="rounded bg-purple-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-main">
                           SPONSORED
                         </span>
+                      ) : venue.spot ? (
+                        <SpotBadge spot={venue.spot} now={spotNow} />
                       ) : (
                         <span />
                       )}
@@ -1188,6 +1332,81 @@ export function VenueMapExplorer({
           </div>
         )}
       </div>
+
+      {spotSheet && (
+        <div className="fixed inset-0 z-[70] flex items-end" onClick={() => setSpotSheet(null)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div
+            role="dialog"
+            aria-label="この場所のキッチンカー"
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-h-[72dvh] w-full overflow-y-auto rounded-t-3xl border-t border-orange-400/40 bg-panel-900 p-4 pb-28 shadow-2xl"
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-main/20" />
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-display text-base font-bold text-main">🚚 この場所のキッチンカー({spotSheet.length}台)</h2>
+              <button type="button" onClick={() => setSpotSheet(null)} aria-label="閉じる" className="rounded-full p-1 text-tone-400 hover:text-main">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {spotSheet.map((p) => {
+                const open = Date.parse(p.spot!.startsAt) <= spotNow;
+                const d = new Date(p.spot!.startsAt);
+                const sameDay = d.toDateString() === new Date(spotNow).toDateString();
+                const hhmm = d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tokyo" });
+                const e = new Date(p.spot!.endsAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tokyo" });
+                return (
+                  <li key={p.id}>
+                    <Link
+                      href={p.spot!.shop?.href ?? "/map"}
+                      className="flex items-center gap-3 rounded-2xl border border-line/20 bg-black/30 p-2.5 transition hover:border-orange-400/50"
+                    >
+                      {p.spot!.shop?.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.spot!.shop.imageUrl} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                      ) : (
+                        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 text-2xl">🚚</span>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold text-main">{p.spot!.shop?.name ?? ""}</span>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted">
+                          {open ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-extrabold text-black">
+                              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" /> OPEN〜{e}
+                            </span>
+                          ) : (
+                            <span className="rounded border border-orange-400/60 px-1.5 py-0.5 text-[10px] font-bold text-orange-300">
+                              {sameDay ? "今日" : `${d.getMonth() + 1}/${d.getDate()}`} {hhmm}〜{e}
+                            </span>
+                          )}
+                          {p.spot!.shop?.genre && <span>{genreLabel(locale, p.spot!.shop.genre)}</span>}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs text-tone-400">詳細 →</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <button
+              type="button"
+              onClick={() => {
+                const map = mapRef.current;
+                if (map && spotSheet.length > 0) {
+                  const lngs = spotSheet.map((p) => p.lng);
+                  const lats = spotSheet.map((p) => p.lat);
+                  map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 90, maxZoom: 18, duration: 600 });
+                }
+                setSpotSheet(null);
+              }}
+              className="mt-3 w-full rounded-full border border-main/15 px-4 py-2.5 text-xs font-semibold text-tone-300 hover:text-main"
+            >
+              地図で拡大して見る
+            </button>
+          </div>
+        </div>
+      )}
 
       {reelOverlayVenueId && (
         <MapReelOverlay

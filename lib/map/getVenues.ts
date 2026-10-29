@@ -5,6 +5,8 @@ import type { CastSummary, VenueCardData, VenuePin } from "@/types/venue";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { gridThumb } from "@/lib/images/thumb";
+import { mergeLiveSpots } from "@/lib/map/liveSpots";
+import { shopPath } from "@/lib/locapass/publicUrls";
 
 /**
  * 地図の取得範囲。全国一括取得はメモリ・転送量が破綻するため、
@@ -162,11 +164,13 @@ async function latestReelDatesByShop(shopIds: string[]): Promise<Map<string, str
  * 地図に打つピンだけの軽量データ。動画URLは含めない。
  * 広域ズームでクラスタを描くのはこちらだけを使う。
  */
+const PIN_COLUMNS = "id, lat, lng, category, cover_url, icon_url, updated_at, portal_id";
+
 export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): Promise<VenuePin[]> {
   const supabase = mapClient();
   const { data } = await supabase
     .from("locapass_shops")
-    .select("id, lat, lng, category, cover_url, icon_url, updated_at")
+    .select(PIN_COLUMNS)
     .eq("status", "active")
     .not("lat", "is", null)
     .not("lng", "is", null)
@@ -176,14 +180,16 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
     .lte("lng", bounds.maxLng)
     .limit(Math.min(limit, MAX_PIN_LIMIT));
 
-  const rows = data ?? [];
+  // 移動販売の店は固定位置を外し、いま出店中の場所だけを足す(lib/map/liveSpots.ts)。
+  const rows = (await mergeLiveSpots(data ?? [], bounds, PIN_COLUMNS, `${PIN_COLUMNS}, name, slug, portal:locapass_portals ( slug )`)) as NonNullable<typeof data>;
 
   // 同じ場所(約10m四方)の店は、1つのピンにまとめる。雑居ビルの3階・4階のように座標が同じ店が多いため。
   // 代表は「一番情報が新しい店」(店舗情報の更新日と、最新リールの投稿日の新しい方)。
   // 丸い写真のピンを出したい店は、情報を更新すればよい、という考え方。
   const groups = new Map<string, typeof rows>();
   for (const s of rows) {
-    const key = `${(s.lat as number).toFixed(4)},${(s.lng as number).toFixed(4)}`;
+    // 移動販売の出店場所は、同じ場所の固定店舗とまとめず、1店ごとに別のピンにする。
+    const key = (s as { spot?: unknown }).spot ? `spot:${s.id}` : `${(s.lat as number).toFixed(4)},${(s.lng as number).toFixed(4)}`;
     const list = groups.get(key);
     if (list) list.push(s);
     else groups.set(key, [s]);
@@ -205,6 +211,22 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
       // 現状locapass_shopsは全店舗plan="free"でスポンサー枠が無いため常にfalse。
       isSponsored: false,
       thumbUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
+      ...(() => {
+        const live = s as unknown as { spot?: VenuePin["spot"]; name?: string; slug?: string; portal?: { slug: string } | { slug: string }[] | null };
+        if (!live.spot) return {};
+        const portal = Array.isArray(live.portal) ? live.portal[0] : live.portal;
+        return {
+          spot: {
+            ...live.spot,
+            shop: {
+              name: live.name ?? "",
+              href: portal && live.slug ? shopPath(portal.slug, live.slug) : "/map",
+              imageUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
+              genre: s.category,
+            },
+          },
+        };
+      })(),
       ...(g.length > 1 ? { memberIds: g.map((m) => m.id) } : {}),
     };
   });
@@ -228,6 +250,9 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
  * - 写真 … トップ画像(画像のとき) → メイン画像 → アイコン。
  * locapass_shops にはスポンサー枠・英語対応・認証バッジの概念が無いため、その3つは常に false で返す。
  */
+const CARD_COLUMNS =
+  "id, name, slug, area, category, lat, lng, address_en, icon_url, cover_url, cover_image_attribution, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id, portal_id, portal:locapass_portals ( slug )";
+
 export async function getVenueCards(
   bounds: VenueBounds,
   center: { lat: number; lng: number },
@@ -236,11 +261,9 @@ export async function getVenueCards(
   const supabase = mapClient();
   const cardLimit = Math.min(limit, MAX_CARD_LIMIT);
 
-  const { data: shopRows } = await supabase
+  const { data: rawShopRows } = await supabase
     .from("locapass_shops")
-    .select(
-      "id, name, slug, area, category, lat, lng, address_en, icon_url, cover_url, cover_image_attribution, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id, portal:locapass_portals ( slug )",
-    )
+    .select(CARD_COLUMNS)
     .eq("status", "active")
     .not("lat", "is", null)
     .not("lng", "is", null)
@@ -250,6 +273,8 @@ export async function getVenueCards(
     .lte("lng", bounds.maxLng)
     // 矩形内が多すぎる場合に備えて、DB側でも上限をかけてから中心に近い順に詰める。
     .limit(MAX_PIN_LIMIT);
+  // 移動販売の店は、いま出店中の場所だけを出す。
+  const shopRows = (await mergeLiveSpots(rawShopRows ?? [], bounds, CARD_COLUMNS)) as NonNullable<typeof rawShopRows>;
 
   const shops = (shopRows ?? [])
     .map((s) => ({
@@ -382,6 +407,7 @@ export async function getVenueCards(
       supportsEnglish: false,
       isVerified: false,
       casts: (castsByShopId.get(s.id) ?? []).slice(0, 6),
+      ...((s as { spot?: VenueCardData["spot"] }).spot ? { spot: (s as { spot?: VenueCardData["spot"] }).spot } : {}),
     };
   });
 

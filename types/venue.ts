@@ -31,6 +31,17 @@ export interface VenuePin {
    * そのときの、まとめた店舗すべてのID(代表の店も含む)。まとめていないピンでは未指定。
    */
   memberIds?: string[];
+  /** 移動販売(キッチンカー)の出店予定。ある店のピンは、営業中ならOPEN、まだなら予定の日時つきで描く。 */
+  spot?: VenueSpot;
+}
+
+/** 移動販売の出店場所の時間枠(ISO文字列)。営業中かどうかは、表示する側が今の時刻と比べて決める。 */
+export interface VenueSpot {
+  startsAt: string;
+  endsAt: string;
+  address: string | null;
+  /** ピン(軽量データ)だけに付く、密集時の一覧に出す店の情報。 */
+  shop?: { name: string; href: string; imageUrl: string | null; genre: string | null };
 }
 
 export interface VenueCardData {
@@ -58,4 +69,6 @@ export interface VenueCardData {
   supportsEnglish: boolean;
   isVerified: boolean;
   casts: CastSummary[];
+  /** 移動販売の出店場所(営業中または予定)。無ければ通常の固定店舗。 */
+  spot?: VenueSpot;
 }

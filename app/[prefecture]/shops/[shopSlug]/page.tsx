@@ -47,6 +47,7 @@ import { genreLabel } from "@/lib/i18n/genreLabels";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { ShopHeroMedia } from "@/components/shop/ShopHeroMedia";
+import { CaravanShopView } from "@/components/shop/CaravanShopView";
 import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
 import { getShopPhotoPosts } from "@/lib/photo/getShopPhotoPosts";
 import { PageDots } from "@/components/shop/PageDots";
@@ -366,6 +367,96 @@ export default async function ShopDetailPage({
     .order("created_at", { ascending: false });
   const allItems = (itemRows ?? []) as ShopItem[];
   const shopItems = [...allItems.filter((i) => i.status !== "sold"), ...allItems.filter((i) => i.status === "sold")];
+
+  // 移動販売(Caravan)のポータルは、キッチンカー向けの専用レイアウトで見せる。
+  if (site.slug === "caravan") {
+    // いま営業中、または次の出店予定(位置つきイベント。00159の前は列が無く、エラーは無視して登録住所を出す)。
+    const nowIso = new Date().toISOString();
+    const { data: spotRows } = await (supabase as any)
+      .from("locapass_shop_events")
+      .select("address, lat, lng, starts_at, ends_at")
+      .eq("shop_id", shopId)
+      .not("lat", "is", null)
+      .gte("ends_at", nowIso)
+      .order("starts_at", { ascending: true })
+      .limit(10);
+    const spotList = (spotRows ?? []) as { address: string | null; lat: number; lng: number; starts_at: string; ends_at: string }[];
+    const liveRow = spotList.find((r) => r.starts_at <= nowIso);
+    const spotRow = liveRow ?? spotList[0];
+    const spot = spotRow
+      ? { kind: (liveRow ? "live" : "next") as "live" | "next", address: spotRow.address, lat: spotRow.lat, lng: spotRow.lng, startsAt: spotRow.starts_at, endsAt: spotRow.ends_at }
+      : null;
+    return (
+      <>
+        <PortalThemeScope theme={isSiteTheme(site.theme) ? site.theme : null} />
+        <WhisperRefreshPing shopId={shopId} />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "FoodEstablishment",
+            name: store.name,
+            description: store.tagline ?? store.description ?? undefined,
+            image: store.hero.url ?? undefined,
+            url: shopUrl,
+            telephone: store.phone ?? undefined,
+            address: store.address ? { "@type": "PostalAddress", streetAddress: store.address, addressCountry: "JP" } : undefined,
+          }}
+        />
+        <CaravanShopView
+          locale={locale}
+          t={t}
+          portal={{ slug: site.slug, name: site.name, nameEn: site.name_en }}
+          shop={{
+            id: store.id,
+            slug: shopRow.slug,
+            name: store.name,
+            area: store.area,
+            genre: store.genre,
+            tagline: store.tagline,
+            description: store.description,
+            address: addressDisplay ?? store.address,
+            phone: store.phone,
+            businessHours: store.businessHours,
+            priceInfo: store.priceInfo,
+            usageNotes: store.usageNotes,
+            websiteUrl: store.websiteUrl,
+            snsLinks: store.snsLinks,
+            heroUrl: store.hero.url,
+            heroType: store.hero.type,
+            coverUrl: store.coverImageUrl,
+            gallery: store.galleryImageUrls,
+            lat: shopRow.lat,
+            lng: shopRow.lng,
+            usedTranslation,
+          }}
+          video={introVideo}
+          heroUseYoutube={!!ytRow?.hero_use_youtube}
+          reels={castReelPreviews.map((r) => ({ id: r.id, castName: r.castName, thumbUrl: r.thumbUrl }))}
+          userPhotos={userPhotos}
+          priceItems={priceItems}
+          events={events}
+          items={shopItems}
+          hrefs={{
+            portal: `/${site.slug}`,
+            reels: shopReelsPath(site.slug, shopRow.slug),
+            archive: archiveHref,
+            photos: shopPhotosPath(site.slug, shopRow.slug),
+            photoNew: `/photo/new?shop=${shopRow.id}`,
+          }}
+          attribution={shopRow.cover_image_attribution as { name?: string; uri?: string | null } | null}
+          spot={spot}
+        />
+        <ShopSectionNav
+          shopId={shopRow.id}
+          phone={store.phone}
+          lineContactUrl={store.lineContactUrl}
+          lineQrImageUrl={store.lineQrImageUrl}
+          reserveHref={null}
+          sections={[...(priceItems.length + shopItems.length > 0 ? ["price"] : []), "access"]}
+        />
+      </>
+    );
+  }
 
   return (
     <ShopSwipeToArchive href={archiveHref}>
