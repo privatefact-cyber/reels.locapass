@@ -48,6 +48,7 @@ import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { ShopHeroMedia } from "@/components/shop/ShopHeroMedia";
 import { ShopSpotCard, type ShopSpot } from "@/components/shop/ShopSpotCard";
+import { ShopScheduleCalendar, type ScheduleSpot } from "@/components/shop/ShopScheduleCalendar";
 import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
 import { getShopPhotoPosts } from "@/lib/photo/getShopPhotoPosts";
 import { PageDots } from "@/components/shop/PageDots";
@@ -373,13 +374,16 @@ export default async function ShopDetailPage({
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")
-    .select("address, lat, lng, starts_at, ends_at")
+    .select("id, body, address, lat, lng, starts_at, ends_at")
     .eq("shop_id", shopId)
     .not("lat", "is", null)
     .gte("ends_at", nowIso)
     .order("starts_at", { ascending: true })
-    .limit(10);
-  const spotList = (spotRows ?? []) as { address: string | null; lat: number; lng: number; starts_at: string; ends_at: string }[];
+    .limit(200);
+  const spotList = (spotRows ?? []) as { id: string; body: string | null; address: string | null; lat: number; lng: number; starts_at: string; ends_at: string }[];
+  const scheduleSpots: ScheduleSpot[] = spotList.map((r) => ({ id: r.id, address: r.address, lat: r.lat, lng: r.lng, startsAt: r.starts_at, endsAt: r.ends_at, note: r.body }));
+  // 複数の日にまたがる予定があるときだけ、カレンダーを出す(1〜2件なら「出店場所」カードで足りる)。
+  const showCalendar = new Set(spotList.map((r) => r.starts_at.slice(0, 10))).size >= 2;
   const liveRow = spotList.find((r) => r.starts_at <= nowIso);
   const spotRow = liveRow ?? spotList[0];
   const spot: ShopSpot | null = spotRow
@@ -528,6 +532,8 @@ export default async function ShopDetailPage({
 
       <div className="space-y-10 px-4 sm:px-6">
         {spot && <ShopSpotCard spot={spot} routeLabel={t.shop.routeGuide} />}
+
+        {showCalendar && <ShopScheduleCalendar spots={scheduleSpots} routeLabel={t.shop.routeGuide} />}
 
         {/* 2. 在籍キャスト/本日の出勤ギャラリー(最優先配置)。 */}
         {todayCasts.length > 0 && (
