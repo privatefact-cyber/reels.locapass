@@ -67,7 +67,7 @@ function GateOverlay({
       }`}
     >
       <div
-        className={`relative flex w-[86vw] max-w-sm aspect-square transform-gpu flex-col items-center justify-center gap-8 overflow-hidden rounded-[2.5rem] border border-main/25 bg-main/[0.04] p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-[250ms] ease-out will-change-transform ${
+          className={`relative flex w-[86vw] max-w-sm min-h-[26rem] transform-gpu flex-col items-center justify-center gap-6 overflow-hidden rounded-[2.5rem] border border-main/25 bg-main/[0.04] p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-[250ms] ease-out will-change-transform ${
           closing || entering ? "scale-90 opacity-0" : "scale-100 opacity-100"
         }`}
       >
@@ -93,6 +93,20 @@ function GateOverlay({
           >
             {optionB.label}
           </button>
+        </div>
+        <div className="relative grid w-full gap-2">
+          <Link
+            href="/lp/shop"
+            className="flex items-center justify-center rounded-xl border border-accent/60 bg-accent/10 px-4 py-3 text-sm font-semibold tracking-wide text-accent transition hover:bg-accent/20"
+          >
+            掲載店として参加
+          </Link>
+          <Link
+            href="/lp/agency"
+            className="flex items-center justify-center rounded-xl border border-main/25 bg-main/[0.03] px-4 py-3 text-sm tracking-wide text-main/90 transition hover:bg-main/10"
+          >
+            代理店として参加
+          </Link>
         </div>
       </div>
       <nav aria-label="運営情報" className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-6 text-[11px] text-main/50">
