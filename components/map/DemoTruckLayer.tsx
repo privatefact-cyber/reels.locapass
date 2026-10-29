@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as maplibregl from "maplibre-gl";
 import { DEMO_TRUCK_ROUTES } from "@/lib/map/demoTruckRoutes";
@@ -67,8 +67,44 @@ function ensureStyle() {
   document.head.appendChild(style);
 }
 
-export function DemoTruckLayer({ map, pins }: { map: maplibregl.Map | null; pins: VenuePin[] }) {
+/** 全ルートを覆う範囲(少し余白をつけたbbox)。この範囲の移動販売ピンを、映している範囲とは別に取得する。 */
+function routesBbox(): string {
+  let minLng = 180, minLat = 90, maxLng = -180, maxLat = -90;
+  for (const byDest of Object.values(DEMO_TRUCK_ROUTES)) {
+    for (const coords of Object.values(byDest)) {
+      for (const [lng, lat] of coords) {
+        minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng);
+        minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
+      }
+    }
+  }
+  const pad = 0.01;
+  return [minLng - pad, minLat - pad, maxLng + pad, maxLat + pad].map((n) => n.toFixed(5)).join(",");
+}
+
+export function DemoTruckLayer({ map }: { map: maplibregl.Map | null }) {
   const router = useRouter();
+  // 映している範囲に関係なく、ルートが通る周辺の移動販売ピンを取得する(着地点が画面の外でも、トラックは走っている)。
+  const [pins, setPins] = useState<VenuePin[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/venues/pins?spots=1&bbox=${routesBbox()}`);
+        if (!res.ok) return;
+        const json = (await res.json()) as { pins?: VenuePin[] };
+        if (!cancelled) setPins(json.pins ?? []);
+      } catch {
+        // 取れなくても、トラックが出ないだけ。
+      }
+    };
+    void load();
+    const t = window.setInterval(load, 5 * 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(t);
+    };
+  }, []);
 
   useEffect(() => {
     if (!map) return;

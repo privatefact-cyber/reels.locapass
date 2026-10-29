@@ -1333,7 +1333,7 @@ export function VenueMapExplorer({
         )}
       </div>
 
-      <DemoTruckLayer map={mapReady ? mapRef.current : null} pins={filteredPins} />
+      <DemoTruckLayer map={mapReady ? mapRef.current : null} />
 
       {spotSheet && (
         <div className="fixed inset-0 z-[70] flex items-end" onClick={() => setSpotSheet(null)}>

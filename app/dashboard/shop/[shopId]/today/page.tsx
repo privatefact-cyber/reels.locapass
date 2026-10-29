@@ -28,7 +28,7 @@ export default async function TodaySpotPage({ params }: { params: Promise<{ shop
     .map((e: any) => ({ id: e.id, startsAt: e.starts_at, endsAt: e.ends_at, address: e.address, lat: e.lat, lng: e.lng, note: e.body }));
   const active = rows.filter((r) => Date.parse(r.startsAt) <= now && Date.parse(r.endsAt) >= now);
   const upcoming = rows.filter((r) => Date.parse(r.startsAt) > now).sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
-  const past = rows.filter((r) => Date.parse(r.endsAt) < now).slice(0, 10);
+  const past = rows.filter((r) => Date.parse(r.endsAt) < now);
 
   return (
     <div className="space-y-4">

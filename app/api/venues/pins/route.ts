@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const pins = await getVenuePins(parsed.bounds);
+  const all = await getVenuePins(parsed.bounds);
+  // spots=1: 移動販売(出店予定のある店)のピンだけ返す。走る広告トラックが、映している範囲に関係なく店を知るために使う。
+  const pins = request.nextUrl.searchParams.get("spots") === "1" ? all.filter((p) => p.spot) : all;
   return NextResponse.json({ pins }, { headers: VENUE_CACHE_HEADERS });
 }
