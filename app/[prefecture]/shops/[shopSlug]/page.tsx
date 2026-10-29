@@ -371,6 +371,10 @@ export default async function ShopDetailPage({
 
   // 出店場所(位置つきのイベント)を持つ店だけ、いま営業中 / 次の出店のカードを出す(移動販売のポータル向け。
   // 他のポータルの店は位置つきイベントが無いので何も出ない)。位置の列が無い等で失敗したら、カードなしで表示する。
+  // 移動販売のポータル(features に 'mobile')は、決まった場所が無い(日ごとに変わる)ので、登録住所と固定の地図は出さない。
+  // 場所は、出店予定(上の出店場所カード・カレンダー・地図)だけで伝える。
+  const { data: portalFeatureRow } = await (supabase as any).from("locapass_portals").select("features").eq("id", site.id).maybeSingle();
+  const isMobilePortal = ((portalFeatureRow?.features ?? []) as string[]).includes("mobile");
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")
@@ -410,7 +414,7 @@ export default async function ShopDetailPage({
           image: store.hero.url ?? undefined,
           url: shopUrl,
           telephone: store.phone ?? undefined,
-          address: store.address
+          address: store.address && !isMobilePortal
             ? {
                 "@type": "PostalAddress",
                 streetAddress: store.address,
@@ -433,7 +437,8 @@ export default async function ShopDetailPage({
       />
 
       {/* 1. トップヒーローセクション */}
-      <section className="relative -mt-px h-[300px] w-full overflow-hidden sm:h-[380px]">
+      {/* space-y-10 の間隔が、画面に見えない部品(スクリプト)の次のここにもかかり、ヘッダーとの間に40pxの隙間ができていたので、!で打ち消す */}
+      <section className="relative !-mt-px h-[300px] w-full overflow-hidden sm:h-[380px]">
         {/* 子ポータルへの戻る導線: ヒーロー左上にすりガラスピル型で浮かせる */}
         <Link
           href={`/${site.slug}`}
@@ -681,7 +686,7 @@ export default async function ShopDetailPage({
           )}
 
           <div className="space-y-3 rounded-2xl border border-line/20 bg-panel-900/60 p-5 shadow-2xl backdrop-blur-xl">
-            {store.address && (
+            {store.address && !isMobilePortal && (
               <InfoRow icon={<MapPin size={16} />} label={t.shop.address} value={addressDisplay ?? store.address} />
             )}
             {store.phone && <InfoRow icon={<Phone size={16} />} label={t.shop.phone} value={store.phone} ltr />}
@@ -694,7 +699,7 @@ export default async function ShopDetailPage({
           </div>
 
           {/* 住所と連動した地図 */}
-          {store.address && (
+          {store.address && !isMobilePortal && (
             <div className="overflow-hidden rounded-2xl border border-line/20 shadow-2xl">
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`}

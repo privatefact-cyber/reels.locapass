@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as maplibregl from "maplibre-gl";
 import { MapReelOverlay, type CardRect } from "@/components/map/MapReelOverlay";
+import { DemoTruckLayer } from "@/components/map/DemoTruckLayer";
 import { CheckCircle2, Globe2, Navigation, Play, Search, X } from "lucide-react";
 import { AFTER_GENRE } from "@/lib/shop/genres";
 import { genreLabel } from "@/lib/i18n/genreLabels";
@@ -1331,6 +1332,8 @@ export function VenueMapExplorer({
           </div>
         )}
       </div>
+
+      <DemoTruckLayer map={mapReady ? mapRef.current : null} pins={filteredPins} />
 
       {spotSheet && (
         <div className="fixed inset-0 z-[70] flex items-end" onClick={() => setSpotSheet(null)}>
