@@ -8,7 +8,6 @@ import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
 import { reelCtaUrl, reelProfileUrl } from "@/lib/reels/links";
 import { shopPath } from "@/lib/locapass/publicUrls";
-import { ShopMediaFallback } from "@/components/shop/ShopMediaFallback";
 import { ReelCard } from "@/components/ReelCard";
 import { PreloadNextVideo } from "@/components/video/PreloadNextVideo";
 import type { AdItem, ReelItem, ShopGridItem } from "@/lib/reels/types";
@@ -214,12 +213,8 @@ const GridTile = memo(function GridTile({
           preload="metadata"
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />
-      ) : tile.kind === "shop" ? (
-        // 店舗タイルで写真が無い/壊れているとき: イメージ写真(無ければ店名入りのグラデーション)。
-        <span className="relative block h-full w-full overflow-hidden bg-panel-900">
-          <ShopMediaFallback category={tile.shop.genre} seed={tile.shop.id} name={tile.shop.name} showCredit={false} thumb />
-        </span>
       ) : (
+        // 写真が無い/壊れているタイル(店舗も含む)は、イメージ写真ではなく、LOCAPASSのプレースホルダを出す。
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-tone-800 via-tone-950 to-black">
           <span className="font-display text-xs uppercase tracking-[0.2em] text-accent/50">
             LOCAPASS
