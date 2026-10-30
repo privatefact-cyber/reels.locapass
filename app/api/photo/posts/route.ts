@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
   // 店舗ページの「このお店の写真を投稿」から来た投稿は、その店に固定する。場所名・位置(ピン)・住所は
   // ブラウザから届いた値ではなく店の登録情報を使い、写真の位置情報やほかの店への紐づけは受け付けない。
   const shopIdParam = text(form.get("shop_id"), 40);
-  let lockedShop: { name: string; venueId: string | null } | null = null;
+  let lockedShop: { id: string; name: string; venueId: string | null } | null = null;
   if (shopIdParam) {
     const { data: shop } = /^[0-9a-f-]{36}$/i.test(shopIdParam)
       ? await admin
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const [venueId] = shop.venue_id
       ? [shop.venue_id]
       : await resolveShopVenueIds({ name: shop.name, venueId: null, lat: shop.lat, lng: shop.lng });
-    lockedShop = { name: shop.name, venueId: venueId ?? null };
+    lockedShop = { id: shopIdParam, name: shop.name, venueId: venueId ?? null };
   }
 
   if (!spotName || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
@@ -200,6 +200,15 @@ export async function POST(request: NextRequest) {
     console.error("photo insert failed", insertError);
     await admin.storage.from("map-photos").remove([path]);
     return NextResponse.json({ error: t.apiPostFailed }, { status: 502 });
+  }
+
+  // 店舗ページから投稿した写真は、掲載店(venue)が未登録の店でも、その店に確実に紐づける。
+  // 紐づけ表(attach)に入れておけば、マップ・フィードの店名リンクと店舗ページの写真一覧がどちらも店舗に結び付く。
+  if (lockedShop) {
+    const { error: linkError } = await (admin as any)
+      .from("locapass_shop_photo_links")
+      .upsert({ post_id: inserted.id, shop_id: lockedShop.id, mode: "attach", created_by: user.id }, { onConflict: "post_id,shop_id" });
+    if (linkError) console.error("photo shop link failed", linkError);
   }
 
   // 場所名・一言・住所の自動翻訳は、投稿の返事を待たせないよう裏で行う(失敗しても投稿は成功のまま、原文で表示される)。
