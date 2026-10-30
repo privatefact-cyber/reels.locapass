@@ -735,7 +735,7 @@ export function PhotoMap({
                     >
                       {t.photo.directionsArrow}
                     </a>
-                    {spot.kind === "listed" && spot.posts.find(({ post }) => post.shop) ? (
+                    {spot.posts.find(({ post }) => post.shop) ? (
                       <Link
                         href={spot.posts.find(({ post }) => post.shop)!.post.shop!.href}
                         onClick={(e) => e.stopPropagation()}
