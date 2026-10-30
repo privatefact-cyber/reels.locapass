@@ -7,6 +7,7 @@ import * as maplibreNs from "maplibre-gl";
 // maplibre-glはCJS(UMD)なので、読み込み経路(サーバー描画を含む初期表示か、クリック後の遅延読み込みか)によって
 // 名前空間に直接Mapが無く default の下にだけある場合がある。どちらでも使えるようにここで解決する。
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
+import Link from "next/link";
 import { Navigation, Play, Route as RouteIcon, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
@@ -734,6 +735,15 @@ export function PhotoMap({
                     >
                       {t.photo.directionsArrow}
                     </a>
+                    {spot.kind === "listed" && spot.posts.find(({ post }) => post.shop) ? (
+                      <Link
+                        href={spot.posts.find(({ post }) => post.shop)!.post.shop!.href}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded-full border border-hl-400/50 px-3 py-2 text-xs text-hl-300 transition hover:bg-hl-400/10"
+                      >
+                        {t.photo.shopPageLink}
+                      </Link>
+                    ) : null}
                     <button
                       type="button"
                       onClick={(e) => {

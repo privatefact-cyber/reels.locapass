@@ -339,6 +339,7 @@ export type Dictionary = {
     directions: string;
     directionsArrow: string;
     viewPhotos: string;
+    shopPageLink: string;
     routeAdd: string;
     routeRemove: string;
     routeStart: string;
@@ -777,6 +778,7 @@ const ja: Dictionary = {
     directions: "ルート案内",
     directionsArrow: "ルート案内 →",
     viewPhotos: "写真を見る",
+    shopPageLink: "店舗ページ",
     routeAdd: "ルートに追加",
     routeRemove: "ルートから外す",
     routeStart: "ルート検索スタート",
@@ -1215,6 +1217,7 @@ const en: Dictionary = {
     directions: "Directions",
     directionsArrow: "Directions →",
     viewPhotos: "View photos",
+    shopPageLink: "Shop page",
     routeAdd: "Add to route",
     routeRemove: "Remove from route",
     routeStart: "Start route search",
@@ -1653,6 +1656,7 @@ const zh: Dictionary = {
     directions: "路线指引",
     directionsArrow: "路线指引 →",
     viewPhotos: "查看照片",
+    shopPageLink: "店铺页面",
     routeAdd: "加入路线",
     routeRemove: "从路线移除",
     routeStart: "开始路线搜索",
@@ -2092,6 +2096,7 @@ const ar: Dictionary = {
     directions: "الاتجاهات",
     directionsArrow: "الاتجاهات ←",
     viewPhotos: "عرض الصور",
+    shopPageLink: "صفحة المتجر",
     routeAdd: "أضف إلى المسار",
     routeRemove: "إزالة من المسار",
     routeStart: "ابدأ البحث عن المسار",
