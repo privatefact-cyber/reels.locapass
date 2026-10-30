@@ -47,10 +47,16 @@ export default async function LocapassShopDashboardLayout({
   const supabase = (await createClient()) as any;
   const { data: portalRow } = await supabase.from("locapass_portals").select("features").eq("id", shop.portal_id).maybeSingle();
   const features: string[] = portalRow?.features ?? [];
-  // 'mobile'(移動販売)のポータルだけ「今日の出店」を出す。
+  // 'mobile'(移動販売)のポータルは「今日の出店」、店舗オプション「開催場所のお知らせ」をオンにした店は「開催場所」を出す。
+  const { data: optRow } = await supabase.from("locapass_shops").select("spot_notice_enabled").eq("id", shop.id).maybeSingle();
+  const spotNotice = Boolean(optRow?.spot_notice_enabled);
   const extraNav = [
     ...(features.includes("items") ? [{ path: "/items", label: "在庫" }] : []),
-    ...(features.includes("mobile") ? [{ path: "/today", label: "🚚 今日の出店" }] : []),
+    ...(features.includes("mobile")
+      ? [{ path: "/today", label: "🚚 今日の出店" }]
+      : spotNotice
+        ? [{ path: "/today", label: "📍 開催場所" }]
+        : []),
   ];
   const navItems = extraNav.length ? [NAV_ITEMS[0], ...extraNav, ...NAV_ITEMS.slice(1)] : NAV_ITEMS;
 

@@ -55,6 +55,7 @@ import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
 import { getShopPhotoPosts } from "@/lib/photo/getShopPhotoPosts";
 import { PhotoWallBackground } from "@/components/shop/PhotoWallBackground";
 import { resolvePreset } from "@/lib/photowall/presets";
+import { eventShopDict } from "@/lib/shop/eventWording";
 import { PageDots } from "@/components/shop/PageDots";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
@@ -378,6 +379,9 @@ export default async function ShopDetailPage({
     .select("photo_wall_enabled, photo_wall_preset")
     .eq("id", shopRow.id)
     .maybeSingle();
+  // 店舗オプション「開催場所のお知らせ」(譲渡会・イベントなど)。オンの店だけ、開催場所のカードとカレンダーを出す。
+  const { data: noticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled").eq("id", shopRow.id).maybeSingle();
+  const spotNoticeEnabled = Boolean(noticeRow?.spot_notice_enabled);
   const wallPreset = wallRow?.photo_wall_enabled ? resolvePreset(wallRow.photo_wall_preset, shopRow.category) : null;
 
   // 掲載アイテム(車両の在庫)。登録がある店舗だけ「在庫車両」セクションを出す(売約済みは後ろへ)。
@@ -413,10 +417,13 @@ export default async function ShopDetailPage({
   }));
   const scheduleSpots: ScheduleSpot[] = spotList.map((r) => ({ id: r.id, address: r.address, lat: r.lat, lng: r.lng, startsAt: r.starts_at, endsAt: r.ends_at, note: r.body }));
   // 複数の日にまたがる予定があるときだけ、カレンダーを出す(1〜2件なら「出店場所」カードで足りる)。
-  const showCalendar = new Set(spotList.map((r) => r.starts_at.slice(0, 10))).size >= 2;
+  // 移動販売のポータルか、オプションをオンにした店だけ。オフの店は位置つきの予定があっても出さない。
+  const spotsAllowed = isMobilePortal || spotNoticeEnabled;
+  const eventMode = !isMobilePortal && spotNoticeEnabled;
+  const showCalendar = spotsAllowed && new Set(spotList.map((r) => r.starts_at.slice(0, 10))).size >= 2;
   const liveRow = spotList.find((r) => r.starts_at <= nowIso);
   const spotRow = liveRow ?? spotList[0];
-  const spot: ShopSpot | null = spotRow
+  const spot: ShopSpot | null = spotsAllowed && spotRow
     ? { kind: liveRow ? "live" : "next", address: spotRow.address, lat: spotRow.lat, lng: spotRow.lng, startsAt: spotRow.starts_at, endsAt: spotRow.ends_at }
     : null;
 
@@ -563,9 +570,9 @@ export default async function ShopDetailPage({
       {totalReels > 0 && <PageDots current={0} shopHref={shopPath(site.slug, shopRow.slug)} archiveHref={archiveHref} />}
 
       <div className="space-y-10 px-4 sm:px-6">
-        {spot && <ShopSpotCard spot={spot} t={t.shop} locale={locale} />}
+        {spot && <ShopSpotCard spot={spot} t={eventMode ? eventShopDict(t.shop, locale) : t.shop} locale={locale} />}
 
-        {showCalendar && <ShopScheduleCalendar spots={scheduleSpots} routeLabel={t.shop.routeGuide} />}
+        {showCalendar && <ShopScheduleCalendar spots={scheduleSpots} routeLabel={t.shop.routeGuide} eventMode={eventMode} />}
 
         {/* 2. 在籍キャスト/本日の出勤ギャラリー(最優先配置)。 */}
         {todayCasts.length > 0 && (

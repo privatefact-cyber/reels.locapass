@@ -29,7 +29,12 @@ function toLocalInput(d: Date) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-export function TodaySpotManager({ shopId, active, upcoming, past }: { shopId: string; active: SpotRow[]; upcoming: SpotRow[]; past: SpotRow[] }) {
+/**
+ * variant: "mobile"=移動販売(営業を始める) / "event"=オプションで開いた店(譲渡会・イベントなどの開催場所のお知らせ。
+ * 「いま営業を始める(現在地)」は無く、予定の登録だけ)。
+ */
+export function TodaySpotManager({ shopId, active, upcoming, past, variant = "mobile" }: { shopId: string; active: SpotRow[]; upcoming: SpotRow[]; past: SpotRow[]; variant?: "mobile" | "event" }) {
+  const ev = variant === "event";
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -99,7 +104,7 @@ export function TodaySpotManager({ shopId, active, upcoming, past }: { shopId: s
   }
 
   function register() {
-    if (!spot) return setMsg({ ok: false, text: "地図で出店場所を選んでください" });
+    if (!spot) return setMsg({ ok: false, text: ev ? "地図で開催場所を選んでください" : "地図で出店場所を選んでください" });
     const list = occurrences();
     if (list.length === 0) return setMsg({ ok: false, text: "日時を入れてください" });
     run(async () => {
@@ -177,7 +182,7 @@ export function TodaySpotManager({ shopId, active, upcoming, past }: { shopId: s
       {active.length > 0 && (
         <section className="space-y-2 rounded-xl border-2 border-orange-400 bg-orange-50 p-4">
           <h2 className="flex items-center gap-1.5 font-bold text-orange-900">
-            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-orange-500" /> いま営業中
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-orange-500" /> {ev ? "いま開催中" : "いま営業中"}
           </h2>
           {active.map((r) => (
             <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white p-3">
@@ -185,15 +190,16 @@ export function TodaySpotManager({ shopId, active, upcoming, past }: { shopId: s
                 <p className="flex items-center gap-1 font-semibold text-slate-900"><MapPin size={14} className="text-orange-500" /> {r.address || "(住所なし)"}</p>
                 <p className="text-xs text-slate-500">{fmt(r.startsAt)} 〜 {fmt(r.endsAt)}</p>
               </div>
-              <button type="button" disabled={pending} onClick={() => run(() => endSpotNow(shopId, r.id), "営業を終了しました。地図から消えます。")} className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-2 text-xs font-bold text-white disabled:opacity-60">
-                <Square size={12} /> 営業終了
+              <button type="button" disabled={pending} onClick={() => run(() => endSpotNow(shopId, r.id), ev ? "開催を終了しました。地図から消えます。" : "営業を終了しました。地図から消えます。")} className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-2 text-xs font-bold text-white disabled:opacity-60">
+                <Square size={12} /> {ev ? "開催終了" : "営業終了"}
               </button>
             </div>
           ))}
         </section>
       )}
 
-      {/* 営業開始ボタン */}
+      {/* 営業開始ボタン(移動販売だけ) */}
+      {!ev && (
       <section className={card}>
         <h2 className="font-bold text-slate-900">いま、ここで営業を始める</h2>
         <p className="text-xs leading-relaxed text-slate-500">いまの現在地を出店場所にして、すぐ地図に出します。お気に入りにしている人には通知が届きます。</p>
@@ -208,10 +214,11 @@ export function TodaySpotManager({ shopId, active, upcoming, past }: { shopId: s
           <Navigation size={18} /> 営業開始(現在地)
         </button>
       </section>
+      )}
 
       {/* 予定登録 */}
       <section id="spot-form" className={card}>
-        <h2 className="font-bold text-slate-900">出店予定を登録する</h2>
+        <h2 className="font-bold text-slate-900">{ev ? "開催予定を登録する" : "出店予定を登録する"}</h2>
         <p className="text-xs text-slate-500">日付は先まで自由に選べます(180日先まで)。開始時刻から終了時刻までの間だけ地図に出ます。毎週・毎日の繰り返しもまとめて登録できます。</p>
         <SpotMapPicker value={spot} onChange={setSpot} />
         <label className="block text-sm text-slate-600">
@@ -290,7 +297,7 @@ export function TodaySpotManager({ shopId, active, upcoming, past }: { shopId: s
         </div>
         <p className="flex flex-wrap gap-x-3 text-[11px] text-slate-500">
           <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-sky-600" />予定</span>
-          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />営業中</span>
+          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />{ev ? "開催中" : "営業中"}</span>
           <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-slate-300" />終了</span>
         </p>
 

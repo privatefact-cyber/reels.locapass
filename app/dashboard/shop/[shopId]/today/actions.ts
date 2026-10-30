@@ -123,3 +123,18 @@ function revalidateAll(shopId: string) {
   revalidatePath(`/dashboard/shop/${shopId}/today`);
   revalidatePath("/map");
 }
+
+/**
+ * 店舗オプション「開催場所のお知らせ」(譲渡会・イベントなど)のオン/オフ。オーナー・ポータル管理者・システム管理者が切り替えられる
+ * (権限は requireShopAccess と同じ)。0件更新でもエラーにならないので、更新された行が返るかで成否を確かめる。
+ */
+export async function updateShopSpotNotice(shopId: string, enabled: boolean) {
+  const supabase = await requireShopAccess(shopId);
+  const { data, error } = await supabase.from("locapass_shops").update({ spot_notice_enabled: enabled }).eq("id", shopId).select("slug, locapass_portals(slug)");
+  if (error) throw new Error("保存に失敗しました");
+  if (!data || data.length === 0) throw new Error("この操作をする権限がありません");
+  const shop = data[0];
+  const portal = Array.isArray(shop.locapass_portals) ? shop.locapass_portals[0] : shop.locapass_portals;
+  if (shop.slug && portal?.slug) revalidatePath(`/${portal.slug}/shops/${shop.slug}`);
+  revalidatePath(`/dashboard/shop/${shopId}`);
+}

@@ -4,6 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { eventShopDict } from "@/lib/shop/eventWording";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, Navigation } from "lucide-react";
 
 export type ScheduleSpot = { id: string; address: string | null; lat: number; lng: number; startsAt: string; endsAt: string; note: string | null };
@@ -25,8 +26,10 @@ function jstTime(iso: string): string {
  * 場所を示す小さな地図が出る。営業中の日はオレンジの点、今日は枠で示す。
  * 見せる条件(複数の日にまたがる予定があるとき)は呼び出し側で決める。
  */
-export function ShopScheduleCalendar({ spots, routeLabel }: { spots: ScheduleSpot[]; routeLabel: string }) {
-  const { t } = useLocale();
+export function ShopScheduleCalendar({ spots, routeLabel, eventMode = false }: { spots: ScheduleSpot[]; routeLabel: string; eventMode?: boolean }) {
+  const { t: baseT, locale } = useLocale();
+  // 「開催場所のお知らせ」オプションの店は、「出店」を「開催」の言い方にする。
+  const t = eventMode ? { ...baseT, shop: eventShopDict(baseT.shop, locale) } : baseT;
   const WEEKDAYS = t.shop.weekdays;
   const todayKey = jstKey(Date.now());
   const byDay = useMemo(() => {

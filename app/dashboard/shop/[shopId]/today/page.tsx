@@ -12,7 +12,10 @@ export default async function TodaySpotPage({ params }: { params: Promise<{ shop
 
   const supabase = (await createClient()) as any;
   const { data: portal } = await supabase.from("locapass_portals").select("features").eq("id", viewer.shop.portal_id).maybeSingle();
-  if (!(portal?.features ?? []).includes("mobile")) notFound();
+  const isMobile = (portal?.features ?? []).includes("mobile");
+  // 移動販売のポータル、または店舗オプション「開催場所のお知らせ」がオンの店だけ。
+  const { data: optRow } = await supabase.from("locapass_shops").select("spot_notice_enabled").eq("id", shopId).maybeSingle();
+  if (!isMobile && !optRow?.spot_notice_enabled) notFound();
 
   const { data, error } = await supabase
     .from("locapass_shop_events")
@@ -32,11 +35,11 @@ export default async function TodaySpotPage({ params }: { params: Promise<{ shop
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-slate-900">今日の出店</h1>
+      <h1 className="text-lg font-bold text-slate-900">{isMobile ? "今日の出店" : "開催場所のお知らせ"}</h1>
       {error ? (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">位置の列がまだ用意されていません(データベースの準備が必要です)。</p>
       ) : (
-        <TodaySpotManager shopId={shopId} active={active} upcoming={upcoming} past={past} />
+        <TodaySpotManager shopId={shopId} active={active} upcoming={upcoming} past={past} variant={isMobile ? "mobile" : "event"} />
       )}
     </div>
   );

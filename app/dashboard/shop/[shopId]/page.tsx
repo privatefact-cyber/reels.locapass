@@ -18,6 +18,7 @@ import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel
 import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapStatsCard";
 import { PriceListSection } from "@/components/locapass-dashboard/PriceListSection";
 import { ShopAccountSettingsSection } from "@/components/locapass-dashboard/ShopAccountSettingsSection";
+import { SpotNoticeOption } from "@/components/locapass-dashboard/SpotNoticeOption";
 import { ShopTranslationEditor, type TranslationEditorField } from "@/components/locapass-dashboard/ShopTranslationEditor";
 import { asStoredTranslations, TRANSLATION_TARGETS } from "@/lib/i18n/contentTranslation";
 import { LANGUAGES } from "@/lib/i18n/languages";
@@ -101,6 +102,7 @@ export default async function LocapassShopSettingsPage({
 
   // 本家shopsの列名に揃える(category→genre, tel→phone, url→website_url, cover_url→cover_image_url)。
   // YouTube動画ID(型に列が無いため別クエリ)。
+  const { data: spotNoticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled").eq("id", currentShop.id).maybeSingle();
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_use_youtube").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
 
@@ -237,6 +239,8 @@ export default async function LocapassShopSettingsPage({
       </section>
 
       <ContactTapStatsCard stats={contactTapStats ?? []} />
+
+      <SpotNoticeOption shopId={currentShop.id} initialEnabled={Boolean(spotNoticeRow?.spot_notice_enabled)} />
 
       <ShopCompletenessCard percent={completeness.percent} items={completenessItems} />
 

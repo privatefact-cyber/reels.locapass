@@ -15,6 +15,19 @@ export async function getMobilePortalIds(supabase: Loose): Promise<Set<number>> 
   return new Set(((data ?? []) as { id: number }[]).map((p) => p.id));
 }
 
+/** オプション「開催場所のお知らせ」(locapass_shops.spot_notice_enabled)をオンにした店のID。列が無い等で取得に失敗したら空。 */
+export async function getSpotNoticeShopIds(supabase: Loose): Promise<Set<string>> {
+  const { data, error } = await supabase.from("locapass_shops").select("id").eq("spot_notice_enabled", true);
+  if (error) return new Set();
+  return new Set(((data ?? []) as { id: string }[]).map((r) => r.id));
+}
+
+/**
+ * オプションの店は、同じ店のピンを地図に2つ出せないので、固定のピンを「開催中・開催が近い間だけ」開催場所に切り替える。
+ * 開催が何日先から切り替えるか(それより先の予定は、固定のピンのまま)。
+ */
+export const EVENT_PIN_LEAD_DAYS = 7;
+
 export type SpotWindow = { lat: number; lng: number; address: string | null; startsAt: string; endsAt: string };
 
 /**
@@ -58,8 +71,14 @@ export async function mergeLiveSpots<T extends { id: string; lat: number | null;
   liveSelect: string = select,
 ): Promise<(T & { spot?: { startsAt: string; endsAt: string; address: string | null } })[]> {
   const supabase = createStaticClient() as unknown as Loose;
-  const [mobilePortals, spots] = await Promise.all([getMobilePortalIds(supabase), getLiveSpots(supabase, bounds)]);
-  const fixed = mobilePortals.size ? rows.filter((r) => r.portal_id == null || !mobilePortals.has(r.portal_id)) : rows;
+  const [mobilePortals, spots, noticeShops] = await Promise.all([getMobilePortalIds(supabase), getLiveSpots(supabase, bounds), getSpotNoticeShopIds(supabase)]);
+  // オプションの店で、開催がまだ先(EVENT_PIN_LEAD_DAYS日より先)の予定は、開催場所のピンにしない。
+  const leadIso = new Date(Date.now() + EVENT_PIN_LEAD_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  for (const [shopId, w] of [...spots]) if (noticeShops.has(shopId) && w.startsAt > leadIso) spots.delete(shopId);
+  // 開催場所のピンにする店は、固定のピンを外す(同じ店が2つ出ないように)。
+  const replaced = new Set([...spots.keys()].filter((id) => noticeShops.has(id)));
+  const inMobile = (r: T) => r.portal_id != null && mobilePortals.has(r.portal_id);
+  const fixed = rows.filter((r) => !inMobile(r) && !replaced.has(r.id));
   if (spots.size === 0) return fixed;
   const { data } = await supabase.from("locapass_shops").select(liveSelect).in("id", [...spots.keys()]).eq("status", "active");
   const live = ((data ?? []) as unknown as T[]).map((s) => {
