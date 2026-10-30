@@ -649,6 +649,7 @@ export function PhotoMap({
           {shownSpots.map((spot) => {
             const isActive = spot.id === activeId;
             const title = spot.names[0] + (spot.names.length > 1 ? t.photo.moreSpots(spot.names.length - 1) : "");
+            const shopHref = spot.posts.find(({ post }) => post.shop)?.post.shop?.href ?? null;
             return (
               <div
                 key={spot.id}
@@ -705,7 +706,17 @@ export function PhotoMap({
                 </div>
                 <div className="shrink-0 space-y-2 p-3">
                   <div className="flex items-center gap-2">
-                    <p className="min-w-0 flex-1 truncate font-display text-sm font-bold text-main">{title}</p>
+                    {shopHref ? (
+                      <Link
+                        href={shopHref}
+                        onClick={(e) => e.stopPropagation()}
+                        className="min-w-0 flex-1 truncate font-display text-sm font-bold text-main underline decoration-main/40 underline-offset-4 hover:decoration-main"
+                      >
+                        {title}
+                      </Link>
+                    ) : (
+                      <p className="min-w-0 flex-1 truncate font-display text-sm font-bold text-main">{title}</p>
+                    )}
                     {spot.kind === "listed" || spot.kind === "spot" ? (
                       <span className="rounded-full border border-tone-600 px-2 py-0.5 text-[10px] text-tone-300">
                         {spot.kind === "listed" ? t.photo.badgeListed : t.photo.badgeSpot}
@@ -735,15 +746,6 @@ export function PhotoMap({
                     >
                       {t.photo.directionsArrow}
                     </a>
-                    {spot.posts.find(({ post }) => post.shop) ? (
-                      <Link
-                        href={spot.posts.find(({ post }) => post.shop)!.post.shop!.href}
-                        onClick={(e) => e.stopPropagation()}
-                        className="rounded-full border border-hl-400/50 px-3 py-2 text-xs text-hl-300 transition hover:bg-hl-400/10"
-                      >
-                        {t.photo.shopPageLink}
-                      </Link>
-                    ) : null}
                     <button
                       type="button"
                       onClick={(e) => {
