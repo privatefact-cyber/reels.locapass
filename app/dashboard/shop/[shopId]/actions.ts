@@ -11,6 +11,7 @@ import type { Json } from "@/types/supabase";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { OFFICIAL_CATEGORY } from "@/lib/shop/genres";
 import { translateEventText, translatePriceItemNames } from "@/lib/shop/shopTranslations";
+import { normalizeInputLang, shopInputLang } from "@/lib/shop/inputLang";
 
 /**
  * LUXELA本家(app/dashboard/shop/actions.ts)の店舗情報画面をlocapass_shopsにつないだ版。
@@ -68,6 +69,8 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   const heroMediaUrl = String(formData.get("hero_media_url") ?? "").trim();
   const heroMediaType = String(formData.get("hero_media_url_type") ?? "").trim() === "video" ? "video" : "image";
   const usageNotes = String(formData.get("usage_notes") ?? "").trim() || null;
+  // 入力言語(空=自動判定)。自動翻訳の原文の言語として使う。
+  const inputLang = normalizeInputLang(String(formData.get("input_lang") ?? "").trim());
   const priceInfo = String(formData.get("price_info") ?? "").trim() || null;
   // 動画のURLは、サイトの種類と動画の識別子だけを保存する。空なら削除(店舗ページから「動画紹介」が消える)。URLが貼られたのに判別できないときは、保存せずエラーにする。
   const videoRaw = String(formData.get("video_url") ?? "").trim();
@@ -106,9 +109,9 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   };
   // 紹介文・営業時間・料金情報・利用説明などが変わっていたら、英語・中国語の翻訳を作り直す
   // (本家refreshShopTranslationsと同じ項目。変わっていなければ翻訳APIは呼ばない)。
-  if (needsTranslation(translationFields, currentShop?.translations)) {
+  if (needsTranslation(translationFields, currentShop?.translations, undefined, inputLang)) {
     try {
-      const translations = preserveManualTranslations(await translateFields(translationFields), currentShop?.translations);
+      const translations = preserveManualTranslations(await translateFields(translationFields, inputLang), currentShop?.translations);
       if (translations) translationsPatch = { translations: translations as unknown as Json };
     } catch (e) {
       console.error("店舗紹介文の翻訳に失敗しました:", e);
@@ -126,6 +129,7 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
       business_hours: businessHours,
       business_hours_weekly: businessHoursWeekly as unknown as Json,
       description,
+      input_lang: inputLang,
       cover_url: coverImageUrl || null,
       url: websiteUrl || null,
       line_url: lineUrl || null,
@@ -305,7 +309,7 @@ export async function addPriceItem(shopId: string, formData: FormData) {
   const priceRaw = String(formData.get("price") ?? "").trim();
   if (!name || !priceRaw) throw new Error("コース名と料金は必須です");
 
-  const [nameTranslations] = await translatePriceItemNames([name]);
+  const [nameTranslations] = await translatePriceItemNames([name], await shopInputLang(supabase, shopId));
   const { error } = await supabase.from("locapass_shop_price_items").insert({
     shop_id: shopId,
     name,
@@ -325,7 +329,7 @@ export async function updatePriceItem(shopId: string, itemId: string, formData: 
   const priceRaw = String(formData.get("price") ?? "").trim();
   if (!name || !priceRaw) throw new Error("コース名と料金は必須です");
 
-  const [nameTranslations] = await translatePriceItemNames([name]);
+  const [nameTranslations] = await translatePriceItemNames([name], await shopInputLang(supabase, shopId));
   const { data, error } = await supabase
     .from("locapass_shop_price_items")
     .update({
@@ -402,7 +406,7 @@ export async function addEvent(shopId: string, formData: FormData) {
     }
   }
 
-  const translations = await translateEventText(title, body || null);
+  const translations = await translateEventText(title, body || null, await shopInputLang(supabase, shopId));
   const { error } = await supabase.from("locapass_shop_events").insert({
     shop_id: shopId,
     title,
@@ -463,7 +467,7 @@ export async function updateEvent(shopId: string, eventId: string, formData: For
     }
   }
 
-  const translations = await translateEventText(title, body || null);
+  const translations = await translateEventText(title, body || null, await shopInputLang(supabase, shopId));
   const { data, error } = await supabase
     .from("locapass_shop_events")
     .update({

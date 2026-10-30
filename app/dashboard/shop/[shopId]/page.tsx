@@ -20,6 +20,7 @@ import { PriceListSection } from "@/components/locapass-dashboard/PriceListSecti
 import { ShopAccountSettingsSection } from "@/components/locapass-dashboard/ShopAccountSettingsSection";
 import { ShopTranslationEditor, type TranslationEditorField } from "@/components/locapass-dashboard/ShopTranslationEditor";
 import { asStoredTranslations, TRANSLATION_TARGETS } from "@/lib/i18n/contentTranslation";
+import { LANGUAGES } from "@/lib/i18n/languages";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
@@ -64,7 +65,7 @@ export default async function LocapassShopSettingsPage({
       supabase
         .from("locapass_shops")
         .select(
-          "id, name, category, address, tel, business_hours, business_hours_weekly, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code, tagline, translations",
+          "id, name, category, address, tel, business_hours, business_hours_weekly, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code, tagline, translations, input_lang",
         )
         .eq("id", currentShop.id)
         .single(),
@@ -495,6 +496,28 @@ export default async function LocapassShopSettingsPage({
               acceptVideo
               boxClassName="aspect-[16/6] w-full max-w-md"
             />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-slate-500" htmlFor="input_lang">
+              文章を入力する言語
+            </label>
+            <select
+              id="input_lang"
+              name="input_lang"
+              defaultValue={shopRow.input_lang ?? ""}
+              // 16px未満だとiPhoneで入力時に自動ズームされる。
+              className="mt-1 w-full max-w-xs rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            >
+              <option value="">自動判定</option>
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code} data-no-translate>
+                  {l.native}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-slate-400">
+              お店紹介文・メニュー・イベント・投稿などを書く言語です。この言語を元に、日本語・英語・中国語・アラビア語へ自動で翻訳されます(お客様は、元の文章もそのまま読めます)。
+            </p>
           </div>
           <div className="sm:col-span-2">
             <label className="block text-xs font-semibold text-slate-500">お店紹介文</label>

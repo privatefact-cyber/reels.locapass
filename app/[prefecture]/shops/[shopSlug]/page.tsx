@@ -44,7 +44,9 @@ import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassRee
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { genreLabel } from "@/lib/i18n/genreLabels";
-import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import { asStoredTranslations, pickTranslation } from "@/lib/i18n/contentTranslation";
+import { isSiteLocale, languageInfo } from "@/lib/i18n/languages";
+import { autoTranslatedFromLabel, showOriginalLabel, showTranslationLabel } from "@/lib/i18n/originalLabel";
 import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { ShopHeroMedia } from "@/components/shop/ShopHeroMedia";
 import { ShopSpotCard, type ShopSpot } from "@/components/shop/ShopSpotCard";
@@ -133,13 +135,22 @@ export async function generateMetadata({
 
 export default async function ShopDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<PageParams>;
+  searchParams: Promise<{ orig?: string }>;
 }) {
   const resolvedParams = await params;
+  const { orig } = await searchParams;
   const { supabase, portal: site, shopRow, shopError } = await resolveShop(resolvedParams);
   const locale = await getServerLocale();
   const t = dictionaries[locale];
+  // 店舗の文章が、サイトの4言語以外(ネパール語・トルコ語など)で書かれているときは、翻訳に加えて「原文を見る」で
+  // 店舗が書いたそのままの文章も読める(翻訳費用はかからない。表示を原文にするだけ)。
+  const sourceLang = asStoredTranslations(shopRow?.translations).source_lang;
+  const extraSource = sourceLang && !isSiteLocale(sourceLang) ? languageInfo(sourceLang) : null;
+  const showOriginal = !!extraSource && orig === "1";
+  const contentLocale = showOriginal ? ("orig" as const) : locale;
   // Google Mapsのhlパラメータは"zh"単体を認識しないため簡体字コードに変換する。
   const mapsHl = locale === "zh" ? "zh-CN" : locale;
 
@@ -157,7 +168,7 @@ export default async function ShopDetailPage({
   // (翻訳が無い項目は日本語のまま)。1項目でも翻訳を使ったら「自動翻訳」の注記を出す(本家と同じ)。
   let usedTranslation = false;
   const tr = (original: string | null, key: string) => {
-    const picked = pickTranslation(locale, original, shopRow.translations, key);
+    const picked = pickTranslation(contentLocale, original, shopRow.translations, key);
     if (picked.translated) usedTranslation = true;
     return picked.text;
   };
@@ -320,7 +331,7 @@ export default async function ShopDetailPage({
 
   const priceItems: PriceItem[] = (priceItemRows ?? []).map((p) => ({
     id: p.id,
-    name: pickTranslation(locale, p.name, p.name_translations, "name").text ?? p.name,
+    name: pickTranslation(contentLocale, p.name, p.name_translations, "name").text ?? p.name,
     durationMinutes: p.duration_minutes,
     price: p.price,
   }));
@@ -328,8 +339,8 @@ export default async function ShopDetailPage({
     .filter((e) => !e.ends_at || new Date(e.ends_at).getTime() >= now)
     .map((e) => ({
       id: e.id,
-      title: pickTranslation(locale, e.title, e.translations, "title").text ?? e.title,
-      body: pickTranslation(locale, e.body, e.translations, "body").text,
+      title: pickTranslation(contentLocale, e.title, e.translations, "title").text ?? e.title,
+      body: pickTranslation(contentLocale, e.body, e.translations, "body").text,
       startsAt: e.starts_at,
       endsAt: e.ends_at,
       imageUrl: e.image_url,
@@ -397,8 +408,8 @@ export default async function ShopDetailPage({
   const spotList = ((spotRows ?? []) as { id: string; body: string | null; address: string | null; lat: number; lng: number; starts_at: string; ends_at: string; translations: unknown }[]).map((r) => ({
     ...r,
     // 住所とひとことは、表示言語の翻訳があればそれを使う(無ければ日本語のまま)。
-    body: pickTranslation(locale, r.body, r.translations, "body").text,
-    address: pickTranslation(locale, r.address, r.translations, "address").text,
+    body: pickTranslation(contentLocale, r.body, r.translations, "body").text,
+    address: pickTranslation(contentLocale, r.address, r.translations, "address").text,
   }));
   const scheduleSpots: ScheduleSpot[] = spotList.map((r) => ({ id: r.id, address: r.address, lat: r.lat, lng: r.lng, startsAt: r.starts_at, endsAt: r.ends_at, note: r.body }));
   // 複数の日にまたがる予定があるときだけ、カレンダーを出す(1〜2件なら「出店場所」カードで足りる)。
@@ -684,7 +695,18 @@ export default async function ShopDetailPage({
               {store.description}
             </p>
           )}
-          {usedTranslation && <p className="text-[11px] text-tone-500">{t.shop.autoTranslated}</p>}
+          {usedTranslation && (
+            <p className="text-[11px] text-tone-500">{extraSource ? autoTranslatedFromLabel(locale, extraSource.native) : t.shop.autoTranslated}</p>
+          )}
+          {extraSource && (
+            <Link
+              href={showOriginal ? `/${resolvedParams.prefecture}/shops/${resolvedParams.shopSlug}` : `?orig=1`}
+              scroll={false}
+              className="inline-block rounded-full border border-main/20 px-3 py-1 text-[11px] font-semibold text-tone-200 hover:border-main/40 hover:text-main"
+            >
+              {showOriginal ? showTranslationLabel(locale) : showOriginalLabel(locale, extraSource.native)}
+            </Link>
+          )}
 
           {store.galleryImageUrls.length > 0 && (
             <div className="-mx-1 flex snap-x gap-2 overflow-x-auto pb-1">

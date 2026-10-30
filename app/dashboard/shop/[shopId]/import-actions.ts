@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ImportError, downloadImportImage, previewShopImport } from "@/lib/shop/importFromWebsite";
 import { refreshShopTranslations, translatePriceItemNames } from "@/lib/shop/shopTranslations";
+import { shopInputLang } from "@/lib/shop/inputLang";
 import type { ApplyImportInput, ApplyImportResult, PreviewImportResult } from "@/lib/shop/importTypes";
 
 /**
@@ -121,7 +122,7 @@ export async function applyImportAction(shopId: string, input: ApplyImportInput)
     const toInsert = candidates.filter((c) => !existingNames.has(c.name));
     if (toInsert.length > 0) {
       const startOrder = Math.max(0, ...(existing ?? []).map((e) => e.display_order ?? 0)) + 1;
-      const nameTranslations = await translatePriceItemNames(toInsert.map((c) => c.name));
+      const nameTranslations = await translatePriceItemNames(toInsert.map((c) => c.name), await shopInputLang(supabase, shopId));
       const { error } = await supabase.from("locapass_shop_price_items").insert(
         toInsert.map((c, i) => ({
           shop_id: shopId,

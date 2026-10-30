@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/types/supabase";
 import { needsTranslation, translateFields } from "@/lib/i18n/contentTranslation";
 import { itemSourceFields } from "@/lib/shop/items";
+import { shopInputLang } from "@/lib/shop/inputLang";
 
 /**
  * 掲載アイテム(車両)の文章を、英語・中国語・アラビア語に翻訳して保存する。サーバー専用。
@@ -11,17 +12,18 @@ import { itemSourceFields } from "@/lib/shop/items";
 export async function refreshItemTranslations(db: SupabaseClient, itemId: string): Promise<void> {
   const { data } = await db
     .from("locapass_shop_items")
-    .select("title, description, price_label, attributes, translations")
+    .select("title, description, price_label, attributes, translations, shop_id")
     .eq("id", itemId)
     .maybeSingle();
   if (!data) return;
 
   const fields = itemSourceFields(data as Parameters<typeof itemSourceFields>[0]);
-  if (!needsTranslation(fields, data.translations)) return;
+  const inputLang = await shopInputLang(db, (data as { shop_id?: string }).shop_id);
+  if (!needsTranslation(fields, data.translations, undefined, inputLang)) return;
 
   let translations = null;
   try {
-    translations = await translateFields(fields);
+    translations = await translateFields(fields, inputLang);
   } catch (e) {
     console.error("掲載アイテムの翻訳に失敗しました:", e);
   }

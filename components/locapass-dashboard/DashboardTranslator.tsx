@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
-import type { Locale } from "@/lib/i18n/locale";
 
 /**
  * 管理画面(店舗オーナー向け)の文言を、表示言語に合わせて差し替える。
@@ -74,7 +73,7 @@ function shouldSkip(el: Element | null, boundary: Element | null): boolean {
   return false;
 }
 
-export function DashboardTranslator({ locale, catalog, children }: { locale: Locale; catalog: Catalog; children: ReactNode }) {
+export function DashboardTranslator({ locale, catalog, children }: { locale: string; catalog: Catalog; children: ReactNode }) {
   const active = locale !== "ja" && Object.keys(catalog).length > 0;
   const [ready, setReady] = useState(!active);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
@@ -181,7 +180,7 @@ export function DashboardTranslator({ locale, catalog, children }: { locale: Loc
 
   // display: contents なので、レイアウトには影響しない(隠すためだけの入れ物)。
   return (
-    <div ref={setRoot} className="contents" style={ready ? undefined : { visibility: "hidden" }}>
+    <div ref={setRoot} dir={locale === "ar" ? "rtl" : "ltr"} className="contents" style={ready ? undefined : { visibility: "hidden" }}>
       {children}
     </div>
   );

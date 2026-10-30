@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { geminiGenerateWithFallback } from "@/lib/gemini";
 import type { Locale } from "@/lib/i18n/locale";
+import { languageInfo } from "@/lib/i18n/languages";
 
 /**
  * 店舗・投稿者が入力した文章(紹介文・営業時間・料金・イベント等)の自動翻訳。サーバー専用。
@@ -81,13 +82,23 @@ function targetsExcludingSource(targets: readonly TranslationTarget[], sourceLan
 }
 
 /** 今の原文に対して、保存済みの翻訳が古い(または無い)か。 */
-export function needsTranslation(fields: SourceFields, stored: unknown, targets: readonly TranslationTarget[] = TRANSLATION_TARGETS): boolean {
+export function needsTranslation(
+  fields: SourceFields,
+  stored: unknown,
+  targets: readonly TranslationTarget[] = TRANSLATION_TARGETS,
+  /** 店舗が指定した入力言語(あれば自動判定より優先)。保存済みの原文言語と違えば、訳し直す。 */
+  sourceLang?: string | null,
+): boolean {
   const st = asStoredTranslations(stored);
   if (st.source_hash !== translationSourceHash(fields)) return true;
   if (Object.keys(nonEmptyFields(fields)).length === 0) return false;
-  // 原文の言語がまだ判定されていない行(従来の保存形式)で、仮名が無い文章は、日本語とは限らない。
-  // 一度だけ判定し直す(判定後は source_lang が入るので、繰り返し引っかからない)。
-  if (!st.source_lang && guessSourceLang(fields) !== "ja") return true;
+  if (sourceLang) {
+    if ((st.source_lang ?? "ja") !== sourceLang) return true;
+  } else if (!st.source_lang && guessSourceLang(fields) !== "ja") {
+    // 原文の言語がまだ判定されていない行(従来の保存形式)で、仮名が無い文章は、日本語とは限らない。
+    // 一度だけ判定し直す(判定後は source_lang が入るので、繰り返し引っかからない)。
+    return true;
+  }
   // 翻訳対象の言語が後から増えた場合、原文が変わっていなくても足りない言語を作る。
   return targetsExcludingSource(targets, storedSourceLang(st)).some((t) => !st[t]);
 }
@@ -129,12 +140,12 @@ export function missingTargets(stored: unknown): TranslationTarget[] {
  * translated が true のときだけ「自動翻訳」の注記を出す。
  */
 export function pickTranslation(
-  locale: Locale,
+  locale: Locale | "orig",
   original: string | null,
   stored: unknown,
   key: string,
 ): { text: string | null; translated: boolean } {
-  if (!original) return { text: original, translated: false };
+  if (!original || locale === "orig") return { text: original, translated: false };
   const st = asStoredTranslations(stored);
   if (locale === (st.source_lang ?? "ja")) return { text: original, translated: false };
   // アラビア語は、まだ翻訳が無い項目だけ英語の翻訳で代替する(英語も無ければ原文)。
@@ -152,12 +163,14 @@ const TARGET_LABEL: Record<TranslationTarget, string> = {
   ar: "Modern Standard Arabic (key \"ar\")",
 };
 
-function buildPromptRules(targets: readonly TranslationTarget[], detect: boolean): string {
+function buildPromptRules(targets: readonly TranslationTarget[], detect: boolean, sourceLang: string | null): string {
+  const sourceName = sourceLang ? languageInfo(sourceLang)?.english ?? sourceLang : null;
   const langList = targets.map((t) => TARGET_LABEL[t]).join(", ");
   const shape = [...(detect ? ['"src": "<source language code>"'] : []), ...targets.map((t) => `"${t}": {<same keys>}`)].join(", ");
   return [
     "You translate text written by shops, restaurants and nightlife venues in Japan for their listing pages.",
     "The owner may be Japanese or a foreigner living in Japan, so the text can be in any language (Japanese, English, Chinese, Korean, Vietnamese, etc.).",
+    ...(sourceName ? [`All the text is written in ${sourceName}.`] : []),
     `Translate every field of every item into ${langList}.`,
     ...(detect
       ? [
@@ -185,7 +198,7 @@ function buildPromptRules(targets: readonly TranslationTarget[], detect: boolean
   ].join("\n");
 }
 
-async function callGemini(items: Record<string, string>[], targets: readonly TranslationTarget[], detect: boolean): Promise<unknown> {
+async function callGemini(items: Record<string, string>[], targets: readonly TranslationTarget[], detect: boolean, sourceLang: string | null): Promise<unknown> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY が設定されていません");
 
@@ -193,7 +206,7 @@ async function callGemini(items: Record<string, string>[], targets: readonly Tra
   const res = await geminiGenerateWithFallback(
     apiKey,
     {
-      contents: [{ parts: [{ text: `${buildPromptRules(targets, detect)}\n\n${JSON.stringify(items)}` }] }],
+      contents: [{ parts: [{ text: `${buildPromptRules(targets, detect, sourceLang)}\n\n${JSON.stringify(items)}` }] }],
       generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
     },
     "content translation",
@@ -221,14 +234,14 @@ async function translateGroup(
   items: SourceFields[],
   cleaned: Record<string, string>[],
   targets: readonly TranslationTarget[],
-  knownSource: "ja" | null,
+  knownSource: string | null,
 ): Promise<(StoredTranslations | null)[]> {
   const requestTargets = knownSource ? targetsExcludingSource(targets, knownSource) : [...targets];
   if (requestTargets.length === 0) {
     return items.map((fields) => ({ source_hash: translationSourceHash(fields), ...(knownSource ? { source_lang: knownSource } : {}) }));
   }
 
-  const parsed = await callGemini(cleaned, requestTargets, !knownSource);
+  const parsed = await callGemini(cleaned, requestTargets, !knownSource, knownSource);
   if (!Array.isArray(parsed) || parsed.length !== cleaned.length) return items.map(() => null);
 
   return items.map((fields, index) => {
@@ -260,6 +273,8 @@ async function translateGroup(
 export async function translateFieldsBatch(
   items: SourceFields[],
   targets: readonly TranslationTarget[] = TRANSLATION_TARGETS,
+  /** 項目ごとの、店舗が指定した入力言語(無ければ null/undefined で、仮名の有無とAIで判定)。items と同じ順。 */
+  sourceLangs?: readonly (string | null | undefined)[],
 ): Promise<(StoredTranslations | null)[]> {
   const cleaned = items.map(nonEmptyFields);
 
@@ -267,18 +282,15 @@ export async function translateFieldsBatch(
     source_hash: translationSourceHash(fields),
   }));
 
-  const japaneseIdx: number[] = [];
-  const unknownIdx: number[] = [];
+  // 原文の言語が分かっている項目(指定された・仮名がある)は、言語ごとにまとめて訳す。分からない項目は、AIに判定させる。
+  const groups = new Map<string | null, number[]>();
   cleaned.forEach((c, i) => {
     if (Object.keys(c).length === 0) return;
-    (guessSourceLang(items[i]) === "ja" ? japaneseIdx : unknownIdx).push(i);
+    const known = sourceLangs?.[i] || guessSourceLang(items[i]);
+    groups.set(known, [...(groups.get(known) ?? []), i]);
   });
 
-  for (const [indexes, knownSource] of [
-    [japaneseIdx, "ja"],
-    [unknownIdx, null],
-  ] as const) {
-    if (indexes.length === 0) continue;
+  for (const [knownSource, indexes] of groups) {
     const group = await translateGroup(
       indexes.map((i) => items[i]),
       indexes.map((i) => cleaned[i]),
@@ -293,7 +305,7 @@ export async function translateFieldsBatch(
   return results;
 }
 
-export async function translateFields(fields: SourceFields): Promise<StoredTranslations | null> {
-  const [result] = await translateFieldsBatch([fields]);
+export async function translateFields(fields: SourceFields, sourceLang?: string | null): Promise<StoredTranslations | null> {
+  const [result] = await translateFieldsBatch([fields], TRANSLATION_TARGETS, [sourceLang]);
   return result ?? null;
 }

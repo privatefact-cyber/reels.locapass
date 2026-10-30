@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/types/supabase";
 import { needsTranslation, preserveManualTranslations, translateFields, translateFieldsBatch } from "@/lib/i18n/contentTranslation";
+import { normalizeInputLang } from "@/lib/shop/inputLang";
 
 /**
  * 店舗の文章の翻訳を、今の日本語に合わせて作り直す(日本語が変わっていなければ何もしない)。
@@ -10,7 +11,7 @@ import { needsTranslation, preserveManualTranslations, translateFields, translat
 export async function refreshShopTranslations(supabase: SupabaseClient<Database>, shopId: string): Promise<void> {
   const { data } = await supabase
     .from("locapass_shops")
-    .select("description, tagline, business_hours, price_info, usage_notes, translations")
+    .select("description, tagline, business_hours, price_info, usage_notes, translations, input_lang")
     .eq("id", shopId)
     .maybeSingle();
   if (!data) return;
@@ -22,11 +23,12 @@ export async function refreshShopTranslations(supabase: SupabaseClient<Database>
     price_info: data.price_info,
     usage_notes: data.usage_notes,
   };
-  if (!needsTranslation(fields, data.translations)) return;
+  const inputLang = normalizeInputLang((data as { input_lang?: string | null }).input_lang);
+  if (!needsTranslation(fields, data.translations, undefined, inputLang)) return;
 
   let translations = null;
   try {
-    translations = preserveManualTranslations(await translateFields(fields), data.translations);
+    translations = preserveManualTranslations(await translateFields(fields, inputLang), data.translations);
   } catch (e) {
     console.error("店舗情報の翻訳に失敗しました:", e);
   }
@@ -38,10 +40,10 @@ export async function refreshShopTranslations(supabase: SupabaseClient<Database>
 }
 
 /** 料金項目名をまとめて翻訳する。失敗時は空の翻訳(日本語表示)を返す。 */
-export async function translatePriceItemNames(names: string[]): Promise<Json[]> {
+export async function translatePriceItemNames(names: string[], sourceLang?: string | null): Promise<Json[]> {
   if (names.length === 0) return [];
   try {
-    const results = await translateFieldsBatch(names.map((name) => ({ name })));
+    const results = await translateFieldsBatch(names.map((name) => ({ name })), undefined, names.map(() => sourceLang));
     return results.map((r) => (r ?? {}) as unknown as Json);
   } catch (e) {
     console.error("料金項目名の翻訳に失敗しました:", e);
@@ -50,9 +52,9 @@ export async function translatePriceItemNames(names: string[]): Promise<Json[]> 
 }
 
 /** イベントのタイトル・本文を翻訳する。失敗時は空の翻訳(日本語表示)を返す。 */
-export async function translateEventText(title: string, body: string | null): Promise<Json> {
+export async function translateEventText(title: string, body: string | null, sourceLang?: string | null): Promise<Json> {
   try {
-    return ((await translateFields({ title, body })) ?? {}) as unknown as Json;
+    return ((await translateFields({ title, body }, sourceLang)) ?? {}) as unknown as Json;
   } catch (e) {
     console.error("イベントの翻訳に失敗しました:", e);
     return {} as Json;

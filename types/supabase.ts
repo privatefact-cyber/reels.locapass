@@ -2519,6 +2519,7 @@ export type Database = {
           hero_media_url: string | null
           icon_url: string | null
           id: string
+          input_lang: string | null
           is_temporarily_closed: boolean
           lat: number | null
           line_qr_image_url: string | null
@@ -2569,6 +2570,7 @@ export type Database = {
           hero_media_url?: string | null
           icon_url?: string | null
           id?: string
+          input_lang?: string | null
           is_temporarily_closed?: boolean
           lat?: number | null
           line_qr_image_url?: string | null
@@ -2619,6 +2621,7 @@ export type Database = {
           hero_media_url?: string | null
           icon_url?: string | null
           id?: string
+          input_lang?: string | null
           is_temporarily_closed?: boolean
           lat?: number | null
           line_qr_image_url?: string | null

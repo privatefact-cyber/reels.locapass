@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/types/supabase";
 import { needsTranslation, preserveManualTranslations, translateFieldsBatch, type SourceFields, type TranslationTarget } from "@/lib/i18n/contentTranslation";
 import { itemSourceFields } from "@/lib/shop/items";
+import { normalizeInputLang } from "@/lib/shop/inputLang";
 import { translateAddressesToEnglish } from "@/lib/map/translateAddress";
 
 /**
@@ -39,11 +40,14 @@ type Target = {
   fieldsOf: (row: Row) => SourceFields;
 };
 
+/** 店舗が入力言語を指定している表(店舗の文章)。指定があれば、自動判定ではなくその言語を原文として訳す。 */
+const SHOP_INPUT_LANG_TABLES = new Set<Target["table"]>(["locapass_shops", "locapass_shop_items", "locapass_reels", "locapass_shop_events", "locapass_shop_price_items"]);
+
 const TARGETS: Target[] = [
   {
     table: "locapass_shops",
     label: "shops",
-    select: "id, description, tagline, business_hours, price_info, usage_notes, translations",
+    select: "id, description, tagline, business_hours, price_info, usage_notes, translations, input_lang",
     shopCol: "id",
     query: (q) => q.eq("status", "active"),
     fieldsOf: (r) => ({
@@ -57,7 +61,7 @@ const TARGETS: Target[] = [
   {
     table: "locapass_shop_items",
     label: "items",
-    select: "id, title, description, price_label, attributes, translations",
+    select: "id, shop_id, title, description, price_label, attributes, translations",
     shopCol: "shop_id",
     query: (q) => q.neq("status", "hidden"),
     fieldsOf: (r) => itemSourceFields(r as unknown as Parameters<typeof itemSourceFields>[0]),
@@ -65,7 +69,7 @@ const TARGETS: Target[] = [
   {
     table: "locapass_reels",
     label: "reels",
-    select: "id, caption, translations",
+    select: "id, shop_id, caption, translations",
     shopCol: "shop_id",
     query: (q) => q.eq("status", "publish").not("caption", "is", null).order("published_at", { ascending: false }).limit(2000),
     fieldsOf: (r) => ({ caption: r.caption as string | null }),
@@ -74,7 +78,7 @@ const TARGETS: Target[] = [
     // 出店予定・イベント(タイトル・本文・住所)。移動販売の出店予定は住所も訳す(英語表示で日本語の住所が出ないように)。
     table: "locapass_shop_events",
     label: "events",
-    select: "id, title, body, address, translations, ends_at",
+    select: "id, shop_id, title, body, address, translations, ends_at",
     shopCol: "shop_id",
     // 終わったイベントは訳さない(費用を抑える)。
     query: (q) => q.or("ends_at.is.null,ends_at.gte.now()").limit(2000),
@@ -84,7 +88,7 @@ const TARGETS: Target[] = [
     // 料金表・メニューの項目名(別の列 name_translations に入れる)。
     table: "locapass_shop_price_items",
     label: "price_items",
-    select: "id, name, name_translations",
+    select: "id, shop_id, name, name_translations",
     translationsCol: "name_translations",
     shopCol: "shop_id",
     query: (q) => q.limit(3000),
@@ -123,7 +127,18 @@ export async function sweepTranslations(
   let stoppedEarly = false;
   const results: Record<string, { checked: number; stale: number; translated: number; failed: number }> = {};
 
+  // 入力言語を指定している店舗(店舗ID → 言語)。
+  const inputLangByShop = new Map<string, string>();
+  {
+    const { data: langRows } = await db.from("locapass_shops").select("id, input_lang").not("input_lang", "is", null);
+    for (const r of (langRows ?? []) as { id: string; input_lang: string | null }[]) {
+      const lang = normalizeInputLang(r.input_lang);
+      if (lang) inputLangByShop.set(r.id, lang);
+    }
+  }
+
   for (const target of TARGETS) {
+    const hintOf = (r: Row): string | null => (SHOP_INPUT_LANG_TABLES.has(target.table) ? (inputLangByShop.get(String(r[target.shopCol])) ?? null) : null);
     const stat = { checked: 0, stale: 0, translated: 0, failed: 0 };
     results[target.label] = stat;
 
@@ -139,7 +154,7 @@ export async function sweepTranslations(
     const stale = rows.filter((r) => {
       const fields = target.fieldsOf(r);
       const hasText = Object.values(fields).some((v) => typeof v === "string" && v.trim());
-      return hasText && needsTranslation(fields, r[target.translationsCol ?? "translations"], target.targets);
+      return hasText && needsTranslation(fields, r[target.translationsCol ?? "translations"], target.targets, hintOf(r));
     });
     stat.stale = stale.length;
 
@@ -152,7 +167,7 @@ export async function sweepTranslations(
       const batch = stale.slice(i, Math.min(i + BATCH_SIZE, i + budget));
       let translated: Awaited<ReturnType<typeof translateFieldsBatch>>;
       try {
-        translated = await translateFieldsBatch(batch.map((r) => target.fieldsOf(r)), target.targets);
+        translated = await translateFieldsBatch(batch.map((r) => target.fieldsOf(r)), target.targets, batch.map(hintOf));
       } catch (e) {
         console.error(`翻訳に失敗しました(${target.label}):`, e);
         stat.failed += batch.length;
