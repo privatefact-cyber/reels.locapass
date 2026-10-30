@@ -51,6 +51,8 @@ import { ShopSpotCard, type ShopSpot } from "@/components/shop/ShopSpotCard";
 import { ShopScheduleCalendar, type ScheduleSpot } from "@/components/shop/ShopScheduleCalendar";
 import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
 import { getShopPhotoPosts } from "@/lib/photo/getShopPhotoPosts";
+import { PhotoWallBackground } from "@/components/shop/PhotoWallBackground";
+import { resolvePreset } from "@/lib/photowall/presets";
 import { PageDots } from "@/components/shop/PageDots";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
@@ -359,6 +361,14 @@ export default async function ShopDetailPage({
   }).catch(() => []);
   const totalReels = allReelRows?.length ?? 0;
 
+  // 背景「写真の壁」のオーナー設定。列が無い等で取得に失敗したら、壁なしで表示する。
+  const { data: wallRow } = await (supabase as any)
+    .from("locapass_shops")
+    .select("photo_wall_enabled, photo_wall_preset")
+    .eq("id", shopRow.id)
+    .maybeSingle();
+  const wallPreset = wallRow?.photo_wall_enabled ? resolvePreset(wallRow.photo_wall_preset, shopRow.category) : null;
+
   // 掲載アイテム(車両の在庫)。登録がある店舗だけ「在庫車両」セクションを出す(売約済みは後ろへ)。
   const { data: itemRows } = await (supabase as any)
     .from("locapass_shop_items")
@@ -401,7 +411,8 @@ export default async function ShopDetailPage({
 
   return (
     <ShopSwipeToArchive href={archiveHref}>
-    <div className="space-y-10 pb-44 md:pb-24">
+    <div className="relative isolate space-y-10 pb-44 md:pb-24">
+      {wallPreset && <PhotoWallBackground realPhotoUrls={userPhotos.map((p) => p.imageUrl)} preset={wallPreset} />}
       {/* 所属する子ポータルで選んだ配色テーマ(未設定ならサイト全体の配色) */}
       <PortalThemeScope theme={isSiteTheme(site.theme) ? site.theme : null} />
       <WhisperRefreshPing shopId={shopId} />

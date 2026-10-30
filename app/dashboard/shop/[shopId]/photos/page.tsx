@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { createClient } from "@/lib/supabase/server";
 import { getShopPhotoAdminView } from "@/lib/photo/getShopPhotoPosts";
+import { PhotoWallSettings } from "@/components/locapass-dashboard/PhotoWallSettings";
+import { resolvePreset } from "@/lib/photowall/presets";
 import { ShopPhotoLinkManager } from "@/components/locapass-dashboard/ShopPhotoLinkManager";
 
 /**
@@ -20,6 +22,12 @@ export default async function LocapassShopPhotosAdminPage({ params }: { params: 
     .eq("id", shopId)
     .maybeSingle();
   if (!shop) notFound();
+  // 背景「写真の壁」の設定(型に無い列なので別に読む)。
+  const { data: wall } = await (supabase as any)
+    .from("locapass_shops")
+    .select("category, photo_wall_enabled, photo_wall_preset")
+    .eq("id", shopId)
+    .maybeSingle();
   const portal = Array.isArray((shop as any).locapass_portals) ? (shop as any).locapass_portals[0] : (shop as any).locapass_portals;
 
   const view = await getShopPhotoAdminView(
@@ -44,6 +52,12 @@ export default async function LocapassShopPhotosAdminPage({ params }: { params: 
           写真そのものは消えず、LOCA SNAP の一覧には残ります。
         </p>
       </div>
+      <PhotoWallSettings
+        shopId={shop.id}
+        initialEnabled={Boolean(wall?.photo_wall_enabled)}
+        initialPreset={wall?.photo_wall_preset ?? null}
+        defaultPreset={resolvePreset(null, wall?.category)}
+      />
       <ShopPhotoLinkManager
         shopId={shop.id}
         canAttach={viewer.isOperator}
