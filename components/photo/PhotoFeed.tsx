@@ -14,6 +14,7 @@ import { PhotoVideo } from "@/components/photo/PhotoVideo";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { areaLabel, dateLocaleTag, tagLabel } from "@/lib/photo/labels";
+import { showOriginalLabel, showTranslationLabel } from "@/lib/i18n/originalLabel";
 
 function PlaceBadge({ kind }: { kind: PhotoPost["placeKind"] }) {
   const { t } = useLocale();
@@ -64,6 +65,8 @@ export function PhotoFeed({
   const { t, locale } = useLocale();
   // 削除した写真はその場で一覧から外す(本人とルート管理者だけに削除ボタンが出る)。
   const [deleted, setDeleted] = useState<Set<string>>(new Set());
+  // 文章が4言語以外(ポルトガル語など)で書かれた投稿は、「原文を見る」で書かれたままの文章に切り替える(画面の中だけ。翻訳費用はかからない)。
+  const [originalIds, setOriginalIds] = useState<Set<string>>(new Set());
   const visiblePosts = useMemo(() => allPosts.filter((p) => !deleted.has(p.id)), [allPosts, deleted]);
 
   // 検索(虫眼鏡)とタグでの絞り込み。グリッド・マップ・穴場のどのビューでも同じ条件を使う。
@@ -256,27 +259,56 @@ export function PhotoFeed({
               </div>
             </div>
             <div className="space-y-2 px-3 pt-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {post.shop ? (
-                  <Link href={post.shop.href} className="flex items-center gap-1 text-base font-medium text-main underline decoration-main/40 underline-offset-4 hover:decoration-main">
-                    <Store size={16} className="shrink-0" />
-                    {post.spotName}
-                  </Link>
-                ) : (
-                  <p className="text-base font-medium text-main">{post.spotName}</p>
-                )}
-                <PlaceBadge kind={post.placeKind} />
-              </div>
-              {post.comment ? <p className="whitespace-pre-wrap text-sm text-tone-300">{post.comment}</p> : null}
-              {post.tags.length > 0 ? (
-                <p className="text-xs text-tone-500">{post.tags.map((tag) => `#${tagLabel(tag, t.photo)}`).join(" ")}</p>
-              ) : null}
-              {post.address ? (
-                <p className="flex items-start gap-1 text-xs text-tone-500">
-                  <MapPin size={12} className="mt-0.5 shrink-0" />
-                  {post.address}
-                </p>
-              ) : null}
+              {(() => {
+                const orig = post.original;
+                // 翻訳が付く前(原文と同じ文)は、切替が要らない。
+                const canToggle = !!orig && (orig.spotName !== post.spotName || (orig.comment ?? "") !== (post.comment ?? "") || (orig.address ?? "") !== (post.address ?? ""));
+                const showOrig = canToggle && originalIds.has(post.id);
+                const spotName = showOrig ? orig!.spotName : post.spotName;
+                const comment = showOrig ? orig!.comment : post.comment;
+                const address = showOrig ? orig!.address : post.address;
+                return (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {post.shop ? (
+                        <Link href={post.shop.href} className="flex items-center gap-1 text-base font-medium text-main underline decoration-main/40 underline-offset-4 hover:decoration-main">
+                          <Store size={16} className="shrink-0" />
+                          {spotName}
+                        </Link>
+                      ) : (
+                        <p dir="auto" className="text-base font-medium text-main">{spotName}</p>
+                      )}
+                      <PlaceBadge kind={post.placeKind} />
+                    </div>
+                    {comment ? <p dir="auto" className="whitespace-pre-wrap text-sm text-tone-300">{comment}</p> : null}
+                    {canToggle ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOriginalIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(post.id)) next.delete(post.id);
+                            else next.add(post.id);
+                            return next;
+                          })
+                        }
+                        className="rounded-full border border-main/25 px-2.5 py-0.5 text-[11px] font-semibold text-tone-300 hover:border-main/50 hover:text-main"
+                      >
+                        🌐 {showOrig ? showTranslationLabel(locale) : showOriginalLabel(locale, orig!.lang)}
+                      </button>
+                    ) : null}
+                    {post.tags.length > 0 ? (
+                      <p className="text-xs text-tone-500">{post.tags.map((tag) => `#${tagLabel(tag, t.photo)}`).join(" ")}</p>
+                    ) : null}
+                    {address ? (
+                      <p dir="auto" className="flex items-start gap-1 text-xs text-tone-500">
+                        <MapPin size={12} className="mt-0.5 shrink-0" />
+                        {address}
+                      </p>
+                    ) : null}
+                  </>
+                );
+              })()}
             </div>
           </article>
         ))}

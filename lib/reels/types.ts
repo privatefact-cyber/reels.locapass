@@ -1,6 +1,8 @@
 export type ReelItem = {
   id: string;
   caption: string | null;
+  /** 投稿文が公開サイトの4言語以外(ポルトガル語など)で書かれているときの、書かれたままの原文。「原文を見る」で出す。 */
+  captionOriginal?: { text: string; lang: string } | null;
   media: { type: "video" | "image"; url: string; poster?: string }[];
   likesCount: number;
   castId: string | null;

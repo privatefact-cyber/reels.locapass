@@ -7,6 +7,7 @@ import { AvatarPeek } from "@/components/AvatarPeek";
 import { ReelCommentSheet } from "@/components/ReelCommentSheet";
 import { CaptionDrawer } from "@/components/CaptionDrawer";
 import { formatPostedAt } from "@/lib/reels/formatPostedAt";
+import { showOriginalLabel, showTranslationLabel } from "@/lib/i18n/originalLabel";
 import { useReelMutedPreference } from "@/lib/reels/useReelMutedPreference";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
@@ -46,6 +47,8 @@ export type ReelCardProps = {
   ctaText?: string;
   /** 投稿本文。先頭の数行だけカード上に出し、タップで下からのドロワーに全文を表示する。 */
   caption?: string | null;
+  /** 投稿文が4言語以外(ポルトガル語など)で書かれているときの、書かれたままの原文。あれば「原文を見る」を出す。 */
+  captionOriginal?: { text: string; lang: string } | null;
   likesCount: number;
   liked?: boolean;
   onToggleLike?: () => void;
@@ -85,6 +88,7 @@ export function ReelCard({
   ctaUrl,
   ctaText,
   caption,
+  captionOriginal,
   likesCount,
   liked = false,
   onToggleLike,
@@ -96,7 +100,7 @@ export function ReelCard({
   fullBleed = false,
   isAd = false,
 }: ReelCardProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   // 投稿者向けインサイト用の閲覧記録(広告は対象外)。
   useReelViewTracking(isAd ? undefined : reelId, isActive);
   const resolvedCtaText = ctaText ?? t.common.learnMore;
@@ -114,7 +118,13 @@ export function ReelCard({
   const [shareCopied, setShareCopied] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [captionOpen, setCaptionOpen] = useState(false);
-  const captionText = caption?.trim() ?? "";
+  // 4言語以外で書かれた投稿は、翻訳に加えて「原文を見る」で書かれたままの文章を読める(切替は画面の中だけ。費用はかからない)。
+  const [showOriginal, setShowOriginal] = useState(false);
+  const original = captionOriginal?.text.trim() ? captionOriginal : null;
+  const captionText = (showOriginal && original ? original.text : caption)?.trim() ?? "";
+  const originalToggle = original
+    ? { label: showOriginal ? showTranslationLabel(locale) : showOriginalLabel(locale, original.lang), onClick: () => setShowOriginal((v) => !v) }
+    : undefined;
   // コメントは最初は1行だけ。1行に入りきらないとき(改行を含むときも)だけ「続きを読む」を出す。
   const captionOneRef = useRef<HTMLSpanElement>(null);
   const [captionLong, setCaptionLong] = useState(false);
@@ -441,6 +451,15 @@ export function ReelCard({
             {captionLong && <span className="shrink-0 text-xs text-main/70 underline underline-offset-2">続きを読む</span>}
           </button>
         )}
+        {originalToggle && captionText && !isAd && (
+          <button
+            type="button"
+            onClick={originalToggle.onClick}
+            className="block rounded-full border border-main/25 bg-black/30 px-2.5 py-0.5 text-[11px] font-semibold text-main/90 backdrop-blur-sm"
+          >
+            🌐 {originalToggle.label}
+          </button>
+        )}
         <Link
           href={ctaUrl}
           className="inline-flex items-center gap-1 rounded-full border border-main/30 bg-main/15 px-4 py-2 text-sm font-medium text-main backdrop-blur-md"
@@ -457,7 +476,7 @@ export function ReelCard({
       </div>
 
       {captionOpen && captionText && (
-        <CaptionDrawer caption={captionText} onClose={() => setCaptionOpen(false)} />
+        <CaptionDrawer caption={captionText} onClose={() => setCaptionOpen(false)} toggle={originalToggle} />
       )}
 
       {reelId && commentsOpen && (

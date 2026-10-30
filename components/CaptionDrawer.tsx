@@ -12,7 +12,18 @@ const CLOSE_BELOW = 0.2;
  * 上部のハンドルを引っ張ると 1/3 → 1/2 の2段階で止まり、
  * 下へ引き下げると閉じる。全文が入りきらない場合は本文をスクロールする。
  */
-export function CaptionDrawer({ caption, onClose, zIndex }: { caption: string; onClose: () => void; zIndex?: number }) {
+export function CaptionDrawer({
+  caption,
+  onClose,
+  zIndex,
+  toggle,
+}: {
+  caption: string;
+  onClose: () => void;
+  zIndex?: number;
+  /** 「原文を見る」「翻訳を見る」の切替(4言語以外で書かれた投稿のとき)。 */
+  toggle?: { label: string; onClick: () => void };
+}) {
   const [snapIndex, setSnapIndex] = useState(0);
   const [viewportH, setViewportH] = useState(0);
   const [dragHeight, setDragHeight] = useState<number | null>(null);
@@ -117,7 +128,12 @@ export function CaptionDrawer({ caption, onClose, zIndex }: { caption: string; o
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-main">{caption}</p>
+          <p dir="auto" className="whitespace-pre-wrap break-words text-sm leading-relaxed text-main">{caption}</p>
+          {toggle && (
+            <button type="button" onClick={toggle.onClick} className="mt-3 rounded-full border border-main/25 px-3 py-1 text-xs font-semibold text-main/80 hover:border-main/50 hover:text-main">
+              {toggle.label}
+            </button>
+          )}
         </div>
       </div>
     </div>,

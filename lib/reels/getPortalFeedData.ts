@@ -5,7 +5,7 @@ import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
 import { latestReelStillsByShop } from "@/lib/map/getVenues";
 import { hasRealPhoto, sinkWithoutPhoto } from "@/lib/shop/sinkWithoutPhoto";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
-import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import { withOriginal, type OriginalText } from "@/lib/i18n/originalText";
 import type { Locale } from "@/lib/i18n/locale";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 
@@ -61,7 +61,7 @@ export function toReelItem(row: ReelRow, locale: Locale = "ja"): ReelItem | null
 
   return {
     id: row.id,
-    caption: pickTranslation(locale, row.caption, row.translations, "caption").text,
+    ...captionFields(locale, row),
     media,
     likesCount: row.like_count,
     castId: row.cast_id,
@@ -170,4 +170,10 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
   }));
 
   return { reels, shopItems, genreChoices, ads };
+}
+
+/** 投稿文(表示言語に合わせた翻訳)と、4言語以外の原文のときの「原文を見る」用の原文。 */
+export function captionFields(locale: Locale, row: { caption: string | null; translations?: unknown }): { caption: string | null; captionOriginal: OriginalText | null } {
+  const c = withOriginal(locale, row.caption, row.translations, "caption");
+  return { caption: c.text, captionOriginal: c.original };
 }

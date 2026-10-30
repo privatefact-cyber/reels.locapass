@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import { captionFields } from "@/lib/reels/getPortalFeedData";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -75,7 +75,7 @@ export default async function StaffReelsPage({
   const reelLocale = await getServerLocale();
   const reels: ReelItem[] = (reelRows ?? []).map((row) => ({
     id: row.id,
-    caption: pickTranslation(reelLocale, row.caption, row.translations, "caption").text,
+    ...captionFields(reelLocale, row),
     media: toReelMedia(row),
     likesCount: row.like_count,
     castId: null,

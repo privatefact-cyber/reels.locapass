@@ -2,6 +2,7 @@ import { resolvePostShops } from "@/lib/photo/resolvePostShops";
 import { createStaticClient } from "@/lib/supabase/static";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import { extraSourceLang, nativeLanguageName } from "@/lib/i18n/originalText";
 
 export type PhotoPost = {
   id: string;
@@ -24,6 +25,8 @@ export type PhotoPost = {
   /** 動画投稿のとき、動画本体(R2)のURL。imageUrlはその1コマ(ポスター)。 */
   videoUrl: string | null;
   likeCount: number;
+  /** 文章が4言語以外(ポルトガル語など)で書かれているとき、書かれたままの原文(「原文を見る」用)。翻訳が無ければ null。 */
+  original: { lang: string; spotName: string; comment: string | null; address: string | null } | null;
   /** 掲載店の写真なら、その店舗ページへのリンク(店名をタップして店舗詳細へ飛ぶため)。 */
   shop: { name: string; href: string } | null;
 };
@@ -79,6 +82,10 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
   // 閲覧者の言語に合わせて、場所名・一言・住所は翻訳があればそれを出す(無ければ原文)。
   const locale = await getServerLocale();
   const tr = (r: PostRow, original: string | null, key: string) => pickTranslation(locale, original, r.translations, key).text;
+  const originalOf = (r: PostRow): PhotoPost["original"] => {
+    const source = extraSourceLang(r.translations);
+    return source ? { lang: nativeLanguageName(source), spotName: r.spot_name, comment: r.comment, address: r.address } : null;
+  };
   return rows.map((r) => ({
     id: r.id,
     memberId: r.member_id,
@@ -99,6 +106,7 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     placeName: r.place_name === r.spot_name ? (tr(r, r.place_name, "spot_name") ?? r.place_name) : r.place_name,
     videoUrl: r.video_url,
     likeCount: likeCounts.get(r.id) ?? 0,
+    original: originalOf(r),
     shop: shopByPost.get(r.id) ?? null,
   }));
 }
