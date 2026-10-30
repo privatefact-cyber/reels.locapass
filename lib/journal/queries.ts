@@ -1,7 +1,7 @@
 import { createStaticClient } from "@/lib/supabase/static";
 import { rowToJournalPost, type JournalPost } from "@/lib/journal/posts";
 
-export const JOURNAL_COLUMNS = "id, slug, category, title, description, lead, cover_url, cover_alt, body, status, published_on, link_url, link_label";
+export const JOURNAL_COLUMNS = "id, slug, category, title, description, lead, cover_url, cover_alt, body, status, published_on, link_url, link_label, translations";
 
 // 公開済みの記事だけを、ログインに関係なく読む(RLSでも公開済みだけが返る)。
 // locapass_journal_posts は生成済みの型(types/supabase.ts)にまだ無いので、型を緩めて呼ぶ。

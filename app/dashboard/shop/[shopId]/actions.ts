@@ -6,7 +6,7 @@ import { sanitizeWeekly, type WeeklyHours } from "@/lib/shop/businessHours";
 import { saveSchedule } from "@/lib/schedules/saveSchedule";
 import { createClient } from "@/lib/supabase/server";
 import { translateAddressToEnglish } from "@/lib/map/translateAddress";
-import { needsTranslation, translateFields } from "@/lib/i18n/contentTranslation";
+import { asStoredTranslations, needsTranslation, preserveManualTranslations, translateFields, TRANSLATION_TARGETS, type StoredTranslations, type TranslationTarget } from "@/lib/i18n/contentTranslation";
 import type { Json } from "@/types/supabase";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { OFFICIAL_CATEGORY } from "@/lib/shop/genres";
@@ -108,7 +108,7 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   // (本家refreshShopTranslationsと同じ項目。変わっていなければ翻訳APIは呼ばない)。
   if (needsTranslation(translationFields, currentShop?.translations)) {
     try {
-      const translations = await translateFields(translationFields);
+      const translations = preserveManualTranslations(await translateFields(translationFields), currentShop?.translations);
       if (translations) translationsPatch = { translations: translations as unknown as Json };
     } catch (e) {
       console.error("店舗紹介文の翻訳に失敗しました:", e);
@@ -165,6 +165,42 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
     .select("id");
   if (ytError || !ytData?.length) throw new Error("動画の保存に失敗しました");
 
+  revalidateShop(shopId);
+}
+
+/** 手直しできる翻訳項目(translations のキー)。店舗情報の保存で訳している項目と同じ。 */
+const EDITABLE_TRANSLATION_KEYS = ["description", "tagline", "business_hours", "price_info", "usage_notes"];
+
+/**
+ * 自動翻訳された文を、人が直して保存する。直した訳が正で、あとで原文を変えて訳し直すときも上書きしない
+ * (preserveManualTranslations)。原文と同じ言語の欄は無い(原文は通常の店舗情報で編集する)。
+ */
+export async function saveShopTranslationEdits(shopId: string, lang: TranslationTarget, edits: Record<string, string>) {
+  const supabase = await requireShopAccess(shopId);
+  if (!TRANSLATION_TARGETS.includes(lang)) throw new Error("言語が正しくありません");
+
+  const { data } = await supabase.from("locapass_shops").select("translations").eq("id", shopId).maybeSingle();
+  if (!data) throw new Error("店舗が見つかりません");
+  const stored = asStoredTranslations(data.translations);
+  if (lang === (stored.source_lang ?? "ja")) throw new Error("原文と同じ言語の文章は、店舗情報の入力欄で編集してください");
+
+  const texts: Record<string, string> = { ...(stored[lang] ?? {}) };
+  const manualKeys = new Set(stored.manual?.[lang] ?? []);
+  for (const [key, value] of Object.entries(edits)) {
+    const text = String(value ?? "").trim().slice(0, 5000);
+    // 空欄は「直さない」として扱う(訳を消して表示が欠けるのを防ぐ)。
+    if (!EDITABLE_TRANSLATION_KEYS.includes(key) || !text || text === texts[key]) continue;
+    texts[key] = text;
+    manualKeys.add(key);
+  }
+
+  const next: StoredTranslations = { ...stored, [lang]: texts, manual: { ...(stored.manual ?? {}), [lang]: [...manualKeys] } };
+  const { data: saved, error } = await supabase
+    .from("locapass_shops")
+    .update({ translations: next as unknown as Json })
+    .eq("id", shopId)
+    .select("id");
+  if (error || !saved?.length) throw new Error("翻訳の保存に失敗しました");
   revalidateShop(shopId);
 }
 

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/types/supabase";
-import { needsTranslation, translateFields, translateFieldsBatch } from "@/lib/i18n/contentTranslation";
+import { needsTranslation, preserveManualTranslations, translateFields, translateFieldsBatch } from "@/lib/i18n/contentTranslation";
 
 /**
  * 店舗の文章の翻訳を、今の日本語に合わせて作り直す(日本語が変わっていなければ何もしない)。
@@ -26,7 +26,7 @@ export async function refreshShopTranslations(supabase: SupabaseClient<Database>
 
   let translations = null;
   try {
-    translations = await translateFields(fields);
+    translations = preserveManualTranslations(await translateFields(fields), data.translations);
   } catch (e) {
     console.error("店舗情報の翻訳に失敗しました:", e);
   }

@@ -6,15 +6,15 @@ import { useReelCaptionsPreference } from "@/lib/reels/useReelCaptionsPreference
 
 type Cue = { s: number; e: number; t: string };
 type Zone = "none" | "top" | "middle" | "bottom";
-type CaptionData = { cues: Cue[]; zone: Zone };
+type CaptionData = { cues: Cue[]; zone: Zone; source: string };
 
-/** 字幕は ja / en / zh の3言語。アラビア語など他の言語の人には英語を出す。 */
-function captionLang(locale: string): "ja" | "en" | "zh" {
-  if (locale === "ja" || locale === "zh") return locale;
+/** 字幕は ja / en / zh / ar の4言語(サイトの表示言語と同じ)。 */
+function captionLang(locale: string): "ja" | "en" | "zh" | "ar" {
+  if (locale === "ja" || locale === "zh" || locale === "ar") return locale;
   return "en";
 }
 
-const CC_LABEL: Record<string, string> = { ja: "字幕", zh: "字幕", en: "Captions", ar: "Captions" };
+const CC_LABEL: Record<string, string> = { ja: "字幕", zh: "字幕", en: "Captions", ar: "الترجمة" };
 
 // 同じリールを何度も取りに行かない(スワイプで戻ったとき等)。取得失敗はキャッシュしない。
 const cache = new Map<string, CaptionData>();
@@ -53,9 +53,9 @@ export function ReelCaptionOverlay({
     let cancelled = false;
     fetch(`/api/reels/${reelId}/captions?lang=${lang}`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((json: { cues?: Cue[]; zone?: Zone } | null) => {
+      .then((json: { cues?: Cue[]; zone?: Zone; source?: string } | null) => {
         if (cancelled || !json) return;
-        const value: CaptionData = { cues: Array.isArray(json.cues) ? json.cues : [], zone: json.zone ?? "none" };
+        const value: CaptionData = { cues: Array.isArray(json.cues) ? json.cues : [], zone: json.zone ?? "none", source: json.source ?? "ja" };
         // 字幕がまだ無い(生成中)結果は覚えない。次に表示されたときに取り直す。
         if (value.cues.length > 0) cache.set(key, value);
         setData(value);
@@ -68,8 +68,9 @@ export function ReelCaptionOverlay({
 
   const cues = data?.cues ?? [];
   const zone = data?.zone ?? "none";
-  // 日本語表示で焼き込み字幕がある動画は、テロップが二重になるので出さない。
-  const suppressed = lang === "ja" && zone !== "none";
+  // 焼き込み字幕は音声と同じ言語で入っていることが多い。同じ言語の字幕を出すとテロップが二重になるので出さない
+  // (英語の動画を日本語で見るときは、焼き込みが英語なので日本語字幕を出す)。
+  const suppressed = zone !== "none" && lang === (data?.source ?? "ja");
   const visible = active && on && !suppressed && cues.length > 0;
 
   // 再生位置に合わせて台詞を切り替える(動画のループでも currentTime が巻き戻るので追従する)。
@@ -115,7 +116,7 @@ export function ReelCaptionOverlay({
             atTop ? "top-16" : "bottom-36"
           }`}
         >
-          <p className="max-w-full rounded-lg bg-black/65 px-3 py-1.5 text-center text-[15px] font-semibold leading-snug text-white shadow-lg [text-wrap:balance]">
+          <p dir={lang === "ar" ? "rtl" : "ltr"} className="max-w-full rounded-lg bg-black/65 px-3 py-1.5 text-center text-[15px] font-semibold leading-snug text-white shadow-lg [text-wrap:balance]">
             {text}
           </p>
         </div>

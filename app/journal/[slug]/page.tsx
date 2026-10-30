@@ -5,6 +5,9 @@ import { ArticleView } from "@/components/journal/ArticleView";
 import { Cover } from "@/components/journal/Cover";
 import { EditorBar } from "@/components/journal/EditorBar";
 import { getPublishedJournalPost, listPublishedJournalPosts } from "@/lib/journal/queries";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { journalText } from "@/lib/journal/text";
+import { localizeJournalPost } from "@/lib/journal/translate";
 
 // 記事は保存のたびに作り直される(保存の処理が一覧と記事のキャッシュを捨てる)。
 // 下書きのURLを開いたときの「ページなし」が残らないよう、短い間隔(60秒)でも作り直す。
@@ -12,8 +15,9 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPublishedJournalPost(slug);
-  if (!post) return {};
+  const found = await getPublishedJournalPost(slug);
+  if (!found) return {};
+  const post = localizeJournalPost(found, await getServerLocale());
   const url = `https://locapass.net/journal/${post.slug}`;
   const image = post.cover ? (post.cover.src.startsWith("/") ? `https://locapass.net${post.cover.src}` : post.cover.src) : null;
   return {
@@ -33,10 +37,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function JournalPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await getPublishedJournalPost(slug);
-  if (!post) notFound();
+  const found = await getPublishedJournalPost(slug);
+  if (!found) notFound();
+  const locale = await getServerLocale();
+  const t = journalText(locale);
+  const post = localizeJournalPost(found, locale);
 
-  const more = (await listPublishedJournalPosts()).filter((p) => p.slug !== post.slug).slice(0, 2);
+  const more = (await listPublishedJournalPosts())
+    .filter((p) => p.slug !== post.slug)
+    .slice(0, 2)
+    .map((p) => localizeJournalPost(p, locale));
   const image = post.cover ? (post.cover.src.startsWith("/") ? `https://locapass.net${post.cover.src}` : post.cover.src) : null;
 
   const jsonLd = {
@@ -45,7 +55,7 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
     headline: post.title,
     description: post.description,
     datePublished: post.date,
-    inLanguage: "ja",
+    inLanguage: locale,
     mainEntityOfPage: `https://locapass.net/journal/${post.slug}`,
     publisher: { "@type": "Organization", name: "LOCAPASS" },
     ...(image ? { image } : {}),
@@ -60,11 +70,11 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
         </Link>
         <EditorBar editSlug={post.slug} />
       </div>
-      <ArticleView post={post} />
+      <ArticleView post={post} locale={locale} />
 
       {more.length > 0 ? (
         <section className="space-y-4 border-t border-main/10 pt-8">
-          <h2 className="text-sm font-bold text-main">ほかの記事も読んでみる</h2>
+          <h2 className="text-sm font-bold text-main">{t.more}</h2>
           <ul className="grid gap-5 sm:grid-cols-2">
             {more.map((p) => (
               <li key={p.slug}>

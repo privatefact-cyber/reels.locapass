@@ -3,22 +3,20 @@ import Link from "next/link";
 import { Cover } from "@/components/journal/Cover";
 import { EditorBar } from "@/components/journal/EditorBar";
 import { listPublishedJournalPosts } from "@/lib/journal/queries";
-import { JOURNAL_CATEGORY_LABELS, formatJournalDate, type JournalCategory } from "@/lib/journal/posts";
+import type { JournalCategory } from "@/lib/journal/posts";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { formatJournalDateFor, journalText } from "@/lib/journal/text";
+import { localizeJournalPost } from "@/lib/journal/translate";
 
-export const metadata: Metadata = {
-  title: "Journal",
-  description: "街とお店のちょっといい話。新しくできたことや、使い方のコツを、写真といっしょにお届けします。",
-  alternates: { canonical: "https://locapass.net/journal" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = journalText(await getServerLocale());
+  return { title: "Journal", description: t.description, alternates: { canonical: "https://locapass.net/journal" } };
+}
 
 const CATEGORIES: JournalCategory[] = ["topics", "tips"];
 
 /** 公開日("2026-10-30")から月("2026-10")を取り出す。 */
 const monthOf = (date: string) => date.slice(0, 7);
-const monthLabel = (month: string) => {
-  const [y, m] = month.split("-").map(Number);
-  return `${y}年${m}月`;
-};
 
 export default async function JournalIndexPage({
   searchParams,
@@ -26,8 +24,14 @@ export default async function JournalIndexPage({
   searchParams: Promise<{ cat?: string; month?: string }>;
 }) {
   const { cat, month } = await searchParams;
+  const locale = await getServerLocale();
+  const t = journalText(locale);
+  const monthLabel = (m: string) => {
+    const [y, mo] = m.split("-").map(Number);
+    return t.month(y, mo);
+  };
   const active = CATEGORIES.find((c) => c === cat) ?? null;
-  const all = await listPublishedJournalPosts();
+  const all = (await listPublishedJournalPosts()).map((p) => localizeJournalPost(p, locale));
   const byCategory = active ? all.filter((p) => p.category === active) : all;
 
   // 月ごとの記事数(新しい月が先頭)。記事は公開日の新しい順に並んで届く。
@@ -64,31 +68,31 @@ export default async function JournalIndexPage({
         <h1 className="font-display bg-gradient-to-r from-hl-200 via-hl-400 to-hl-200 bg-clip-text text-4xl font-bold text-transparent">
           Journal
         </h1>
-        <p className="text-sm text-muted">街とお店の、ちょっといい話。</p>
+        <p className="text-sm text-muted">{t.tagline}</p>
       </header>
 
       <EditorBar />
 
-      <nav className="flex flex-wrap justify-center gap-2" aria-label="カテゴリ">
+      <nav className="flex flex-wrap justify-center gap-2" aria-label={t.categoryNav}>
         <Link href={href(null, activeMonth)} className={tab(!active)}>
-          すべて
+          {t.all}
         </Link>
         {CATEGORIES.map((c) => (
           <Link key={c} href={href(c, activeMonth)} className={tab(active === c)}>
-            {JOURNAL_CATEGORY_LABELS[c]}
+            {t.categoryLabels[c]}
           </Link>
         ))}
       </nav>
 
       {months.length > 1 && (
-        <nav className="space-y-2 text-center" aria-label="月別アーカイブ">
-          <p className="text-[11px] tracking-wider text-tone-500">ARCHIVE</p>
+        <nav className="space-y-2 text-center" aria-label={t.archiveNav}>
+          <p className="text-[11px] tracking-wider text-tone-500">{t.archive}</p>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs">
             <Link
               href={href(active, null)}
               className={!activeMonth ? "text-hl-400" : "text-tone-300 hover:text-main"}
             >
-              すべての月
+              {t.allMonths}
             </Link>
             {months.map((m) => (
               <Link
@@ -105,14 +109,14 @@ export default async function JournalIndexPage({
       )}
 
       {posts.length === 0 ? (
-        <p className="text-center text-sm text-muted">記事はまだありません。</p>
+        <p className="text-center text-sm text-muted">{t.noPosts}</p>
       ) : (
         <div className="space-y-9">
           {groups.map((g) => (
             <section key={g.month} className="space-y-4" aria-label={monthLabel(g.month)}>
               <h2 className="border-b border-main/10 pb-2 text-sm font-bold tracking-wide text-hl-200">
                 {monthLabel(g.month)}
-                <span className="ml-2 text-xs font-normal text-tone-500">{g.posts.length}件</span>
+                <span className="ml-2 text-xs font-normal text-tone-500">{t.count(g.posts.length)}</span>
               </h2>
               <ul className="grid gap-6 md:grid-cols-2">
                 {g.posts.map((p) => (
@@ -121,9 +125,9 @@ export default async function JournalIndexPage({
                       <Cover post={p} className="aspect-[16/10] rounded-2xl transition group-hover:opacity-90" />
                       <div className="space-y-1.5 px-1">
                         <div className="flex items-center gap-2 text-[11px] text-tone-500">
-                          <span className="text-hl-400/80">{JOURNAL_CATEGORY_LABELS[p.category]}</span>
+                          <span className="text-hl-400/80">{t.categoryLabels[p.category]}</span>
                           <span aria-hidden>·</span>
-                          <time dateTime={p.date}>{formatJournalDate(p.date)}</time>
+                          <time dateTime={p.date}>{formatJournalDateFor(p.date, locale)}</time>
                         </div>
                         <h3 className="text-base font-bold leading-snug text-main group-hover:text-hl-200">{p.title}</h3>
                         <p className="line-clamp-2 text-xs leading-6 text-muted">{p.description}</p>

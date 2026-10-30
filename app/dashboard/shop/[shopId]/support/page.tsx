@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { docsFor } from "@/lib/support/docs";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { SupportCenter } from "@/components/support/SupportCenter";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,8 @@ export default async function ShopSupportPage({ params }: { params: Promise<{ sh
   const { shopId } = await params;
   const viewer = await getShopForManager(shopId);
   if (!viewer) notFound();
-  const docs = docsFor(["shop"]).map(({ id, audience, title, body }) => ({ id, audience, title, body }));
+  const locale = await getServerLocale();
+  const docs = docsFor(["shop"], locale).map(({ id, audience, title, body }) => ({ id, audience, title, body }));
   return (
     <div className="rounded-2xl bg-black py-1">
       <SupportCenter docs={docs} audience="shop" />

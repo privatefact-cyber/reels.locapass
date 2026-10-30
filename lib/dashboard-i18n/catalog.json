@@ -1,0 +1,3927 @@
+{
+ "・": {
+  "en": "•",
+  "zh": "•",
+  "ar": "•"
+ },
+ "・{0}": {
+  "en": "• {0}",
+  "zh": "• {0}",
+  "ar": "• {0}"
+ },
+ "・先頭が一覧の代表写真になります)": {
+  "en": "• The first one will be used as the main photo for the list)",
+  "zh": "• 第一张将作为列表的代表照片）",
+  "ar": "• ستكون الصورة الأولى هي الصورة الرئيسية في القائمة)"
+ },
+ ": ページの中で、その場で再生されます。終わるとサムネイルに戻り、お客様が外へ移動しにくく、音楽の入った動画も、そのまま再生できます。": {
+  "en": ": Plays directly on the page. Once finished, it returns to the thumbnail, keeping customers on your page. Videos with music can also be played as is.",
+  "zh": "：直接在页面内播放。播放结束后返回缩略图，防止顾客离开页面，带背景音乐的视频也可以直接播放。",
+  "ar": ": يتم التشغيل مباشرة داخل الصفحة. وعند الانتهاء، يعود إلى الصورة المصغرة مما يقلل من خروج العملاء، كما يمكن تشغيل الفيديوهات التي تحتوي على موسيقى كما هي."
+ },
+ "({0}件)": {
+  "en": "({0})",
+  "zh": "({0}件)",
+  "ar": "({0})"
+ },
+ "({0}分)": {
+  "en": "({0} min)",
+  "zh": "({0}分钟)",
+  "ar": "({0} دقيقة)"
+ },
+ "(あなた)": {
+  "en": "(You)",
+  "zh": "(您)",
+  "ar": "(أنت)"
+ },
+ "(テスト)": {
+  "en": "(Test)",
+  "zh": "(测试)",
+  "ar": "(اختبار)"
+ },
+ "(予定{0}件)": {
+  "en": "({0} scheduled)",
+  "zh": "(预计 {0} 项)",
+  "ar": "({0} مجدولة)"
+ },
+ "(住所なし)": {
+  "en": "(No address)",
+  "zh": "(无地址)",
+  "ar": "(لا يوجد عنوان)"
+ },
+ "(入力済みの内容を上書きします)": {
+  "en": "(Overwrites existing content)",
+  "zh": "(将覆盖已输入的内容)",
+  "ar": "(سيتم استبدال المحتوى المدخل)"
+ },
+ "(公開しない)": {
+  "en": "(Do not publish)",
+  "zh": "(不公开)",
+  "ar": "(عدم النشر)"
+ },
+ "(店舗のパスワードは変更されていません)": {
+  "en": "(Store password has not been changed)",
+  "zh": "(店铺密码未更改)",
+  "ar": "(لم يتم تغيير كلمة مرور المتجر)"
+ },
+ "(文章なし・星のみ)": {
+  "en": "(No text, rating only)",
+  "zh": "(无文字・仅评分)",
+  "ar": "(بدون نص، تقييم فقط)"
+ },
+ "(電話/SMS)": {
+  "en": "(Phone/SMS)",
+  "zh": "(电话/短信)",
+  "ar": "(هاتف/SMS)"
+ },
+ "{0} ({1}歳)": {
+  "en": "{0} ({1} years old)",
+  "zh": "{0}（{1}岁）",
+  "ar": "{0} ({1} سنة)"
+ },
+ "{0} から {1} まで、{2}件を登録します": {
+  "en": "Registering {2} item(s) from {0} to {1}",
+  "zh": "从 {0} 到 {1}，将注册 {2} 条记录",
+  "ar": "تسجيل {2} من {0} إلى {1}"
+ },
+ "{0} に移動しました。ずれていればピンをドラッグしてください。": {
+  "en": "Moved to {0}. If it is off, please drag the pin.",
+  "zh": "已移动至 {0}。如有偏差，请拖动大头针。",
+  "ar": "تم الانتقال إلى {0}. إذا كان هناك إزاحة، يرجى سحب الدبوس."
+ },
+ "{0}(店舗)": {
+  "en": "{0} (Store)",
+  "zh": "{0}（店铺）",
+  "ar": "{0} (المتجر)"
+ },
+ "{0}(撮影 {1})": {
+  "en": "{0} (Shot {1})",
+  "zh": "{0}（拍摄于 {1}）",
+  "ar": "{0} (تصوير {1})"
+ },
+ "{0}さんのマイページ用リンクです。タップして、別途お伝えする暗証番号でログインしてください。 {1}": {
+  "en": "This is the My Page link for {0}. Tap to log in using the PIN provided separately. {1}",
+  "zh": "这是 {0} 的个人主页链接。请点击并使用另行通知的密码登录。 {1}",
+  "ar": "هذا هو رابط الصفحة الشخصية لـ {0}. اضغط عليه وسجل الدخول باستخدام رمز PIN المرسل بشكل منفصل. {1}"
+ },
+ "{0}さんの投稿用リンクです。タップして、別途お伝えする暗証番号でログインしてください。 {1}": {
+  "en": "This is the posting link for {0}. Tap to log in using the PIN provided separately. {1}",
+  "zh": "这是 {0} 的发布专有链接。请点击并使用另行通知的密码登录。 {1}",
+  "ar": "هذا هو رابط النشر الخاص بـ {0}. اضغط عليه وسجل الدخول باستخدام رمز PIN المرسل بشكل منفصل. {1}"
+ },
+ "{0}の保存に失敗しました: {1}": {
+  "en": "Failed to save {0}: {1}",
+  "zh": "保存 {0} 失败：{1}",
+  "ar": "فشل حفظ {0}: {1}"
+ },
+ "{0}人に送信しました": {
+  "en": "Sent to {0} people",
+  "zh": "已发送给 {0} 人",
+  "ar": "تم الإرسال إلى {0} من الأشخاص"
+ },
+ "{0}件の予定をまとめて登録": {
+  "en": "Batch register {0} schedules",
+  "zh": "批量注册 {0} 条日程",
+  "ar": "تسجيل {0} من المواعيد دفعة واحدة"
+ },
+ "{0}日ぶんの予定を登録しました。": {
+  "en": "Registered schedules for {0} days.",
+  "zh": "已注册 {0} 天的日程。",
+  "ar": "تم تسجيل مواعيد لـ {0} من الأيام."
+ },
+ "{0}月{1}日{2}": {
+  "en": "{0}/{1} {2}",
+  "zh": "{0}月{1}日 {2}",
+  "ar": "{0}/{1} {2}"
+ },
+ "{0}歳": {
+  "en": "{0} years old",
+  "zh": "{0}岁",
+  "ar": "{0} سنة"
+ },
+ "「{0}」を削除します。プロフィール・写真・出勤予定・投稿リールなど関連データもすべて削除され、元に戻せません。よろしいですか？": {
+  "en": "Are you sure you want to delete \"{0}\"? All related data including profile, photos, work schedule, and posted reels will be deleted and cannot be undone.",
+  "zh": "确定要删除“{0}”吗？包含个人资料、照片、出勤计划、发布的Reels等所有相关数据也将被删除且无法恢复。",
+  "ar": "هل أنت أثق من رغبتك في حذف \"{0}\"؟ سيتم حذف جميع البيانات ذات الصلة بما في ذلك الملف الشخصي والصور وجدول العمل ومقاطع Reels المنشورة ولن يمكن استعادتها."
+ },
+ "「{0}」を削除します。元に戻せません。よろしいですか?(売れた車は「売約済み」にすると履歴として残せます)": {
+  "en": "Are you sure you want to delete \"{0}\"? This action cannot be undone. (Cars that have been sold can be kept in history by setting them to \"Sold\").",
+  "zh": "确定要删除“{0}”吗？此操作无法撤销。（已售车辆设置为“已售出”可保留在历史记录中）",
+  "ar": "هل أنت متاكد من حذف \"{0}\"؟ لا يمكن التراجع عن هذا الإجراء. (يمكنك الاحتفاظ بالسيارات المباعة في السجل عن طريق تعيينها كـ \"تم البيع\")"
+ },
+ "」を編集中": {
+  "en": "\" Editing",
+  "zh": "”正在编辑",
+  "ar": "\" قيد التعديل"
+ },
+ "※ ステータスの変更は詳細ページで行ってください": {
+  "en": "* Please change the status on the details page.",
+  "zh": "※ 请在详情页面更改状态",
+  "ar": "* يرجى تغيير الحالة في صفحة التفاصيل"
+ },
+ "※電話番号・生年月日・PINは、運営を含め他の誰にも公開されません。忘れると自己復旧ができなくなるため、必ず控えてください。": {
+  "en": "* Phone number, date of birth, and PIN will not be disclosed to anyone, including management. If you forget them, self-recovery will not be possible, so please be sure to keep a record.",
+  "zh": "※ 电话号码、出生日期和PIN不会向包括运营人员在内的任何人公开。如果遗忘将无法自行恢复，请务必妥善记录。",
+  "ar": "* لن يتم الكشف عن رقم الهاتف وتاريخ الميلاد ورمز PIN لأي شخص، بما في ذلك إدارة الموقع. إذا نسيتها، لن تتمكن من استعادتها بنفسك، لذا يرجى الاحتفاظ بنسخة منها."
+ },
+ "← FACES一覧に戻る": {
+  "en": "← Back to FACES List",
+  "zh": "← 返回FACES列表",
+  "ar": "← العودة إلى قائمة FACES"
+ },
+ "← FACES管理に戻る": {
+  "en": "← Back to FACES Management",
+  "zh": "← 返回FACES管理",
+  "ar": "← العودة إلى إدارة FACES"
+ },
+ "← 一覧に戻る": {
+  "en": "← Back to List",
+  "zh": "← 返回列表",
+  "ar": "← العودة إلى القائمة"
+ },
+ "+ 時間帯を追加(昼夜で分かれる場合など)": {
+  "en": "+ Add time slot (e.g. if split between day and night)",
+  "zh": "+ 添加时间段（如分为昼夜等）",
+  "ar": "+ إضافة فترة زمنية (على سبيل المثال، عند التقسيم بين النهار والليل)"
+ },
+ "＋ 車両を追加": {
+  "en": "+ Add vehicle",
+  "zh": "＋ 添加车辆",
+  "ar": "+ إضافة مركبة"
+ },
+ "⚠ 生年月日から18歳未満の可能性があります。採用前に必ず年齢を確認してください。": {
+  "en": "⚠ May be under 18 years old based on birth date. Please verify age before hiring.",
+  "zh": "⚠ 根据出生日期，可能未满18岁。请在录用前务必核实年龄。",
+  "ar": "⚠ قد يكون الشخص تحت سن 18 عامًا بناءً على تاريخ الميلاد. يرجى التحقق من العمر قبل التوظيف."
+ },
+ "⚡ 緊急ブースト": {
+  "en": "⚡ Urgent Boost",
+  "zh": "⚡ 紧急Boost",
+  "ar": "⚡ Boost طارئ"
+ },
+ "⚡ブースト": {
+  "en": "⚡ Boost",
+  "zh": "⚡ Boost",
+  "ar": "⚡ Boost"
+ },
+ "✓ 更新しました": {
+  "en": "✓ Updated",
+  "zh": "✓ 已更新",
+  "ar": "✓ تم التحديث"
+ },
+ "❓ 使い方": {
+  "en": "❓ How to Use",
+  "zh": "❓ 使用方法",
+  "ar": "❓ كيفية الاستخدام"
+ },
+ "📍 開催場所": {
+  "en": "📍 Location",
+  "zh": "📍 活动地点",
+  "ar": "📍 موقع الفعالية"
+ },
+ "📷 免許証・マイナンバーカードをスキャンして自動入力": {
+  "en": "📷 Scan driver's license / My Number card to auto-fill",
+  "zh": "📷 扫描驾照/个人番号卡以自动输入",
+  "ar": "📷 مسح رخصة القيادة / بطاقة رقمي الشخصي (My Number) للإدخال التلقائي"
+ },
+ "📷 車検証をスキャンして自動入力": {
+  "en": "📷 Scan vehicle inspection certificate to auto-fill",
+  "zh": "📷 扫描机动车行驶证以自动输入",
+  "ar": "📷 مسح شهادة فحص المركبة للإدخال التلقائي"
+ },
+ "🚚 今日の出店": {
+  "en": "🚚 Today's stall location",
+  "zh": "🚚 今日出店",
+  "ar": "🚚 موقع الكشك اليوم"
+ },
+ "1回の出店は24時間以内にしてください": {
+  "en": "Please keep each store opening within 24 hours.",
+  "zh": "单次出店时间请在24小时以内",
+  "ar": "يرجى أن تكون كل فترة افتتاح ضمن 24 ساعة"
+ },
+ "24時間営業": {
+  "en": "Open 24 hours",
+  "zh": "24小时营业",
+  "ar": "مفتوح 24 ساعة"
+ },
+ "30日": {
+  "en": "30 days",
+  "zh": "30天",
+  "ar": "30 يومًا"
+ },
+ "4桁のPIN(ご自身で決めてください)": {
+  "en": "4-digit PIN (Set your own)",
+  "zh": "4位PIN码（请自行设定）",
+  "ar": "رمز PIN من 4 أرقام (يرجى تحديده بنفسك)"
+ },
+ "7日": {
+  "en": "7 days",
+  "zh": "7天",
+  "ar": "7 أيام"
+ },
+ "Android: Chromeで開いて、メニュー →「ホーム画面に追加」": {
+  "en": "Android: Open in Chrome, Menu → \"Add to Home screen\"",
+  "zh": "Android：在Chrome中打开，菜单 →“添加到主屏幕”",
+  "ar": "Android: افتح في Chrome، القائمة ← \"إضافة إلى الشاشة الرئيسية\""
+ },
+ "Cloudflare Stream の公開設定が不足しています": {
+  "en": "Cloudflare Stream visibility settings are incomplete.",
+  "zh": "Cloudflare Stream 的公开设置不足",
+  "ar": "إعدادات النشر لـ Cloudflare Stream غير مكتملة"
+ },
+ "FACESがいません。": {
+  "en": "There are no FACES.",
+  "zh": "没有 FACES。",
+  "ar": "لا يوجد FACES."
+ },
+ "FACESの削除に失敗しました: {0}": {
+  "en": "Failed to delete FACES: {0}",
+  "zh": "删除 FACES 失败: {0}",
+  "ar": "فشل حذف FACES: {0}"
+ },
+ "FACESの登録はまだありません。": {
+  "en": "No FACES registered yet.",
+  "zh": "尚未注册 FACES。",
+  "ar": "لم يتم تسجيل أي FACES بعد."
+ },
+ "FACESより:": {
+  "en": "From FACES:",
+  "zh": "来自 FACES：",
+  "ar": "من FACES:"
+ },
+ "FACESリール": {
+  "en": "FACES Reels",
+  "zh": "FACES Reels",
+  "ar": "FACES Reels"
+ },
+ "FACESリールを投稿する": {
+  "en": "Post a FACES Reel",
+  "zh": "发布 FACES Reel",
+  "ar": "نشر FACES Reel"
+ },
+ "FACESを削除": {
+  "en": "Delete FACES",
+  "zh": "删除 FACES",
+  "ar": "حذف FACES"
+ },
+ "FACES一覧": {
+  "en": "FACES List",
+  "zh": "FACES 列表",
+  "ar": "قائمة FACES"
+ },
+ "FACES名で検索": {
+  "en": "Search by FACES name",
+  "zh": "按 FACES 名称搜索",
+  "ar": "البحث باسم FACES"
+ },
+ "FACES登録に失敗しました: {0}": {
+  "en": "Failed to register FACES: {0}",
+  "zh": "注册 FACES 失败: {0}",
+  "ar": "فشل تسجيل FACES: {0}"
+ },
+ "FACES管理": {
+  "en": "FACES Management",
+  "zh": "FACES 管理",
+  "ar": "إدارة FACES"
+ },
+ "Googleのユーザー": {
+  "en": "Google user",
+  "zh": "Google 用户",
+  "ar": "مستخدم Google"
+ },
+ "Googleの口コミ": {
+  "en": "Google reviews",
+  "zh": "Google 评价",
+  "ar": "تقييمات Google"
+ },
+ "Googleマップとの連携をご利用の場合、ここに入力した店名・住所・電話番号・営業時間は、入力したとおりにGoogleマップへ送られます。 Googleには、看板どおりの店名を入力してください。Googleから修正の連絡があったときは、お店の側で対応をお願いします。": {
+  "en": "When using Google Maps integration, the store name, address, phone number, and business hours entered here will be sent to Google Maps exactly as entered. Please enter the store name as it appears on your physical sign. If Google contacts you regarding corrections, please handle it on your end.",
+  "zh": "如果使用 Google 地图关联功能，在此输入的店名、地址、电话号码和营业时间将按原样发送至 Google 地图。请在 Google 中输入与招牌一致的店名。如果收到 Google 的修改通知，请店铺自行处理。",
+  "ar": "عند استخدام ربط خرائط Google، سيتم إرسال اسم المتجر والعنوان ورقم الهاتف وساعات العمل المدخلة هنا إلى خرائط Google كما هي تمامًا. يرجى إدخال اسم المتجر المطابق لافتة المتجر. إذا تم الاتصال بك من قبل Google لإجراء تعديلات، يرجى التعامل معها من قبل المتجر."
+ },
+ "Googleマップに付いた口コミを確認して、返信できます。新しい口コミが付くと、通知でお知らせします。 返信は、お店の名前でGoogleマップに公開されます。返信するかどうか、どんな文面にするかは、お店が決められます。": {
+  "en": "You can check and reply to reviews posted on Google Maps. You will be notified when a new review is posted. Replies will be published on Google Maps under your store name. Whether to reply and what text to use is up to your store.",
+  "zh": "您可以查看并回复 Google 地图上的评价。收到新评价时会通过通知提醒您。回复将以店铺名称公开在 Google 地图上。是否回复以及回复内容由店铺决定。",
+  "ar": "يمكنك مراجعة التقييمات الموجودة على خرائط Google والرد عليها. سيتم إخطارك عند إرسال تقييم جديد. سيتم نشر الرد باسم متجرك على خرائط Google. ويعود للمتجر قرار الرد ونصه."
+ },
+ "iPhone: Safariで開いて、共有ボタン →「ホーム画面に追加」": {
+  "en": "iPhone: Open in Safari, tap Share button → \"Add to Home Screen\"",
+  "zh": "iPhone：在Safari中打开，点击分享按钮 → “添加到主屏幕”",
+  "ar": "iPhone: افتح في Safari، اضغط على زر المشاركة ← \"إضافة إلى الشاشة الرئيسية\""
+ },
+ "LINEで問い合わせ": {
+  "en": "Inquire via LINE",
+  "zh": "通过 LINE 咨询",
+  "ar": "الاستفسار عبر LINE"
+ },
+ "LINEで送る": {
+  "en": "Send via LINE",
+  "zh": "通过 LINE 发送",
+  "ar": "إرسال عبر LINE"
+ },
+ "LINEのQRコードを表示": {
+  "en": "Show LINE QR code",
+  "zh": "显示 LINE 二维码",
+  "ar": "عرض رمز QR لـ LINE"
+ },
+ "LOCAPASS経由の連絡": {
+  "en": "Contact via LOCAPASS",
+  "zh": "通过 LOCAPASS 联系",
+  "ar": "التواصل عبر LOCAPASS"
+ },
+ "PDFとして保存・印刷": {
+  "en": "Save as PDF / Print",
+  "zh": "保存为PDF / 打印",
+  "ar": "حفظ كـ PDF / طباعة"
+ },
+ "PIN(確認)": {
+  "en": "PIN (Confirm)",
+  "zh": "PIN（确认）",
+  "ar": "رمز PIN (تأكيد)"
+ },
+ "PIN(確認)が一致しません": {
+  "en": "PIN (Confirm) does not match.",
+  "zh": "PIN（确认）不一致",
+  "ar": "رمز PIN (التأكيد) غير متطابق"
+ },
+ "PINは数字4桁で入力してください": {
+  "en": "Please enter a 4-digit PIN.",
+  "zh": "请输入4位数字PIN",
+  "ar": "يرجى إدخال رمز PIN مكون من 4 أرقام."
+ },
+ "PR文": {
+  "en": "Promotional Text",
+  "zh": "宣传文案",
+  "ar": "النص الترويجي"
+ },
+ "PR文:": {
+  "en": "Promotional Text:",
+  "zh": "宣传文案：",
+  "ar": "النص الترويجي:"
+ },
+ "QRコードを表示(お客様にその場で見せる用)": {
+  "en": "Show QR Code (to show customers on the spot)",
+  "zh": "显示二维码（供当场向顾客出示）",
+  "ar": "عرض رمز QR (ليتم إظهاره للعميل في المكان)"
+ },
+ "QRコード画像(任意・通常は不要です)": {
+  "en": "QR Code Image (Optional / Usually not required)",
+  "zh": "二维码图片（可选・通常无需填写）",
+  "ar": "صورة رمز QR (اختياري - عادة غير مطلوب)"
+ },
+ "Stripe決済手数料(約3.6%)を差し引いた金額です(接続後に実額へ置き換わります)。振込は発生せず、翌月以降の月額利用料の請求から差し引きます。控除済みの累計:": {
+  "en": "Amount after deducting Stripe payment fee (approx. 3.6%) (will be replaced with actual amount after connection). No bank transfer occurs; it will be deducted from next month's monthly fee billing. Total deducted:",
+  "zh": "扣除Stripe支付手续费（约3.6%）后的金额（连接后将替换为实际金额）。不进行转账，将从次月起的手续费/月费账单中扣除。已扣除累计：",
+  "ar": "هذا هو المبلغ بعد خصم رسوم معالجة Stripe (حوالي 3.6%) (سيتم استبداله بالمبلغ الفعلي بعد الاتصال). لن يتم إجراء أي تحويل مصرفي، وسيتم خصمه من فواتير رسوم الاستخدام الشهرية بدءًا من الشهر التالي. إجمالي الخصومات:"
+ },
+ "URL・ID・パスワードをコピー": {
+  "en": "Copy URL, ID, and Password",
+  "zh": "复制URL、ID和密码",
+  "ar": "نسخ الرابط والمعرف وكلمة المرور"
+ },
+ "URLをコピー": {
+  "en": "Copy URL",
+  "zh": "复制URL",
+  "ar": "نسخ الرابط"
+ },
+ "YouTubeの動画URLを入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。": {
+  "en": "Entering a YouTube video URL will display a \"Video Introduction\" on your store page. If left blank, it will not be displayed.",
+  "zh": "输入YouTube视频URL后，店铺页面上将显示“视频介绍”。留空则不显示。",
+  "ar": "سيؤدي إدخال رابط فيديو YouTube إلى إظهار \"مقدمة الفيديو\" في صفحة المتجر. إذا تركته فارغًا، فلن يتم عرضه."
+ },
+ "YouTubeの動画URLを貼る": {
+  "en": "Paste YouTube Video URL",
+  "zh": "粘贴YouTube视频URL",
+  "ar": "لصق رابط فيديو YouTube"
+ },
+ "YouTube動画(任意)": {
+  "en": "YouTube Video (Optional)",
+  "zh": "YouTube视频（可选）",
+  "ar": "فيديو YouTube (اختياري)"
+ },
+ "yyyy年MM月dd日 HH:mm": {
+  "en": "yyyy/MM/dd HH:mm",
+  "zh": "yyyy年MM月dd日 HH:mm",
+  "ar": "yyyy/MM/dd HH:mm"
+ },
+ "アイコン": {
+  "en": "Icon",
+  "zh": "图标",
+  "ar": "أيقونة"
+ },
+ "アイコンの保存に失敗しました": {
+  "en": "Failed to save icon.",
+  "zh": "保存图标失败",
+  "ar": "فشل حفظ الأيقونة."
+ },
+ "アイコンの保存に失敗しました: {0}": {
+  "en": "Failed to save icon: {0}",
+  "zh": "保存图标失败：{0}",
+  "ar": "فشل حفظ الأيقونة: {0}"
+ },
+ "アイコンを保存できませんでした(対象のFACESが見つかりません)": {
+  "en": "Could not save icon (target FACES not found).",
+  "zh": "无法保存图标（未找到目标 FACES）",
+  "ar": "تعذر حفظ الأيقونة (لم يتم العثور على FACES المستهدفة)."
+ },
+ "アイコンを変更": {
+  "en": "Change Icon",
+  "zh": "更改图标",
+  "ar": "تغيير الأيقونة"
+ },
+ "アイコンを更新しました": {
+  "en": "Icon updated.",
+  "zh": "图标已更新",
+  "ar": "تم تحديث الأيقونة."
+ },
+ "アカウント": {
+  "en": "Account",
+  "zh": "账号",
+  "ar": "الحساب"
+ },
+ "アカウント設定": {
+  "en": "Account Settings",
+  "zh": "账号设置",
+  "ar": "إعدادات الحساب"
+ },
+ "アップロードに失敗しました": {
+  "en": "Upload failed.",
+  "zh": "上传失败",
+  "ar": "فشل التحميل."
+ },
+ "アップロードに失敗しました: {0}": {
+  "en": "Upload failed: {0}",
+  "zh": "上传失败：{0}",
+  "ar": "فشل التحميل: {0}"
+ },
+ "アップロード中...": {
+  "en": "Uploading...",
+  "zh": "正在上传...",
+  "ar": "جاري التحميل..."
+ },
+ "ありません。": {
+  "en": "None.",
+  "zh": "暂无。",
+  "ar": "لا يوجد."
+ },
+ "イベントの削除に失敗しました: {0}": {
+  "en": "Failed to delete event: {0}",
+  "zh": "删除活动失败：{0}",
+  "ar": "فشل حذف الفعالية: {0}"
+ },
+ "イベントの削除に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to delete event (target not found or permission denied).",
+  "zh": "删除活动失败（未找到目标或无权限）",
+  "ar": "فشل حذف الفعالية (غير موجودة أو لا تملك الإذن)."
+ },
+ "イベントの更新に失敗しました: {0}": {
+  "en": "Failed to update event: {0}",
+  "zh": "更新活动失败：{0}",
+  "ar": "فشل تحديث الفعالية: {0}"
+ },
+ "イベントの更新に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to update event (target not found or permission denied).",
+  "zh": "更新活动失败（未找到目标或无权限）",
+  "ar": "فشل تحديث الفعالية (غير موجودة أو لا تملك الإذن)."
+ },
+ "イベントの登録に失敗しました: {0}": {
+  "en": "Failed to register event: {0}",
+  "zh": "添加活动失败：{0}",
+  "ar": "فشل تسجيل الفعالية: {0}"
+ },
+ "イベントリール用のサムネイル画像は必須です": {
+  "en": "Thumbnail image for the event Reel is required.",
+  "zh": "活动 Reel 需要提供缩略图",
+  "ar": "الصورة المصغرة لـ Reel الفعالية مطلوبة."
+ },
+ "イベント告知": {
+  "en": "Event Announcement",
+  "zh": "活动公告",
+  "ar": "إعلان الفعالية"
+ },
+ "いま、ここで営業を始める": {
+  "en": "Start business here now",
+  "zh": "立即在此处开始营业",
+  "ar": "بدء العمل هنا الآن"
+ },
+ "いま、店舗ページに出ている写真はありません。": {
+  "en": "There are currently no photos displayed on the store page.",
+  "zh": "店铺页面当前没有显示任何照片。",
+  "ar": "لا توجد صور معروضة حاليًا على صفحة المتجر."
+ },
+ "いまの現在地を出店場所にして、すぐ地図に出します。お気に入りにしている人には通知が届きます。": {
+  "en": "Sets your current location as the store location and displays it on the map immediately. Users who added you to favorites will receive a notification.",
+  "zh": "将您当前的位置设为出店地点，并立即显示在地图上。添加到收藏的用户将收到通知。",
+  "ar": "تعيين موقعك الحالي كموقع للمتجر وإظهاره على الخريطة فورًا. سيصل إشعار للمستخدمين الذين أضافوك إلى المفضلات."
+ },
+ "いま営業中": {
+  "en": "Open Now",
+  "zh": "营业中",
+  "ar": "مفتوح الآن"
+ },
+ "いま開催中": {
+  "en": "Ongoing Now",
+  "zh": "正在举行",
+  "ar": "جاري الآن"
+ },
+ "エリア": {
+  "en": "Area",
+  "zh": "区域",
+  "ar": "المنطقة"
+ },
+ "オーナー": {
+  "en": "Owner",
+  "zh": "店主",
+  "ar": "المالك"
+ },
+ "オプション:開催場所のお知らせ": {
+  "en": "Option: Location Announcement",
+  "zh": "选项：举办地点通知",
+  "ar": "خيار: إشعار مكان الفعالية"
+ },
+ "オフにしました。": {
+  "en": "Turned off.",
+  "zh": "已关闭。",
+  "ar": "تم إيقاف التشغيل."
+ },
+ "オンにしました。上のメニューに「開催場所」が出ます。": {
+  "en": "Turned on. \"Location\" will now appear in the top menu.",
+  "zh": "已开启。顶部菜单将显示“举办地点”。",
+  "ar": "تم التشغيل. سيظهر \"مكان الفعالية\" في القائمة العلوية."
+ },
+ "お休み": {
+  "en": "Closed",
+  "zh": "休息日",
+  "ar": "مغلق"
+ },
+ "お問い合わせ": {
+  "en": "Contact Us",
+  "zh": "联系我们",
+  "ar": "تواصل معنا"
+ },
+ "お問い合わせが見つかりません": {
+  "en": "No inquiries found.",
+  "zh": "未找到咨询信息",
+  "ar": "لم يتم العثور على أي استفسارات"
+ },
+ "お客様から連絡があった場合": {
+  "en": "When contacted by a customer",
+  "zh": "收到顾客联系时",
+  "ar": "عند التواصل من قبل العميل"
+ },
+ "お客様が無料で取り消せる期限です。それ以降の取り消しは「判断待ち」としてここに届き、「請求なし」か「キャンセル料を請求」をワンタップで選べます。事前連絡があった場合も、同じボタンで選べます。": {
+  "en": "This is the deadline for free customer cancellations. Cancellations after this will appear here as \"Pending Decision\", where you can select \"No Charge\" or \"Charge Cancellation Fee\" with one tap. If prior notification was provided, you can also use the same button.",
+  "zh": "这是顾客免费取消的截止期限。之后的取消申请将作为“待判”发送至此处，您可以通过一键选择“不收费”或“收取取消费”。如果有事先通知，也可以使用相同的按钮进行选择。",
+  "ar": "هذا هو الموعد النهائي للإلغاء المجاني من قبل العميل. الإلغاءات بعد ذلك ستصل هنا كـ \"في انتظار القرار\"، ويمكنك اختيار \"بدون رسوم\" أو \"تحصيل رسوم الإلغاء\" بنقرة واحدة. في حال وجود إشعار مسبق، يمكنك أيضًا الاختيار باستخدام نفس الزر."
+ },
+ "お客様にこの店舗の公開ページへアクセスしてもらうための短縮URL・QRコードです。": {
+  "en": "Shortened URL and QR code for customers to access this store's public page.",
+  "zh": "供顾客访问此店铺公开页面的短网址和二维码。",
+  "ar": "رابط مختصر ورمز QR للعملاء للوصول إلى الصفحة العامة لهذا المتجر."
+ },
+ "お客様へのメッセージ": {
+  "en": "Message to customers",
+  "zh": "给顾客的信息",
+  "ar": "رسالة إلى العملاء"
+ },
+ "お客様側の表示を見る": {
+  "en": "View customer page",
+  "zh": "查看顾客侧显示",
+  "ar": "عرض من وجهة نظر العميل"
+ },
+ "お店からの返信": {
+  "en": "Reply from store",
+  "zh": "店家回复",
+  "ar": "الرد من المتجر"
+ },
+ "お店の公式サイトのURLを入れると、紹介文・営業時間・電話番号・料金表・写真を読み取ります。 内容を確認して、使う項目だけ反映できます。Instagram・XなどのSNSは各サービスの規約上取り込めません。": {
+  "en": "Enter your store's official website URL to import description, business hours, phone number, price list, and photos. You can review the content and apply only the items you want to use. Social media like Instagram and X cannot be imported due to each service's terms of use.",
+  "zh": "输入店铺官方网站 URL，即可自动读取简介、营业时间、电话号码、价目表和照片。您可以核对内容，仅应用需要的项目。由于各平台的条款限制，无法导入 Instagram、X 等 SNS 内容。",
+  "ar": "أدخل رابط الموقع الرسمي لمتجرك لاستيراد الوصف، وساعات العمل، ورقم الهاتف، وقائمة الأسعار، والصور. يمكنك مراجعة المحتوى وتطبيق العناصر التي تريدها فقط. لا يمكن استيراد وسائل التواصل الاجتماعي مثل Instagram وX نظرًا لشروط خدمة كل منها."
+ },
+ "お店紹介文": {
+  "en": "Store Description",
+  "zh": "店铺简介",
+  "ar": "وصف المتجر"
+ },
+ "お店紹介文・営業時間・利用説明は、保存すると英語・中国語に自動翻訳されて海外のお客さんにも表示されます。": {
+  "en": "Store description, business hours, and instructions will be automatically translated into English and Chinese upon saving, and displayed to overseas customers.",
+  "zh": "店铺简介、营业时间和使用说明在保存后将自动翻译成英文和中文，并展示给海外顾客。",
+  "ar": "سيتم ترجمة وصف المتجر وساعات العمل وإرشادات الاستخدام تلقائيًا إلى الإنجليزية والصينية عند الحفظ، وتظهر للعملاء الأجانب."
+ },
+ "お気に入りユーザーへのメッセージ": {
+  "en": "Message to favorite users",
+  "zh": "给收藏用户的信息",
+  "ar": "رسالة للمستخدمين الذين أضافوا المتجر للمفضلة"
+ },
+ "お気に入り登録者 全員(": {
+  "en": "All users who favorited (",
+  "zh": "所有收藏者 (",
+  "ar": "جميع المفضلين ("
+ },
+ "カード保存": {
+  "en": "Save Card",
+  "zh": "保存卡片",
+  "ar": "حفظ البطاقة"
+ },
+ "カード動画にする": {
+  "en": "Set as Card Video",
+  "zh": "设为卡片视频",
+  "ar": "تعيين كفيديو بطاقة"
+ },
+ "カード動画に使えるのは、この店舗の公開中の動画リールだけです": {
+  "en": "Only published video Reels from this store can be used for card videos.",
+  "zh": "只有该店铺已公开的视频 Reel 才能设为卡片视频",
+  "ar": "يمكن فقط استخدام مقاطع Reel المنشورة لجميع المتاجر في فيديوهات البطاقات."
+ },
+ "カード動画に設定中": {
+  "en": "Setting as card video...",
+  "zh": "正在设置为卡片视频...",
+  "ar": "جاري التعيين كفيديو بطاقة..."
+ },
+ "カード動画の設定に失敗しました: {0}": {
+  "en": "Failed to set card video: {0}",
+  "zh": "设置卡片视频失败：{0}",
+  "ar": "فشل ضبط فيديو البطاقة: {0}"
+ },
+ "カード動画の設定に失敗しました(対象の店舗が見つからないか、権限がありません)": {
+  "en": "Failed to set card video (target store not found or permission denied).",
+  "zh": "设置卡片视频失败（未找到目标店铺或无权限）",
+  "ar": "فشل ضبط فيديو البطاقة (المتجر المستهدف غير موجود أو لا تملك الإذن)."
+ },
+ "がマップ上のどこに表示されるかを決めます。住所で検索してから、 ビルの入口に合うようピンをドラッグしてください。": {
+  "en": "Determines where ... is displayed on the map. Search by address, then drag the pin to match the building entrance.",
+  "zh": "决定……在地图上的显示位置。请先搜索地址，然后拖动大头针使其对准建筑物入口。",
+  "ar": "يُحدد أين سيظهر ... على الخريطة. يرجى البحث عن طريق العنوان، ثم سحب الدبوس ليتطابق مع مدخل المبنى."
+ },
+ "から手続きするか、管理者IDの追加が使える場合は、オーナーの方に、新しいIDを発行してもらってください。": {
+  "en": "Proceed from ..., or if administrator ID addition is available, please ask the owner to issue a new ID.",
+  "zh": "请从……办理手续；如果可使用添加管理员 ID 功能，请让业主为您发行新的 ID。",
+  "ar": "يرجى المتابعة من...، أو إذا كانت إمكانية إضافة معرف مسؤول متاحة، يرجى طلب إصدار معرف جديد من المالك."
+ },
+ "カレンダーで設定する": {
+  "en": "Set via Calendar",
+  "zh": "在日历中设置",
+  "ar": "الضبط من التقويم"
+ },
+ "キャッチコピー": {
+  "en": "Tagline",
+  "zh": "宣传语",
+  "ar": "الشعار الترويجي"
+ },
+ "ギャラリーの削除に失敗しました: {0}": {
+  "en": "Failed to delete gallery item: {0}",
+  "zh": "删除图库失败：{0}",
+  "ar": "فشل حذف معرض الصور: {0}"
+ },
+ "ギャラリーの取得に失敗しました: {0}": {
+  "en": "Failed to retrieve gallery: {0}",
+  "zh": "获取图库失败：{0}",
+  "ar": "فشل استرداد معرض الصور: {0}"
+ },
+ "ギャラリーは最大{0}枚までです": {
+  "en": "The gallery can hold up to {0} images.",
+  "zh": "画廊最多可添加{0}张照片",
+  "ar": "يمكن أن يحتوي معرض الصور على {0} صور كحد أقصى."
+ },
+ "ギャラリーへの追加に失敗しました: {0}": {
+  "en": "Failed to add to gallery: {0}",
+  "zh": "添加至画廊失败：{0}",
+  "ar": "فشل الإضافة إلى معرض الصور: {0}"
+ },
+ "キャンセル": {
+  "en": "Cancel",
+  "zh": "取消",
+  "ar": "إلغاء"
+ },
+ "キャンセルの方針": {
+  "en": "Cancellation Policy",
+  "zh": "取消政策",
+  "ar": "سياسة الإلغاء"
+ },
+ "クイックアクション": {
+  "en": "Quick Actions",
+  "zh": "快捷操作",
+  "ar": "إجراءات سريعة"
+ },
+ "クローズ": {
+  "en": "Close",
+  "zh": "关闭",
+  "ar": "إغلاق"
+ },
+ "くわしい説明": {
+  "en": "Detailed Description",
+  "zh": "详细说明",
+  "ar": "وصف تفصيلي"
+ },
+ "コース名": {
+  "en": "Course Name",
+  "zh": "套餐名称",
+  "ar": "اسم الباقة"
+ },
+ "コース名と料金は必須です": {
+  "en": "Course name and price are required.",
+  "zh": "套餐名称和价格为必填项",
+  "ar": "اسم الباقة والسعر مطلوبان."
+ },
+ "ここから投稿するとFACES本人のリールとしてタグ付けされます(店舗リールは 「リール投稿」ページから)。": {
+  "en": "Posting from here tags it as the FACES individual's Reel (for store Reels, use the \"Post Reel\" page).",
+  "zh": "从此处发布将被标记为 FACES 本人的 Reel（店铺 Reel 请通过“发布 Reel”页面操作）。",
+  "ar": "النشر من هنا سيقوم بإضافته كـ Reel الخاص بشخص FACES (بالنسبة لـ Reels المتجر، استخدم صفحة \"نشر Reel\")."
+ },
+ "ここで登録した画像はポータルトップの「イベント」特設リールにも縦長画像として流れます。終了日時を過ぎたイベントはポータルの一覧から自動的に非表示になります。": {
+  "en": "Images registered here will also appear as vertical images in the special \"Events\" Reel at the top of the portal. Events past their end date and time will automatically be hidden from the portal list.",
+  "zh": "此处注册的图片也将作为竖屏图片展示在门户首页的“活动”特设 Reel 中。超过结束时间的活动将自动从门户列表中隐藏。",
+  "ar": "الصور المسجلة هنا ستظهر أيضًا كصور عمودية في Reel الخاص بـ \"الفعاليات\" أعلى البوابة. الفعاليات التي تجاوزت تاريخ ووقت الانتهاء ستُخفى تلقائيًا من قائمة البوابة."
+ },
+ "ここで編集した内容は表側ポータルの店舗ページに反映されます。": {
+  "en": "Changes edited here will be reflected on the public portal store page.",
+  "zh": "此处编辑的内容将反映在前端门户的店铺页面上。",
+  "ar": "التغييرات التي يتم تعديلها هنا ستنعكس على صفحة المتجر في البوابة الرئيسية."
+ },
+ "こちら(電話番号・生年月日・暗証番号で再設定)": {
+  "en": "Here (Reset via phone number, date of birth, PIN)",
+  "zh": "此处（通过电话号码、出生日期、PIN码重置）",
+  "ar": "هنا (إعادة الضبط برقم الهاتف، تاريخ الميلاد، الرمز السري)"
+ },
+ "このURLをコピーしてください": {
+  "en": "Please copy this URL",
+  "zh": "请复制此 URL",
+  "ar": "يرجى نسخ هذا الرابط"
+ },
+ "このエリアに投稿された最新の写真(80枚まで)のうち、いま出ていないものです。場所名の表記が違って自動で紐付かなかった写真を、ここから追加できます。": {
+  "en": "These are the latest photos (up to 80) posted in this area that are not currently displayed. You can add photos here that were not automatically linked due to differences in location name formatting.",
+  "zh": "这些是发布在该区域的最新照片（最多80张）中当前未显示的照片。由于地点名称拼写不同而未自动关联的照片，可以从此处添加。",
+  "ar": "هذه هي أحدث الصور (حتى 80 صورة) المنشورة في هذه المنطقة والتي لا تُعرض حاليًا. يمكنك إضافة الصور من هنا التي لم يتم ربطها تلقائيًا بسبب اختلاف كتابة اسم الموقع."
+ },
+ "このお店は、まだGoogleマップと連携していません。連携をご希望の場合は、運営にご相談ください。": {
+  "en": "This store is not yet linked with Google Maps. If you wish to link it, please contact support.",
+  "zh": "该店铺尚未与 Google 地图关联。如需关联，请联系运营部门。",
+  "ar": "هذا المتجر غير مرتبط بـ Google Maps بعد. إذا كنت ترغب في الربط، يرجى التواصل مع الإدارة."
+ },
+ "このダッシュボードへのログインID・パスワードです。発行時の画面を閉じた後も、ここでいつでも確認・変更できます。": {
+  "en": "These are the login ID and password for this dashboard. Even after closing the initial issuance screen, you can check or change them here anytime.",
+  "zh": "这是此仪表板的登录 ID 和密码。在关闭初始发行界面后，您仍可随时在此进行查看和修改。",
+  "ar": "هذه هي معرف الدخول وكلمة المرور الخاصة بلوحة التحكم هذه. حتى بعد إغلاق شاشة الإصدار الأولية، يمكنك التحقق منهما أو تغييرهما هنا في أي وقت."
+ },
+ "このページからは取り込める情報が見つかりませんでした。": {
+  "en": "No importable information was found on this page.",
+  "zh": "未在该页面找到可导入的信息。",
+  "ar": "لم يتم العثور على معلومات يمكن استيرادها من هذه الصفحة."
+ },
+ "このまま待ってください。完了すると自動でボタンが押せるようになります。": {
+  "en": "Please wait. Once completed, the button will automatically become clickable.",
+  "zh": "请保持等待。完成后按钮将自动变为可点击状态。",
+  "ar": "يرجى الانتظار كما أنت. بمجرد الانتهاء، سينشط الزر تلقائيًا."
+ },
+ "このリールの字幕をすべて消しますか?(自動では作り直されません)": {
+  "en": "Delete all subtitles for this Reel? (They will not be automatically regenerated)",
+  "zh": "是否删除此 Reel 的所有字幕？（不会自动重新生成）",
+  "ar": "هل تريد حذف جميع الترجمات لهذا الـ Reel؟ (لن يتم إعادة إنشائها تلقائيًا)"
+ },
+ "このリンクを開き、6桁の暗証番号を入力するとFACES本人が投稿用マイページにログインできます。URLだけでは入れません。暗証番号はリンクとは別の方法で伝えてください(LINE送信には含まれません)。": {
+  "en": "Open this link and enter the 6-digit PIN for the FACES person to log into their posting My Page. Access is not possible with just the URL. Please convey the PIN separately from the link (it is not included in LINE messages).",
+  "zh": "打开此链接并输入 6 位 PIN 码，FACES 本人即可登录发布用个人主页。仅凭 URL 无法进入。请通过链接以外的方式告知 PIN 码（不包含在 LINE 发送中）。",
+  "ar": "افتح هذا الرابط وأدخل الرمز السري المكون من 6 أرقام لتسجيل دخول شخص FACES إلى صفحته الشخصية للنشر. لا يمكن الدخول باستخدام الرابط فقط. يرجى إبلاغ الرمز السري بطريقة منفصلة عن الرابط (غير مدرج في إرسال LINE)."
+ },
+ "この一覧は自店舗のみに表示されます。他店舗からは見えません。": {
+  "en": "This list is displayed only to your store. It is not visible to other stores.",
+  "zh": "此列表仅显示给您自身的店铺。其他店铺无法查看。",
+  "ar": "تظهر هذه القائمة لمتجرك فقط. ولا يمكن للمتاجر الأخرى رؤيتها."
+ },
+ "この位置で保存": {
+  "en": "Save at this location",
+  "zh": "保存在此位置",
+  "ar": "حفظ في هذا الموقع"
+ },
+ "この写真をアイコンにする": {
+  "en": "Set this photo as icon",
+  "zh": "将此照片设为图标",
+  "ar": "تعيين هذه الصورة كأيقونة"
+ },
+ "この動画を削除しますか? 削除すると元に戻せません。": {
+  "en": "Delete this video? Once deleted, it cannot be undone.",
+  "zh": "确定要删除此视频吗？删除后将无法恢复。",
+  "ar": "هل تريد حذف هذا الفيديو؟ بمجرد الحذف، لا يمكن التراجع."
+ },
+ "この店舗では、優先予約はまだ受け付けていません(有料掲載プランの店舗で、運営が公開したときに有効になります)。": {
+  "en": "Priority bookings are not currently accepted for this shop (this will become active once published by management for shops on a paid listing plan).",
+  "zh": "本店暂不接受特快预约（仅限付费上线计划的店铺，在运营方发布后生效）。",
+  "ar": "لا تقبل هذه المنشأة الحجوزات ذات الأولوية حاليًا (يتم تفعيلها عند نشرها من قبل الإدارة للمنشآت المشتركة في خطة الإدراج المدفوعة)."
+ },
+ "この店舗では出さない": {
+  "en": "Do not display at this shop",
+  "zh": "不在本店展示",
+  "ar": "عدم العرض في هذه المنشأة"
+ },
+ "この店舗では出さない写真(": {
+  "en": "Photos not displayed at this shop (",
+  "zh": "不在本店展示的照片（",
+  "ar": "الصور غير المعروضة في هذه المنشأة ("
+ },
+ "この店舗に表示する": {
+  "en": "Display at this shop",
+  "zh": "在本店展示",
+  "ar": "العرض في هذه المنشأة"
+ },
+ "この店舗のFACESを管理する権限がありません": {
+  "en": "You do not have permission to manage FACES for this shop.",
+  "zh": "您没有管理本店 FACES 的权限。",
+  "ar": "ليس لديك إذن لإدارة FACES لهذه المنشأة."
+ },
+ "この店舗のスタッフを管理する権限がありません": {
+  "en": "You do not have permission to manage staff for this shop.",
+  "zh": "您没有管理本店员工的权限。",
+  "ar": "ليس لديك إذن لإدارة طاقم العمل لهذه المنشأة."
+ },
+ "この店舗の管理画面に入れるIDです(最大": {
+  "en": "ID used to access this shop's admin dashboard (Max.",
+  "zh": "可登录本店管理后台的ID（最多",
+  "ar": "المعرف المخصص للدخول إلى لوحة تحكم هذه المنشأة (الحد الأقصى"
+ },
+ "この店舗を操作する権限がありません": {
+  "en": "You do not have permission to operate this shop.",
+  "zh": "您没有操作本店的权限。",
+  "ar": "ليس لديك إذن لتشغيل هذه المنشأة."
+ },
+ "この店舗を編集する権限がありません": {
+  "en": "You do not have permission to edit this shop.",
+  "zh": "您没有编辑本店的权限。",
+  "ar": "ليس لديك إذن لتعديل هذه المنشأة."
+ },
+ "この情報は今だけ表示されます。必ずFACES本人に伝えてください。": {
+  "en": "This information is only displayed now. Please be sure to convey it to the FACES user directly.",
+  "zh": "此信息仅在此刻显示。请务必亲自告知 FACES 本人。",
+  "ar": "يتم عرض هذه المعلومات الآن فقط. يُرجى التأكد من إبلاغ شخص FACES المعني."
+ },
+ "この情報は今だけ表示されます。必ず本人に伝えてください。": {
+  "en": "This information is only displayed now. Please be sure to convey it to the person directly.",
+  "zh": "此信息仅在此刻显示。请务必亲自告知本人。",
+  "ar": "يتم عرض هذه المعلومات الآن فقط. يُرجى التأكد من إبلاغ الشخص المعني."
+ },
+ "この操作ができるのは、この店舗のオーナーIDだけです。": {
+  "en": "Only the owner ID of this shop can perform this operation.",
+  "zh": "只有本店的店主ID才能进行此操作。",
+  "ar": "يمكن لمالك هذه المنشأة فقط إجراء هذه العملية."
+ },
+ "この操作をする権限がありません": {
+  "en": "You do not have permission to perform this operation.",
+  "zh": "您没有执行此操作的权限。",
+  "ar": "ليس لديك إذن لإجراء هذه العملية."
+ },
+ "この日に予定を追加": {
+  "en": "Add schedule on this date",
+  "zh": "在此日期添加日程",
+  "ar": "إضافة موعد في هذا اليوم"
+ },
+ "この日の予定はありません": {
+  "en": "No schedules for this date.",
+  "zh": "该日期没有日程。",
+  "ar": "لا توجد مواعيد في هذا اليوم."
+ },
+ "この画面を閉じると二度と表示できません。リンクとは別の方法(口頭など)で本人に伝えてください。": {
+  "en": "Once you close this screen, it cannot be displayed again. Please convey it to the person through another method (such as verbally) besides sending a link.",
+  "zh": "关闭此页面后将无法再次显示。请通过链接以外的方式（如口头告知）转告本人。",
+  "ar": "بمجرد إغلاق هذه الشاشة، لن تتمكن من عرضها مرة أخرى. يُرجى إبلاغ الشخص المعني بطريقة أخرى (مثل الشفهية) غير الرابط."
+ },
+ "この端末では現在地を取得できません。下の「予定を登録」で場所を選んでください。": {
+  "en": "Unable to get your current location on this device. Please select a location using \"Register Schedule\" below.",
+  "zh": "无法在此设备上获取当前位置。请在下方的“登记日程”中选择位置。",
+  "ar": "يتعذر الحصول على موقعك الحالي على هذا الجهاز. يُرجى تحديد الموقع من \"تسجيل موعد\" أدناه."
+ },
+ "この言語の訳を保存": {
+  "en": "Save translation for this language",
+  "zh": "保存该语言的翻译",
+  "ar": "حفظ ترجمة هذه اللغة"
+ },
+ "コピー": {
+  "en": "Copy",
+  "zh": "复制",
+  "ar": "نسخ"
+ },
+ "コピーしました": {
+  "en": "Copied",
+  "zh": "已复制",
+  "ar": "تم النسخ"
+ },
+ "コメント・本文を入力": {
+  "en": "Enter comment / body text",
+  "zh": "输入评论/正文",
+  "ar": "أدخل التعليق / النص"
+ },
+ "ご予約・お問い合わせURL": {
+  "en": "Reservation / Inquiry URL",
+  "zh": "预约/咨询 URL",
+  "ar": "رابط الحجز / الاستفسار"
+ },
+ "ご利用の流れ、注意事項など": {
+  "en": "Usage process, precautions, etc.",
+  "zh": "使用流程、注意事项等",
+  "ar": "خطوات الاستخدام، التنبيهات، إلخ."
+ },
+ "ご担当者様の生年月日": {
+  "en": "Contact person's date of birth",
+  "zh": "负责人出生年月日",
+  "ar": "تاريخ ميلاد الشخص المسؤول"
+ },
+ "ご担当者様の電話番号": {
+  "en": "Contact person's phone number",
+  "zh": "负责人电话号码",
+  "ar": "رقم هاتف الشخص المسؤول"
+ },
+ "ご自分のログインIDの確認と、パスワードの変更ができます。パスワードは、いつでも変更できます。": {
+  "en": "You can check your login ID and change your password. You can change your password at any time.",
+  "zh": "您可以查看自己的登录ID并修改密码。密码随时可以修改。",
+  "ar": "يمكنك التحقق من معرف تسجيل الدخول الخاص بك وتغيير كلمة المرور. يمكنك تغيير كلمة المرور في أي وقت."
+ },
+ "ご自身のアカウントの動画、または権利のある動画だけを載せてください。非公開または埋め込みを許可していないYouTube動画は、再生されません。": {
+  "en": "Please only upload videos from your own account or videos you have the rights to. Private YouTube videos or those that do not allow embedding will not play.",
+  "zh": "请仅发布您自己账号的视频或拥有版权的视频。私密或未允许嵌入的 YouTube 视频将无法播放。",
+  "ar": "يُرجى إدراج الفيديوهات الخاصة بحسابك أو الفيديوهات التي تمتلك حقوقها فقط. لن يتم تشغيل فيديوهات YouTube الخاصة أو التي لا تسمح بالتضمين."
+ },
+ "ご要望:": {
+  "en": "Requests:",
+  "zh": "特殊要求：",
+  "ar": "الطلبات:"
+ },
+ "しない(この日だけ)": {
+  "en": "Disable (this day only)",
+  "zh": "不执行（仅限当天）",
+  "ar": "إلغاء (هذا اليوم فقط)"
+ },
+ "ジャンル": {
+  "en": "Genre",
+  "zh": "类型",
+  "ar": "الفئة"
+ },
+ "スタッフの削除に失敗しました: {0}": {
+  "en": "Failed to delete staff member: {0}",
+  "zh": "删除员工失败：{0}",
+  "ar": "فشل حذف الموظف: {0}"
+ },
+ "スタッフの追加に失敗しました: {0}": {
+  "en": "Failed to add staff member: {0}",
+  "zh": "添加员工失败：{0}",
+  "ar": "فشل إضافة الموظف: {0}"
+ },
+ "スタッフを追加": {
+  "en": "Add Staff",
+  "zh": "添加员工",
+  "ar": "إضافة موظف"
+ },
+ "スタッフ管理": {
+  "en": "Staff Management",
+  "zh": "员工管理",
+  "ar": "إدارة الموظفين"
+ },
+ "ステータス": {
+  "en": "Status",
+  "zh": "状态",
+  "ar": "الحالة"
+ },
+ "すべての項目がそろっています。お客さんに選ばれやすい状態です。": {
+  "en": "All items are complete. Your profile is now easy for customers to choose.",
+  "zh": "所有项目已填写完毕。目前处于更容易被顾客选择的状态。",
+  "ar": "جميع العناصر مكتملة. منشأتك الآن في حالة يسهل على العملاء اختيارها."
+ },
+ "スマホのログイン用URL": {
+  "en": "Mobile Login URL",
+  "zh": "手机登录URL",
+  "ar": "رابط تسجيل الدخول للهاتف المحمول"
+ },
+ "ずれていれば、ピンをドラッグしてください。": {
+  "en": "If it is off, please drag the pin.",
+  "zh": "如有偏差，请拖动大头针。",
+  "ar": "إذا كان الموقع غير دقيق، يُرجى سحب الدبوس."
+ },
+ "タイトル": {
+  "en": "Title",
+  "zh": "标题",
+  "ar": "العنوان"
+ },
+ "タイトルは80文字以内にしてください": {
+  "en": "Please keep the title within 80 characters.",
+  "zh": "标题请控制在80个字符以内",
+  "ar": "يرجى أن يكون العنوان ضمن 80 حرفًا."
+ },
+ "タイトルは必須です": {
+  "en": "Title is required.",
+  "zh": "标题为必填项",
+  "ar": "العنوان مطلوب."
+ },
+ "タイトルを入力してください": {
+  "en": "Please enter a title.",
+  "zh": "请输入标题",
+  "ar": "يرجى إدخال العنوان."
+ },
+ "ダミー写真の雰囲気": {
+  "en": "Sample photo style",
+  "zh": "示例照片风格",
+  "ar": "أسلوب الصور التوضيحية"
+ },
+ "ついたコメント": {
+  "en": "Received Comments",
+  "zh": "收到的评论",
+  "ar": "التعليقات الواردة"
+ },
+ "デポジット": {
+  "en": "Deposit",
+  "zh": "押金",
+  "ar": "العربون"
+ },
+ "ドタキャンや作りすぎの時に、1〜3時間限定のお得情報をすぐ掲載できます。": {
+  "en": "Instantly post special deals for 1–3 hours in case of last-minute cancellations or extra inventory.",
+  "zh": "在遇到临时取消或做多时，可以立即发布1至3小时限定的优惠信息。",
+  "ar": "يمكنك نشر عروض خاصة لفترة محدودة من 1 إلى 3 ساعات فورًا في حالات الإلغاء المفاجئ أو الفائض."
+ },
+ "どちらで使いますか？": {
+  "en": "Which will you use it for?",
+  "zh": "您要在哪里使用？",
+  "ar": "أين تريد استخدامها؟"
+ },
+ "トップ画像": {
+  "en": "Top Image",
+  "zh": "顶部图片",
+  "ar": "الصورة الرئيسية"
+ },
+ "トップ画像/動画(横長・店舗ページ上部に表示されます)": {
+  "en": "Top image/video (landscape, displayed at the top of the store page)",
+  "zh": "顶部图片/视频（横向，显示在店铺页面顶部）",
+  "ar": "الصورة/الفيديو الرئيسي (أفقي، يظهر في أعلى صفحة المتجر)"
+ },
+ "トップ画像は使わない": {
+  "en": "Do not use top image",
+  "zh": "不使用顶部图片",
+  "ar": "عدم استخدام الصورة الرئيسية"
+ },
+ "の管理": {
+  "en": "Management",
+  "zh": "的管理",
+  "ar": "إدارة"
+ },
+ "パスワード": {
+  "en": "Password",
+  "zh": "密码",
+  "ar": "كلمة المرور"
+ },
+ "パスワード(6文字以上・空欄なら自動で作ります)": {
+  "en": "Password (6+ characters; automatically generated if left blank)",
+  "zh": "密码（6个字符以上，留空则自动生成）",
+  "ar": "كلمة المرور (6 أحرف أو أكثر، وسيتم إنشاؤها تلقائيًا إذا تركت فارغة)"
+ },
+ "パスワードを再発行する": {
+  "en": "Reset Password",
+  "zh": "重置密码",
+  "ar": "إعادة إصدار كلمة المرور"
+ },
+ "パスワードを変更する": {
+  "en": "Change Password",
+  "zh": "修改密码",
+  "ar": "تغيير كلمة المرور"
+ },
+ "パスワードを忘れたとき": {
+  "en": "Forgot password?",
+  "zh": "忘记密码？",
+  "ar": "نسيت كلمة المرور؟"
+ },
+ "ひとこと(任意)": {
+  "en": "Short comment (optional)",
+  "zh": "一句话说明（选填）",
+  "ar": "ملاحظة قصيرة (اختياري)"
+ },
+ "ひとことコメントを入力": {
+  "en": "Enter a short comment",
+  "zh": "输入一句话评论",
+  "ar": "أدخل ملاحظة قصيرة"
+ },
+ "フォロワー": {
+  "en": "Followers",
+  "zh": "关注者",
+  "ar": "المتابعون"
+ },
+ "フリガナ": {
+  "en": "Furigana",
+  "zh": "假名（Furigana）",
+  "ar": "فوريكانا"
+ },
+ "プリセットが正しくありません": {
+  "en": "Invalid preset.",
+  "zh": "预设不正确",
+  "ar": "الإعداد المسبق غير صحيح."
+ },
+ "プレビュー": {
+  "en": "Preview",
+  "zh": "预览",
+  "ar": "معاينة"
+ },
+ "フロア写真をアップロード": {
+  "en": "Upload floor photo",
+  "zh": "上传店内照片",
+  "ar": "تحميل صورة الصالة"
+ },
+ "フロア写真をアップロードすると、AIが混雑状況を判定してお問い合わせチャットに反映します。": {
+  "en": "When you upload a floor photo, AI will determine the congestion status and reflect it in the inquiry chat.",
+  "zh": "上传店内照片后，AI将判断拥挤状况并反映在咨询聊天中。",
+  "ar": "عند تحميل صورة الصالة، سيقوم الذكاء الاصطناعي بتقييم مدى الازدحام وعرضه في دردشة الاستفسارات."
+ },
+ "プロフィール": {
+  "en": "Profile",
+  "zh": "个人资料",
+  "ar": "الملف الشخصي"
+ },
+ "プロフィール・写真・出勤スケジュール・日記をここから管理できます。": {
+  "en": "You can manage your profile, photos, work schedule, and diary from here.",
+  "zh": "您可以在此管理个人资料、照片、出勤日程和日志。",
+  "ar": "يمكنك إدارة ملفك الشخصي والصور وجدول العمل واليوميات من هنا."
+ },
+ "プロフィールを更新": {
+  "en": "Update Profile",
+  "zh": "更新个人资料",
+  "ar": "تحديث الملف الشخصي"
+ },
+ "ほかの写真をこの店舗に表示する": {
+  "en": "Display other photos at this shop",
+  "zh": "在本店展示其他照片",
+  "ar": "عرض صور أخرى في هذه المنشأة"
+ },
+ "マイページ": {
+  "en": "My Page",
+  "zh": "个人主页",
+  "ar": "صفحتي"
+ },
+ "マイページ（個人）": {
+  "en": "My Page (Personal)",
+  "zh": "个人主页（个人）",
+  "ar": "صفحتي (شخصي)"
+ },
+ "マイページ用リンク(URL紛失・ログアウト時もいつでも再確認・再送できます)": {
+  "en": "My Page Link (Can be re-checked or re-sent anytime if URL is lost or logged out)",
+  "zh": "个人主页链接（遗失URL或退出登录后可随时重新确认或重发）",
+  "ar": "رابط صفحتي (يمكنك إعادة التحقق منه أو إعادة إرساله في أي وقت حتى عند فقدان الرابط أو تسجيل الخروج)"
+ },
+ "マイページ用リンクのQRコード": {
+  "en": "QR Code for My Page Link",
+  "zh": "个人主页链接二维码",
+  "ar": "رمز QR لرابط صفحتي"
+ },
+ "まだFACESリールの投稿はありません。": {
+  "en": "No FACES Reels posts yet.",
+  "zh": "尚无 FACES Reel 动态。",
+  "ar": "لا توجد منشورات FACES Reels حتى الآن."
+ },
+ "まだありません。": {
+  "en": "None yet.",
+  "zh": "暂无。",
+  "ar": "لا يوجد شيء حتى الآن."
+ },
+ "まだお問い合わせはありません。": {
+  "en": "No inquiries yet.",
+  "zh": "暂无咨询。",
+  "ar": "لا توجد استفسارات حتى الآن."
+ },
+ "まだコメントはありません。": {
+  "en": "No comments yet.",
+  "zh": "暂无评论。",
+  "ar": "لا توجد تعليقات حتى الآن."
+ },
+ "まだスタッフが登録されていません。": {
+  "en": "No staff members registered yet.",
+  "zh": "尚未注册员工。",
+  "ar": "لم يتم تسجيل أي من طاقم العمل حتى الآن."
+ },
+ "またはタップして選択": {
+  "en": "or tap to select",
+  "zh": "或点击选择",
+  "ar": "أو انقر للاختيار"
+ },
+ "まだリール投稿はありません。": {
+  "en": "No Reel posts yet.",
+  "zh": "尚无 Reel 动态。",
+  "ar": "لا توجد منشورات Reels حتى الآن."
+ },
+ "まだ発射したブーストはありません。": {
+  "en": "No Boosts have been launched yet.",
+  "zh": "尚未发布任何 Boost。",
+  "ar": "لم يتم إطلاق أي Boost بعد."
+ },
+ "まだ車両が登録されていません。「＋ 車両を追加」から登録してください。": {
+  "en": "No vehicles registered yet. Please register via \"+ Add Vehicle\".",
+  "zh": "尚未注册任何车辆。请通过“+ 添加车辆”进行注册。",
+  "ar": "لم يتم تسجيل أي مركبات بعد. يرجى التسجيل من \"+ إضافة مركبة\"."
+ },
+ "マップのカード動画": {
+  "en": "Map Card Video",
+  "zh": "地图卡片视频",
+  "ar": "فيديو بطاقة الخريطة"
+ },
+ "マップのピン位置": {
+  "en": "Map Pin Location",
+  "zh": "地图大头针位置",
+  "ar": "موقع دبوس الخريطة"
+ },
+ "メイン画像": {
+  "en": "Main Image",
+  "zh": "主图",
+  "ar": "الصورة الرئيسية"
+ },
+ "メイン画像(縦型・一覧のサムネイルに使われます)": {
+  "en": "Main Image (Vertical, used for thumbnails in lists)",
+  "zh": "主图（竖版，用作列表缩略图）",
+  "ar": "الصورة الرئيسية (رأسية، تُستخدم كصورة مصغرة في القوائم)"
+ },
+ "メイン画像は使わない": {
+  "en": "Do not use main image",
+  "zh": "不使用主图",
+  "ar": "عدم استخدام الصورة الرئيسية"
+ },
+ "もう一度お試しください。": {
+  "en": "Please try again.",
+  "zh": "请重试。",
+  "ar": "يرجى المحاولة مرة أخرى."
+ },
+ "やめる": {
+  "en": "Cancel",
+  "zh": "取消",
+  "ar": "إلغاء"
+ },
+ "ラスト(深夜3時まで)": {
+  "en": "Last (Until 3:00 AM)",
+  "zh": "末班（至凌晨3点）",
+  "ar": "الطلب الأخير (حتى الساعة 3:00 صباحاً)"
+ },
+ "リールを投稿する": {
+  "en": "Post a Reel",
+  "zh": "发布Reel",
+  "ar": "نشر Reel"
+ },
+ "リール投稿": {
+  "en": "Reels Post",
+  "zh": "Reel发布",
+  "ar": "منشور Reel"
+ },
+ "リール投稿用ログイン": {
+  "en": "Login for Reels Posting",
+  "zh": "Reel发布专用登录",
+  "ar": "تسجيل الدخول لنشر Reels"
+ },
+ "リール用サムネイル画像(必須・推奨サイズ 1080x1920)": {
+  "en": "Thumbnail Image for Reels (Required, recommended size 1080x1920)",
+  "zh": "Reel缩略图（必填，建议尺寸 1080x1920）",
+  "ar": "صورة مصغرة لـ Reel (إلزامي، الحجم الموصى به 1080x1920)"
+ },
+ "リンクの再発行に失敗しました: {0}": {
+  "en": "Failed to reissue link: {0}",
+  "zh": "重新生成链接失败：{0}",
+  "ar": "فشلت إعادة إصدار الرابط: {0}"
+ },
+ "リンクを再発行する(旧リンクは無効化)": {
+  "en": "Reissue link (Old link will be invalidated)",
+  "zh": "重新生成链接（旧链接将失效）",
+  "ar": "إعادة إصدار الرابط (سيتم إبطال الرابط القديم)"
+ },
+ "リンク先URL(任意)": {
+  "en": "Destination URL (Optional)",
+  "zh": "目标URL（可选）",
+  "ar": "رابط الوجهة (اختياري)"
+ },
+ "ログアウト": {
+  "en": "Log Out",
+  "zh": "退出登录",
+  "ar": "تسجيل الخروج"
+ },
+ "ログインID": {
+  "en": "Login ID",
+  "zh": "登录ID",
+  "ar": "معرف تسجيل الدخول"
+ },
+ "ログインID(メールアドレス・空欄なら自動で作ります。本人が受け取れるメールにすると、パスワードを忘れたとき、メールで再設定できます)": {
+  "en": "Login ID (Email address. If left blank, it will be generated automatically. Using an email address you can receive will allow you to reset your password via email if forgotten)",
+  "zh": "登录ID（电子邮箱。如果留空将自动生成。使用您能接收邮件的邮箱，可在忘记密码时通过邮件重置）",
+  "ar": "معرف تسجيل الدخول (البريد الإلكتروني. إذا تُرك فارغاً، سيتم إنشاؤه تلقائياً. يتيح لك استخدام بريد إلكتروني يمكنك استقبال الرسائل عليه إعادة تعيين كلمة المرور عبر البريد الإلكتروني في حال نسيانها)"
+ },
+ "ログインID(メールアドレス欄に入力)": {
+  "en": "Login ID (Enter in email address field)",
+  "zh": "登录ID（在电子邮箱栏中输入）",
+  "ar": "معرف تسجيل الدخول (أدخله في حقل البريد الإلكتروني)"
+ },
+ "ログインURL": {
+  "en": "Login URL",
+  "zh": "登录URL",
+  "ar": "رابط تسجيل الدخول"
+ },
+ "ログインURL: {0} ID: {1} パスワード: {2}": {
+  "en": "Login URL: {0} ID: {1} Password: {2}",
+  "zh": "登录URL: {0} ID: {1} 密码: {2}",
+  "ar": "رابط تسجيل الدخول: {0} المعرف: {1} كلمة المرور: {2}"
+ },
+ "ログインが必要です": {
+  "en": "Login is required",
+  "zh": "需要登录",
+  "ar": "تسجيل الدخول مطلوب"
+ },
+ "ログインしたあとは、ログイン状態が続くので、毎回打つ必要はありません": {
+  "en": "Once logged in, your session will remain active, so you don't need to enter it every time.",
+  "zh": "登录后将保持登录状态，无需每次都输入。",
+  "ar": "بمجرد تسجيل الدخول، ستظل مسجلاً للدخول، لذا لن تحتاج إلى إدخاله في كل مرة."
+ },
+ "ログインの発行に失敗しました": {
+  "en": "Failed to issue login credentials",
+  "zh": "生成登录信息失败",
+  "ar": "فشل إصدار بيانات تسجيل الدخول"
+ },
+ "ログインを発行する": {
+  "en": "Issue Login Credentials",
+  "zh": "生成登录信息",
+  "ar": "إصدار بيانات تسجيل الدخول"
+ },
+ "ログイン復旧情報の登録(必須)": {
+  "en": "Register Login Recovery Information (Required)",
+  "zh": "注册登录恢复信息（必填）",
+  "ar": "تسجيل معلومات استعادة تسجيل الدخول (إلزامي)"
+ },
+ "ログイン未発行": {
+  "en": "Login Not Issued",
+  "zh": "未生成登录信息",
+  "ar": "لم يتم إصدار بيانات تسجيل الدخول"
+ },
+ "ログイン用QRコード": {
+  "en": "QR Code for Login",
+  "zh": "登录用二维码",
+  "ar": "رمز QR لتسجيل الدخول"
+ },
+ "ログイン用の暗証番号(6桁)": {
+  "en": "PIN Code for Login (6 digits)",
+  "zh": "登录用PIN码（6位数字）",
+  "ar": "رمز PIN لتسجيل الدخول (6 أرقام)"
+ },
+ "ログイン発行済み": {
+  "en": "Login Issued",
+  "zh": "已生成登录信息",
+  "ar": "تم إصدار بيانات تسجيل الدخول"
+ },
+ "をお気に入り登録中のユーザー(": {
+  "en": "Users who favorited this (",
+  "zh": "已将此内容收藏的用户 (",
+  "ar": "المستخدمون الذين أضافوا هذا إلى المفضلات ("
+ },
+ "をドラッグ&ドロップ": {
+  "en": "Drag & drop",
+  "zh": "拖放",
+  "ar": "سحب وإفلات"
+ },
+ "一度に登録できるのは60件までです": {
+  "en": "You can register up to 60 items at a time.",
+  "zh": "一次最多只能注册60条。",
+  "ar": "يمكنك تسجيل ما يصل إلى 60 عنصرًا في المرة الواحدة."
+ },
+ "一般ユーザーから届いた来店予約・問い合わせDMです。FACESへの個別DMはありません。": {
+  "en": "These are store visit reservations and inquiry DMs from general users. There are no individual DMs to FACES.",
+  "zh": "这是来自普通用户的到店预约和咨询私信。没有针对FACES的单独私信。",
+  "ar": "هذه رسائل مباشرة لحجوزات الاستفسارات وزيارات المتاجر الواردة من المستخدمين العاديين. لا توجد رسائل مباشرة فردية إلى FACES."
+ },
+ "万円で割り切れる額は「255万円」と表示されます。": {
+  "en": "Amounts divisible by 10,000 yen are displayed as \"255万円\".",
+  "zh": "整万日元的金额将显示为“255万円”。",
+  "ar": "المبالغ القابلة للقسمة على 10,000 ين ستُعرض بالشكل \"255万円\"."
+ },
+ "上のURLから自動でQRコードを生成して「連絡」モーダルに表示します。公式LINEのブランドQR画像などを代わりに使いたい場合だけここにアップロードしてください": {
+  "en": "A QR code will be automatically generated from the URL above and displayed in the \"Contact\" modal. Upload here only if you wish to use an official LINE branded QR image instead.",
+  "zh": "系统将根据上面的URL自动生成二维码并显示在“联系”弹窗中。仅当您希望改用官方LINE品牌二维码等图片时，才需要在此处上传。",
+  "ar": "سيتم إنشاء رمز QR تلقائيًا من الرابط أعلاه وعرضه في نافذة \"التواصل\" المنبثقة. قم بالتحميل هنا فقط إذا كنت ترغب في استخدام صورة QR الخاصة بالعلامة التجارية لـ LINE الرسمي بدلاً من ذلك."
+ },
+ "上限の": {
+  "en": "Limit of",
+  "zh": "上限的",
+  "ar": "الحد الأقصى لـ"
+ },
+ "下の動画リールから「カード動画にする」を押すと、マップのカードでその動画が流れます。選ばない場合は最新の動画リールが流れます。": {
+  "en": "Tap \"Set as Card Video\" on a video reel below to play it on your map card. If unselected, the latest video reel will be played.",
+  "zh": "点击下方视频 Reels 中的“设为卡片视频”，该视频就会在地图卡片上播放。如果不选择，将播放最新发布的视频 Reels。",
+  "ar": "اضغط على \"تعيين كفيديو بطاقة\" من بكرات الفيديو أدناه لتشغيله على بطاقة الخريطة. إذا لم تحدد فيديو، سيتم تشغيل أحدث بكرة فيديو."
+ },
+ "不明なエラー": {
+  "en": "Unknown error",
+  "zh": "未知错误",
+  "ar": "خطأ غير معروف"
+ },
+ "与信保持": {
+  "en": "Credit hold",
+  "zh": "预授权冻结",
+  "ar": "حجز الائتمان"
+ },
+ "与信照会に失敗しました: {0}": {
+  "en": "Credit check failed: {0}",
+  "zh": "信用查询失败：{0}",
+  "ar": "فشل الاستعلام عن الائتمان: {0}"
+ },
+ "与信照会結果": {
+  "en": "Credit check result",
+  "zh": "信用查询结果",
+  "ar": "نتيجة الاستعلام عن الائتمان"
+ },
+ "与信照会結果:": {
+  "en": "Credit check result:",
+  "zh": "信用查询结果：",
+  "ar": "نتيجة الاستعلام عن الائتمان:"
+ },
+ "中文": {
+  "en": "Chinese",
+  "zh": "中文",
+  "ar": "الصينية"
+ },
+ "乗車定員": {
+  "en": "Seating capacity",
+  "zh": "乘员人数",
+  "ar": "سعة الركاب"
+ },
+ "予定": {
+  "en": "Schedule",
+  "zh": "日程",
+  "ar": "الجدول الزمني"
+ },
+ "予定カレンダー": {
+  "en": "Schedule calendar",
+  "zh": "日程日历",
+  "ar": "تقويم المواعيد"
+ },
+ "予定を削除しました": {
+  "en": "Schedule deleted",
+  "zh": "已删除日程",
+  "ar": "تم حذف الموعد"
+ },
+ "予定を登録": {
+  "en": "Add schedule",
+  "zh": "添加日程",
+  "ar": "إضافة موعد"
+ },
+ "予定を登録しました。開始時刻になると地図に出ます。": {
+  "en": "Schedule registered. It will appear on the map at the start time.",
+  "zh": "已注册日程。到达开始时间后将显示在地图上。",
+  "ar": "تم تسجيل الموعد. سيظهر على الخريطة عند حلول وقت البدء."
+ },
+ "人)": {
+  "en": "people)",
+  "zh": "人）",
+  "ar": "شخص)"
+ },
+ "人)。追加・削除ができるのは「オーナー」のIDだけです。管理者は、投稿やスタッフ管理など日々の運用ができ、IDの追加・削除はできません。": {
+  "en": "people). Only \"Owner\" IDs can add or delete accounts. Administrators can manage daily operations like posts and staff management, but cannot add or delete IDs.",
+  "zh": "人）。只有“所有者”账号可以添加或删除账号。管理员可以进行发布和员工管理等日常运营，但无法添加或删除账号。",
+  "ar": "شخص). يمكن للحسابات بصفة \"المالك\" فقط الإضافة أو الحذف. يمكن للمسؤولين إجراء العمليات اليومية مثل المنشورات وإدارة الموظفين، ولكن لا يمكنهم إضافة أو حذف الحسابات."
+ },
+ "人)にプッシュ通知とお知らせを送れます。割引チケットなどの画像も添付できます。": {
+  "en": "people). You can send push notifications and announcements. Images like discount coupons can also be attached.",
+  "zh": "人）发送推送通知和公告。还可以附加优惠券等图片。",
+  "ar": "شخص). يمكنك إرسال إشعارات وإعلانات لهم. يمكنك أيضاً إرفاق صور مثل قسائم الخصم."
+ },
+ "人に達しています。追加するには、使わない管理者を外してください。": {
+  "en": "people. To add more, please remove unused administrators.",
+  "zh": "人。如需添加，请移除不使用的管理员。",
+  "ar": "شخص. للإضافة، يرجى إزالة المسؤولين غير المستخدمين."
+ },
+ "今後ログインID・パスワードを忘れた際に、運営に問い合わせず自分で再発行できるようにするための登録です。最初に一度だけお願いしています。": {
+  "en": "This registration allows you to reset your login ID and password by yourself if you forget them in the future without contacting support. We ask you to complete this only once at the beginning.",
+  "zh": "此注册是为了日后忘记登录ID或密码时，无需联系客服即可自行重置。仅需在初始阶段设置一次。",
+  "ar": "هذا التسجيل مخصص لتمكينك من إعادة إصدار معرف التسجيل وكلمة المرور بنفسك في حالة نسيانهما دون الحاجة للتواصل مع الدعم. يطلب منك القيام بذلك مرة واحدة فقط في البداية."
+ },
+ "今日の出店": {
+  "en": "Today's location",
+  "zh": "今日出店",
+  "ar": "كشك اليوم"
+ },
+ "今日出勤登録済みの": {
+  "en": "Registered as working today",
+  "zh": "今日已出勤登记的",
+  "ar": "المسجلين للحضور اليوم"
+ },
+ "今週末はイベント開催中です！ぜひ遊びに来てください。": {
+  "en": "An event is happening this weekend! Please come by and visit us.",
+  "zh": "本周末正在举行活动！欢迎大家前来玩耍。",
+  "ar": "هناك فعالية جارية هذا الأسبوع! تفضلوا بزيارتنا."
+ },
+ "他の店舗と重複しない識別コードです。運営とのやり取りなどで店舗を特定する際にお使いください。": {
+  "en": "A unique identification code separate from other stores. Use this when identifying your store during communications with support.",
+  "zh": "与其他店铺不重复的唯一标识码。在与运营沟通确认店铺时请使用此代码。",
+  "ar": "رمز تعريف فريد لا يتكرر مع المتاجر الأخرى. استخدمه عند تحديد متجرك أثناء التواصل مع الإدارة."
+ },
+ "仮の位置(要調整)": {
+  "en": "Temporary position (adjustment needed)",
+  "zh": "临时位置（需调整）",
+  "ar": "موقع مؤقت (يتطلب تعديلاً)"
+ },
+ "件": {
+  "en": "items",
+  "zh": "件",
+  "ar": "عنصر"
+ },
+ "位置の列がまだ用意されていません(データベースの準備が必要です)。": {
+  "en": "The location column is not ready yet (database setup required).",
+  "zh": "位置列尚未准备好（需要准备数据库）。",
+  "ar": "عمود الموقع غير جاهز بعد (يتطلب إعداد قاعدة البيانات)."
+ },
+ "住所": {
+  "en": "Address",
+  "zh": "地址",
+  "ar": "العنوان"
+ },
+ "住所から自動取得": {
+  "en": "Get automatically from address",
+  "zh": "从地址自动获取",
+  "ar": "الحصول التلقائي من العنوان"
+ },
+ "住所が見つかりませんでした。地図を直接ドラッグして調整してください。": {
+  "en": "Address not found. Please drag the map directly to adjust.",
+  "zh": "未找到该地址。请直接拖拽地图进行调整。",
+  "ar": "لم يتم العثور على العنوان. يرجى سحب الخريطة مباشرة للتعديل."
+ },
+ "住所を入力して検索": {
+  "en": "Enter address to search",
+  "zh": "输入地址进行搜索",
+  "ar": "أدخل العنوان للبحث"
+ },
+ "使い方": {
+  "en": "How to use",
+  "zh": "使用说明",
+  "ar": "كيفية الاستخدام"
+ },
+ "例: 2006年(H18)": {
+  "en": "Ex: Year 2006 (H18)",
+  "zh": "例：2006年（H18）",
+  "ar": "مثال: سنة 2006 (H18)"
+ },
+ "例: 2550000": {
+  "en": "Ex: 2550000",
+  "zh": "例：2550000",
+  "ar": "مثال: 2550000"
+ },
+ "例: 48000": {
+  "en": "Ex: 48000",
+  "zh": "例：48000",
+  "ar": "مثال: 48000"
+ },
+ "例: L.O.は閉店30分前 / 祝日は営業時間が変わる場合あり / 不定休あり": {
+  "en": "Ex: L.O. 30 min before closing / Hours may vary on holidays / Irregular holidays",
+  "zh": "例：L.O.为关门前30分钟 / 节假日营业时间可能变更 / 不定期休息",
+  "ar": "مثال: آخر طلب قبل 30 دقيقة من الإغلاق / قد تتغير ساعات العمل في العطلات الرسمية / عطلات غير منتظمة"
+ },
+ "例: manager@example.com": {
+  "en": "Ex: manager@example.com",
+  "zh": "例：manager@example.com",
+  "ar": "مثال: manager@example.com"
+ },
+ "例: R8年10月 / 車検整備付": {
+  "en": "Ex: Oct 2026 (R8) / Includes vehicle inspection & maintenance",
+  "zh": "例：R8年10月 / 含车检整备",
+  "ar": "مثال: أكتوبر 2026 (R8) / يشمل الفحص والصيانة"
+ },
+ "例: ガソリン": {
+  "en": "Ex: Gasoline",
+  "zh": "例：汽油",
+  "ar": "مثال: بنزين"
+ },
+ "例: クーペ": {
+  "en": "Ex: Coupe",
+  "zh": "例：双门跑车",
+  "ar": "مثال: كوبيه"
+ },
+ "例: ポルシェ 911 カレラ S": {
+  "en": "Ex: Porsche 911 Carrera S",
+  "zh": "例：保时捷 911 Carrera S",
+  "ar": "مثال: بورشه 911 كاريرا S"
+ },
+ "例: ミアミブルー": {
+  "en": "Ex: Miami Blue",
+  "zh": "例：迈阿密蓝",
+  "ar": "مثال: أزرق ميامي"
+ },
+ "例: 応談 / 支払総額 298万円": {
+  "en": "Example: Negotiable / Total price 2.98 million yen",
+  "zh": "例：面议 / 总价 298万日元",
+  "ar": "مثال: قابل للتفاوض / السعر الإجمالي 2.98 مليون ين"
+ },
+ "例:限定メニューあり、雨天中止": {
+  "en": "Example: Limited menu available, canceled in case of rain",
+  "zh": "例：有限定菜单、雨天取消",
+  "ar": "مثال: تتوفر قائمة محددة، يُلغى في حال هطول الأمطار"
+ },
+ "価格・走行距離は数字で入力してください": {
+  "en": "Please enter numbers for price and mileage.",
+  "zh": "价格和行驶里程请输入数字",
+  "ar": "يرجى إدخال أرقام للسعر والمسافة المقطوعة."
+ },
+ "価格(円)": {
+  "en": "Price (JPY)",
+  "zh": "价格（日元）",
+  "ar": "السعر (ين)"
+ },
+ "価格が正しくありません": {
+  "en": "Price is invalid.",
+  "zh": "价格不正确",
+  "ar": "السعر غير صحيح"
+ },
+ "価格の表記(任意・入れると価格より優先)": {
+  "en": "Price Display (Optional - Overrides numerical price if entered)",
+  "zh": "价格显示（选填・如填写将优先于价格显示）",
+  "ar": "عرض السعر (اختياري - سيحل محل السعر إذا تم إدخاله)"
+ },
+ "価格の表記は20文字以内にしてください": {
+  "en": "Please keep the price display within 20 characters.",
+  "zh": "价格显示请在20个字符以内",
+  "ar": "يرجى كتابة عرض السعر في حدود 20 حرفًا."
+ },
+ "価格はお問い合わせください": {
+  "en": "Please contact us for pricing.",
+  "zh": "价格请咨询",
+  "ar": "يرجى الاتصال بنا لمعرفة السعر"
+ },
+ "保存": {
+  "en": "Save",
+  "zh": "保存",
+  "ar": "حفظ"
+ },
+ "保存しました": {
+  "en": "Saved.",
+  "zh": "已保存",
+  "ar": "تم الحفظ"
+ },
+ "保存しました。マップにこの位置で表示されます。": {
+  "en": "Saved. It will be displayed at this position on the map.",
+  "zh": "已保存。地图上将显示在此位置。",
+  "ar": "تم الحفظ. سيتم عرضه بهذا الموقع على الخريطة."
+ },
+ "保存しました(反映まで最大5分ほどかかります)": {
+  "en": "Saved. (It may take up to 5 minutes to reflect)",
+  "zh": "已保存（最多需要约5分钟才能生效）",
+  "ar": "تم الحفظ (قد يستغرق ظهور التغييرات ما يصل إلى 5 دقائق)"
+ },
+ "保存する": {
+  "en": "Save",
+  "zh": "保存",
+  "ar": "حفظ"
+ },
+ "保存できませんでした": {
+  "en": "Could not save.",
+  "zh": "无法保存",
+  "ar": "تعذر الحفظ"
+ },
+ "保存に失敗しました": {
+  "en": "Failed to save.",
+  "zh": "保存失败",
+  "ar": "فشل الحفظ"
+ },
+ "保存に失敗しました: {0}": {
+  "en": "Failed to save: {0}",
+  "zh": "保存失败：{0}",
+  "ar": "فشل الحفظ: {0}"
+ },
+ "保存に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to save (Target not found or missing permission).",
+  "zh": "保存失败（未找到目标或无权限）",
+  "ar": "فشل الحفظ (العنصر غير موجود أو لا تملك الإذن)"
+ },
+ "保存中...": {
+  "en": "Saving...",
+  "zh": "保存中...",
+  "ar": "جاري الحفظ..."
+ },
+ "保存中…": {
+  "en": "Saving…",
+  "zh": "保存中…",
+  "ar": "جاري الحفظ…"
+ },
+ "修復歴・整備内容・装備などを自由に": {
+  "en": "Feel free to describe repair history, maintenance details, equipment, etc.",
+  "zh": "可自由填写修缮记录、保养内容、配置装备等",
+  "ar": "اكتب بحرية تاريخ الإصلاح، تفاصيل الصيانة، التجهيزات، إلخ."
+ },
+ "候補の写真はありません。": {
+  "en": "No candidate photos available.",
+  "zh": "没有候选照片。",
+  "ar": "لا توجد صور مرشحة."
+ },
+ "優先予約": {
+  "en": "Priority Reservation",
+  "zh": "优先预约",
+  "ar": "حجز أولوية"
+ },
+ "元に戻す": {
+  "en": "Undo",
+  "zh": "撤销",
+  "ar": "تراجع"
+ },
+ "先頭へ": {
+  "en": "Back to top",
+  "zh": "回到顶部",
+  "ar": "إلى الأعلى"
+ },
+ "入力する": {
+  "en": "Enter",
+  "zh": "输入",
+  "ar": "إدخال"
+ },
+ "全て": {
+  "en": "All",
+  "zh": "全部",
+  "ar": "الكل"
+ },
+ "公式HP": {
+  "en": "Official Website",
+  "zh": "官方网站",
+  "ar": "الموقع الرسمي"
+ },
+ "公式LINEの友だち追加URL、またはWEB予約ページ(ホットペッパー、STORES等)のURLを入力してください。": {
+  "en": "Please enter the official LINE friend add URL or the web reservation page URL (Hot Pepper, STORES, etc.).",
+  "zh": "请输入官方LINE添加好友URL、或网上预约页面（Hot Pepper、STORES等）的URL。",
+  "ar": "يرجى إدخال رابط إضافة أصدقاء LINE الرسمي، أو رابط صفحة الحجز عبر الإنترنت (Hot Pepper، STORES، إلخ)."
+ },
+ "公式サイトから取り込む": {
+  "en": "Import from official website",
+  "zh": "从官网导入",
+  "ar": "استيراد من الموقع الرسمي"
+ },
+ "円": {
+  "en": "yen",
+  "zh": "日元",
+  "ar": "ين"
+ },
+ "円(": {
+  "en": "yen (",
+  "zh": "日元(",
+  "ar": "ين ("
+ },
+ "最大": {
+  "en": "Max",
+  "zh": "最大",
+  "ar": "الحد الأقصى"
+ },
+ "最近のブースト": {
+  "en": "Recent Boosts",
+  "zh": "最近的 Boost",
+  "ar": "عمليات Boost الأخيرة"
+ },
+ "最適化中...": {
+  "en": "Optimizing...",
+  "zh": "正在优化...",
+  "ar": "جاري التحسين..."
+ },
+ "写真": {
+  "en": "Photos",
+  "zh": "照片",
+  "ar": "الصور"
+ },
+ "写真・動画を選ぶか、テキストを入力してください": {
+  "en": "Please select a photo/video or enter text",
+  "zh": "请选择照片/视频或输入文本",
+  "ar": "يُرجى تحديد صورة/مقطع فيديو أو إدخال نص"
+ },
+ "写真・動画を選択": {
+  "en": "Select photos/videos",
+  "zh": "选择照片/视频",
+  "ar": "تحديد صور/مقاطع فيديو"
+ },
+ "写真・動画を選択(任意)": {
+  "en": "Select photos/videos (optional)",
+  "zh": "选择照片/视频（可选）",
+  "ar": "تحديد صور/مقاطع فيديو (اختياري)"
+ },
+ "写真・動画付きの投稿ではコメントとしてそのまま表示されます。": {
+  "en": "For posts with photos or videos, this will be displayed directly as a comment.",
+  "zh": "对于带有照片/视频的动态，它将直接显示为评论。",
+  "ar": "بالنسبة للمنشورات المرفقة بصور أو مقاطع فيديو، سيتم عرضها مباشرة كتعليق."
+ },
+ "写真・文章を使う権利があることの確認にチェックを入れてください": {
+  "en": "Please check the box to confirm that you have the right to use the photos and text.",
+  "zh": "请勾选以确认您拥有使用相关照片和文字的权利。",
+  "ar": "يُرجى تحديد المربع للتأكيد على أنك تمتلك حق استخدام الصور والنصوص."
+ },
+ "写真(": {
+  "en": "Photos (",
+  "zh": "照片(",
+  "ar": "الصور ("
+ },
+ "写真(メイン画像・トップ画像に使うものを選んでください)": {
+  "en": "Photos (Select the image to use for the main/top image)",
+  "zh": "照片（请选择用于主图/顶部图片的照片）",
+  "ar": "الصور (يرجى اختيار الصورة المخصصة للصورة الرئيسية/العلوية)"
+ },
+ "写真か動画を選んでください": {
+  "en": "Please select a photo or video",
+  "zh": "请选择照片或视频",
+  "ar": "يرجى اختيار صورة أو مقطع فيديو"
+ },
+ "写真なし": {
+  "en": "No photo",
+  "zh": "无照片",
+  "ar": "بدون صورة"
+ },
+ "写真の取り込みに失敗しました": {
+  "en": "Failed to import photos",
+  "zh": "导入照片失败",
+  "ar": "فشل استيراد الصور"
+ },
+ "写真の管理": {
+  "en": "Photo Management",
+  "zh": "照片管理",
+  "ar": "إدارة الصور"
+ },
+ "写真は保存されず、AIが混雑状況を判定してすぐに破棄します。": {
+  "en": "Photos are not saved; AI analyzes congestion and discards them immediately.",
+  "zh": "照片不会被保存，AI将在判断拥挤状况后立即销毁。",
+  "ar": "لا يتم حفظ الصور، حيث يقيم الذكاء الاصطناعي حالة الازدحام ويقوم بالتخلص منها فورًا."
+ },
+ "写真をドラッグ&ドロップ、またはタップして選択": {
+  "en": "Drag & drop photos, or tap to select",
+  "zh": "拖拽照片，或点击进行选择",
+  "ar": "اسحب الصور وأفلتها، أو انقر لتحديدها"
+ },
+ "写真をドラッグ&ドロップ、またはタップして選択(あと{0}枚)": {
+  "en": "Drag & drop photos, or tap to select ({0} left)",
+  "zh": "拖拽照片，或点击进行选择（还剩{0}张）",
+  "ar": "اسحب الصور وأفلتها، أو انقر لتحديدها (متبقي {0})"
+ },
+ "写真を追加(複数選択可)": {
+  "en": "Add photos (multiple selections allowed)",
+  "zh": "添加照片（可多选）",
+  "ar": "إضافة صور (يمكن تحديد أكثر من صورة)"
+ },
+ "写真を選択・撮影": {
+  "en": "Select or take a photo",
+  "zh": "选择或拍摄照片",
+  "ar": "تحديد صورة أو التقاطها"
+ },
+ "処理中...": {
+  "en": "Processing...",
+  "zh": "处理中...",
+  "ar": "جاري المعالجة..."
+ },
+ "出力日:": {
+  "en": "Output Date:",
+  "zh": "导出日期：",
+  "ar": "تاريخ الإصدار:"
+ },
+ "出勤スケジュール": {
+  "en": "Shift schedule",
+  "zh": "出勤排班",
+  "ar": "جدول الحضور"
+ },
+ "出勤する": {
+  "en": "Clock in",
+  "zh": "登记出勤",
+  "ar": "تسجيل الحضور"
+ },
+ "出勤予定の削除に失敗しました: {0}": {
+  "en": "Failed to delete shift schedule: {0}",
+  "zh": "删除出勤计划失败：{0}",
+  "ar": "فشل في حذف جدول الحضور: {0}"
+ },
+ "出勤予定の更新に失敗しました: {0}": {
+  "en": "Failed to update shift schedule: {0}",
+  "zh": "更新出勤计划失败：{0}",
+  "ar": "فشل في تحديث جدول الحضور: {0}"
+ },
+ "出勤予定の更新に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to update shift schedule (target not found or permission denied)",
+  "zh": "更新出勤计划失败（未找到目标或无权限）",
+  "ar": "فشل في تحديث جدول الحضور (الهدف غير موجود أو لا توجد صلاحيات)"
+ },
+ "出勤予定の登録に失敗しました: {0}": {
+  "en": "Failed to register shift schedule: {0}",
+  "zh": "登记出勤计划失败：{0}",
+  "ar": "فشل في تسجيل جدول الحضور: {0}"
+ },
+ "出勤予定の登録はまだありません。": {
+  "en": "No shift schedule registered yet.",
+  "zh": "尚未登记出勤计划。",
+  "ar": "لم يتم تسجيل جدول حضور بعد."
+ },
+ "出店予定": {
+  "en": "Store appearance schedule",
+  "zh": "出店计划",
+  "ar": "الجدول المخطط لفتح المتاجر"
+ },
+ "出店予定を登録する": {
+  "en": "Register store appearance schedule",
+  "zh": "登记出店计划",
+  "ar": "تسجيل الجدول المخطط لفتح المتاجر"
+ },
+ "出店場所": {
+  "en": "Store location",
+  "zh": "出店地点",
+  "ar": "موقع المتجر"
+ },
+ "初期パスワード": {
+  "en": "Initial password",
+  "zh": "初始密码",
+  "ar": "كلمة المرور الأولية"
+ },
+ "判定に失敗しました": {
+  "en": "Verification failed",
+  "zh": "判定失败",
+  "ar": "فشل التحقق"
+ },
+ "判定中...": {
+  "en": "Verifying...",
+  "zh": "判定中...",
+  "ar": "جاري التحقق..."
+ },
+ "利用説明": {
+  "en": "Usage instructions",
+  "zh": "使用说明",
+  "ar": "تعليمات الاستخدام"
+ },
+ "削除": {
+  "en": "Delete",
+  "zh": "删除",
+  "ar": "حذف"
+ },
+ "削除してやり直す": {
+  "en": "Delete and start over",
+  "zh": "删除并重试",
+  "ar": "الحذف والبدء من جديد"
+ },
+ "削除に失敗しました": {
+  "en": "Delete failed",
+  "zh": "删除失败",
+  "ar": "فشل الحذف"
+ },
+ "削除に失敗しました: {0}": {
+  "en": "Failed to delete: {0}",
+  "zh": "删除失败：{0}",
+  "ar": "فشل الحذف: {0}"
+ },
+ "削除に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to delete (target not found or permission denied)",
+  "zh": "删除失败（未找到目标或无权限）",
+  "ar": "فشل الحذف (الهدف غير موجود أو لا توجد صلاحيات)"
+ },
+ "削除中...": {
+  "en": "Deleting...",
+  "zh": "删除中...",
+  "ar": "جاري الحذف..."
+ },
+ "前の月": {
+  "en": "Previous month",
+  "zh": "上个月",
+  "ar": "الشهر السابق"
+ },
+ "前回の場所と時間帯をフォームに入れました。日時を確認して「予定を登録」を押してください。": {
+  "en": "The previous location and time slot have been filled into the form. Please check the date and time, then press \"Register Schedule\".",
+  "zh": "已将上次的地点和时间段填入表单。请确认日期和时间，然后点击“登记计划”。",
+  "ar": "تم إدخال الموقع والفترة الزمنية السابقة في النموذج. يُرجى التحقق من التاريخ والوقت، ثم الضغط على \"تسجيل الجدول\"."
+ },
+ "動画オプション:": {
+  "en": "Video options:",
+  "zh": "视频选项：",
+  "ar": "خيارات الفيديو:"
+ },
+ "動画のURLを判別できません。YouTubeの動画URL（watch?v=…、youtu.be/…、shorts/…）を貼ってください。": {
+  "en": "Unable to recognize video URL. Please paste a YouTube video URL (watch?v=..., youtu.be/..., shorts/...).",
+  "zh": "无法识别视频URL。请粘贴YouTube视频URL（watch?v=…、youtu.be/…、shorts/…）。",
+  "ar": "تعذر التعرف على رابط الفيديو. يُرجى لصق رابط فيديو من YouTube (watch?v=...، youtu.be/...، shorts/...)."
+ },
+ "動画の保存に失敗しました": {
+  "en": "Failed to save video",
+  "zh": "保存视频失败",
+  "ar": "فشل حفظ الفيديو"
+ },
+ "動画をスマホ向けに最適化しています…": {
+  "en": "Optimizing video for mobile devices...",
+  "zh": "正在针对手机端优化视频…",
+  "ar": "جاري تحسين الفيديو للهواتف الذكية..."
+ },
+ "原文と同じ言語の文章は、店舗情報の入力欄で編集してください": {
+  "en": "Please edit text in the original language directly in the store information fields.",
+  "zh": "与原文相同语言的文本，请在店铺信息输入栏中进行编辑。",
+  "ar": "يرجى تعديل النصوص بنفس لغة النص الأصلي في حقول إدخال معلومات المتجر."
+ },
+ "反映しました: {0}": {
+  "en": "Applied: {0}",
+  "zh": "已应用：{0}",
+  "ar": "تم التطبيق: {0}"
+ },
+ "反映する項目が選ばれていません": {
+  "en": "No items selected to apply",
+  "zh": "未选择要应用的项目",
+  "ar": "لم يتم تحديد عناصر لتطبيقها"
+ },
+ "反映中…": {
+  "en": "Applying...",
+  "zh": "应用中…",
+  "ar": "جاري التطبيق..."
+ },
+ "取り込む写真・文章は当店が権利を持つもの(または使用の許可を得たもの)です。": {
+  "en": "The imported photos and text are owned by our store (or permitted for use).",
+  "zh": "导入的照片和文字归本店内拥有权利（或已获得使用许可）。",
+  "ar": "الصور والنصوص المستوردة مملوكة لمحلنا (أو تم الحصول على إذن لاستخدامها)."
+ },
+ "取り込んだ口コミは、まだありません。": {
+  "en": "No imported reviews yet.",
+  "zh": "暂无导入的评价。",
+  "ar": "لا توجد مراجعات مستوردة بعد."
+ },
+ "取消": {
+  "en": "Cancel",
+  "zh": "取消",
+  "ar": "إلغاء"
+ },
+ "各言語の表示を確認・修正": {
+  "en": "Review and edit translations for each language",
+  "zh": "查看并修改各语言的显示",
+  "ar": "مراجعة وتعديل العرض بكل لغة"
+ },
+ "同時に掲載できるブーストは3件までです。終了してから発射してください": {
+  "en": "You can publish up to 3 Boosts at the same time. Please end an active one before launching a new Boost.",
+  "zh": "最多可同时展示3个Boost。请先结束一个再重新发射。",
+  "ar": "يمكنك نشر ما يصل إلى 3 تعزيزات (Boost) في نفس الوقت. يرجى إنهاء أحدها قبل الإطلاق."
+ },
+ "名": {
+  "en": "Person(s)",
+  "zh": "人",
+  "ar": "شخص"
+ },
+ "名を上に表示しています。急な出勤の人は下にスクロールするか名前で検索して追加してください。": {
+  "en": "Showing staff at the top. For unscheduled shifts, please scroll down or search by name to add them.",
+  "zh": "上方已显示名单。如需添加临时出勤人员，请向下滚动或按姓名搜索添加。",
+  "ar": "يتم عرض الموظفين في الأعلى. بالنسبة لمن حضروا بشكل مفاجئ، يرجى التمرير للأسفل أو البحث بالاسم للإضافة."
+ },
+ "名前": {
+  "en": "Name",
+  "zh": "姓名",
+  "ar": "الاسم"
+ },
+ "名前は必須です": {
+  "en": "Name is required.",
+  "zh": "姓名必填",
+  "ar": "الاسم مطلوب."
+ },
+ "名前未入力": {
+  "en": "Name not entered",
+  "zh": "未输入姓名",
+  "ar": "لم يتم إدخال الاسم"
+ },
+ "告知する": {
+  "en": "Announce",
+  "zh": "发布公告",
+  "ar": "إعلان"
+ },
+ "問題なし": {
+  "en": "No issues",
+  "zh": "正常",
+  "ar": "لا توجد مشاكل"
+ },
+ "営業を終了しました。地図から消えます。": {
+  "en": "Business hours ended. It will disappear from the map.",
+  "zh": "已结束营业。将从地图上隐藏。",
+  "ar": "تم إنهاء العمل. سيختفي من الخريطة."
+ },
+ "営業を開始しました({0}時間後に自動で終了)。地図にこの場所が出ます。": {
+  "en": "Started business (will automatically end in {0} hours). This location will appear on the map.",
+  "zh": "已开始营业（将在{0}小时后自动结束）。地图上将显示此位置。",
+  "ar": "بدأ العمل (سينتهي تلقائيًا بعد {0} ساعات). سيظهر هذا الموقع على الخريطة."
+ },
+ "営業中": {
+  "en": "Open",
+  "zh": "营业中",
+  "ar": "مفتوح"
+ },
+ "営業時間": {
+  "en": "Business Hours",
+  "zh": "营业时间",
+  "ar": "ساعات العمل"
+ },
+ "営業時間カレンダー": {
+  "en": "Business Hours Calendar",
+  "zh": "营业时间日历",
+  "ar": "تقويم ساعات العمل"
+ },
+ "営業時間の補足(任意)": {
+  "en": "Business Hours Notes (Optional)",
+  "zh": "营业时间补充（选填）",
+  "ar": "ملاحظات ساعات العمل (اختياري)"
+ },
+ "営業終了": {
+  "en": "End Business",
+  "zh": "结束营业",
+  "ar": "إنهاء العمل"
+ },
+ "営業開始(現在地)": {
+  "en": "Start Business (Current Location)",
+  "zh": "开始营业（当前位置）",
+  "ar": "بدء العمل (الموقع الحالي)"
+ },
+ "回": {
+  "en": "times",
+  "zh": "次",
+  "ar": "مرة"
+ },
+ "回)": {
+  "en": "times)",
+  "zh": "次）",
+  "ar": "مرة)"
+ },
+ "土": {
+  "en": "Sat",
+  "zh": "周六",
+  "ar": "السبت"
+ },
+ "在庫": {
+  "en": "Inventory",
+  "zh": "库存",
+  "ar": "المخزون"
+ },
+ "在庫(車両)": {
+  "en": "Inventory (Vehicles)",
+  "zh": "库存（车辆）",
+  "ar": "المخزون (المركبات)"
+ },
+ "地図で出店場所を選んでください": {
+  "en": "Please select the store location on the map",
+  "zh": "请在地图上选择开店位置",
+  "ar": "يرجى تحديد موقع المتجر على الخريطة"
+ },
+ "地図で場所を選ぶと入ります": {
+  "en": "Selecting a location on the map will populate this field",
+  "zh": "在地图上选择位置后将自动填入",
+  "ar": "سيتم إدخال الموقع عند تحديده على الخريطة"
+ },
+ "地図で開催場所を選んでください": {
+  "en": "Please select the event location on the map",
+  "zh": "请在地图上选择活动地点",
+  "ar": "يرجى تحديد موقع الفعالية على الخريطة"
+ },
+ "型式": {
+  "en": "Model Code",
+  "zh": "车型代号",
+  "ar": "رمز الطراز"
+ },
+ "基本情報": {
+  "en": "Basic Information",
+  "zh": "基本信息",
+  "ar": "المعلومات الأساسية"
+ },
+ "場所が正しくありません。地図で場所を選んでください": {
+  "en": "Location is invalid. Please select the location on the map.",
+  "zh": "位置不正确。请在地图上选择位置。",
+  "ar": "الموقع غير صحيح. يرجى تحديد الموقع على الخريطة."
+ },
+ "場所の表示(住所。直せます)": {
+  "en": "Displayed Location (Address; editable)",
+  "zh": "显示位置（地址；可修改）",
+  "ar": "الموقع المعروض (العنوان، يمكن تعديله)"
+ },
+ "場所名・投稿者で絞り込み": {
+  "en": "Filter by location name or poster",
+  "zh": "按地点名称或发布者筛选",
+  "ar": "تصفية حسب اسم المكان أو الناشر"
+ },
+ "外す": {
+  "en": "Remove",
+  "zh": "移除",
+  "ar": "إزالة"
+ },
+ "失敗しました": {
+  "en": "Failed",
+  "zh": "失败",
+  "ar": "فشلت العملية"
+ },
+ "契約中": {
+  "en": "Active Contract",
+  "zh": "签约中",
+  "ar": "عقد سارٍ"
+ },
+ "字幕": {
+  "en": "Subtitles",
+  "zh": "字幕",
+  "ar": "الترجمة"
+ },
+ "字幕はまだありません。投稿から数十秒後にできます。声のない動画には付きません。": {
+  "en": "No subtitles yet. They will be generated a few seconds after posting. Videos without speech will not get subtitles.",
+  "zh": "暂无字幕。发布数十秒后自动生成。无声视频不会添加字幕。",
+  "ar": "لا توجد ترجمات بعد. سيتم إنشاؤها بعد ثوانٍ من النشر. لن تضاف للفيديوهات بدون صوت."
+ },
+ "字幕をすべて消す": {
+  "en": "Delete All Subtitles",
+  "zh": "删除所有字幕",
+  "ar": "حذف جميع الترجمات"
+ },
+ "字幕を削除しました": {
+  "en": "Subtitles deleted",
+  "zh": "已删除字幕",
+  "ar": "تم حذف الترجمة"
+ },
+ "字幕を編集": {
+  "en": "Edit Subtitles",
+  "zh": "编辑字幕",
+  "ar": "تعديل الترجمة"
+ },
+ "定休日": {
+  "en": "Regular Holiday",
+  "zh": "定期休息日",
+  "ar": "عطلة منتظمة"
+ },
+ "対応済み": {
+  "en": "Completed",
+  "zh": "已处理",
+  "ar": "تمت المعالجة"
+ },
+ "対象が見つからないか、権限がありません": {
+  "en": "Target not found or you do not have permission",
+  "zh": "未找到目标或没有权限",
+  "ar": "لم يتم العثور على الهدف أو ليس لديك الإذن"
+ },
+ "対象が見つかりません": {
+  "en": "Target not found",
+  "zh": "未找到目标",
+  "ar": "لم يتم العثور على الهدف"
+ },
+ "対象のFACESが見つかりません": {
+  "en": "Target FACES not found",
+  "zh": "未找到目标 FACES",
+  "ar": "لم يتم العثور على FACES المستهدفة"
+ },
+ "履歴": {
+  "en": "History",
+  "zh": "历史记录",
+  "ar": "السجل"
+ },
+ "席だけ確保・お料理は現地で。お客様は1名500円(上限5,000円)のデポジットをカードで保証してリクエストします。ご来店なら請求は0円です。": {
+  "en": "Reserve seats only; order food at the venue. Customers request by guaranteeing a card deposit of 500 yen per person (up to 5,000 yen). If they visit, the charge is 0 yen.",
+  "zh": "仅预订座位，现场点餐。顾客以每人500日元（上限5,000日元）的卡押金担保进行预约申请。如果入店消费，则实际扣款为0日元。",
+  "ar": "حجز المقاعد فقط وطلب الطعام في الموقع. يطلب العملاء عن طريق إيداع مبلغ تأمين بالبطاقة بقيمة 500 ين للشخص الواحد (بحد أقصى 5,000 ين). إذا حضروا، فلن يتم تحصيل أي مبلغ (0 ين)."
+ },
+ "年": {
+  "en": "Year",
+  "zh": "年",
+  "ar": "السنة"
+ },
+ "年式": {
+  "en": "Model year",
+  "zh": "年款",
+  "ar": "سنة الصنع"
+ },
+ "年齢": {
+  "en": "Age",
+  "zh": "年龄",
+  "ar": "العمر"
+ },
+ "年齢:": {
+  "en": "Age:",
+  "zh": "年龄：",
+  "ar": "العمر:"
+ },
+ "店内の雰囲気が伝わる写真を最大10枚まで登録できます。表側の店舗ページに表示されます。": {
+  "en": "You can upload up to 10 photos that convey the atmosphere inside the store. They will be displayed on the public store page.",
+  "zh": "最多可注册10张传达店内氛围的照片。这些照片将显示在公开的店铺页面上。",
+  "ar": "يمكنك تسجيل ما يصل إلى 10 صور تعبر عن أجواء المحل. سيتم عرضها على صفحة المتجر العامة."
+ },
+ "店舗・ポータルの管理画面を開く。": {
+  "en": "Open the store/portal admin dashboard.",
+  "zh": "打开店铺/门户网站管理页面。",
+  "ar": "افتح لوحة تحكم المتجر/البوابة."
+ },
+ "店舗が見つかりません": {
+  "en": "Store not found",
+  "zh": "未找到店铺",
+  "ar": "لم يتم العثور على المتجر"
+ },
+ "店舗コード": {
+  "en": "Store code",
+  "zh": "店铺代码",
+  "ar": "رمز المتجر"
+ },
+ "店舗スタッフのみ閲覧できます。表示用リンクは5分で失効します。": {
+  "en": "Can only be viewed by store staff. The display link will expire in 5 minutes.",
+  "zh": "仅限店铺员工查看。显示链接将在5分钟后失效。",
+  "ar": "يمكن لموظفي المتجر فقط عرض هذا. سينتهي رابط العرض خلال 5 دقائق."
+ },
+ "店舗ページQRコード": {
+  "en": "Store page QR code",
+  "zh": "店铺页面二维码",
+  "ar": "رمز QR لصفحة المتجر"
+ },
+ "店舗ページに出ている写真(": {
+  "en": "Photos shown on the store page (",
+  "zh": "店铺页面上显示的照片(",
+  "ar": "الصور المعروضة في صفحة المتجر ("
+ },
+ "店舗ページの「LOCA SNAP」に出る写真を管理します。違う店の写真が出ているときは「この店舗では出さない」にできます。 写真そのものは消えず、LOCA SNAP の一覧には残ります。": {
+  "en": "Manage photos that appear in \"LOCA SNAP\" on the store page. If a photo from a different store appears, you can set it to \"Do not show at this store\". The photo itself will not be deleted and will remain in the LOCA SNAP list.",
+  "zh": "管理显示在店铺页面“LOCA SNAP”中的照片。如果显示了其他店铺的照片，可以设置为“不在此店铺显示”。照片本身不会被删除，仍会保留在 LOCA SNAP 列表中。",
+  "ar": "إدارة الصور التي تظهر في \"LOCA SNAP\" على صفحة المتجر. إذا ظهرت صورة لمتجر آخر، يمكنك ضبطها على \"عدم العرض في هذا المتجر\". لن يتم حذف الصورة نفسها وستبقى في قائمة LOCA SNAP."
+ },
+ "店舗ページのトップ(ヒーロー)に、この YouTube 動画を流す": {
+  "en": "Play this YouTube video at the top (hero section) of the store page",
+  "zh": "在店铺页面顶部（Hero 区域）播放此 YouTube 视频",
+  "ar": "تشغيل فيديو YouTube هذا في أعلى صفحة المتجر (قسم البطل)"
+ },
+ "店舗ページの背景に、小さな写真を貼った壁を薄く敷きます。投稿が少ないうちは雰囲気の近いダミー写真が並び、投稿が増えるほどお客様の写真に入れ替わります。": {
+  "en": "A subtle photo wall featuring small images will be set as the background for the store page. While posts are few, dummy photos with a similar vibe will be displayed, and as posts increase, they will be replaced with customer photos.",
+  "zh": "店铺页面的背景将铺设一层淡雅的小照片墙。在投稿较少时，会显示氛围相近的替代照片；随着投稿增加，会逐渐替换为顾客的照片。",
+  "ar": "ستوضع خلفية خفيفة على شكل جدار من الصور الصغيرة لصفحة المتجر. عندما تكون المشاركات قليلة، سيتم عرض صور توضيحية ذات طابع مشابه، ومع زيادة المشاركات، ستستبدل بصور العملاء."
+ },
+ "店舗ページの連絡ボタンが押された回数です。実際に通話・友だち追加まで進んだ数ではありません。": {
+  "en": "This is the number of times the contact button on the store page was pressed. It is not the actual number of calls made or friend additions.",
+  "zh": "这是店铺页面上的联系按钮被点击的次数。并不代表实际拨打电话或添加好友的次数。",
+  "ar": "هذا هو عدد المرات التي تم فيها الضغط على زر الاتصال في صفحة المتجر. وليس عدد المكالمات الفعلية أو إضافات الأصدقاء."
+ },
+ "店舗名": {
+  "en": "Store name",
+  "zh": "店铺名称",
+  "ar": "اسم المتجر"
+ },
+ "店舗名は必須です": {
+  "en": "Store name is required",
+  "zh": "店铺名称为必填项",
+  "ar": "اسم المتجر مطلوب"
+ },
+ "店舗情報": {
+  "en": "Store information",
+  "zh": "店铺信息",
+  "ar": "معلومات المتجر"
+ },
+ "店舗情報が見つかりません。": {
+  "en": "Store information not found.",
+  "zh": "未找到店铺信息。",
+  "ar": "لم يتم العثور على معلومات المتجر."
+ },
+ "店舗情報の文章は、保存すると他の言語へ自動で翻訳されます。不自然な訳はここで直せます。直した訳が正になり、あとで原文を変えても上書きされません。": {
+  "en": "When saved, store information text is automatically translated into other languages. You can correct unnatural translations here. Edited translations become permanent and will not be overwritten even if the original text is changed later.",
+  "zh": "保存店铺信息文本后，系统会自动将其翻译成其他语言。您可以在此处修正不自然的翻译。修正后的翻译将成为最终版本，之后即使更改原文也不会被覆盖。",
+  "ar": "عند حفظ نصوص معلومات المتجر، يتم ترجمتها تلقائيًا إلى اللغات الأخرى. يمكنك تصحيح الترجمات غير الطبيعية هنا. تصبح الترجمات المعدلة هي المعتمدة ولن يتم استبدالها حتى لو تم تغيير النص الأصلي لاحقًا."
+ },
+ "店舗情報の更新に失敗しました: {0}": {
+  "en": "Failed to update store information: {0}",
+  "zh": "更新店铺信息失败：{0}",
+  "ar": "فشل تحديث معلومات المتجر: {0}"
+ },
+ "店舗情報の更新に失敗しました(対象の店舗が見つからないか、権限がありません)": {
+  "en": "Failed to update store information (target store not found or you do not have permission)",
+  "zh": "更新店铺信息失败（未找到目标店铺或没有权限）",
+  "ar": "فشل تحديث معلومات المتجر (لم يتم العثور على المتجر المستهدف أو ليس لديك الإذن)"
+ },
+ "店舗情報の更新に失敗しました(権限をご確認ください)": {
+  "en": "Failed to update store information (please check your permissions)",
+  "zh": "更新店铺信息失败（请检查您的权限）",
+  "ar": "فشل تحديث معلومات المتجر (يرجى التحقق من أذوناتك)"
+ },
+ "店舗紹介ギャラリー": {
+  "en": "Store introduction gallery",
+  "zh": "店铺介绍图库",
+  "ar": "معرض تقديم المتجر"
+ },
+ "店長・管理者専用の入口です(一般のページにはリンクがありません)。スマホで開いて、ブックマークかホーム画面に追加しておくと、いつでもすぐ入れます。": {
+  "en": "This entry is exclusively for managers and administrators (there is no link on public pages). Open it on your smartphone and add it to your bookmarks or home screen for quick access anytime.",
+  "zh": "店长与管理员专用入口（普通页面中没有此链接）。在手机上打开并添加书签或添加到主屏幕，即可随时快捷访问。",
+  "ar": "مدخل خاص بمدير المحل والمسؤولين (لا يوجد رابط في الصفحات العامة). افتحه على هاتفك الذكي وأضفه إلى الإشارات المرجعية أو الشاشة الرئيسية للوصول إليه في أي وقت."
+ },
+ "座標が不正です": {
+  "en": "Invalid coordinates",
+  "zh": "坐标无效",
+  "ar": "الإحداثيات غير صالحة"
+ },
+ "従業者名簿": {
+  "en": "Employee roster",
+  "zh": "员工花名册",
+  "ar": "سجل الموظفين"
+ },
+ "従業者名簿を出力": {
+  "en": "Export employee roster",
+  "zh": "导出员工花名册",
+  "ar": "تصدير سجل الموظفين"
+ },
+ "復帰させる": {
+  "en": "Restore",
+  "zh": "恢复",
+  "ar": "إعادة"
+ },
+ "復帰に失敗しました: {0}": {
+  "en": "Failed to restore: {0}",
+  "zh": "恢复失败：{0}",
+  "ar": "فشلت الإعادة: {0}"
+ },
+ "応募日:": {
+  "en": "Application date:",
+  "zh": "申请日期：",
+  "ar": "تاريخ الطلب:"
+ },
+ "応募日時": {
+  "en": "Application date and time",
+  "zh": "申请时间",
+  "ar": "تاريخ ووقت الطلب"
+ },
+ "応募者の登録に失敗しました: {0}": {
+  "en": "Failed to register applicant: {0}",
+  "zh": "注册申请者失败：{0}",
+  "ar": "فشل تسجيل المتقدم: {0}"
+ },
+ "応募者の登録はまだありません。": {
+  "en": "No applicants registered yet.",
+  "zh": "尚无申请者注册。",
+  "ar": "لا يوجد متقدمون مسجلون بعد."
+ },
+ "応募者一覧": {
+  "en": "Applicant list",
+  "zh": "申请者列表",
+  "ar": "قائمة المتقدمين"
+ },
+ "応募者管理": {
+  "en": "Applicant management",
+  "zh": "申请者管理",
+  "ar": "إدارة المتقدمين"
+ },
+ "悪質なコメントはここから削除できます(削除すると投稿者以外には表示されなくなります)。": {
+  "en": "You can delete malicious comments here (once deleted, they will no longer be visible to anyone except the poster).",
+  "zh": "您可以在此处删除不良评论（删除后，除发布者外其他人将无法查看）。",
+  "ar": "يمكنك حذف التعليقات المسيئة من هنا (بمجرد حذفها، لن تكون مرئية لأي شخص باستثناء الناشر)."
+ },
+ "所属店舗が見つかりません": {
+  "en": "Associated store not found",
+  "zh": "未找到所属店铺",
+  "ar": "لم يتم العثور على المتجر التابع"
+ },
+ "手動で調整済み": {
+  "en": "Manually adjusted",
+  "zh": "已手动调整",
+  "ar": "تم التعديل يدوياً"
+ },
+ "手直し済み": {
+  "en": "Manually edited",
+  "zh": "已手动修正",
+  "ar": "معدل يدوياً"
+ },
+ "投稿する": {
+  "en": "Post",
+  "zh": "发布",
+  "ar": "نشر"
+ },
+ "投稿の保存に失敗しました: {0}": {
+  "en": "Failed to save post: {0}",
+  "zh": "保存帖子失败：{0}",
+  "ar": "فشل حفظ المنشور: {0}"
+ },
+ "投稿中...": {
+  "en": "Posting...",
+  "zh": "发布中...",
+  "ar": "جاري النشر..."
+ },
+ "投稿用リンク(マイページ)": {
+  "en": "Posting link (My Page)",
+  "zh": "发布用链接（我的页面）",
+  "ar": "رابط النشر (صفحتي)"
+ },
+ "投稿用リンクのQRコード": {
+  "en": "QR code for posting link",
+  "zh": "发布用链接的二维码",
+  "ar": "رمز QR لرابط النشر"
+ },
+ "投稿用リンクの再発行に失敗しました: {0}": {
+  "en": "Failed to reissue posting link: {0}",
+  "zh": "重新生成发布用链接失败：{0}",
+  "ar": "فشل إعادة إصدار رابط النشر: {0}"
+ },
+ "投稿用リンクを再発行します。今までのリンク/QRコードは無効になり、FACESは新しいリンクが必要になります。よろしいですか？": {
+  "en": "Reissuing the posting link. Previous links/QR codes will become invalid, and FACES will require the new link. Are you sure?",
+  "zh": "将重新生成发布用链接。之前的链接/二维码将失效，FACES 将需要使用新链接。确定要继续吗？",
+  "ar": "سيتم إعادة إصدار رابط النشر. ستصبح الروابط/رموز QR السابقة غير صالحة، وسيتطلب FACES الرابط الجديد. هل أنت تأكد؟"
+ },
+ "招待の発行に失敗しました": {
+  "en": "Failed to issue invitation",
+  "zh": "发行邀请失败",
+  "ar": "فشل إصدار الدعوة"
+ },
+ "排気量": {
+  "en": "Engine displacement",
+  "zh": "排量",
+  "ar": "سعة المحرك"
+ },
+ "排気量(cc)": {
+  "en": "Engine displacement (cc)",
+  "zh": "排量(cc)",
+  "ar": "سعة المحرك (سي سي)"
+ },
+ "採用": {
+  "en": "Hire",
+  "zh": "录用",
+  "ar": "توظيف"
+ },
+ "推奨サイズ: 1600×600px前後(横長)。動画は10〜15秒程度・自動ループ再生されます": {
+  "en": "Recommended size: approx. 1600×600px (landscape). Videos should be about 10–15 seconds and will loop automatically.",
+  "zh": "建议尺寸：1600×600px左右（横向）。视频时长约10-15秒，会自动循环播放",
+  "ar": "الحجم الموصى به: حوالي 1600×600 بكسل (أفقي). يجب أن تتراوح مدة الفيديو بين 10 و15 ثانية وسيتم تشغيله تلقائياً بشكل متكرر."
+ },
+ "掲載の充実度": {
+  "en": "Listing completeness",
+  "zh": "页面信息丰富度",
+  "ar": "مدى اكتمال القائمة"
+ },
+ "掲載中": {
+  "en": "Published",
+  "zh": "展示中",
+  "ar": "معروض حالياً"
+ },
+ "掲載時間は1〜3時間から選んでください": {
+  "en": "Please select a display time between 1 and 3 hours",
+  "zh": "请选择1至3小时之间的展示时间",
+  "ar": "يرجى اختيار مدة العرض من 1 إلى 3 ساعات"
+ },
+ "撮り直す": {
+  "en": "Retake",
+  "zh": "重新拍摄",
+  "ar": "إعادة الالتقاط"
+ },
+ "操作": {
+  "en": "Action",
+  "zh": "操作",
+  "ar": "الإجراء"
+ },
+ "料金(円)": {
+  "en": "Price (JPY)",
+  "zh": "费用（日元）",
+  "ar": "السعر (ين)"
+ },
+ "料金情報": {
+  "en": "Pricing information",
+  "zh": "价格信息",
+  "ar": "معلومات الأسعار"
+ },
+ "料金表": {
+  "en": "Price list",
+  "zh": "价格表",
+  "ar": "قائمة الأسعار"
+ },
+ "料金表 {0}件": {
+  "en": "Price list: {0} item(s)",
+  "zh": "价格表 {0}条",
+  "ar": "قائمة الأسعار {0}"
+ },
+ "料金表(同じ名前の項目が既にある場合は追加しません)": {
+  "en": "Price list (items with existing identical names will not be added)",
+  "zh": "价格表（如果已存在同名项目则不会添加）",
+  "ar": "قائمة الأسعار (لن يتم إضافتها إذا كان هناك عنصر بنفس الاسم بالفعل)"
+ },
+ "料金表の登録に失敗しました: {0}": {
+  "en": "Failed to register price list: {0}",
+  "zh": "注册价格表失败：{0}",
+  "ar": "فشل تسجيل قائمة الأسعار: {0}"
+ },
+ "料金項目の削除に失敗しました: {0}": {
+  "en": "Failed to delete price item: {0}",
+  "zh": "删除价格项目失败：{0}",
+  "ar": "فشل حذف عنصر السعر: {0}"
+ },
+ "料金項目の削除に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to delete price item (item not found or insufficient permissions)",
+  "zh": "删除价格项目失败（找不到目标或无权限）",
+  "ar": "فشل حذف عنصر السعر (لم يتم العثور على الهدف أو لا توجد صلاحيات)"
+ },
+ "料金項目の更新に失敗しました: {0}": {
+  "en": "Failed to update price item: {0}",
+  "zh": "更新价格项目失败：{0}",
+  "ar": "فشل تحديث عنصر السعر: {0}"
+ },
+ "料金項目の更新に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to update price item (item not found or insufficient permissions)",
+  "zh": "更新价格项目失败（找不到目标或无权限）",
+  "ar": "فشل تحديث عنصر السعر (لم يتم العثور على الهدف أو لا توجد صلاحيات)"
+ },
+ "料金項目の登録に失敗しました: {0}": {
+  "en": "Failed to register price item: {0}",
+  "zh": "注册价格项目失败：{0}",
+  "ar": "فشل تسجيل عنصر السعر: {0}"
+ },
+ "新しいリクエストはありません。": {
+  "en": "There are no new requests.",
+  "zh": "没有新的请求。",
+  "ar": "لا توجد طلبات جديدة."
+ },
+ "新規FACES登録": {
+  "en": "Register new FACES",
+  "zh": "新增 FACES 注册",
+  "ar": "تسجيل FACES جديد"
+ },
+ "新規応募者を登録": {
+  "en": "Register new applicant",
+  "zh": "注册新应聘者",
+  "ar": "تسجيل متتقدم جديد"
+ },
+ "既にログインは発行済みです。": {
+  "en": "Login credentials have already been issued.",
+  "zh": "登录账号已发行。",
+  "ar": "تم إصدار بيانات تسجيل الدخول بالفعل."
+ },
+ "日": {
+  "en": "Day",
+  "zh": "天",
+  "ar": "يوم"
+ },
+ "日(": {
+  "en": "Day (",
+  "zh": "天(",
+  "ar": "يوم ("
+ },
+ "日ぶん": {
+  "en": "Days worth",
+  "zh": "天数",
+  "ar": "أيام"
+ },
+ "日付は先まで自由に選べます(180日先まで)。開始時刻から終了時刻までの間だけ地図に出ます。毎週・毎日の繰り返しもまとめて登録できます。": {
+  "en": "You can freely choose future dates (up to 180 days in advance). It will appear on the map only between the start and end times. You can also register weekly or daily repeats all at once.",
+  "zh": "您可以自由选择未来的日期（最多可提前 180 天）。它仅在开始时间到结束时间之间显示在地图上。您还可以批量注册每周或每天的重复设置。",
+  "ar": "يمكنك اختيار التواريخ المستقبلية بحرية (حتى 180 يوماً مقدماً). ستظهر على الخريطة فقط بين وقت البدء ووقت الانتهاء. يمكنك أيضاً تسجيل التكرار الأسبوعي أو اليومي دفعة واحدة."
+ },
+ "日付は必須です": {
+  "en": "Date is required",
+  "zh": "日期为必填项",
+  "ar": "التاريخ مطلوب"
+ },
+ "日時が正しくありません": {
+  "en": "Invalid date/time",
+  "zh": "日期时间不正确",
+  "ar": "التاريخ والوقت غير صحيحين"
+ },
+ "日時を入れてください": {
+  "en": "Please enter the date and time",
+  "zh": "请输入日期和时间",
+  "ar": "يُرجى إدخال التاريخ والوقت"
+ },
+ "日本語": {
+  "en": "Japanese",
+  "zh": "日语",
+  "ar": "اليابانية"
+ },
+ "日記・投稿": {
+  "en": "Journal & Posts",
+  "zh": "日记/动态",
+  "ar": "اليوميات والمشاركات"
+ },
+ "星{0}": {
+  "en": "{0} stars",
+  "zh": "{0}星",
+  "ar": "{0} نجوم"
+ },
+ "時刻の形式が不正です": {
+  "en": "Invalid time format",
+  "zh": "时间格式不正确",
+  "ar": "تنسيق الوقت غير صحيح"
+ },
+ "時刻未指定": {
+  "en": "Time not specified",
+  "zh": "未指定时间",
+  "ar": "لم يتم تحديد الوقت"
+ },
+ "時間": {
+  "en": "Time",
+  "zh": "时间",
+  "ar": "الوقت"
+ },
+ "時間(分)": {
+  "en": "Time (min)",
+  "zh": "时间（分钟）",
+  "ar": "الوقت (بالدقائق)"
+ },
+ "暗証番号の発行に失敗しました: {0}": {
+  "en": "Failed to issue PIN: {0}",
+  "zh": "发行 PIN 码失败：{0}",
+  "ar": "فشل إصدار رمز PIN: {0}"
+ },
+ "暗証番号を再発行": {
+  "en": "Reissue PIN",
+  "zh": "重新发行 PIN 码",
+  "ar": "إعادة إصدار رمز PIN"
+ },
+ "暗証番号を再発行します。今までの暗証番号は使えなくなります。よろしいですか？": {
+  "en": "A new PIN will be issued. Your current PIN will no longer be usable. Are you sure?",
+  "zh": "将重新发行 PIN 码。原 PIN 码将无法使用。确定要继续吗？",
+  "ar": "سيتم إعادة إصدار رمز PIN. لن يتمكن من استخدام رمز PIN الحالي بعد الآن. هل أنت تأكد؟"
+ },
+ "暗証番号を発行": {
+  "en": "Issue PIN",
+  "zh": "发行 PIN 码",
+  "ar": "إصدار رمز PIN"
+ },
+ "更新": {
+  "en": "Update",
+  "zh": "更新",
+  "ar": "تحديث"
+ },
+ "更新しました: {0}(撮影 {1})": {
+  "en": "Updated: {0} (Shot on {1})",
+  "zh": "已更新：{0}（拍摄于 {1}）",
+  "ar": "تم التحديث: {0} (تم التقاطها في {1})"
+ },
+ "更新する": {
+  "en": "Update",
+  "zh": "更新",
+  "ar": "تحديث"
+ },
+ "更新できませんでした(権限をご確認ください)": {
+  "en": "Could not update (Please check permissions)",
+  "zh": "无法更新（请检查您的权限）",
+  "ar": "تعذر التحديث (يُرجى التحقق من الأذونات)"
+ },
+ "更新に失敗しました": {
+  "en": "Failed to update",
+  "zh": "更新失败",
+  "ar": "فشل التحديث"
+ },
+ "更新に失敗しました: {0}": {
+  "en": "Failed to update: {0}",
+  "zh": "更新失败：{0}",
+  "ar": "فشل التحديث: {0}"
+ },
+ "更新に失敗しました。": {
+  "en": "Failed to update.",
+  "zh": "更新失败。",
+  "ar": "فشل التحديث."
+ },
+ "更新に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to update (Target not found or no permission)",
+  "zh": "更新失败（未找到目标或无权限）",
+  "ar": "فشل التحديث (العنصر غير موجود أو لا توجد أذونات)"
+ },
+ "更新中…": {
+  "en": "Updating...",
+  "zh": "正在更新…",
+  "ar": "جاري التحديث..."
+ },
+ "更新日": {
+  "en": "Updated date",
+  "zh": "更新日期",
+  "ar": "تاريخ التحديث"
+ },
+ "月": {
+  "en": "Mon",
+  "zh": "周一",
+  "ar": "الاثنين"
+ },
+ "月曜の内容を全曜日にコピー": {
+  "en": "Copy Monday's settings to all days",
+  "zh": "将周一内容复制到所有星期",
+  "ar": "نسخ محتوى يوم الاثنين إلى جميع الأيام"
+ },
+ "木": {
+  "en": "Thu",
+  "zh": "周四",
+  "ar": "الخميس"
+ },
+ "未契約": {
+  "en": "No contract",
+  "zh": "未签约",
+  "ar": "غير متعاقد"
+ },
+ "未対応": {
+  "en": "Pending",
+  "zh": "未处理",
+  "ar": "غير معالج"
+ },
+ "未発行です。発行するまでこのリンクではログインできません。": {
+  "en": "Not issued yet. You cannot log in with this link until it is issued.",
+  "zh": "尚未发行。在发行之前，您无法通过此链接登录。",
+  "ar": "لم يتم الإصدار بعد. لا يمكنك تسجيل الدخول باستخدام هذا الرابط حتى يتم إصداره."
+ },
+ "未記入です。曜日ごとの営業時間を設定すると、営業中だけトップの「NOW」に表示されます。": {
+  "en": "Blank. If you set daily business hours, your store will be shown under \"NOW\" on the home page during business hours.",
+  "zh": "未填写。如果设置每日营业时间，仅在营业时间内显示在首页“NOW”板块。",
+  "ar": "غير مكتمل. إذا قمت بضبط ساعات العمل لكل يوم، فسيتم عرض متجرك في قسم \"NOW\" بالصفحة الرئيسية فقط خلال ساعات العمل."
+ },
+ "未記入です。曜日ごとの営業時間を設定すると、店舗ページに曜日別で表示されます。": {
+  "en": "Blank. If you set daily business hours, they will appear by day on your store page.",
+  "zh": "未填写。如果设置每日营业时间，将在店铺页面按星期显示。",
+  "ar": "غير مكتمل. إذا قمت بضبط ساعات العمل لكل يوم، فسيتم عرضها حسب أيام الأسبوع في صفحة متجرك."
+ },
+ "未記入に戻す(NOWに表示されなくなります)": {
+  "en": "Clear entry (Will no longer be displayed on NOW)",
+  "zh": "清空内容（将不再显示在“NOW”中）",
+  "ar": "إعادة إلى غير مكتمل (لن يتم عرضه في قسم NOW بعد الآن)"
+ },
+ "未設定": {
+  "en": "Not set",
+  "zh": "未设置",
+  "ar": "غير محدد"
+ },
+ "未選択": {
+  "en": "Not selected",
+  "zh": "未选择",
+  "ar": "غير محدد"
+ },
+ "本人確認情報(従業者名簿用)": {
+  "en": "Identity verification info (For employee roster)",
+  "zh": "身份验证信息（用于员工名册）",
+  "ar": "معلومات التحقق من الهوية (لسجل الموظفين)"
+ },
+ "本人確認書類をスキャン": {
+  "en": "Scan ID document",
+  "zh": "扫描身份验证文件",
+  "ar": "مسح وثيقة إثبات الهوية ضوئيًا"
+ },
+ "本名": {
+  "en": "Real name",
+  "zh": "真实姓名",
+  "ar": "الاسم الحقيقي"
+ },
+ "本名(氏名)": {
+  "en": "Real name (Full name)",
+  "zh": "真实姓名（姓名）",
+  "ar": "الاسم الحقيقي (الاسم الكامل)"
+ },
+ "本文(画像だけでも送れます)": {
+  "en": "Body text (you can send images only)",
+  "zh": "正文（也可以只发送图片）",
+  "ar": "النص (يمكنك إرسال الصور فقط)"
+ },
+ "本文を入力するか、画像を添付してください": {
+  "en": "Please enter the message body or attach an image.",
+  "zh": "请输入正文或添加图片附件",
+  "ar": "يُرجى إدخال النص أو إرفاق صورة."
+ },
+ "本日の出勤(": {
+  "en": "Today's shifts (",
+  "zh": "今日出勤 (",
+  "ar": "الحضور اليوم ("
+ },
+ "来店の確認(": {
+  "en": "Confirming visit (",
+  "zh": "确认到店 (",
+  "ar": "تأكيد الزيارة ("
+ },
+ "枚まで登録済みです。追加するには先に削除してください。": {
+  "en": "Registered up to the limit. Please delete existing ones before adding more.",
+  "zh": "已达到最大注册张数。如需添加，请先删除。",
+  "ar": "تم تسجيل الحد الأقصى من الصور. لإضافة المزيد، يُرجى الحذف أولاً."
+ },
+ "検索": {
+  "en": "Search",
+  "zh": "搜索",
+  "ar": "بحث"
+ },
+ "検索中…": {
+  "en": "Searching...",
+  "zh": "正在搜索…",
+  "ar": "جاري البحث..."
+ },
+ "様": {
+  "en": "Mr./Ms.",
+  "zh": "先生/女士",
+  "ar": "السيد/السيدة"
+ },
+ "権限がありません": {
+  "en": "You do not have permission.",
+  "zh": "没有权限",
+  "ar": "لا تملك الصلاحية"
+ },
+ "次の月": {
+  "en": "Next month",
+  "zh": "下个月",
+  "ar": "الشهر القادم"
+ },
+ "次回ID/パスワードを忘れた際は、この電話番号・生年月日・PINでご自身で再発行できます。": {
+  "en": "If you forget your ID/password next time, you can reissue it yourself using this phone number, date of birth, and PIN.",
+  "zh": "下次忘记ID/密码时，可使用此电话号码、出生日期和PIN码自行重置。",
+  "ar": "إذا نسيت معرف/كلمة المرور في المرة القادمة، يمكنك إعادتها بنفسك باستخدام رقم الهاتف وتاريخ الميلاد ورقم PIN هذا."
+ },
+ "残りわずか": {
+  "en": "Few remaining",
+  "zh": "所剩无几",
+  "ar": "المتبقي قليل"
+ },
+ "毎日(同じ時間)": {
+  "en": "Every day (same time)",
+  "zh": "每天（相同时间）",
+  "ar": "يوميًا (في نفس الوقت)"
+ },
+ "毎週(同じ曜日・同じ時間)": {
+  "en": "Every week (same day & time)",
+  "zh": "每周（相同星期·相同时间）",
+  "ar": "أسبوعيًا (في نفس اليوم والوقت)"
+ },
+ "氏名": {
+  "en": "Name",
+  "zh": "姓名",
+  "ar": "الاسم الكامل"
+ },
+ "氏名（活動名）": {
+  "en": "Name (Stage name)",
+  "zh": "姓名（活动名）",
+  "ar": "الاسم (الاسم الفني)"
+ },
+ "氏名(源氏名)": {
+  "en": "Name (Stage name)",
+  "zh": "姓名（艺名）",
+  "ar": "الاسم (الاسم المستعار)"
+ },
+ "氏名と電話番号は必須です": {
+  "en": "Name and phone number are required.",
+  "zh": "姓名和电话号码为必填项",
+  "ar": "الاسم ورقم الهاتف مطلوبان."
+ },
+ "氏名は必須です": {
+  "en": "Name is required.",
+  "zh": "姓名为必填项",
+  "ar": "الاسم مطلوب."
+ },
+ "水": {
+  "en": "Wed",
+  "zh": "周三",
+  "ar": "الأربعاء"
+ },
+ "注意": {
+  "en": "Caution",
+  "zh": "注意",
+  "ar": "تنبيه"
+ },
+ "混雑状況(AIコンシェルジュ連携)": {
+  "en": "Congestion status (AI Concierge integration)",
+  "zh": "拥挤状况（AI管家联动）",
+  "ar": "حالة الازدحام (ربط AI Concierge)"
+ },
+ "添付する画像": {
+  "en": "Attached image",
+  "zh": "附件图片",
+  "ar": "الصورة المرفقة"
+ },
+ "満席": {
+  "en": "Full house",
+  "zh": "客满",
+  "ar": "ممتلئ بالكامل"
+ },
+ "源氏名": {
+  "en": "Stage name",
+  "zh": "艺名",
+  "ar": "الاسم المستعار"
+ },
+ "源氏名:": {
+  "en": "Stage name:",
+  "zh": "艺名：",
+  "ar": "الاسم المستعار:"
+ },
+ "火": {
+  "en": "Tue",
+  "zh": "周二",
+  "ar": "الثلاثاء"
+ },
+ "点": {
+  "en": "Points",
+  "zh": "分",
+  "ar": "نقاط"
+ },
+ "無断キャンセルのデポジット残高(月額利用料から控除)": {
+  "en": "No-show deposit balance (deducted from monthly fee)",
+  "zh": "无故取消押金余额（从月费中扣除）",
+  "ar": "رصيد تأمين الإلغاء بدون إشعار (يُخصم من رسوم الاشتراك الشهرية)"
+ },
+ "燃料": {
+  "en": "Fuel",
+  "zh": "燃料",
+  "ar": "الوقود"
+ },
+ "特典タグは20文字以内にしてください": {
+  "en": "Please keep reward tags within 20 characters.",
+  "zh": "优惠标签请控制在20个字符以内",
+  "ar": "يُرجى أن يكون وشم الميزة في حدود 20 حرفًا."
+ },
+ "状態": {
+  "en": "Status",
+  "zh": "状态",
+  "ar": "الحالة"
+ },
+ "状態が正しくありません": {
+  "en": "Invalid status",
+  "zh": "状态不正确",
+  "ar": "الحالة غير صالحة"
+ },
+ "現在:": {
+  "en": "Current:",
+  "zh": "当前：",
+  "ar": "الحالي:"
+ },
+ "現在のお気に入り数": {
+  "en": "Current favorites count",
+  "zh": "当前收藏数",
+  "ar": "عدد المفضلة الحالي"
+ },
+ "現在マップのカードには店舗のトップ画像が表示されます。動画を流すには動画オプションのご契約が必要です(運営者にお問い合わせください)。選んでおいた動画は契約後に反映されます。": {
+  "en": "Currently, the main store image is displayed on the map card. To play videos, a video option subscription is required (please contact support). Selected videos will take effect after subscribing.",
+  "zh": "当前地图卡片上显示的是店铺的头图。如需播放视频，需要订阅视频附加选项（请咨询运营方）。预先选择好的视频将在订阅后生效。",
+  "ar": "تعرض بطاقة الخريطة حاليًا الصورة الرئيسية للمتجر. لتشغيل الفيديوهات، يلزم الاشتراك في خيار الفيديو (يُرجى الاتصال بالإدارة). سيتم تطبيق الفيديوهات المحددة بعد الاشتراك."
+ },
+ "現在地を取得しています…": {
+  "en": "Getting current location...",
+  "zh": "正在获取当前位置…",
+  "ar": "جاري الحصول على الموقع الحالي..."
+ },
+ "現在地を取得できませんでした。位置情報の許可を確認するか、下の「予定を登録」で場所を選んでください。": {
+  "en": "Could not obtain current location. Please check location permissions or select a location under \"Register Schedule\" below.",
+  "zh": "无法获取当前位置。请检查位置权限，或在下方的“添加日程”中选择位置。",
+  "ar": "تعذر الحصول على الموقع الحالي. يُرجى التحقق من إذن الموقع، أو اختيار الموقع من \"تسجيل الموعد\" أدناه."
+ },
+ "生年月日": {
+  "en": "Date of birth",
+  "zh": "出生日期",
+  "ar": "تاريخ الميلاد"
+ },
+ "画像": {
+  "en": "Image",
+  "zh": "图片",
+  "ar": "صورة"
+ },
+ "画像(割引チケットなど・1枚)": {
+  "en": "Image (discount ticket, etc. · 1 image)",
+  "zh": "图片（优惠券等·1张）",
+  "ar": "صورة (تذكرة خصم، إلخ · قطعة واحدة)"
+ },
+ "画像/動画": {
+  "en": "Image/Video",
+  "zh": "图片/视频",
+  "ar": "صورة/فيديو"
+ },
+ "画像URLがありません": {
+  "en": "No image URL",
+  "zh": "没有图片URL",
+  "ar": "لا يوجد رابط URL للصورة"
+ },
+ "画像URLが不正です": {
+  "en": "Invalid image URL",
+  "zh": "图片URL无效",
+  "ar": "رابط URL للصورة غير صحيح"
+ },
+ "画像URLを入力してください": {
+  "en": "Please enter the image URL",
+  "zh": "请输入图片URL",
+  "ar": "يرجى إدخال رابط URL للصورة"
+ },
+ "画像として保存": {
+  "en": "Save as Image",
+  "zh": "保存为图片",
+  "ar": "حفظ كصورة"
+ },
+ "画像のアップロードに失敗しました": {
+  "en": "Failed to upload image",
+  "zh": "图片上传失败",
+  "ar": "فشل تحميل الصورة"
+ },
+ "画像の削除に失敗しました: {0}": {
+  "en": "Failed to delete image: {0}",
+  "zh": "删除图片失败：{0}",
+  "ar": "فشل حذف الصورة: {0}"
+ },
+ "画像の生成に失敗しました": {
+  "en": "Failed to generate image",
+  "zh": "生成图片失败",
+  "ar": "فشل إنشاء الصورة"
+ },
+ "画像の登録に失敗しました": {
+  "en": "Failed to register image",
+  "zh": "注册图片失败",
+  "ar": "فشل تسجيل الصورة"
+ },
+ "画像の登録に失敗しました: {0}": {
+  "en": "Failed to register image: {0}",
+  "zh": "注册图片失败：{0}",
+  "ar": "فشل تسجيل الصورة: {0}"
+ },
+ "画像は読み取り処理のみに使用され、保存されません。": {
+  "en": "The image is only used for processing and will not be saved.",
+  "zh": "图片仅用于读取处理，不会被保存。",
+  "ar": "تُستخدم الصورة لمعالجة القراءة فقط ولن يتم حفظها."
+ },
+ "画像をドラッグ&ドロップ、またはタップして選択(複数可)": {
+  "en": "Drag & drop image(s) or tap to select (multiple allowed)",
+  "zh": "拖拽或点击选择图片（可多选）",
+  "ar": "اسحب الصورة وأفلتها، أو انقر لتحديدها (يمكن تحديد أكثر من صورة)"
+ },
+ "画像を外す": {
+  "en": "Remove image",
+  "zh": "移除图片",
+  "ar": "إزالة الصورة"
+ },
+ "画像を差し替え": {
+  "en": "Replace image",
+  "zh": "替换图片",
+  "ar": "استبدال الصورة"
+ },
+ "画像を読み込めませんでした": {
+  "en": "Could not load image",
+  "zh": "无法加载图片",
+  "ar": "تعذر تحميل الصورة"
+ },
+ "画像を追加": {
+  "en": "Add image",
+  "zh": "添加图片",
+  "ar": "إضافة صورة"
+ },
+ "画像を選ばない場合、先頭{0}文字が黒背景の大きな文字で画像化されます。それ以降は「続きを読む」で表示されます({1}文字)。": {
+  "en": "If no image is selected, the first {0} characters will be converted into an image with large text on a black background. The remaining text will be displayed under \"Read More\" ({1} characters).",
+  "zh": "如果不选择图片，前{0}个字将以黑底大字形式生成图片。其余内容将通过“阅读更多”显示（{1}个字）。",
+  "ar": "في حالة عدم تحديد صورة، سيتم تحويل أول {0} من الأحرف إلى صورة بنص كبير على خلفية سوداء. وسيتم عرض باقي النص تحت \"قراءة المزيد\" ({1} من الأحرف)."
+ },
+ "画像を選ぶ": {
+  "en": "Select image",
+  "zh": "选择图片",
+  "ar": "تحديد صورة"
+ },
+ "画像を選ぶと、円形に切り抜く画面が開きます。": {
+  "en": "Selecting an image will open a screen to crop it into a circle.",
+  "zh": "选择图片后，将打开圆形裁剪页面。",
+  "ar": "عند تحديد صورة، ستفتح شاشة لقصها على شكل دائري."
+ },
+ "発射に失敗しました: {0}": {
+  "en": "Failed to send: {0}",
+  "zh": "发送失败：{0}",
+  "ar": "فشل الإرسال: {0}"
+ },
+ "発行されたIDは、メールを受け取れないIDのため、ログイン画面の「メールで再設定」は使えません。ログインできないときは、": {
+  "en": "The issued ID cannot receive emails, so \"Reset via email\" on the login screen cannot be used. If you cannot log in,",
+  "zh": "已发行的ID无法接收邮件，因此无法使用登录页面上的“通过邮件重置”。如果无法登录，",
+  "ar": "لا يمكن للمعرف الصادر استقبال البريد الإلكتروني، لذا لا يمكن استخدام \"إعادة الضبط عبر البريد الإلكتروني\" في شاشة تسجيل الدخول. إذا تعذر عليك تسجيل الدخول،"
+ },
+ "発行しました。パスワードはこの画面でしか表示されません。必ず控えて、本人にお伝えください。": {
+  "en": "Issued successfully. The password will only be displayed on this screen. Please be sure to write it down and inform the user.",
+  "zh": "已发行。密码仅在此页面显示。请务必记录并告知本人。",
+  "ar": "تم الإصدار. سيتم عرض كلمة المرور في هذه الشاشة فقط. يرجى التأكد من تدوينها وإبلاغ الشخص بها."
+ },
+ "発行すると、FACES本人がリール(縦型動画/写真)を自分のスマホから直接投稿できるようになります。": {
+  "en": "Once issued, FACES users will be able to post Reels (vertical videos/photos) directly from their smartphones.",
+  "zh": "发行后，FACES本人便可直接从自己的手机发布Reel（竖屏视频/照片）。",
+  "ar": "بمجرد الإصدار، سيتمكن مستخدم FACES من نشر مقاطع Reels (فيديوهات عمودية/صور) مباشرة من هاتفه الذكي."
+ },
+ "発行に失敗しました": {
+  "en": "Failed to issue",
+  "zh": "发行失败",
+  "ar": "فشل الإصدار"
+ },
+ "発行中...": {
+  "en": "Issuing...",
+  "zh": "发行中...",
+  "ar": "جاري الإصدار..."
+ },
+ "発行中…": {
+  "en": "Issuing…",
+  "zh": "发行中…",
+  "ar": "جاري الإصدار…"
+ },
+ "発行日:": {
+  "en": "Date of issue:",
+  "zh": "发行日期：",
+  "ar": "تاريخ الإصدار:"
+ },
+ "発行済みです(セキュリティのため再表示できません。忘れた場合は再発行してください)。": {
+  "en": "Already issued (cannot be displayed again for security reasons. If forgotten, please reissue).",
+  "zh": "已发行（出于安全考虑无法再次显示。如果忘记，请重新发行）。",
+  "ar": "تم الإصدار بالفعل (لا يمكن إعادة عرضها لأسباب أمنية. إذا نسيتها، يرجى إعادة الإصدار)."
+ },
+ "登録": {
+  "en": "Register",
+  "zh": "注册",
+  "ar": "تسجيل"
+ },
+ "登録した車両は、店舗ページの「在庫」に表示されます。": {
+  "en": "Registered vehicles will be displayed under \"Inventory\" on the store page.",
+  "zh": "已注册的车辆将显示在店铺页面的“库存”中。",
+  "ar": "ستظهر المركبات المسجلة في قسم \"المخزون\" بصفحة المتجر."
+ },
+ "登録して与信照会": {
+  "en": "Register and check credit",
+  "zh": "注册并查询信用",
+  "ar": "التسجيل والاستعلام عن الائتمان"
+ },
+ "登録して続ける": {
+  "en": "Register and continue",
+  "zh": "注册并继续",
+  "ar": "التسجيل والمتابعة"
+ },
+ "登録しました。": {
+  "en": "Registered.",
+  "zh": "已注册。",
+  "ar": "تم التسجيل."
+ },
+ "登録する予定がありません": {
+  "en": "No plans to register",
+  "zh": "暂无注册计划",
+  "ar": "لا توجد خطة للتسجيل"
+ },
+ "登録に失敗しました": {
+  "en": "Failed to register",
+  "zh": "注册失败",
+  "ar": "فشل التسجيل"
+ },
+ "登録に失敗しました: {0}": {
+  "en": "Failed to register: {0}",
+  "zh": "注册失败：{0}",
+  "ar": "فشل التسجيل: {0}"
+ },
+ "登録に失敗しました。入力内容を確認してもう一度お試しください。": {
+  "en": "Failed to register. Please check your input and try again.",
+  "zh": "注册失败。请检查输入内容后重试。",
+  "ar": "فشل التسجيل. يرجى التحقق من البيانات المدخلة والمحاولة مرة أخرى."
+ },
+ "登録フォームの日付を {0}/{1} にしました。場所を選んで「予定を登録」を押してください。": {
+  "en": "Set the registration form date to {0}/{1}. Select a location and press \"Register Schedule\".",
+  "zh": "已将注册表单的日期设置为 {0}/{1}。请选择地点并点击“注册日程”。",
+  "ar": "تم تعيين تاريخ نموذج التسجيل إلى {0}/{1}. يرجى تحديد الموقع والضغط على \"تسجيل الجدول\"."
+ },
+ "登録中...": {
+  "en": "Registering...",
+  "zh": "注册中...",
+  "ar": "جاري التسجيل..."
+ },
+ "登録済みの写真から選ぶ": {
+  "en": "Select from registered photos",
+  "zh": "从已注册的照片中选择",
+  "ar": "اختر من الصور المسجلة"
+ },
+ "直前キャンセルの判断(": {
+  "en": "Last-minute cancellation judgment (",
+  "zh": "判定临期取消(",
+  "ar": "تقييم الإلغاء في اللحظة الأخيرة ("
+ },
+ "直近7日(30日:": {
+  "en": "Past 7 days (30 days:",
+  "zh": "近7天(30天:",
+  "ar": "آخر 7 أيام (30 يومًا:"
+ },
+ "確定済み・これから(": {
+  "en": "Confirmed / Upcoming (",
+  "zh": "已确认·即将到来(",
+  "ar": "المؤكدة / القادمة ("
+ },
+ "種類": {
+  "en": "Type",
+  "zh": "类型",
+  "ar": "النوع"
+ },
+ "稼働開始日": {
+  "en": "Operation start date",
+  "zh": "启用日期",
+  "ar": "تاريخ بدء التشغيل"
+ },
+ "空席あり": {
+  "en": "Seats available",
+  "zh": "有空位",
+  "ar": "توجد أماكن شاغرة"
+ },
+ "空欄ならFACESのプロフィールページへのリンクになります。": {
+  "en": "If left blank, it will link to the FACES profile page.",
+  "zh": "若留空，将自动链接至 FACES 个人资料页面。",
+  "ar": "إذا تُرك فارغًا، سيكون رابطًا إلى صفحة ملف FACES الشخصي."
+ },
+ "空欄なら店舗ページへのリンクになります。": {
+  "en": "If left blank, it will link to the store page.",
+  "zh": "若留空，将自动链接至店铺页面。",
+  "ar": "إذا تُرك فارغًا، سيكون رابطًا إلى صفحة المتجر."
+ },
+ "管理する店舗を選択": {
+  "en": "Select store to manage",
+  "zh": "选择要管理的店铺",
+  "ar": "حدد متجرًا لإدارته"
+ },
+ "管理者": {
+  "en": "Administrator",
+  "zh": "管理员",
+  "ar": "المسؤول"
+ },
+ "管理者ID": {
+  "en": "Admin ID",
+  "zh": "管理员 ID",
+  "ar": "معرف المسؤول"
+ },
+ "管理者IDの追加・削除は、オーナーのIDでログインしたときだけできます。": {
+  "en": "Admin IDs can only be added or deleted when logged in with an Owner ID.",
+  "zh": "只有在使用业主 ID 登录时，才能添加或删除管理员 ID。",
+  "ar": "يمكن إضافة معرفات المسؤولين أو حذفها فقط عند تسجيل الدخول باستخدام معرف المالك."
+ },
+ "管理者IDを発行": {
+  "en": "Issue Admin ID",
+  "zh": "发行管理员 ID",
+  "ar": "إصدار معرف مسؤول"
+ },
+ "管理者IDを追加": {
+  "en": "Add Admin ID",
+  "zh": "添加管理员 ID",
+  "ar": "إضافة معرف مسؤول"
+ },
+ "管理者が追加": {
+  "en": "Administrator added",
+  "zh": "已添加管理员",
+  "ar": "تمت إضافة المسؤول"
+ },
+ "終了": {
+  "en": "End",
+  "zh": "结束",
+  "ar": "إنهاء"
+ },
+ "終了がすでに過ぎています": {
+  "en": "The end time has already passed.",
+  "zh": "结束时间已过。",
+  "ar": "انقضى وقت الانتهاء بالفعل."
+ },
+ "終了が開始より早い場合は翌日までの営業として扱います(例: 18:00〜03:00)。祝日の個別設定はありません。": {
+  "en": "If the end time is earlier than the start time, it will be treated as open until the next day (e.g., 18:00–03:00). There are no separate settings for public holidays.",
+  "zh": "如果结束时间早于开始时间，将视为营业至次日（例如：18:00〜03:00）。无法定节假日单独设置。",
+  "ar": "إذا كان وقت الانتهاء أسبق من وقت البدء، فسيتم اعتباره عملًا حتى اليوم التالي (مثال: 18:00 إلى 03:00). لا توجد إعدادات منفصلة للعطلات الرسمية."
+ },
+ "終了して管理コンソールに戻る": {
+  "en": "Exit and return to management console",
+  "zh": "结束并返回管理控制台",
+  "ar": "الإنهاء والعودة إلى وحدة التحكم بالإدارة"
+ },
+ "終了できませんでした": {
+  "en": "Could not end.",
+  "zh": "无法结束。",
+  "ar": "تعذر الإنهاء."
+ },
+ "終了に失敗しました: {0}": {
+  "en": "Failed to end: {0}",
+  "zh": "结束失败：{0}",
+  "ar": "فشل الإنهاء: {0}"
+ },
+ "終了に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to end (Target not found or no permission)",
+  "zh": "结束失败（未找到目标或无权限）",
+  "ar": "فشل الإنهاء (الهدف غير موجود أو لا توجد صلاحيات)"
+ },
+ "終了は開始より後にしてください": {
+  "en": "End time must be after start time.",
+  "zh": "结束时间必须晚于开始时间。",
+  "ar": "يجب أن يكون وقت الانتهاء بعد وقت البدء."
+ },
+ "終了日": {
+  "en": "End date",
+  "zh": "结束日期",
+  "ar": "تاريخ الانتهاء"
+ },
+ "終了日を設定する場合は開始日も設定してください": {
+  "en": "If setting an end date, please set a start date as well.",
+  "zh": "如果设置了结束日期，请一并设置开始日期。",
+  "ar": "إذا قمت بضبط تاريخ الانتهاء، يرجى ضبط تاريخ البدء أيضًا."
+ },
+ "終了日時は開始日時より後に設定してください": {
+  "en": "Please set the end date and time after the start date and time.",
+  "zh": "结束日期时间必须设置在开始日期时间之后。",
+  "ar": "يرجى ضبط تاريخ ووقت الانتهاء بعد تاريخ ووقت البدء."
+ },
+ "経過すると自動で終了": {
+  "en": "Automatically ends when elapsed",
+  "zh": "时间到达后自动结束",
+  "ar": "ينتهي تلقائيًا بعد انقضاء الوقت"
+ },
+ "続きを読む": {
+  "en": "Read more",
+  "zh": "阅读更多",
+  "ar": "قراءة المزيد"
+ },
+ "続ける": {
+  "en": "Continue",
+  "zh": "继续",
+  "ar": "متابعة"
+ },
+ "編集": {
+  "en": "Edit",
+  "zh": "编辑",
+  "ar": "تعديل"
+ },
+ "編集をやめる": {
+  "en": "Cancel editing",
+  "zh": "取消编辑",
+  "ar": "إلغاء التعديل"
+ },
+ "繰り返し": {
+  "en": "Repeat",
+  "zh": "重复",
+  "ar": "تكرار"
+ },
+ "翻訳の保存に失敗しました": {
+  "en": "Failed to save translation.",
+  "zh": "保存翻译失败",
+  "ar": "فشل حفظ الترجمة"
+ },
+ "背景に写真の壁を表示する": {
+  "en": "Display photo wall in background",
+  "zh": "在背景显示照片墙",
+  "ar": "عرض جدار الصور في الخلفية"
+ },
+ "背景の「写真の壁」": {
+  "en": "Background \"Photo Wall\"",
+  "zh": "背景“照片墙”",
+  "ar": "خلفية \"جدار الصور\""
+ },
+ "自分の投稿・いいね・フォロー・お気に入りを見る。": {
+  "en": "View my posts, likes, follows, and favorites.",
+  "zh": "查看自己的帖子、赞、关注和收藏。",
+  "ar": "عرض منشوراتي وإعجاباتي ومتابعاتي والمفضلة."
+ },
+ "自店舗のFACES・スタッフ・店舗アカウントが投稿したリール(縦型動画/写真)の一覧です。不適切な投稿はここから削除できます。": {
+  "en": "This is a list of Reels (vertical videos/photos) posted by your store's FACES, staff, and store accounts. Inappropriate posts can be deleted from here.",
+  "zh": "这是本店 FACES、员工及店铺账号发布的 Reels（竖屏短视频/照片）列表。可在此处删除不当内容。",
+  "ar": "هذه قائمة بـ Reels (مقاطع فيديو رأسية/صور) التي تم نشرها بواسطة حسابات FACES والموظفين والمتجر الخاص بك. يمكنك حذف المنشورات غير المناسبة من هنا."
+ },
+ "色": {
+  "en": "Color",
+  "zh": "颜色",
+  "ar": "اللون"
+ },
+ "要注意({0}件一致)": {
+  "en": "Attention required ({0} matches)",
+  "zh": "需注意(匹配 {0} 项)",
+  "ar": "يتطلب انتباهًا (طابق {0})"
+ },
+ "見つかりませんでした。地図をタップして場所を選んでください。": {
+  "en": "Not found. Tap the map to select a location.",
+  "zh": "未找到。请点击地图选择位置。",
+  "ar": "لم يتم العثور عليه. يرجى الضغط على الخريطة لتحديد الموقع."
+ },
+ "見送り": {
+  "en": "Passed",
+  "zh": "不予考虑",
+  "ar": "مستبعد"
+ },
+ "言語が正しくありません": {
+  "en": "Invalid language.",
+  "zh": "语言不正确",
+  "ar": "اللغة غير صحيحة"
+ },
+ "該当あり": {
+  "en": "Matching",
+  "zh": "有匹配项",
+  "ar": "يوجد تطابق"
+ },
+ "該当するFACESがいません。": {
+  "en": "No matching FACES found.",
+  "zh": "未找到匹配的 FACES。",
+  "ar": "لم يتم العثور على FACES مطابقة."
+ },
+ "該当する応募者がいません": {
+  "en": "No matching applicants found",
+  "zh": "没有符合条件的申请者",
+  "ar": "لا يوجد متقدمون مطابقون"
+ },
+ "該当なし": {
+  "en": "No matches",
+  "zh": "无匹配项",
+  "ar": "لا يوجد تطابق"
+ },
+ "詳細(任意)": {
+  "en": "Details (Optional)",
+  "zh": "详细信息（可选）",
+  "ar": "التفاصيل (اختياري)"
+ },
+ "詳細は600文字以内にしてください": {
+  "en": "Please keep details within 600 characters",
+  "zh": "详细信息请控制在 600 字以内",
+  "ar": "يرجى إدخال التفاصيل في حدود 600 حرف"
+ },
+ "詳細ページ用の追加画像(任意・複数選択可)": {
+  "en": "Additional images for detail page (Optional, multiple select)",
+  "zh": "详情页追加图片（可选，可多选）",
+  "ar": "صور إضافية لصفحة التفاصيل (اختياري، يمكنك تحديد أكثر من صورة)"
+ },
+ "詳細ページ用画像の形式が不正です": {
+  "en": "Invalid image format for detail page",
+  "zh": "详情页图片格式不正确",
+  "ar": "تنسيق صورة صفحة التفاصيل غير صالح"
+ },
+ "詳細メッセージを入力してください": {
+  "en": "Please enter a detailed message",
+  "zh": "请输入详细消息",
+  "ar": "يرجى إدخال رسالة تفصيلية"
+ },
+ "詳細を編集": {
+  "en": "Edit details",
+  "zh": "编辑详细信息",
+  "ar": "تعديل التفاصيل"
+ },
+ "誤認識や誤訳を直せます。時間と行数は変えられません。店名などの固有名詞を確認してください。": {
+  "en": "You can fix misrecognitions and mistranslations. Time and line numbers cannot be changed. Please verify proper nouns such as store names.",
+  "zh": "您可以修正误识别和误译。时间和行数无法更改。请检查店名等专有名词。",
+  "ar": "يمكنك تصحيح التعرف الخاطئ والترجمات الخاطئة. لا يمكن تغيير الوقت وعدد الأسطر. يرجى التحقق من الأسماء الخاصة مثل اسم المتجر."
+ },
+ "説明(任意・1000文字まで)": {
+  "en": "Description (Optional, up to 1,000 characters)",
+  "zh": "说明（可选，最多1000字）",
+  "ar": "الوصف (اختياري، حتى 1000 حرف)"
+ },
+ "説明は1000文字以内にしてください": {
+  "en": "Please keep description within 1,000 characters",
+  "zh": "说明请控制在 1000 字以内",
+  "ar": "يرجى إدخال الوصف في حدود 1000 حرف"
+ },
+ "読み取りに失敗しました": {
+  "en": "Failed to read",
+  "zh": "读取失败",
+  "ar": "فشلت القراءة"
+ },
+ "読み取り中...": {
+  "en": "Reading...",
+  "zh": "读取中...",
+  "ar": "جاري القراءة..."
+ },
+ "読み取り中…(10秒ほど)": {
+  "en": "Reading... (approx. 10 sec)",
+  "zh": "读取中...（约10秒）",
+  "ar": "جاري القراءة... (حوالي 10 ثوانٍ)"
+ },
+ "読み取る": {
+  "en": "Scan",
+  "zh": "读取",
+  "ar": "قراءة"
+ },
+ "読み込みに失敗しました。時間をおいて再度お試しください": {
+  "en": "Failed to load. Please try again after a while",
+  "zh": "加载失败。请稍后再试",
+  "ar": "تعذر التحميل. يرجى المحاولة مرة أخرى بعد قليل"
+ },
+ "読み込み中...": {
+  "en": "Loading...",
+  "zh": "加载中...",
+  "ar": "جاري التحميل..."
+ },
+ "読み込み中…": {
+  "en": "Loading...",
+  "zh": "加载中...",
+  "ar": "جاري التحميل..."
+ },
+ "譲渡会やイベントなど、場所が変わる開催をお知らせできます。オンにすると、開催予定を登録する欄がメニューに出て、店舗ページの「次の開催」とカレンダー、地図のピンに表示されます。": {
+  "en": "You can announce events that change locations, such as adoption fairs. When enabled, a menu item to register upcoming events will appear, and details will be displayed under \"Next Event\", the calendar, and map pins on your store page.",
+  "zh": "可以通知领养会或活动等地点会变动的举办信息。开启后，菜单中会出现注册举办计划的栏目，并将显示在店铺页面的“下一次举办”、日历以及地图的大头针上。",
+  "ar": "يمكنك الإعلان عن الفعاليات التي تتغير مواقعها، مثل معارض التبني. عند التفعيل، يظهر خيار لتسجيل الفعاليات القادمة في القائمة، وسيتم عرضها في قسم \"الفعالية القادمة\" والتقويم ودبوس الخريطة على صفحة المتجر."
+ },
+ "走行距離": {
+  "en": "Mileage",
+  "zh": "行驶里程",
+  "ar": "المسافة المقطوعة"
+ },
+ "走行距離(km)": {
+  "en": "Mileage (km)",
+  "zh": "行驶里程 (km)",
+  "ar": "المسافة المقطوعة (كم)"
+ },
+ "足りない項目を埋めるほど、マップや一覧でお客さんに選ばれやすくなります。": {
+  "en": "The more missing items you fill in, the easier it will be for customers to choose you on the map and lists.",
+  "zh": "填写的缺少项目越多，越容易在地图和列表中吸引顾客选择。",
+  "ar": "كلما أكملت العناصر المفقودة، أصبح من الأسهل للعملاء اختيارك على الخريطة والقوائم."
+ },
+ "身分証画像": {
+  "en": "ID photo",
+  "zh": "身份证件图片",
+  "ar": "صورة الهوية"
+ },
+ "身分証画像(本人確認書類)": {
+  "en": "ID photo (Identity verification document)",
+  "zh": "身份证件图片（身份验证文件）",
+  "ar": "صورة الهوية (وثيقة إثبات الهوية)"
+ },
+ "身分証画像の削除に失敗しました: {0}": {
+  "en": "Failed to delete ID photo: {0}",
+  "zh": "删除身份证件图片失败：{0}",
+  "ar": "فشل حذف صورة الهوية: {0}"
+ },
+ "身分証画像の登録に失敗しました: {0}": {
+  "en": "Failed to register ID photo: {0}",
+  "zh": "注册身份证件图片失败：{0}",
+  "ar": "فشل تسجيل صورة الهوية: {0}"
+ },
+ "身分証画像の登録に失敗しました(対象が見つからないか、権限がありません)": {
+  "en": "Failed to register ID photo (Target not found or insufficient permissions)",
+  "zh": "注册身份证件图片失败（未找到目标或无权限）",
+  "ar": "فشل تسجيل صورة الهوية (لم يتم العثور على الهدف أو لا تملك الإذن)"
+ },
+ "身分証画像を保存": {
+  "en": "Save ID photo",
+  "zh": "保存身份证件图片",
+  "ar": "حفظ صورة الهوية"
+ },
+ "車両を編集": {
+  "en": "Edit vehicle",
+  "zh": "编辑车辆",
+  "ar": "تعديل المركبة"
+ },
+ "車両を追加": {
+  "en": "Add vehicle",
+  "zh": "添加车辆",
+  "ar": "إضافة مركبة"
+ },
+ "車体の形状": {
+  "en": "Body style",
+  "zh": "车身形式",
+  "ar": "شكل الهيكل"
+ },
+ "車台番号(サイトには出ません)": {
+  "en": "Chassis number (Not displayed on the website)",
+  "zh": "车架号（不会显示在网站上）",
+  "ar": "رقم الشاسيه (لن يظهر على الموقع)"
+ },
+ "車名・グレード(必須)": {
+  "en": "Vehicle name & trim (Required)",
+  "zh": "车名/级别（必填）",
+  "ar": "اسم المركبة والفئة (مطلوب)"
+ },
+ "車名(タイトル)は必須です": {
+  "en": "Vehicle name (Title) is required",
+  "zh": "车名（标题）为必填项",
+  "ar": "اسم المركبة (العنوان) مطلوب"
+ },
+ "車名は80文字以内にしてください": {
+  "en": "Please keep vehicle name within 80 characters",
+  "zh": "车名请控制在 80 字以内",
+  "ar": "يرجى إدخال اسم المركبة في حدود 80 حرفًا"
+ },
+ "車検": {
+  "en": "Vehicle inspection",
+  "zh": "车检",
+  "ar": "فحص المركبة"
+ },
+ "車検証から読み取りました。内容に間違いがないか確認してください(車名は「ポルシェ 911 GT3」のようにグレードまで書き足すと伝わりやすくなります)。所有者の名前・住所などは読み取らず、保存もしません。": {
+  "en": "Scanned from the vehicle inspection certificate. Please verify that the details are correct (adding the trim grade to the vehicle name, like \"Porsche 911 GT3\", makes it clearer). Owner's name and address are not read or saved.",
+  "zh": "已从车检证中读取。请检查内容是否正确（车名若加上级别，如“保时捷 911 GT3”，会更容易传达）。不会读取或保存所有者的姓名、地址等信息。",
+  "ar": "تمت القراءة من شهادة فحص المركبة. يرجى التحقق من صحة المحتوى (توضيح الفئة مع اسم المركبة مثل \"Porsche 911 GT3\" يجعلها أسهل للفهم). لن يتم قراءة أو حفظ اسم المالك أو عنوانه."
+ },
+ "車検証の全体が写るように撮影してください。車名・年式・車検・型式などが入ります(走行距離と価格は手入力です)。": {
+  "en": "Please take a photo so the entire vehicle inspection certificate is visible. Make, model year, inspection, model number, etc., will be included (mileage and price must be entered manually).",
+  "zh": "请拍摄完整的车辆检验合格证。车辆名称、年份、年检、车型等信息将被自动录入（行驶里程和价格需手动输入）。",
+  "ar": "يرجى التقاط صورة بحيث تظهر شهادة فحص المركبة بالكامل. سيتم تضمين اسم السيارة والسنة والفحص والطراز وما إلى ذلك (يتم إدخال المسافة المقطوعة والسعر يدويًا)."
+ },
+ "車検証の情報(任意・スキャンで入ります)": {
+  "en": "Vehicle inspection certificate info (Optional - populated via scan)",
+  "zh": "车辆检验合格证信息（可选，通过扫描自动录入）",
+  "ar": "معلومات شهادة فحص المركبة (اختياري - تُدخل عبر المسح الضوئي)"
+ },
+ "軽度の一致あり": {
+  "en": "Minor match found",
+  "zh": "存在轻微匹配",
+  "ar": "تطابق طفيف"
+ },
+ "返信する": {
+  "en": "Reply",
+  "zh": "回复",
+  "ar": "رد"
+ },
+ "返信の文章(Googleマップに公開されます)": {
+  "en": "Reply message (Will be published on Google Maps)",
+  "zh": "回复内容（将公开发布至 Google 地图）",
+  "ar": "نص الرد (سيتم نشره على خرائط Google)"
+ },
+ "返信の送信に失敗しました: {0}": {
+  "en": "Failed to send reply: {0}",
+  "zh": "发送回复失败：{0}",
+  "ar": "فشل إرسال الرد: {0}"
+ },
+ "返信を入力": {
+  "en": "Enter reply",
+  "zh": "输入回复",
+  "ar": "إدخال الرد"
+ },
+ "返信を書き換える": {
+  "en": "Edit reply",
+  "zh": "修改回复",
+  "ar": "تعديل الرد"
+ },
+ "返信内容は必須です": {
+  "en": "Reply content is required",
+  "zh": "回复内容为必填项",
+  "ar": "محتوى الرد مطلوب"
+ },
+ "返答待ち(": {
+  "en": "Awaiting response (",
+  "zh": "等待回复（",
+  "ar": "في انتظار الرد ("
+ },
+ "追加": {
+  "en": "Add",
+  "zh": "添加",
+  "ar": "إضافة"
+ },
+ "追加を解除": {
+  "en": "Remove",
+  "zh": "取消添加",
+  "ar": "إزالة الإضافة"
+ },
+ "退店から30日を過ぎると復帰できなくなります。復帰させるとアカウント・ログイン情報・投稿履歴はそのまま戻ります。": {
+  "en": "You will not be able to restore the account after 30 days from closing. Restoring will recover your account, login information, and post history as they were.",
+  "zh": "闭店超过30天后将无法恢复。恢复后，账号、登录信息及发布记录将原样还原。",
+  "ar": "لن تتمكن من الاستعادة بعد مرور 30 يومًا من الإغلاق. ستؤدي الاستعادة إلى استرجاع الحساب ومعلومات تسجيل الدخول وسجل المشاركات كما كانت."
+ },
+ "退店から30日を過ぎると復帰できなくなります。復帰させるとアカウント・ログイン情報はそのまま戻ります。": {
+  "en": "You will not be able to restore the account after 30 days from closing. Restoring will recover your account and login information as they were.",
+  "zh": "闭店超过30天后将无法恢复。恢复后，账号及登录信息将原样还原。",
+  "ar": "لن تتمكن من الاستعادة بعد مرور 30 يومًا من الإغلاق. ستؤدي الاستعادة إلى استرجاع الحساب ومعلومات تسجيل الدخول كما كانت."
+ },
+ "退店日:": {
+  "en": "Closing Date:",
+  "zh": "闭店日期：",
+  "ar": "تاريخ الإغلاق:"
+ },
+ "退店済み(30日以内は復帰可能)": {
+  "en": "Closed (Restorable within 30 days)",
+  "zh": "已闭店（30天内可恢复）",
+  "ar": "مغلق (يمكن الاستعادة خلال 30 يومًا)"
+ },
+ "送信する": {
+  "en": "Send",
+  "zh": "发送",
+  "ar": "إرسال"
+ },
+ "送信に失敗しました": {
+  "en": "Failed to send",
+  "zh": "发送失败",
+  "ar": "فشل الإرسال"
+ },
+ "送信中...": {
+  "en": "Sending...",
+  "zh": "发送中...",
+  "ar": "جارٍ الإرسال..."
+ },
+ "送信先": {
+  "en": "Recipient",
+  "zh": "收件人",
+  "ar": "المستلم"
+ },
+ "通信を確認して再試行してください": {
+  "en": "Please check your network connection and try again",
+  "zh": "请检查网络连接后重试",
+  "ar": "يرجى التحقق من الاتصال بالشبكة وإعادة المحاولة"
+ },
+ "連絡先:": {
+  "en": "Contact:",
+  "zh": "联系方式：",
+  "ar": "معلومات الاتصال:"
+ },
+ "連絡先未入力": {
+  "en": "No contact info entered",
+  "zh": "未输入联系方式",
+  "ar": "لم يتم إدخال معلومات الاتصال"
+ },
+ "週ぶん": {
+  "en": "week's worth",
+  "zh": "周份",
+  "ar": "ما يكفي لأسبوع"
+ },
+ "運営として閲覧しているため、ここでは、店舗のIDやパスワードは表示・変更できません。": {
+  "en": "Because you are viewing as an administrator, store IDs and passwords cannot be displayed or changed here.",
+  "zh": "由于您是以管理员身份浏览，在此无法查看或修改店铺的ID和密码。",
+  "ar": "نظرًا لأنك تعرض الصفحة كمسؤول، لا يمكن عرض أو تغيير معرف المتجر ورقم المرور هنا."
+ },
+ "運営として閲覧しているため、返信はできません(店舗の画面から返信します)。": {
+  "en": "Because you are viewing as an administrator, you cannot reply here (please reply from the store screen).",
+  "zh": "由于您是以管理员身份浏览，无法进行回复（请在店铺页面进行回复）。",
+  "ar": "نظرًا لأنك تعرض الصفحة كمسؤول، لا يمكنك الرد هنا (يرجى الرد من شاشة المتجر)."
+ },
+ "運営として閲覧しているため、返信は送れません(店舗の画面から返信してください)": {
+  "en": "Because you are viewing as an administrator, replies cannot be sent (please reply from the store screen).",
+  "zh": "由于您是以管理员身份浏览，无法发送回复（请在店铺页面进行回复）。",
+  "ar": "نظرًا لأنك تعرض الصفحة كمسؤول، لا يمكن إرسال الرد (يرجى الرد من شاشة المتجر)."
+ },
+ "運営者として代理閲覧中:": {
+  "en": "Proxy viewing as Administrator:",
+  "zh": "正在以管理员身份代理浏览：",
+  "ar": "عرض بالنيابة كمسؤول:"
+ },
+ "選べない値です": {
+  "en": "Invalid selection",
+  "zh": "不可选择的值",
+  "ar": "قيمة غير صالحة للاختيار"
+ },
+ "選んだ内容を反映する": {
+  "en": "Apply selected options",
+  "zh": "应用所选内容",
+  "ar": "تطبيق الخيارات المحددة"
+ },
+ "選んだ立場は次回から自動で開きます。切り替えはヘッダーの「管理」/アイコンから。": {
+  "en": "The selected role will automatically open next time. You can switch roles from \"Admin\" / icon in the header.",
+  "zh": "下次将自动打开所选身份。您可以通过页眉中的“管理”/图标进行切换。",
+  "ar": "سيتم فتح الدور المحدد تلقائيًا في المرة القادمة. يمكنك التبديل من \"إدارة\" / الأيقونة في الرأس."
+ },
+ "選択を解除して最新の動画リールに戻す": {
+  "en": "Deselect and return to the latest video reels",
+  "zh": "取消选择并返回最新的视频 Reel",
+  "ar": "إلغاء التحديد والعودة إلى أحدث مقاطع الفيديو"
+ },
+ "金": {
+  "en": "Fri",
+  "zh": "周五",
+  "ar": "الجمعة"
+ },
+ "閉じる": {
+  "en": "Close",
+  "zh": "关闭",
+  "ar": "إغلاق"
+ },
+ "開催を終了しました。地図から消えます。": {
+  "en": "The event has ended. It will be removed from the map.",
+  "zh": "活动已结束。将从地图上移除。",
+  "ar": "انتهى الحدث. سيتم إزالته من الخريطة."
+ },
+ "開催中": {
+  "en": "Ongoing",
+  "zh": "进行中",
+  "ar": "جاري الآن"
+ },
+ "開催予定を登録する": {
+  "en": "Register upcoming event",
+  "zh": "登记预定活动",
+  "ar": "تسجيل حدث قادم"
+ },
+ "開催場所のお知らせ": {
+  "en": "Event Location Announcement",
+  "zh": "活动地点通知",
+  "ar": "إشعار مكان الحدث"
+ },
+ "開催場所のお知らせを使う": {
+  "en": "Use Event Location Announcement",
+  "zh": "使用活动地点通知",
+  "ar": "استخدام إشعار مكان الحدث"
+ },
+ "開催終了": {
+  "en": "Ended",
+  "zh": "已结束",
+  "ar": "منتهي"
+ },
+ "開始": {
+  "en": "Start",
+  "zh": "开始",
+  "ar": "بدء"
+ },
+ "開始は180日以内にしてください": {
+  "en": "Please set the start date within 180 days.",
+  "zh": "请在180天内开始",
+  "ar": "يرجى البدء في غضون 180 يومًا"
+ },
+ "開始日": {
+  "en": "Start date",
+  "zh": "开始日期",
+  "ar": "تاريخ البدء"
+ },
+ "電話で問い合わせ": {
+  "en": "Inquire by phone",
+  "zh": "电话咨询",
+  "ar": "الاستفسار عبر الهاتف"
+ },
+ "電話はLOCAPASS経由かどうかを自動では判別できないため、お客さんに「LOCAPASSを見た」と伝えてもらう案内を連絡画面に表示しています。": {
+  "en": "Since phone calls cannot be automatically identified as coming through LOCAPASS, a notice is displayed on the contact screen asking customers to mention that they saw LOCAPASS.",
+  "zh": "由于无法自动判断电话是否来自LOCAPASS，因此在联系页面上会显示提示，请顾客说明“我看了LOCAPASS”。",
+  "ar": "نظرًا لأنه لا يمكن تحديد ما إذا كانت المكالمات عبر LOCAPASS تلقائيًا، يتم عرض إشعار على شاشة الاتصال يطلب من العملاء ذكر أنهم \"شاهدوا LOCAPASS\"."
+ },
+ "電話番号": {
+  "en": "Phone number",
+  "zh": "电话号码",
+  "ar": "رقم الهاتف"
+ },
+ "面接中": {
+  "en": "Interview in progress",
+  "zh": "面试中",
+  "ar": "جاري إجراء المقابلة"
+ },
+ "音なしで自動ループ再生されます(写真や動画より優先)。YouTube の動画URLを入れたときだけ有効です。": {
+  "en": "Plays automatically on a silent loop (takes priority over photos and videos). Only valid when a YouTube video URL is entered.",
+  "zh": "无声自动循环播放（优先级高于照片和视频）。仅在输入 YouTube 视频 URL 时有效。",
+  "ar": "يتم التشغيل التلقائي والتكراري بدون صوت (له الأولوية على الصور ومقاطع الفيديو). يعمل فقط عند إدخال رابط فيديو YouTube."
+ },
+ "風営法に基づく従業者名簿として、氏名・生年月日・住所・稼働開始日等を出力します。": {
+  "en": "Outputs names, dates of birth, addresses, start dates, etc., as an employee roster in compliance with the Entertainment Business Act.",
+  "zh": "作为基于《风俗营业法》的员工名簿，导出姓名、出生日期、地址、开始工作日期等信息。",
+  "ar": "يستخرج قائمة الموظفين بناءً على قانون أعمال الترفيه، تتضمن الاسم، تاريخ الميلاد، العنوان، تاريخ بدء العمل، إلخ."
+ },
+ "黒服・店長など、個人単位のアカウントを発行できます。各スタッフは専用マイページ(リール投稿・イベント投稿・お問い合わせ対応・プロフィール編集)を持ち、自分が投稿したものだけを編集・削除できます。": {
+  "en": "Accounts can be issued for individual staff members, such as floor staff or managers. Each staff member has a dedicated My Page (reels posting, event posting, customer inquiries, profile editing) and can only edit or delete their own posts.",
+  "zh": "可以为服务人员、店长等个人发放账号。每位员工都有专属个人页面（发布Reels短视频、发布活动、回复咨询、编辑个人资料），且只能编辑或删除自己发布的内容。",
+  "ar": "يمكن إصدار حسابات فردية للموظفين مثل طاقم العمل أو مدير المحل. يمتلك كل موظف صفحته الشخصية الخاصة (نشر المقاطع القصيرة Reels، نشر الفعاليات، الرد على الاستفسارات، تعديل الملف الشخصي) ويمكنه فقط تعديل أو حذف ما قام بنشره."
+ }
+}

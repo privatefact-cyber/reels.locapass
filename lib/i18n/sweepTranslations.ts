@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/types/supabase";
-import { needsTranslation, translateFieldsBatch, type SourceFields, type TranslationTarget } from "@/lib/i18n/contentTranslation";
+import { needsTranslation, preserveManualTranslations, translateFieldsBatch, type SourceFields, type TranslationTarget } from "@/lib/i18n/contentTranslation";
 import { itemSourceFields } from "@/lib/shop/items";
 import { translateAddressesToEnglish } from "@/lib/map/translateAddress";
 
@@ -160,7 +160,8 @@ export async function sweepTranslations(
         continue;
       }
       for (let j = 0; j < batch.length; j += 1) {
-        const result = translated[j];
+        // 人が手直しした訳は、原文が変わっても上書きしない。
+        const result = preserveManualTranslations(translated[j], batch[j][target.translationsCol ?? "translations"]);
         if (!result) {
           stat.failed += 1;
           continue;

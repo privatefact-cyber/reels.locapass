@@ -18,6 +18,8 @@ import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel
 import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapStatsCard";
 import { PriceListSection } from "@/components/locapass-dashboard/PriceListSection";
 import { ShopAccountSettingsSection } from "@/components/locapass-dashboard/ShopAccountSettingsSection";
+import { ShopTranslationEditor, type TranslationEditorField } from "@/components/locapass-dashboard/ShopTranslationEditor";
+import { asStoredTranslations, TRANSLATION_TARGETS } from "@/lib/i18n/contentTranslation";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
@@ -62,7 +64,7 @@ export default async function LocapassShopSettingsPage({
       supabase
         .from("locapass_shops")
         .select(
-          "id, name, category, address, tel, business_hours, business_hours_weekly, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code",
+          "id, name, category, address, tel, business_hours, business_hours_weekly, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code, tagline, translations",
         )
         .eq("id", currentShop.id)
         .single(),
@@ -100,6 +102,19 @@ export default async function LocapassShopSettingsPage({
   // YouTube動画ID(型に列が無いため別クエリ)。
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_use_youtube").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
+
+  // 自動翻訳の確認・修正欄。原文が入っている項目だけ、原文と別の言語ぶんを出す。
+  const storedTranslations = asStoredTranslations(shopRow.translations);
+  const translationLanguages = TRANSLATION_TARGETS.filter((l) => l !== (storedTranslations.source_lang ?? "ja") && storedTranslations[l]);
+  const translationFields: TranslationEditorField[] = (
+    [
+      { key: "description", label: "お店紹介文", original: shopRow.description },
+      { key: "tagline", label: "キャッチコピー", original: shopRow.tagline },
+      { key: "usage_notes", label: "利用説明", original: shopRow.usage_notes },
+      { key: "business_hours", label: "営業時間", original: shopRow.business_hours },
+      { key: "price_info", label: "料金情報", original: shopRow.price_info },
+    ] as { key: string; label: string; original: string | null }[]
+  ).filter((f): f is TranslationEditorField => !!f.original?.trim());
 
   const shop = {
     name: shopRow.name,
@@ -503,6 +518,21 @@ export default async function LocapassShopSettingsPage({
           <input type="hidden" name="price_info" value={shop.price_info ?? ""} />
         </SaveForm>
       </section>
+
+      {translationFields.length > 0 && translationLanguages.length > 0 && (
+        <section id="shop-translations" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6">
+          <h2 className="mb-1 text-sm font-semibold text-slate-900">各言語の表示を確認・修正</h2>
+          <p className="-mt-1 mb-4 text-xs text-slate-500">
+            店舗情報の文章は、保存すると他の言語へ自動で翻訳されます。不自然な訳はここで直せます。直した訳が正になり、あとで原文を変えても上書きされません。
+          </p>
+          <ShopTranslationEditor
+            shopId={currentShop.id}
+            fields={translationFields}
+            languages={translationLanguages}
+            stored={storedTranslations as never}
+          />
+        </section>
+      )}
 
       <section id="shop-gallery" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">店舗紹介ギャラリー</h2>

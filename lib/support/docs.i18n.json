@@ -1,0 +1,306 @@
+{
+  "about": {
+    "source_hash": "ac775dadcd2bbeb7347b6a430b0ab677",
+    "source_lang": "ja",
+    "en": {
+      "title": "What is locapass?",
+      "body": "locapass is a local portal where you can discover shops, people, and events in town through vertical swipe reels (short videos and photos).\nThe main page covers all areas, but when you enter a specific area (sub-portal) like Mito or Oarai, you will see information only for that area.\nTapping a tile on the home page opens a vertical swipe reel, and tapping again takes you to the shop's page.\nFACES = posts by people (staff, etc.), SHOP = shop tiles, SNAP = customer photo posts (LOCA SNAP), BOOST = urgent boosts."
+    },
+    "zh": {
+      "title": "什么是locapass",
+      "body": "locapass是一个可以通过上下滑动短视频/照片(Reels)来查找当地店铺、人物和活动的地区门户网站。\n首页展示所有区域的内容，进入水戸、大洗等特定区域（子门户）后，则仅显示该区域的信息。\n点击首页的图块即可开启上下滑动的短视频/照片，再次点击可跳转至店铺页面。\nFACES = 人物（工作人员等）的动态，SHOP = 店铺图块，SNAP = 顾客上传的照片（LOCA SNAP），BOOST = 紧急推广。"
+    },
+    "ar": {
+      "title": "ما هو locapass؟",
+      "body": "locapass هو بوابة محلية تتيح لك اكتشاف المتاجر والأشخاص والفعاليات في المدينة من خلال مقاطع ريلز (فيديوهات قصيرة وصور) بالتمرير العمودي.\nتعرض الصفحة الرئيسية جميع المناطق، وعند دخولك إلى منطقة محددة (بوابة فرعية) مثل Mito أو Oarai، ستظهر لك معلومات تلك المنطقة فقط.\nيتيح لك الضغط على المربع في الصفحة الرئيسية فتح مقاطع ريلز بالتمرير العمودي، وبالضغط مرة أخرى يمكنك الانتقال إلى صفحة المتجر.\nFACES = منشورات الأشخاص (طاقم العمل، إلخ)، SHOP = مربعات المتاجر، SNAP = صور العملاء (LOCA SNAP)، BOOST = الترويج العاجل."
+    }
+  },
+  "search": {
+    "source_hash": "e6037086108ea1b95138472423f790fd",
+    "source_lang": "ja",
+    "en": {
+      "title": "How to Search for Shops (Search & Tags)",
+      "body": "You can search by area or shop name keywords using the magnifying glass icon at the top of the main page.\nTapping the category tags next to it (Cafes/Sweets, Izakaya/Bars, Restaurants/Dining, etc.) allows you to filter by specific categories (multiple selections allowed; tap again to deselect).\nYou can also search via the map using \"Map\" in the bottom menu. You can even ask the AI concierge (✨ button), \"What do you recommend?\""
+    },
+    "zh": {
+      "title": "如何查找店铺（搜索与标签）",
+      "body": "您可以通过首页顶部的放大镜图标按区域或店铺名称关键词进行搜索。\n点击旁边的类别标签（咖啡/甜点、居酒屋/酒吧、餐厅/用餐等），可以按该类别进行筛选（支持多选，再次点击即可取消）。\n还可以通过底部菜单中的“地图”在地图上进行查找。您也可以向✨按钮的AI（智能助手）提问：“有什么推荐？”"
+    },
+    "ar": {
+      "title": "كيفية البحث عن المتاجر (البحث والعلامات)",
+      "body": "يمكنك البحث باستخدام الكلمات المفتاحية للمنطقة أو اسم المتجر عبر أيقونة العدسة المكبرة في أعلى الصفحة الرئيسية.\nيتيح لك الضغط على علامات التصنيف المجاورة لها (مقهى/حلويات، إيزاكايا/بار، مطعم/وجبات، إلخ) تصفية النتائج حسب ذلك التصنيف (يمكن تحديد خيارات متعددة، والضغط مرة أخرى للإلغاء).\nيمكنك أيضًا البحث من خلال الخريطة عبر خيار \"الخريطة\" في القائمة السفلى. كما يمكنك سؤال الذكاء الاصطناعي (زر ✨) \"ما هي توصياتك؟\"."
+    }
+  },
+  "account": {
+    "source_hash": "7bc9474dc8c3fdc3e821b66a4c665bac",
+    "source_lang": "ja",
+    "en": {
+      "title": "Login & My Page",
+      "body": "You can log in or access My Page using the user icon in the top right. On My Page, you can edit your nickname and icon, check FACES you follow, favorite shops, saved reels, your own comments, and notifications.\nLogging in is required for posting photos, liking, following, and making reservations.\nIf you forget your password, you can reset it via password reset on the login screen."
+    },
+    "zh": {
+      "title": "登录与个人中心",
+      "body": "您可以通过右上角的头像图标登录或前往个人中心。在个人中心，您可以修改昵称和头像，查看已关注的FACES、收藏的店铺、保存的Reels、自己的评论以及通知。\n发布照片、点赞、关注和预约等功能需要登录。\n如果忘记密码，可以通过登录页面的重置密码进行操作。"
+    },
+    "ar": {
+      "title": "تسجيل الدخول والصفحة الشخصية",
+      "body": "يمكنك تسجيل الدخول أو الانتقال إلى الصفحة الشخصية عبر أيقونة المستخدم في أعلى اليمين. في الصفحة الشخصية، يمكنك تغيير الاسم المستعار والأيقونة، والتحقق من FACES التي تتابعها، والمتاجر المفضلة، ومقاطع ريلز المحفوظة، وتعليقاتك الخاصة، والإشعارات.\nيلزم تسجيل الدخول لنشر الصور، وإبداء الإعجاب، والمتابعة، والحجز، وما إلى ذلك.\nإذا نسيت كلمة المرور، يمكنك إعادة ضبطها من خلال خيار إعادة ضبط كلمة المرور على شاشة تسجيل الدخول."
+    }
+  },
+  "language": {
+    "source_hash": "0f6995491d46e0231fa8a6668b811dc9",
+    "source_lang": "ja",
+    "en": {
+      "title": "Language Switching",
+      "body": "You can switch between Japanese, English, Chinese, and Arabic using \"日 / EN / 中 / عربي\" at the top of the screen. You can also type questions for the AI in each language."
+    },
+    "zh": {
+      "title": "切换语言",
+      "body": "通过屏幕顶部的“日 / EN / 中 / عربي”，可以切换日语、英语、中文和阿拉伯语。您也可以用每种语言输入AI提问。"
+    },
+    "ar": {
+      "title": "تبديل اللغة",
+      "body": "يمكنك التبديل بين اليابانية والإنجليزية والصينية والعربية باستخدام \"日 / EN / 中 / عربي\" في أعلى الشاشة. يمكنك أيضًا إدخال أسئلة AI بكل لغة."
+    }
+  },
+  "photo": {
+    "source_hash": "48f1d3fe9fc15a02d654cefdcd5b5c0f",
+    "source_lang": "ja",
+    "en": {
+      "title": "LOCA SNAP (Rokasuna: Photo & Video Posting)",
+      "body": "You can view photos and videos of the town posted by everyone under \"SNAP\" on the top page or /photo (LOCA SNAP). You can switch between grid view and map view.\nTo post, log in and select a photo or video from \"Post\".\n・The area is automatically determined from the photo's shooting location (location info). For videos as well, if the device has recorded location info, it will be read.\n・You can tag nearby shops (shops listed on locapass) and recommended local spots. You can also enter shop names manually.\n・With \"AI Auto-fill\", spot names and comments can be entered automatically.\n・Videos must be mp4/mov/webm, up to 50MB, and up to 30 seconds. Progress (%) is displayed during upload.\n・Posts are checked by AI, and inappropriate content will not be published. You cannot post a large amount in a short period.\nWhen viewing by vertical swiping, videos play automatically (muted) and stop when you swipe to the next one. Tap the video to turn on the sound.\nIn map view, photos are grouped by shop, and zooming in turns them into circular thumbnails. Tap \"View Photos\" on a card to see only photos of that location."
+    },
+    "zh": {
+      "title": "LOCA SNAP（ロカスナ：发布照片和视频）",
+      "body": "在首页的“SNAP”或 /photo(LOCA SNAP) 中，可以查看大家发布的城市照片和视频。可以在网格视图和地图视图之间切换。\n如要发布，请登录后从“发布”中选择照片或视频。\n・将根据照片的拍摄地点（位置信息）自动确定区域。对于视频，只要设备记录了位置信息也会自动读取。\n・您可以标注附近店家（locapass刊登店）和本地推荐景点。店名也可以手动输入。\n・使用“AI自动填充”，可以自动输入景点名称和评语。\n・视频支持 mp4/mov/webm，最大 50MB，最长 30 秒。上传过程中会显示进度（%）。\n・发布内容由 AI 进行审核，不合规的内容将不会展示。请勿在短时间内频繁大量发布。\n在垂直滑动浏览时，视频会自动无声播放，滑动到下一个时自动停止。点击视频即可开启声音。\n在地图视图中，照片会按店铺分组，放大后会显示为圆形缩略图。点击卡片上的“查看照片”，即可仅查看该景点的照片。"
+    },
+    "ar": {
+      "title": "LOCA SNAP (Rokasuna: نشر الصور ومقاطع الفيديو)",
+      "body": "يمكنك مشاهدة صور ومقاطع فيديو المدينة التي ينشرها الجميع من خلال \"SNAP\" في الصفحة الرئيسية أو /photo (LOCA SNAP). يمكنك التبديل بين عرض الشبكة وعرض الخريطة.\nللأنشر، قم بتسجيل الدخول واختر صورة أو مقطع فيديو من \"نشر\".\n・يتم تحديد المنطقة تلقائيًا من موقع التقاط الصورة (معلومات الموقع). بالنسبة لمقاطع الفيديو، سيتم قراءتها أيضًا إذا كان الجهاز قد سجل معلومات الموقع.\n・يمكنك الإشارة إلى المتاجر القريبة (المتاجر المدرجة في locapass) والأماكن المحلية الموصى بها. يمكنك أيضًا إدخال اسم المتجر يدويًا.\n・باستخدام \"AI التلقائي\"، يمكنك إدخال اسم المكان والتعليق تلقائيًا.\n・مقاطع الفيديو تدعم mp4/mov/webm، حتى 50MB وحتى 30 ثانية. يتم عرض التقدم (%) أثناء التحميل.\n・يتم فحص المنشورات بواسطة AI، ولن يتم نشر المحتوى غير الملائم. لا يمكنك نشر كميات كبيرة في فترة زمنية قصيرة.\nعند المشاهدة بالتمرير العمودي، يتم تشغيل مقاطع الفيديو تلقائيًا (بدون صوت) وتتوقف عند التمرير إلى التالي. يمكنك تشغيل الصوت بالضغط على مقطع الفيديو.\nفي عرض الخريطة، يتم تجميع الصور حسب كل متجر، وعند التكبير تصبح مصغرات دائرية. انقر على \"مشاهدة الصور\" في البطاقة لمشاهدة صور ذلك المكان فقط."
+    }
+  },
+  "photo-route": {
+    "source_hash": "f094221c34f949e6b6fa2f0f3855e140",
+    "source_lang": "ja",
+    "en": {
+      "title": "How to Create a Route (Photo Map)",
+      "body": "In the photo map view, selecting the places you want to visit in order will create a route like A→B→C, which you can open in Google Maps directions. Saving and sharing routes is not supported yet."
+    },
+    "zh": {
+      "title": "制作游览路线的方法（照片地图）",
+      "body": "在照片地图视图中，按顺序选择想去的地方即可生成 A→B→C 的路线，并可以在 Google 地图中打开路线导航。目前尚不支持保存或分享路线。"
+    },
+    "ar": {
+      "title": "كيفية إنشاء مسار جولة (خريطة الصور)",
+      "body": "في عرض خريطة الصور، يؤدي اختيار الأماكن التي تريد زيارتها بالترتيب إلى إنشاء مسار A→B→C، ويمكنك فتحه في إرشادات الاتجاهات في Google Maps. لا يمكن حفظ المسارات أو مشاركتها حتى الآن."
+    }
+  },
+  "like-follow": {
+    "source_hash": "55c588e824a19bfb6b425951083ebdde",
+    "source_lang": "ja",
+    "en": {
+      "title": "Likes, Follows, Favorites, and Notifications",
+      "body": "You can tap the heart to like reels and photos, follow cast members, and add shops to your favorites. When you follow a creator, or when someone likes or follows your photos, notifications will appear under the bell icon. You can toggle notification types in your settings.\nPush notifications to smartphones are currently under preparation, so only in-app notifications are available at present."
+    },
+    "zh": {
+      "title": "点赞·关注·收藏·通知",
+      "body": "您可以对视频（Reels）和照片点赞（心形图标）、关注店员（Cast），以及将店家加入收藏。当您关注发布者，或者有人对您的照片点赞或关注您时，通知消息将显示在铃铛图标（通知）中。通知类型可以在设置中进行切换。\n手机推送通知目前正在准备中，现在仅提供应用内通知。"
+    },
+    "ar": {
+      "title": "الإعجابات والمتابعة والمفضلة والإشعارات",
+      "body": "يمكنك الضغط على رمز القلب (الإعجاب) على مقاطع \"رِيلز\" والصور، ومتابعة طاقم العمل (الكاست)، وإضافة المتاجر إلى المفضلة. عندما تتابع أحد الناشرين، أو عندما يتلقى حسابك إعجابًا أو متابعة على صورك، ستصلك التنبيهات عبر رمز الجرس (الإشعارات). يمكنك التغيير بين أنواع الإشعارات من الإعدادات.\nإشعارات الدفع على الهواتف الذكية قيد الإعداد حاليًا، وتقتصر التنبيهات حاليًا على الإشعارات داخل التطبيق فقط."
+    }
+  },
+  "faces-user": {
+    "source_hash": "57829cee84bde001c8c01551682693d9",
+    "source_lang": "ja",
+    "en": {
+      "title": "What is FACES, How to View & Follow",
+      "body": "FACES refers to the people who act as the \"face\" of the shop and share its charm. FACES registered by the shop publish their own posts (reels).\nHow to view: The shop page features \"TODAY'S FACES\" (FACES working today) and \"ALL FACES\" (all registered FACES). Tapping a round icon takes you to that FACES's page (where you can view profile, PR text, photos, and reels). Tapping the \"FACES\" tile at the top also allows you to view FACES reels by swiping vertically.\nFollowing: You can follow from the FACES page (login required). You can check the FACES you are following from My Page.\nStories: FACES with a colored ring around their icon are posting \"Stories\" that disappear after 24 hours. Stories can only be viewed by followers (if you tap without following, a prompt to follow will appear).\nCommenting on FACES or reacting to posts requires logging in. Registering and posting as FACES is done through the shop's management screen and cannot be done by customers."
+    },
+    "zh": {
+      "title": "什么是FACES、查看方法与关注",
+      "body": "FACES是指作为店家“形象代表”并宣传店家魅力的人员。店家注册的FACES会发布自己的帖子（Reels）。\n查看方法：在店家页面上有“TODAY'S FACES”（今日上班的FACES）和“ALL FACES”（所有已注册的FACES），点击圆形头像即可进入该FACES的页面（可查看个人资料、宣传文案、照片和Reels）。点击顶部的“FACES”图块，也可以通过上下滑动查看FACES的Reels。\n关注：可在FACES页面进行关注（需登录）。可在“我的页面”中查看正在关注的FACES。\n快照（Story）：头像周围带有彩色光环的FACES发布了会在24小时后消失的“Story”。Story仅限关注者查看（未关注时点击，会显示提示关注的引导）。\n对FACES评论或互动需登录后进行。FACES的注册和发布是由店家管理后台进行的，顾客无法自行注册。"
+    },
+    "ar": {
+      "title": "ما هي ميزة FACES وكيفية العرض والمتابعة",
+      "body": "تشير FACES إلى الأشخاص الذين يمثلون \"وجه المتجر\" ويعبرون عن جاذبيته. ينشر الأشخاص المسجلون كـ FACES من قبل المتجر منشوراتهم الخاصة (مقاطع رِيلز).\nطريقة العرض: تحتوي صفحة المتجر على \"TODAY'S FACES\" (الأشخاص الموجودون في العمل اليوم) و\"ALL FACES\" (جميع الأشخاص المسجلين). يتيح لك الضغط على الأيقونة الدائرية للانتقال إلى صفحة FACES الخاصة بذلك الشخص (حيث يمكنك رؤية الملف الشخصي، النص الترويجي، الصور، ومقاطع رِيلز). كما يمكنك الضغط على مربع \"FACES\" في الأعلى لعرض مقاطع رِيلز الخاصة بـ FACES من خلال السحب العمودي.\nالمتابعة: يمكنك المتابعة من صفحة FACES (يتطلب تسجيل الدخول). يمكنك التحقق من FACES الذين تتابعهم من \"صفحتي\".\nالقصص (Stories): يُصدر FACES الذين تظهر حول أيقونتهم حلقة ملونة \"قصصًا\" تختفي بعد 24 ساعة. يمكن للمتابعين فقط رؤية القصص (إذا ضغطت عليها دون متابعة، ستظهر لك تعليمات تحثك على المتابعة).\nيمكنك التعليق على FACES أو التفاعل مع المنشورات بعد تسجيل الدخول. يتم تسجيل FACES والنشر من خلال لوحة إدارة المتجر، ولا يمكن للعملاء التسجيل."
+    }
+  },
+  "boost-view": {
+    "source_hash": "3ecffe2cc5b20798fabd7c02b4e6b700",
+    "source_lang": "ja",
+    "en": {
+      "title": "How to View Emergency Boosts (Limited-time Offers)",
+      "body": "\"BOOST\" refers to special limited-time deals (valid for 1–3 hours) published by shops due to last-minute cancellations or over-preparation (shops select 1, 2, or 3 hours for display duration) (found via the orange \"⚡BOOST\" at the top or /boost).\nThe timer at the top-left of the grid shows the remaining time, with offers having less time remaining displayed first. Tapping one enables vertical swiping, and tapping again opens the detail card.\nDetail card buttons: LINE Reservation / Phone Reservation / Go to Shop (Google Maps) / View Shop Details.\nWhen you arrive at the shop, please tell them \"I saw locapass\". No advance payment is required. When you enter an area such as Mito, only boosts from shops in that area will be displayed. Once the time expires, it will display \"Ended\" and disappear."
+    },
+    "zh": {
+      "title": "如何查看紧急Boost（限时优惠）",
+      "body": "“BOOST”是店家因突发取消或制作过多等原因而发布的“限时1〜3小时”超值优惠信息（店家可选择展示1、2或3小时）（可通过顶部的橙色“⚡BOOST”或 /boost 查看）。\n网格左上角的计时器显示剩余时间，剩余时间越少越靠前显示。点击后进入上下滑动模式，再次点击可打开详细卡片。\n详细卡片上的按钮：LINE预约 / 电话预约 / 前往店家（Google地图） / 查看店铺详情。\n到达店家后，请告诉店家“我是看了locapass来的”。无需提前结算。当进入水户等特定区域时，将仅显示该区域店家的Boost。超过时间后将显示“已结束”并消失。"
+    },
+    "ar": {
+      "title": "كيفية عرض تعزيز الطوارئ (العروض المحدودة بوقت)",
+      "body": "تعد ميزة \"BOOST\" عروضًا خاصة \"محدودة لمدة من 1 إلى 3 ساعات\" يصدرها المتجر بسبب الإلغاءات المفاجئة أو التحضير الزائد عن الحاجة (يختار المتجر مدة العرض من بين 1 أو 2 أو 3 ساعات) (تجدها عبر زِر \"⚡BOOST\" البرتقالي في الأعلى أو عبر الرابط /boost).\nيعرض المؤقت الموجود في أعلى اليسار من الشبكة الوقت المتبقي، وتظهر العروض ذات الوقت المتبقي الأقل في المقدمة. يتيح لك الضغط عليها السحب العمودي، وتؤدي الضغطة الأخرى إلى فتح بطاقة التفاصيل.\nأزرار بطاقة التفاصيل: حجز عبر LINE / حجز عبر الهاتف / الذهاب إلى المتجر (خرائط Google) / عرض تفاصيل المتجر.\nعند وصولك إلى المتجر، يُرجى إخبارهم بـ \"لقد رأيت locapass\". لا يلزم الدفع المسبق. عند دخولك إلى منطقة مثل Mito، سيتم عرض تعزيزات المتاجر الموجودة في تلك المنطقة فقط. بمجرد انقضاء الوقت، سيتم عرض \"انتهى\" وتختفي."
+    }
+  },
+  "reserve-user": {
+    "source_hash": "0b06ec64d14eda3a40a7a19bf4bb378e",
+    "source_lang": "ja",
+    "en": {
+      "title": "How to Use Priority Reservation (Deposit Reservation)",
+      "body": "A \"Reserve\" button will appear at the bottom of participating venue pages (participating venues only). This secures your table only, and you order your food at the venue on the day of your visit.\nSteps: Enter the date, time, number of guests, your name, and phone number, agree to the terms, and submit your request. If the venue accepts, the reservation is confirmed; if they decline or do not respond within 12 hours, the request is released with no charge. You can check the status in your notifications and under \"Priority Reservation History\" on My Page.\nDeposit: 500 yen per person, up to a maximum of 5,000 yen. If you visit the venue, you will be charged 0 yen. The deposit will only be charged as a cancellation fee in the event of a no-show.\nCard handling: If your visit is within 5 days, a temporary authorization hold will be placed on your card (you will not be charged). For reservations further in advance, your card information will be saved and only charged in the event of a no-show. Prepaid cards cannot be used.\nCancellations: Free of charge if cancelled before the venue's specified deadline (a set number of hours before your visit). After that, a cancellation fee may apply at the venue's discretion. Contacting the venue in advance may result in special consideration.\nFor your first reservation, you can book for up to 6 people and have up to 1 active reservation at a time.\n*Currently in test operation, so no actual charges will occur."
+    },
+    "zh": {
+      "title": "优先预订（押金预订）使用指南",
+      "body": "在支持此功能的店铺页面下方会出现“预订”按钮（仅限支持的店铺）。此操作仅保留座位，餐品需在到店当天现场点餐。\n步骤：输入日期、时间、人数、姓名和电话号码，同意条款后发送请求。店家选择“接受”即预订成功；若选择“拒绝”或在12小时内未回复，请求将被取消且不收取任何费用。您可以通过通知以及“我的页面”中的“优先预订历史”查看结果。\n押金：每人500日元，上限5,000日元。只要您按时到店，实际扣款为0日元。仅在无故缺席（未事先通知的取消）时，押金才会作为取消费被扣除。\n银行卡处理：如果用餐日期在5天以内，系统将临时占用信用卡额度（不会实际扣款）。对于更晚日期的预订，系统会保存卡片信息，仅在无故缺席时扣款。不支持使用预付卡。\n取消规则：如果在每家店铺规定的截止时间（到店前指定小时数）之前取消，则免费。此后取消，店家可能会根据自行判断收取取消费。提前与店家联系可能会获得谅解与照顾。\n首次预订限制为最多6人，且同时只能存在1笔预订。\n※目前处于测试阶段，不会产生实际扣款。"
+    },
+    "ar": {
+      "title": "كيفية استخدام الحجز ذو الأولوية (حجز العربون)",
+      "body": "يظهر زر \"حجز\" في أسفل صفحة المطاعم المشاركة (المتاجر المشاركة فقط). يضمن هذا إمكانية حجز المقاعد فقط، وتطلب الطعام في المكان يوم زيارتك.\nالخطوات: أدخل التاريخ، الوقت، عدد الأشخاص، اسمك، ورقم هاتفك، ووافق ثم أرسل الطلب. إذا اختار المطعم \"قبول\"، يتم تأكيد الحجز؛ وإذا اختار \"رفض\" أو لم يرد خلال 12 ساعة، يتم إلغاء الطلب دون أي رسوم. يمكنك التحقق من النتيجة في الإشعارات وفي \"سجل الحجز ذو الأولوية\" في صفحتي الشخصية.\nالعربون: 500 ين للشخص الواحد، بحد أقصى 5,000 ين. إذا حضرت للزيارة، تكون الرسوم 0 ين. يتم تحصيل العربون كرسوم إلغاء فقط في حالة عدم الحضور بدون إشعارات.\nالتعامل مع البطاقة: إذا كانت الزيارة خلال 5 أيام، يتم حجز مبلغ مؤقت على البطاقة (لن يتم خصمه). بالنسبة للحجوزات البعيدة، يتم حفظ معلومات البطاقة ويتم الخصم فقط في حالة عدم الحضور بدون إشعار. لا يمكن استخدام البطاقات مسبقة الدفع.\nالإلغاء: مجاني إذا تم قبل الموعد المحدد من قبل كل مطعم (قبل عدد معين من الساعات من الزيارة). بعد ذلك، قد يتم فرض رسوم إلغاء وفقًا لتقدير المطعم. قد يؤدي الاتصال بالمطعم مسبقًا إلى مراعاة ظروفك.\nبالنسبة للحجز الأول، يكون الحد الأقصى حتى 6 أشخاص وحجز واحد فقط في نفس الوقت.\n*حالياً الخدمة في المرحلة التجريبية، ولن يتم إجراء أي خصم فعلي."
+    }
+  },
+  "shop-video": {
+    "source_hash": "399b1061e43d263cfd99c5edddfc9748",
+    "source_lang": "ja",
+    "en": {
+      "title": "Video Introduction on Venue Page (YouTube)",
+      "body": "When a \"Video Introduction\" is displayed on a venue's page, tap it to watch the YouTube video directly on the spot. The video plays within the page and returns to the thumbnail when finished. Venues that do not show a video introduction do not have a video registered yet.\nYouTube videos set to private by the venue or those that do not allow embedding cannot be played."
+    },
+    "zh": {
+      "title": "店铺页面的视频介绍（YouTube）",
+      "body": "当店铺页面显示“视频介绍”时，点击即可直接观看YouTube视频。视频将在页面内播放，播放结束后返回缩略图。未显示视频介绍的店铺表示尚未注册视频。\n店家设为私密或不允许嵌入的YouTube视频将无法播放。"
+    },
+    "ar": {
+      "title": "فيديو تعريفي في صفحة المطعم (YouTube)",
+      "body": "عندما يظهر \"فيديو تعريفي\" في صفحة المطعم، يمكنك الضغط عليه لمشاهدة فيديو YouTube في نفس المكان. يتم تشغيل الفيديو داخل الصفحة، ويتم العودة إلى الصورة المصغرة عند انتهائه. المطاعم التي لا يظهر فيها فيديو تعريفي لم تقم بتسجيل فيديو بعد.\nلا يمكن تشغيل فيديوهات YouTube التي جعلها المطعم خاصة أو التي لا تسمح بالتضمين."
+    }
+  },
+  "contact": {
+    "source_hash": "4fd392e9fa5c535aab58a394b63772ba",
+    "source_lang": "ja",
+    "en": {
+      "title": "Contacting & Inquiring with Venues",
+      "body": "You can contact the venue directly via phone or LINE from the \"Contact\" section on the venue's page. If you have inquiries about how to use the website that cannot be resolved through this support section, you can contact management."
+    },
+    "zh": {
+      "title": "联系店铺 / 咨询",
+      "body": "您可以通过店铺页面中的“联系方式”，通过电话或LINE直接联系店铺。关于网站使用方法的咨询，如果无法通过本帮助页面解决，可以联系运营团队。"
+    },
+    "ar": {
+      "title": "الاتصال والاستفسار من المطاعم",
+      "body": "يمكنك الاتصال بالمطعم مباشرة عبر الهاتف أو LINE من خلال خيار \"الاتصال\" في صفحة المطعم. بالنسبة للاستفسارات المتعلقة بكيفية استخدام الموقع، إذا لم تجد الإجابة في قسم الدعم هذا، يمكنك الاتصال بالإدارة."
+    }
+  },
+  "shop-dashboard": {
+    "source_hash": "958e38fb59cb5dba56724f83a6c31942",
+    "source_lang": "ja",
+    "en": {
+      "title": "Overview of the Store Management Screen",
+      "body": "After logging in, store managers enter the store management screen (you can also jump directly to the posting screen using the \"Post\" button at the top of My Page).\nTop menu: Store Info / FACES Management / Staff Management / Admin ID / Reel Posts / ⚡Boost / Priority Booking / Messages to Customers / Applicant Management / Contact Us.\nSystem administrators and area managers can select a store and post on its behalf using \"Post to Store as Operations\" on My Page."
+    },
+    "zh": {
+      "title": "店铺管理界面概览",
+      "body": "店铺管理者登录后即可进入店铺管理界面（也可以通过个人主页顶部的“发布”按钮快速跳转至发布界面）。\n顶部菜单：店铺信息 / FACES管理 / 员工管理 / 管理员ID / Reel发布 / ⚡Boost / 优先预约 / 给顾客的留言 / 应聘者管理 / 联系咨询。\n系统管理员和区域管理员可以在个人主页通过“以运营身份发布至店铺”选择店铺代为发布。"
+    },
+    "ar": {
+      "title": "نظرة عامة على شاشة إدارة المتجر",
+      "body": "يدخل مدير المتجر إلى شاشة إدارة المتجر بعد تسجيل الدخول (يمكنك أيضًا الانتقال مباشرة إلى شاشة النشر عبر زر \"نشر\" في أعلى صفحة My Page).\nالقائمة العلوية: معلومات المتجر / إدارة FACES / إدارة الموظفين / معرف Admin ID / نشر Reels / ⚡Boost / الحجز الأولي / رسائل للعملاء / إدارة المتقدمين / اتصل بنا.\nيمكن لمديري النظام ومديري المناطق اختيار متجر والنشر نيابة عنه عبر \"النشر في المتجر كإدارة\" في صفحة My Page."
+    }
+  },
+  "shop-faces": {
+    "source_hash": "c67e01338a99125eaf827f8fd6e39a20",
+    "source_lang": "ja",
+    "en": {
+      "title": "Registering FACES and Posting Reels from FACES (First Step)",
+      "body": "FACES are the people who act as the face of your shop and share its appeal. On LOCAPASS, FACES posts are central to getting your shop noticed. Please register your FACES first, then post Reels.\nSteps:\n1. Open \"FACES Management\" in the top menu of the store management screen.\n2. In \"Register New FACES\", enter their name (stage name), age, and PR text, then register.\n3. Open the registered FACES profile and set a profile photo (they can also set it themselves from My Page). This photo will appear on various screens, such as the circular FACES icons on your shop's page.\n4. Click \"Issue Login\" under \"Reel Posting Login\" on the same screen.\n5. Share the generated posting link (or QR code) and 6-digit PIN with the FACES member (please send the link and PIN separately; they cannot log in with the URL alone).\n6. Once the FACES member opens the link and enters the PIN, they can access their My Page and post Reels.\nIf they cannot post themselves, the shop can also post on their behalf. Please post from \"FACES Reels\" in the FACES management screen.\nTo remove a FACES member, delete them from the FACES list (they can be restored within 30 days of leaving). If a password or PIN is forgotten, issue a new one via \"Issue Login\" (Reissue)."
+    },
+    "zh": {
+      "title": "注册FACES以及从FACES发布Reel（首先要做的事）",
+      "body": "FACES是指作为店铺“面孔”并传播店铺魅力的人。在LOCAPASS上，FACES的发布是让更多人关注店铺的核心。请先注册FACES，然后再发布Reel。\n步骤：\n1. 打开店铺管理界面顶部菜单中的“FACES管理”。\n2. 在“新建FACES注册”中输入姓名（活动名）、年龄和PR自荐文案并进行注册。\n3. 打开已注册的FACES并设置头像照片（本人也可以在个人主页中自行设置）。该照片将显示在店铺页面的FACES圆形图标等各个界面上。\n4. 在同一界面中的“Reel发布用登录”点击“生成登录信息”。\n5. 将生成的发布用链接（或二维码）及6位数密码告知FACES本人（请分别通过不同途径发送链接和密码，仅凭URL是无法进入的）。\n6. FACES本人打开链接并输入密码后，即可进入其个人主页并发布Reel。\n如果本人无法发布，店铺端也可以代为发布。请从FACES管理界面的“FACES Reel”中进行发布。\n如需解除FACES，请从FACES列表中删除（离店后30天内可恢复）。如果忘记密码，可通过“生成登录信息”（重新生成）来获取新密码。"
+    },
+    "ar": {
+      "title": "تسجيل FACES ونشر Reels من FACES (الخطوة الأولى)",
+      "body": "أشخاص FACES هم من يمثلون وجه المتجر وينشرون جاذبيته. على منصة LOCAPASS، تُعد منشورات FACES هي المحور الأساسي لجذب الانتباه لمتجرك. يُرجى تسجيل FACES أولاً، ثم نشر Reels.\nالخطوات:\n1. افتح \"إدارة FACES\" من القائمة العلوية لشاشة إدارة المتجر.\n2. في \"تسجيل FACES جديد\"، أدخل الاسم (اسم النشاط)، العمر، ونص التعريف PR، ثم قم بالتسجيل.\n3. افتح ملف FACES المسجل وقم بتعيين صورة الملف الشخصي (يمكن للشخص نفسه تعيينها من صفحة My Page). ستظهر هذه الصورة في شاشات مختلفة مثل الأيقونات الدائرية لـ FACES في صفحة متجرك.\n4. انقر على \"إصدار تسجيل الدخول\" تحت \"تسجيل الدخول لنشر Reels\" في نفس الشاشة.\n5. شارك رابط النشر المولد (أو رمز QR) ورمز PIN المكون من 6 أرقام مع شخص FACES (يُرجى إرسال الرابط ورمز PIN بطرق منفصلة؛ لا يمكن الدخول باستخدام URL فقط).\n6. بمجرد أن يفتح شخص FACES الرابط ويدخل رمز PIN، سيتمكن من الوصول إلى صفحة My Page الخاصة به ونشر Reels.\nإذا لم يتمكن الشخص من النشر بنفسه، يمكن للمتجر النشر نيابة عنه. يُرجى النشر من \"FACES Reels\" في شاشة إدارة FACES.\nلإزالة شخص FACES، قم بحذفه من قائمة FACES (يمكن استعادته خلال 30 يومًا من المغادرة). إذا نسيت كلمة المرور أو رمز PIN، قم بإنشاء رمز جديد عبر \"إصدار تسجيل الدخول\" (إعادة إصدار)."
+    }
+  },
+  "shop-admin-ids": {
+    "source_hash": "2ff1175c83ac858e251f6ed7aebbe30e",
+    "source_lang": "ja",
+    "en": {
+      "title": "Adding Admin IDs (Owner Only, Up to 5 People)",
+      "body": "In \"Admin ID\" on the store management screen, you can add IDs that can access this store's management screen (up to 5 people per store). Only \"Owner\" IDs can add or delete users; added \"Admin\" IDs do not have this authority.\nTo add an admin, enter an email address (auto-generated if left blank) and password (auto-generated if left blank), then click \"Issue Admin ID\". The ID and password displayed immediately after generation are shown on that screen only, so be sure to note them down and pass them on to the person.\nAdmin and Owner IDs can also use the same My Page as staff (editing profile photo and name, posting Reels, etc.) from \"My Page\" in the menu. A personal profile will be created the first time it is opened.\nAdmins who are no longer needed can be removed by clicking \"Remove\". Owner IDs cannot be removed from this screen (if changes are needed, please contact management)."
+    },
+    "zh": {
+      "title": "添加管理员ID（仅限业主·最多5人）",
+      "body": "在店铺管理界面的“管理员ID”中，可以增加能够进入该店铺管理界面的ID（每家店铺最多5人）。只有“业主”ID具有添加和删除的权限，添加的“管理员”ID不具备该权限。\n添加时，输入电子邮箱（留空则自动生成）和密码（留空则自动生成），然后点击“生成管理员ID”。生成后即刻显示的ID和密码仅在该界面展示一次，请务必记录并告知本人。\n管理员和业主ID也可以通过菜单中的“个人主页”，使用与员工相同的个人主页（编辑头像照片与姓名、发布Reel等）。首次打开时将自动创建本人资料。\n不再使用的管理员可以通过点击“解除”进行删除。业主ID无法在此界面解除（如需变更，请联系运营人员）。"
+    },
+    "ar": {
+      "title": "إضافة معرفات المسؤول Admin ID (للمالك فقط - 5 أفراد كحد أقصى)",
+      "body": "من خلال \"معرف المسؤول Admin ID\" في شاشة إدارة المتجر، يمكنك زيادة عدد المعرفات التي يمكنها الدخول إلى شاشة إدارة هذا المتجر (بحد أقصى 5 أفراد لكل متجر). فقط معرف \"المالك\" هو من يملك صلاحية الإضافة والحذف، ولا تتوفر هذه الصلاحية للمعرفات المضافة بصفة \"مسؤول Admin\".\nعند الإضافة، أدخل البريد الإلكتروني (سيتم إنشاؤه تلقائيًا إذا ترك فارغًا) وكلمة المرور (ستنشأ تلقائيًا إذا تركت فارغة)، ثم انقر على \"إصدار معرف المسؤول Admin ID\". المعرف وكلمة المرور اللذان يظهران فور الإصدار يتم عرضهما على تلك الشاشة فقط، لذا يرجى كتابتهما وإبلاغ الشخص بهما.\nيمكن للمسؤولين والمالكين أيضًا استخدام صفحة My Page نفسها مثل الموظفين (تعديل صورة الملف الشخصي والاسم، ونشر Reels، إلخ) من خيار \"My Page\" في القائمة. سيتم إنشاء الملف الشخصي في المرة الأولى التي يتم فيها فتحه.\nيمكن حذف المسؤولين الذين لم تعد هناك حاجة إليهم بالنقر على \"إزالة\". لا يمكن إزالة معرف المالك من هذه الشاشة (إذا كانت التغييرات مطلوبة، يرجى الاتصال بالإدارة)."
+    }
+  },
+  "shop-youtube": {
+    "source_hash": "d25ee526074a6ff1eb75a649e2e618c1",
+    "source_lang": "ja",
+    "en": {
+      "title": "Adding YouTube videos to your shop page",
+      "body": "Enter a video URL starting with watch?v=…, youtu.be/…, or shorts/… into \"YouTube Video (Optional)\" under \"Shop Info\" in the shop management dashboard and save. A \"Video Introduction\" section will then appear on your shop page. The video plays directly within the page and reverts to the thumbnail when finished. This prevents customers from navigating away, and videos with music can also be played as is.\nIf you save with the field left blank, \"Video Introduction\" will disappear from your shop page. You can display 1 video.\nPlease post only videos from your own account or videos you have the rights to use. Videos set to private by the publisher or YouTube videos that do not allow embedding cannot be played (please check that \"Allow embedding\" is enabled in the YouTube video settings)."
+    },
+    "zh": {
+      "title": "在店铺页面添加YouTube视频",
+      "body": "在店铺管理后台“店铺信息”中的“YouTube视频（可选）”中填入 watch?v=…、youtu.be/… 或 shorts/… 的任意视频URL并保存，店铺页面上就会显示“视频介绍”。视频会在页面内直接播放，播放结束后恢复为缩略图。这样不易导致顾客离开页面，带有音乐的视频也可以直接播放。\n清空并保存后，“视频介绍”将从店铺页面中消失。可上传的视频为1条。\n请仅发布您自己账号的视频或拥有相应权限的视频。发布者设置为不公开的视频或未允许嵌入的YouTube视频将无法播放（请在YouTube视频设置中确认“允许嵌入”）。"
+    },
+    "ar": {
+      "title": "إضافة فيديو يوتيوب إلى صفحة المتجر",
+      "body": "أدخل رابط فيديو يبدأ بـ watch?v=… أو youtu.be/… أو shorts/… في حقل \"فيديو يوتيوب (اختياري)\" ضمن \"معلومات المتجر\" في لوحة تحكم إدارة المتجر ثم احفظ، وسيظهر قسم \"فيديو تعريفي\" على صفحة متجرك. يتم تشغيل الفيديو مباشرة داخل الصفحة، وعند انتهائه يعود إلى الصورة المصغرة. يساعد هذا في منع المغادرة، كما يمكن تشغيل الفيديوهات التي تحتوي على موسيقى كما هي.\nإذا تركت الحقل فارغًا وحفظت، سيختفي \"فيديو تعريفي\" من صفحة المتجر. يمكنك إضافة فيديو واحد فقط.\nيرجى إضافة الفيديوهات الخاصة بحسابك فقط أو الفيديوهات التي تمتلك حقوق استخدامها. لا يمكن تشغيل الفيديوهات التي جعلها الناشر خاصة أو فيديوهات يوتيوب التي لا تسمح بالتضمين (تحقق من إعداد \"سماح بالتضمين\" في إعدادات فيديو يوتيوب)."
+    }
+  },
+  "shop-post": {
+    "source_hash": "26bd11a8674d7e015409d29a0afd85d3",
+    "source_lang": "ja",
+    "en": {
+      "title": "How to post Reels (Regular Posts)",
+      "body": "Post photos and videos from \"Reel Posts\" in the shop management dashboard. Posts will appear in the top feed and area feed. You can also quickly access this screen from the \"Regular Post\" button at the top of My Page."
+    },
+    "zh": {
+      "title": "如何发布Reels（普通动态）",
+      "body": "在店铺管理后台的“Reels发布”中发布照片和视频。发布的内容将显示在首页及区域动态流中。您也可以通过个人主页顶部的“普通动态”按钮快速进入此页面。"
+    },
+    "ar": {
+      "title": "كيفية نشر الريلز (المشاركات العادية)",
+      "body": "انشر الصور والفيديوهات من \"منشورات الريلز\" في لوحة تحكم إدارة المتجر. ستظهر منشوراتك في الصفحة الرئيسية وخلاصة المنطقة. يمكنك أيضًا الوصول إلى هذه الشاشة بسرعة من زر \"منشور عادي\" في أعلى صفحتي."
+    }
+  },
+  "shop-boost": {
+    "source_hash": "9701dc0cb4cbc0ede53419e30a8fe90f",
+    "source_lang": "ja",
+    "en": {
+      "title": "How to post an Emergency Boost",
+      "body": "This feature allows you to instantly post time-limited special offers for 1 to 3 hours when you have last-minute cancellations or made too many products. Access it from \"Boost Post\" at the top of My Page or \"⚡ Boost\" in the shop management dashboard.\nInput fields: Title (Required, 80 characters), Detailed message (Required, 600 characters), Discount/Perk tag (Optional. Button or custom text, 20 characters), Photo (Optional. Uses shop cover photo if not set), Display duration (Select from 1, 2, or 3 hours; default is 1 hour).\nClicking \"⚡ Launch Emergency Boost\" will immediately publish it to /boost. The display duration will be the time selected at launch and cannot be changed later. Up to 3 active boosts per shop can be published simultaneously.\nActive boosts can be ended early using \"End Now\" (such as when all seats become full). Content cannot be edited, so if you make a mistake, please end it and post again.\nCustomers visit your shop without advance payment and state \"I saw locapass\". \"LINE Reservation\", \"Phone Reservation\", and \"Get Directions\" on the card are displayed based on the phone number, LINE, and location registered in Shop Info. They will not appear if not registered (please register them in Shop Info)."
+    },
+    "zh": {
+      "title": "如何发布紧急提速（Emergency Boost）",
+      "body": "当遇到临时取消或商品制作过多时，此功能可让您立即发布1～3小时限时的优惠信息。可通过个人主页顶部的“提速发布”或店铺管理后台的“⚡提速”进入。\n输入项目：标题（必填，80字）、详细信息（必填，600字）、折扣/优惠标签（可选。按钮或自由输入，20字）、照片（可选。未设置时显示店铺封面图）、发布时间（可选1、2、3小时，默认1小时）。\n点击“⚡ 发射紧急提速”后，将立即发布至 /boost。发布时间为发射时选择的时间，事后无法修改。同一家店铺最多可同时发布3条。\n发布中的提速可通过“立即结束”提前终止（例如满座时）。由于无法修改内容，如有错误请终止后重新发布。\n顾客将在无需预付的情况下到店，并告知“我看了locapass”。卡片上的“LINE预约”、“电话预约”、“前往店家”是根据店铺信息中注册的电话号码、LINE和位置自动生成的。未注册则不显示（请在店铺信息中进行注册）。"
+    },
+    "ar": {
+      "title": "كيفية إطلاق التعزيز الطارئ (Emergency Boost)",
+      "body": "تتيح لك هذه الميزة نشر عروض خاصة لفترة محدودة من 1 إلى 3 ساعات على الفور عند حدوث إلغاءات مفاجئة أو فائض في المنتجات. يمكنك الوصول إليها من \"منشور التعزيز\" في أعلى صفحتي، أو من \"⚡ التعزيز\" في لوحة تحكم إدارة المتجر.\nالمدخلات: العنوان (إلزامي، 80 حرفًا)، الرسالة التفصيلية (إلزامية، 600 حرف)، بطاقة الخصم/الميزة (اختياري. إما زر أو نص حر، 20 حرفًا)، الصورة (اختياري. إذا لم تُحدد ستُستخدم صورة غلاف المتجر)، مدة العرض (اختر من بين 1، 2، 3 ساعات، الافتراضي هو ساعة واحدة).\nعند الضغط على \"⚡ إطلاق التعزيز الطارئ\"، سيتم النشر فورًا على /boost. ستكون مدة العرض هي الوقت المحدد عند الإطلاق ولا يمكن تغييرها لاحقًا. يمكن نشر ما يصل إلى 3 تعزيزات نشطة في نفس الوقت لكل متجر.\nيمكن إنهاء التعزيزات النشطة مبكرًا باستخدام \"إنهاء الآن\" (على سبيل المثال عند امتلاء المقاعد). لا يمكن تعديل المحتوى، لذا إذا ارتكبت خطأً، يُرجى الإنهاء ثم النشر من جديد.\nسيصل العملاء إلى متجرك دون دفع مسبق ويقولون \"لقد شاهدت locapass\". تظهر أزرار \"حجز عبر LINE\" و\"حجز هاتفي\" و\"الانتقال إلى المتجر\" في البطاقة بناءً على رقم الهاتف وLINE والموقع المسجل في معلومات المتجر. لن تظهر إذا لم تكن مسجلة (يُرجى تسجيلها في معلومات المتجر)."
+    }
+  },
+  "shop-reserve": {
+    "source_hash": "49d9e7125628fed836cbcb2512370524",
+    "source_lang": "ja",
+    "en": {
+      "title": "How to Accept and Use Priority Reservations",
+      "body": "Priority Reservation is a feature available to stores on paid listing plans after management enables public settings. Manage it on the \"Priority Reservation\" screen.\n・Awaiting Response: Customer reservation requests arrive here. Tap \"Accept (Confirm)\" to confirm with one tap, or \"Decline\" to release the customer's slot (0 yen charged). You can also include a short message. If there is no response within 12 hours, it will be automatically declined. If you need to adjust the time, please contact the phone number on the screen directly.\n・Cancellation Policy: Each store can set the \"Deadline for free customer cancellation\" (up to 1, 3, 6, 12, 24, or 48 hours before the visit, or up to the visit time). Customer cancellations after the deadline will be sent to \"Last-minute Cancellation Decision\".\n・One-Tap Decision: You can choose \"No Charge (Generous Response)\" or \"Charge Cancellation Fee\". If the customer contacts you in advance by phone, etc., you can make the same decision from \"When Contacted by Customer\" under confirmed reservations.\n・After Reservation Time Passes: Press \"Visited\" (0 yen charged) or \"No-Show\" (Charge Deposit). If no action is taken for 24 hours, it will be automatically released as a visit (no charge will be made automatically).\n・Deposit: 500 yen per person, up to 5,000 yen. Charged deposits (minus a handling fee of approx. 3.6%) will be added to your on-screen balance and deducted from monthly usage fee billings in subsequent months (no bank transfers).\n・Customers whose charges fail will not be able to make reservations thereafter."
+    },
+    "zh": {
+      "title": "优先预约的接单与使用方法",
+      "body": "优先预约是付费刊登计划的店家在运营方完成公开设置后可使用的功能。请在“优先预约”页面进行操作。\n・等待回复：收到客人的预约请求。点击“接受（确认）”进行一键确认，点击“拒绝”释放客人的名额（收费0日元）。还可以附上一句话留言。如果12小时内未回复，系统将自动拒绝。如需调整时间，请直接拨打页面上的电话号码联系。\n・取消政策：每个店家均可设置“客人可免费取消的期限”（到店前1、3、6、12、24、48小时，或截至到店时间）。超越期限后的客人取消将转至“临近取消的判断”。\n・一键判断：可以选择“不收费（贴心处理）”或“收取取消费”。如果客人事先通过电话等方式联系了您，也可以在已确认预约的“收到客人联系时”进行同样的判断。\n・超过预约时间后：点击“已到店”（收费0日元）或“无故取消”（收取押金）。如果24小时内未进行操作，将作为已到店自动释放（不会自动扣费）。\n・押金：每人500日元，上限5,000日元。所收取的押金扣除支付手续费（约3.6%）后的金额将计入页面余额，并从次月起的手续费/月费账单中扣减（不会进行银行转账）。\n・扣款失败的客人今后将无法再进行预约。"
+    },
+    "ar": {
+      "title": "كيفية قبول واستخدام الحجوزات الأولوية",
+      "body": "الحجز الأولي هو ميزة متاحة للمتاجر المسجلة في خطط الإدراج المدفوعة بعد أن تقوم الإدارة بضبط إعدادات النشر. يتم تشغيلها من شاشة \"الحجز الأولي\".\n・في انتظار الرد: تصلك طلبات حجز العملاء. يمكنك التأكيد بلمسة واحدة عبر \"قبول (تأكيد)\"، أو إخلاء خانة العميل عبر \"رفض\" (الرسوم 0 ين). يمكنك أيضًا إرفاق رسالة قصيرة. إذا لم يتم الرد خلال 12 ساعة، سيتم الرفض تلقائيًا. إذا كنت بحاجة إلى تعديل الوقت، يرجى الاتصال مباشرة برقم الهاتف الظاهر على الشاشة.\n・سياسة الإلغاء: يمكن لكل متجر تحديد \"الموعد النهائي للإلغاء المجاني للعميل\" (حتى 1، 3، 6، 12، 24، 48 ساعة قبل الزيارة، أو حتى وقت الزيارة). الإلغاءات من العملاء بعد الموعد النهائي ستصل إلى \"قرار الإلغاء في اللحظة الأخيرة\".\n・قرار بلمسة واحدة: يمكنك اختيار \"بدون رسوم (معاملة ممتازة)\" أو \"تحصيل رسوم الإلغاء\". إذا اتصل بك العميل مسبقًا عبر الهاتف أو غيره، يمكنك إجراء نفس القرار من قسم \"في حالة تواصل العميل\" للحجوزات المؤكدة.\n・بعد انقضاء وقت الحجز: اضغط على \"حضر\" (الرسوم 0 ين) أو \"إلغاء دون إشعارات\" (تحصيل الوديعة). إذا لم تقم بأي إجراء خلال 24 ساعة، سيتم إخلاء الحجز تلقائيًا كزيارة (لن يتم تحصيل الرسوم تلقائيًا).\n・الوديعة: 500 ين للشخص الواحد، بحد أقصى 5,000 ين. سيتم إضافة مبلغ الوديعة المحصل مطروحًا منه رسوم الدفع (حوالي 3.6%) إلى الرصيد الموضح على الشاشة، وسيتم خصمه من فواتير رسوم الاستخدام الشهرية اعتبارًا من الشهر التالي (لا يوجد تحويل بنكي).\n・العملاء الذين تفشل عملية تحصيل الرسوم منهم لن يتمكنوا من الحجز بعد ذلك."
+    }
+  }
+}

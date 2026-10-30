@@ -3,6 +3,10 @@
  * 機能を追加・変更したら、同じ変更の中でここも更新すること(マニュアルを別に書かない運用)。
  *   audience: "user"=一般のお客様 / "shop"=店舗の管理者(管理権限を持つ人にだけ見せる)
  */
+import type { Locale } from "@/lib/i18n/locale";
+import { translationSourceHash, type StoredTranslations } from "@/lib/i18n/contentTranslation";
+import TRANSLATIONS from "./docs.i18n.json";
+
 export type SupportDoc = { id: string; audience: "user" | "shop"; title: string; path?: string; body: string };
 
 export const SUPPORT_DOCS: SupportDoc[] = [
@@ -196,6 +200,18 @@ FACESを外すときは、FACES一覧から削除します(退店から30日以�
   },
 ];
 
-export function docsFor(audiences: ("user" | "shop")[]): SupportDoc[] {
-  return SUPPORT_DOCS.filter((d) => audiences.includes(d.audience));
+export function docsFor(audiences: ("user" | "shop")[], locale: Locale = "ja"): SupportDoc[] {
+  return SUPPORT_DOCS.filter((d) => audiences.includes(d.audience)).map((d) => localizeDoc(d, locale));
+}
+
+/**
+ * 表示言語の機能カードにする。日本語が原本で、他言語は scripts/translate-support-docs.ts が
+ * docs.i18n.json に作った翻訳。日本語が変わって翻訳が古いカード・翻訳が無いカードは、日本語のまま出す。
+ */
+function localizeDoc(doc: SupportDoc, locale: Locale): SupportDoc {
+  if (locale === "ja") return doc;
+  const stored = (TRANSLATIONS as Record<string, StoredTranslations | undefined>)[doc.id];
+  const translated = stored?.[locale];
+  if (!stored || !translated || stored.source_hash !== translationSourceHash({ title: doc.title, body: doc.body })) return doc;
+  return { ...doc, title: translated.title ?? doc.title, body: translated.body ?? doc.body };
 }

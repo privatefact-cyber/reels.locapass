@@ -5,21 +5,23 @@
 import { geminiLiteGenerateContentUrl } from "@/lib/gemini";
 import type { Cue } from "./transcribe";
 
-export type CaptionLang = "ja" | "en" | "zh";
-export const CAPTION_LANGS: CaptionLang[] = ["ja", "en", "zh"];
+export type CaptionLang = "ja" | "en" | "zh" | "ar";
+export const CAPTION_LANGS: CaptionLang[] = ["ja", "en", "zh", "ar"];
 export type AvoidZone = "none" | "top" | "middle" | "bottom";
 
 const LANG_LABEL: Record<CaptionLang, string> = {
   ja: "natural Japanese",
   en: "natural English",
   zh: "Simplified Chinese",
+  ar: "Modern Standard Arabic",
 };
 
-/** Whisperが返す言語名 → 字幕の言語コード(3言語以外はnull)。 */
+/** Whisperが返す言語名 → 字幕の言語コード(4言語以外はnull)。 */
 export function sourceLangCode(whisperLanguage: string): CaptionLang | null {
   if (whisperLanguage.startsWith("japan")) return "ja";
   if (whisperLanguage.startsWith("english")) return "en";
   if (whisperLanguage.startsWith("chinese")) return "zh";
+  if (whisperLanguage.startsWith("arabic")) return "ar";
   return null;
 }
 
@@ -63,8 +65,9 @@ export async function translateCues(
     "Rules:",
     "- Return ONLY JSON: {" + shape + "}. Each value is an array of strings with EXACTLY the same number of items, in the same order, as the input lines.",
     "- Keep every line short and natural for on-screen subtitles. Do not merge or split lines.",
-    "- Do not translate proper nouns (shop names, brand names, people's names); in English write Japanese names in romaji.",
-    "- Keep numbers, times and prices exactly. 円 is \"yen\" in English, \"日元\" in Chinese.",
+    "- Do not translate proper nouns (shop names, brand names, people's names); in English write Japanese names in romaji; in Arabic write them in Latin letters.",
+    "- The spoken language may be any language; translate it naturally for a native reader, not word for word.",
+    "- Keep numbers, times and prices exactly. 円 is \"yen\" in English, \"日元\" in Chinese, \"ين\" in Arabic (Western digits 0-9).",
     "- Do not add information that is not in the line.",
     hint.shopName ? `Shop name (keep as is): ${hint.shopName}` : "",
     "",

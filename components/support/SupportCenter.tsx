@@ -36,9 +36,9 @@ export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user
         body: JSON.stringify({ message: q, history, path: "/support", audience }),
       });
       const data = await res.json();
-      setMsgs((p) => [...p, { role: "ai", text: data?.reply ?? "エラーが発生しました。", links: data?.links, unanswered: data?.answered === false, question: q, qid: data?.qid ?? null }]);
+      setMsgs((p) => [...p, { role: "ai", text: data?.reply ?? t.error, links: data?.links, unanswered: data?.answered === false, question: q, qid: data?.qid ?? null }]);
     } catch {
-      setMsgs((p) => [...p, { role: "ai", text: "通信に失敗しました。もう一度お試しください。" }]);
+      setMsgs((p) => [...p, { role: "ai", text: t.netError }]);
     } finally {
       setLoading(false);
       setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 50);
@@ -59,7 +59,7 @@ export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user
     }
   }
 
-  const samples = SAMPLE_QUESTIONS[audience];
+  const samples = SAMPLE_QUESTIONS[locale][audience];
   const shown = docs.filter((d) => d.audience === audience);
 
   return (
@@ -163,8 +163,8 @@ export function SupportCenter({ docs, audience }: { docs: Doc[]; audience: "user
         <div className="space-y-2">
           {shown.map((d) => (
             <details key={d.id} className="rounded-xl border border-main/10 bg-tone-900/60 px-3 py-2.5">
-              <summary className="cursor-pointer text-sm font-bold">{d.title}</summary>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">{d.body}</p>
+              <summary dir="auto" className="cursor-pointer text-sm font-bold">{d.title}</summary>
+              <p dir="auto" className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">{d.body}</p>
             </details>
           ))}
         </div>

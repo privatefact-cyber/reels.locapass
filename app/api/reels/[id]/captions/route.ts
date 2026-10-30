@@ -4,9 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import { ALLOWED_VIDEO_PREFIX, runCaptionPipeline } from "@/lib/reels/captions/pipeline";
 import { claimAndRunTags } from "@/lib/reels/tags/pipeline";
+import { CAPTION_LANGS, type CaptionLang } from "@/lib/reels/captions/translate";
 
 // 文字起こし+翻訳は1本10〜20秒ほど。レスポンスを返した後に裏で走らせる(after)。
 export const maxDuration = 60;
+
+function isCaptionLang(value: unknown): value is CaptionLang {
+  return typeof value === "string" && (CAPTION_LANGS as string[]).includes(value);
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** 1日(UTC日付)に処理する本数の上限(課金事故を防ぐサーキットブレーカー)。環境変数で変えられる。 */
@@ -49,7 +54,7 @@ const MAX_CUE_CHARS = 120;
 
 /**
  * 字幕の文言を直す(投稿者本人/店舗スタッフ)。時刻は変えられず、台詞の件数も変えられない(同じ件数で文言だけ差し替える)。
- * body: { lang: "ja"|"en"|"zh", texts: string[] }
+ * body: { lang: "ja"|"en"|"zh"|"ar", texts: string[] }
  */
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -59,7 +64,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const body = (await req.json().catch(() => null)) as { lang?: string; texts?: unknown } | null;
   const lang = body?.lang;
-  if (lang !== "ja" && lang !== "en" && lang !== "zh") return NextResponse.json({ error: "invalid lang" }, { status: 400 });
+  if (!isCaptionLang(lang)) return NextResponse.json({ error: "invalid lang" }, { status: 400 });
   if (!Array.isArray(body?.texts) || !body.texts.every((t) => typeof t === "string")) {
     return NextResponse.json({ error: "invalid texts" }, { status: 400 });
   }
@@ -164,19 +169,19 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 }
 
 /**
- * 字幕を返す(再生画面が呼ぶ)。?lang=ja|en|zh。公開されているリールなら誰でも読める(RLSがそのまま効く)。
+ * 字幕を返す(再生画面が呼ぶ)。?lang=ja|en|zh|ar。公開されているリールなら誰でも読める(RLSがそのまま効く)。
  * CDNに5分キャッシュさせ、再生のたびに関数が動かないようにする。
  */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!UUID_RE.test(id)) return NextResponse.json({ cues: [] }, { status: 400 });
   const lang = new URL(req.url).searchParams.get("lang");
-  if (lang !== "ja" && lang !== "en" && lang !== "zh") return NextResponse.json({ cues: [] }, { status: 400 });
+  if (!isCaptionLang(lang)) return NextResponse.json({ cues: [] }, { status: 400 });
 
   const db = createStaticClient() as unknown as SupabaseClient;
   const [captions, reel] = await Promise.all([
     db.from("locapass_reel_captions").select("cues").eq("reel_id", id).eq("lang", lang).maybeSingle(),
-    db.from("locapass_reels").select("caption_avoid_zone").eq("id", id).maybeSingle(),
+    db.from("locapass_reels").select("caption_avoid_zone, caption_source_lang").eq("id", id).maybeSingle(),
   ]);
 
   const cues = Array.isArray(captions.data?.cues) ? captions.data.cues : [];
@@ -185,6 +190,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       cues,
       // 動画に焼き込み字幕がある位置(none/top/middle/bottom)。テロップはこれを避けて置く。
       zone: reel.data?.caption_avoid_zone ?? "none",
+      // 動画の音声の言語。焼き込み字幕と同じ言語の字幕だけ、二重表示を避けるのに使う。
+      source: reel.data?.caption_source_lang ?? "ja",
     },
     {
       headers: {

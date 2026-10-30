@@ -1,5 +1,5 @@
 /**
- * リール1本分の字幕生成: 動画取得 → 文字起こし → 翻訳(英・中) → 焼き込み字幕の位置判定 → 保存。
+ * リール1本分の字幕生成: 動画取得 → 文字起こし → 翻訳(日・英・中・アラビア語) → 焼き込み字幕の位置判定 → 保存。
  * 投稿者のセッション付きSupabaseクライアントで書き込む(RLSが「自分のリールだけ」に絞る。service roleは使わない)。
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -59,7 +59,7 @@ export async function runCaptionPipeline(db: SupabaseClient, reel: ReelForCaptio
       return;
     }
 
-    // 元の言語が ja/en/zh ならそのまま保存し、足りない言語だけ翻訳する。それ以外の言語は3言語とも翻訳。
+    // 元の言語が ja/en/zh/ar ならそのまま保存し、足りない言語だけ翻訳する。それ以外の言語(韓国語等)は4言語とも翻訳。
     const source = sourceLangCode(transcription.language);
     const targets = CAPTION_LANGS.filter((l) => l !== source);
     const translated = await translateCues(transcription.cues, targets, { shopName: reel.shopName });
@@ -80,7 +80,7 @@ export async function runCaptionPipeline(db: SupabaseClient, reel: ReelForCaptio
     const { error } = await db.from("locapass_reel_captions").upsert(rows, { onConflict: "reel_id,lang" });
     if (error) throw new Error(`字幕の保存に失敗: ${error.message}`);
 
-    await setStatus("ready", { caption_avoid_zone: zone });
+    await setStatus("ready", { caption_avoid_zone: zone, caption_source_lang: source ?? "other" });
   } catch (cause) {
     console.error("[captions] pipeline failed", reel.id, cause);
     await setStatus("failed");

@@ -2,9 +2,8 @@ import type { Locale } from "@/lib/i18n/locale";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
 import type { ShopItem } from "@/lib/shop/items";
 
-/** 表示言語に合わせて、翻訳がある項目を差し替えたアイテムを返す(翻訳が無い項目は日本語のまま)。 */
+/** 表示言語に合わせて、翻訳がある項目を差し替えたアイテムを返す(翻訳が無い項目・原文と同じ言語の項目は原文のまま)。 */
 export function localizeItem(item: ShopItem, locale: Locale): ShopItem {
-  if (locale === "ja") return item;
   const pick = (original: string | null | undefined, key: string) =>
     original ? (pickTranslation(locale, original, item.translations, key).text ?? original) : original;
   const a = item.attributes ?? {};

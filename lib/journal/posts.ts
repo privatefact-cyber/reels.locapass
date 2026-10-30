@@ -1,5 +1,6 @@
 /**
- * LOCAPASS Journal(/journal)の記事の型と、本文の書式の変換。日本語のみ。
+ * LOCAPASS Journal(/journal)の記事の型と、本文の書式の変換。
+ * 書く言語は問わない(日本語でも英語でもよい)。他の表示言語へは、保存時に自動翻訳する(lib/journal/translate.ts)。
  * 記事そのものはデータベース(locapass_journal_posts)にあり、ルート管理者と「投稿担当」が画面から書く。
  *   topics … 新機能・お知らせ・開発のこぼれ話
  *   tips   … ちょっとしたコツ
@@ -31,6 +32,8 @@ export type JournalPost = {
   /** 記事の一番下に出す任意のリンク。url が空なら、何も出さない */
   link?: { url: string; label: string };
   status?: "draft" | "published";
+  /** 自動翻訳(lib/journal/translate.ts が作る)。表示の言語に合わせて localizeJournalPost で当てはめる */
+  translations?: unknown;
 };
 
 export const JOURNAL_CATEGORY_LABELS: Record<JournalCategory, string> = {
@@ -164,6 +167,7 @@ type PostRow = {
   published_on: string;
   link_url?: string | null;
   link_label?: string | null;
+  translations?: unknown;
 };
 
 export function rowToJournalPost(r: PostRow): JournalPost {
@@ -181,5 +185,6 @@ export function rowToJournalPost(r: PostRow): JournalPost {
       ? { link: { url: r.link_url, label: r.link_label?.trim() || JOURNAL_DEFAULT_LINK_LABEL } }
       : {}),
     status: r.status === "published" ? "published" : "draft",
+    ...(r.translations ? { translations: r.translations } : {}),
   };
 }

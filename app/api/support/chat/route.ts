@@ -59,7 +59,6 @@ const SUPPORT_URL = "https://locapass.net/support";
 const JOURNAL_URL = "https://locapass.net/journal";
 
 // 答えられないときの定型の案内。無理に答えず、読める場所(サポートページとJournal)のURLを渡す。
-// Journalは日本語の記事だけなので、他の言語でもそう添える。
 const FALLBACK: Record<string, { text: string; support: string; journal: string }> = {
   ja: {
     text: "その点は、こちらでは分かりかねます。\n詳しくは、サポートページか、Journalの記事をご覧ください。",
@@ -67,19 +66,19 @@ const FALLBACK: Record<string, { text: string; support: string; journal: string 
     journal: "Journal(使い方・お知らせ)",
   },
   en: {
-    text: "I'm sorry, I can't answer that here.\nPlease check the Support page or the Journal (articles are in Japanese) for details.",
+    text: "I'm sorry, I can't answer that here.\nPlease check the Support page or the Journal for details.",
     support: "Support page",
-    journal: "Journal (Japanese)",
+    journal: "Journal (guides & news)",
   },
   zh: {
-    text: "抱歉，这个问题我在这里无法回答。\n详细内容请查看“支持页面”或 Journal（文章为日语）。",
+    text: "抱歉，这个问题我在这里无法回答。\n详细内容请查看“支持页面”或 Journal 文章。",
     support: "支持页面",
-    journal: "Journal（日语）",
+    journal: "Journal（使用指南・公告）",
   },
   ar: {
-    text: "عذرًا، لا أستطيع الإجابة عن ذلك هنا.\nللتفاصيل، يُرجى الاطلاع على صفحة الدعم أو Journal (المقالات باليابانية).",
+    text: "عذرًا، لا أستطيع الإجابة عن ذلك هنا.\nللتفاصيل، يُرجى الاطلاع على صفحة الدعم أو مقالات Journal.",
     support: "صفحة الدعم",
-    journal: "Journal (باليابانية)",
+    journal: "Journal (الأدلة والأخبار)",
   },
 };
 

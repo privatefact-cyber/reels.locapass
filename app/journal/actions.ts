@@ -1,8 +1,10 @@
 "use server";
 
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { journalNeedsTranslation, translateJournalPost } from "@/lib/journal/translate";
 import { getJournalAccess } from "@/lib/journal/access";
 import {
   JOURNAL_RESERVED_SLUGS,
@@ -99,6 +101,27 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
   if (!result.data) return { ok: false, error: "保存できませんでした(記事が見つからないか、権限がありません)。" };
 
   refresh();
+
+  // 公開する記事は、他の表示言語へ自動翻訳する(保存の応答を待たせないよう、返事のあとに裏で行う)。
+  // 失敗しても記事は公開されたまま原文で読める(翻訳が付くまでは、閲覧者には原文が出る)。
+  if (input.status === "published") {
+    const postId = result.data.id as string;
+    after(async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const table = (supabase as any).from("locapass_journal_posts");
+        const { data: current } = await table.select("translations").eq("id", postId).maybeSingle();
+        const post = { title, description, lead: lead || undefined, cover: coverUrl ? { src: coverUrl, alt: row.cover_alt ?? "" } : undefined, link: row.link_url ? { url: row.link_url, label: row.link_label ?? "" } : undefined, body };
+        if (!journalNeedsTranslation(post, current?.translations)) return;
+        const translations = await translateJournalPost(post);
+        if (!translations) return;
+        const { data: saved } = await table.update({ translations }).eq("id", postId).select("id");
+        if (saved?.length) refresh();
+      } catch (e) {
+        console.error("Journalの翻訳に失敗しました:", e);
+      }
+    });
+  }
   return { ok: true, slug, status: input.status };
 }
 

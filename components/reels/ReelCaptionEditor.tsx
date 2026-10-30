@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 type Cue = { s: number; e: number; t: string };
-type Lang = "ja" | "en" | "zh";
+type Lang = "ja" | "en" | "zh" | "ar";
 const LANGS: { code: Lang; label: string }[] = [
   { code: "ja", label: "日本語" },
   { code: "en", label: "English" },
   { code: "zh", label: "中文" },
+  { code: "ar", label: "العربية" },
 ];
 
 function formatTime(sec: number): string {
@@ -158,6 +159,7 @@ function CaptionEditorModal({ reelId, onClose }: { reelId: string; onClose: () =
                     <span className="mt-2 w-9 shrink-0 text-[11px] tabular-nums text-slate-400">{formatTime(c.s)}</span>
                     <input
                       type="text"
+                      dir={lang === "ar" ? "rtl" : "ltr"}
                       value={draft[i] ?? c.t}
                       maxLength={120}
                       // 16px未満だとiPhoneで入力時に自動ズームされる。
