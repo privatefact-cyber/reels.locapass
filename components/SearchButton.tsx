@@ -20,6 +20,13 @@ export function SearchButton({ home = "/" }: { home?: string }) {
   const { t } = useLocale();
 
   function handleClick() {
+    // マイページの「投稿写真」を開いているときは、サイト全体の検索ではなく、自分の投稿を探す検索欄に移る。
+    const mine = typeof document !== "undefined" ? document.querySelector<HTMLInputElement>("input[data-my-posts-search]") : null;
+    if (pathname === "/mypage" && mine) {
+      mine.scrollIntoView({ block: "center", behavior: "smooth" });
+      mine.focus();
+      return;
+    }
     // homeは今いるポータルのトップ("/"=全体、"/mito"=子ポータル)。子ポータルでは検索対象もそのポータルに限るため、
     // 全体トップ("/")ではなくそのポータルのトップへ戻して開く。
     const inPlacePaths = [home, `${home === "/" ? "" : home}/events`];

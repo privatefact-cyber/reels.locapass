@@ -10,6 +10,7 @@ import { PhotoSpotList } from "@/components/photo/PhotoSpotList";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
 import { PhotoFullscreen } from "@/components/photo/PhotoFullscreen";
 import { PhotoDeleteButton } from "@/components/photo/PhotoDeleteButton";
+import { PhotoDownloadButton } from "@/components/photo/PhotoDownloadButton";
 import { PhotoVideo } from "@/components/photo/PhotoVideo";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -246,6 +247,7 @@ export function PhotoFeed({
                     setFullscreenIndex(null);
                   }}
                 />
+                <PhotoDownloadButton post={post} />
                 <PhotoShareButton post={post} />
                 <a
                   href={photoRouteUrl(post)}

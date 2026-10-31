@@ -376,6 +376,7 @@ export type Dictionary = {
     nearbyTitle: string;
     spotLabel: string;
     spotPlaceholder: string;
+    downloadVideo: string;
     extraShopsLabel: string;
     extraShopsHint: string;
     extraShopsPlaceholder: string;
@@ -830,6 +831,7 @@ const ja: Dictionary = {
     nearbyTitle: "近くの場所から選ぶ",
     spotLabel: "おすすめの場所・店名（必須）",
     spotPlaceholder: "例: 千波湖の桜並木",
+    downloadVideo: "動画を保存",
     extraShopsLabel: "ほかに紹介した店舗（任意）",
     extraShopsHint: "動画で複数の店を紹介したときは、紹介した店を追加すると、その店舗のページにもこの投稿が表示されます。",
     extraShopsPlaceholder: "店名で検索して追加（最大8件）",
@@ -1284,6 +1286,7 @@ const en: Dictionary = {
     nearbyTitle: "Pick a nearby place",
     spotLabel: "Place or shop name (required)",
     spotPlaceholder: "e.g. Cherry blossoms along the lake",
+    downloadVideo: "Download video",
     extraShopsLabel: "Other shops featured (optional)",
     extraShopsHint: "If your video features several shops, add them here and the post will also appear on each shop's page.",
     extraShopsPlaceholder: "Search by shop name to add (up to 8)",
@@ -1738,6 +1741,7 @@ const zh: Dictionary = {
     nearbyTitle: "从附近地点中选择",
     spotLabel: "推荐的地点/店名（必填）",
     spotPlaceholder: "例：湖畔的樱花道",
+    downloadVideo: "下载视频",
     extraShopsLabel: "其他介绍的店铺（选填）",
     extraShopsHint: "视频中介绍了多家店铺时，请在此添加，这条投稿也会显示在这些店铺的页面上。",
     extraShopsPlaceholder: "按店名搜索添加（最多8家）",
@@ -2193,6 +2197,7 @@ const ar: Dictionary = {
     nearbyTitle: "اختر مكانًا قريبًا",
     spotLabel: "اسم المكان أو المتجر (مطلوب)",
     spotPlaceholder: "مثال: أشجار الكرز بجانب البحيرة",
+    downloadVideo: "تنزيل الفيديو",
     extraShopsLabel: "متاجر أخرى تم تقديمها (اختياري)",
     extraShopsHint: "إذا قدّم الفيديو عدة متاجر، أضفها هنا وسيظهر المنشور أيضًا في صفحة كل متجر.",
     extraShopsPlaceholder: "ابحث باسم المتجر للإضافة (حتى 8)",
