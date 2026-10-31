@@ -319,7 +319,7 @@ export function ReelCard({
         </div>
       )}
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/30" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
 
       {/* 再生中は画像中央部タップで指定リンク先へ(投稿の任意URL、無ければ既定のリンク先)。
           この後に続くボタン類はDOM順で上に来るため、それぞれのタップは奪わない。 */}

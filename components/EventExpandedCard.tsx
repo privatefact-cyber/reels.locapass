@@ -47,7 +47,7 @@ export function EventExpandedCard({ event }: { event: PortalEvent }) {
       <div className="absolute inset-0 overflow-hidden rounded-2xl bg-tone-950">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={event.imageUrl} alt={event.title} loading="lazy" className="h-full w-full object-cover" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
         <div className="absolute inset-x-3 top-3 flex flex-wrap gap-2">
           {event.area && (
             <span className="rounded-full bg-black/50 px-2.5 py-1 text-[11px] font-semibold text-main backdrop-blur-sm">
