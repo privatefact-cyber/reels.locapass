@@ -49,7 +49,8 @@ async function main() {
   const files = ["aoyama_photo_6.jpg", "header_aoyama_pc.jpg", "aoyama_photo_2.jpg", "aoyama_photo_1_1004d4fe-270c-43c5-b6fb-38cc9b182505.jpg", "aoyama_photo_5.jpg"];
   const urls: string[] = [];
   for (const [i, f] of files.entries()) {
-    const path = `shops/${SLUG}/${i}-${f.replace(/[^a-z0-9._-]/gi, "")}`;
+    // パスに "/shops/" を含めない(sanitizeImageUrl が古いWP由来のURLとみなして画像を落とすため)。
+    const path = `${SLUG}/photo-${i}.jpg`;
     const { error } = await db.storage
       .from("locapass-portal-media")
       .upload(path, readFileSync(join(dir, f)), { contentType: "image/jpeg", upsert: true });
