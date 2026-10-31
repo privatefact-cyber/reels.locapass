@@ -18,6 +18,19 @@ const OPERATOR_NAME = "LOCAPASS運営";
 const RATE_LIMIT_PER_10MIN = 10;
 const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
+const MAX_EXTRA_SHOPS = 8;
+/** extra_shop_ids(店舗IDのJSON配列)を、形式の正しいIDだけ・重複なし・上限までに整える。 */
+function parseExtraShopIds(v: FormDataEntryValue | null): string[] {
+  if (typeof v !== "string" || !v) return [];
+  try {
+    const arr = JSON.parse(v) as unknown;
+    if (!Array.isArray(arr)) return [];
+    const ids = arr.filter((x): x is string => typeof x === "string" && /^[0-9a-f-]{36}$/i.test(x));
+    return Array.from(new Set(ids)).slice(0, MAX_EXTRA_SHOPS);
+  } catch {
+    return [];
+  }
+}
 const text = (v: FormDataEntryValue | null, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 /**
@@ -209,6 +222,21 @@ export async function POST(request: NextRequest) {
       .from("locapass_shop_photo_links")
       .upsert({ post_id: inserted.id, shop_id: lockedShop.id, mode: "attach", created_by: user.id }, { onConflict: "post_id,shop_id" });
     if (linkError) console.error("photo shop link failed", linkError);
+  }
+
+  // 動画で複数の店を紹介したときなど、投稿者が選んだ「ほかに紹介した店舗」(最大 MAX_EXTRA_SHOPS)。
+  // 実在する公開中の店舗だけを、その投稿の紹介店舗(attach)として結び付ける。結び付いた店舗のページにもこの投稿が出る。
+  // 店舗ページから投稿した(店舗に固定した)場合は受け付けない。
+  if (!lockedShop) {
+    const extraIds = parseExtraShopIds(form.get("extra_shop_ids"));
+    if (extraIds.length > 0) {
+      const { data: extraShops } = await admin.from("locapass_shops").select("id").in("id", extraIds).eq("status", "active");
+      const rows = (extraShops ?? []).map((s) => ({ post_id: inserted.id, shop_id: s.id, mode: "attach", created_by: user.id }));
+      if (rows.length > 0) {
+        const { error: extraError } = await (admin as any).from("locapass_shop_photo_links").upsert(rows, { onConflict: "post_id,shop_id" });
+        if (extraError) console.error("photo extra shop links failed", extraError);
+      }
+    }
   }
 
   // 場所名・一言・住所の自動翻訳は、投稿の返事を待たせないよう裏で行う(失敗しても投稿は成功のまま、原文で表示される)。

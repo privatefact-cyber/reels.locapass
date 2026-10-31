@@ -255,6 +255,11 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     : null;
   const [pick, setPick] = useState<Candidate | null>(presetPick);
   const [spotName, setSpotName] = useState(preset?.name ?? "");
+  // 動画で複数の店を紹介したときの「ほかに紹介した店舗」(最大8)。
+  const [extraShops, setExtraShops] = useState<{ id: string; name: string; area: string | null }[]>([]);
+  const [shopQuery, setShopQuery] = useState("");
+  const [shopHits, setShopHits] = useState<{ id: string; name: string; area: string | null; portalName: string | null }[]>([]);
+  const [shopSearched, setShopSearched] = useState(false);
   const [comment, setComment] = useState("");
   const [asOperator, setAsOperator] = useState(false);
   // AIが作った一言。入力欄にはプレースホルダーとして出し、空のまま投稿されたらこれを採用する。
@@ -286,6 +291,28 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [busy]);
+
+  // 店名の検索は、入力が止まってから(0.3秒)行う。
+  useEffect(() => {
+    const q = shopQuery.trim();
+    if (!q) {
+      setShopHits([]);
+      setShopSearched(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/photo/shops?q=${encodeURIComponent(q)}`);
+        if (!res.ok) return;
+        const data = (await res.json()) as { shops?: { id: string; name: string; area: string | null; portalName: string | null }[] };
+        setShopHits(data.shops ?? []);
+        setShopSearched(true);
+      } catch {
+        // 検索できなくても、投稿はできる。
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [shopQuery]);
 
   async function loadCandidates(c: { lat: number; lng: number }) {
     try {
@@ -514,6 +541,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
       if (pick.kind === "listed" && pick.venue_id) body.append("venue_id", pick.venue_id);
       if (pick.kind === "spot" && pick.place_id) body.append("place_id", pick.place_id);
     }
+    if (!locked && extraShops.length > 0) body.append("extra_shop_ids", JSON.stringify(extraShops.map((s) => s.id)));
     if (canOperator && asOperator) body.append("as_operator", "true");
     try {
       const res = await fetch("/api/photo/posts", { method: "POST", body });
@@ -684,6 +712,64 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
           <span className="text-xs text-tone-500">{t.photo.spotLabel}</span>
           <input value={spotName} onChange={(e) => setSpotName(e.target.value)} required maxLength={100} className={input} placeholder={t.photo.spotPlaceholder} />
         </label>
+      )}
+      {locked ? null : (
+        <div className="space-y-2">
+          <span className="text-xs text-tone-500">{t.photo.extraShopsLabel}</span>
+          <p className="text-[11px] text-tone-600">{t.photo.extraShopsHint}</p>
+          {extraShops.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {extraShops.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setExtraShops((cur) => cur.filter((x) => x.id !== s.id))}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-hl-400/60 px-3 py-1.5 text-xs text-main"
+                >
+                  {s.name}
+                  {s.area ? <span className="text-[10px] text-tone-500">{s.area}</span> : null}
+                  <span aria-hidden className="text-tone-400">×</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {extraShops.length < 8 ? (
+            <input
+              value={shopQuery}
+              onChange={(e) => setShopQuery(e.target.value)}
+              maxLength={40}
+              className={input}
+              placeholder={t.photo.extraShopsPlaceholder}
+            />
+          ) : (
+            <p className="text-[11px] text-tone-500">{t.photo.extraShopsMax}</p>
+          )}
+          {shopQuery.trim() && extraShops.length < 8 ? (
+            shopHits.length > 0 ? (
+              <ul className="divide-y divide-main/10 overflow-hidden rounded-xl border border-main/15">
+                {shopHits
+                  .filter((h) => !extraShops.some((s) => s.id === h.id))
+                  .map((h) => (
+                    <li key={h.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExtraShops((cur) => [...cur, { id: h.id, name: h.name, area: h.area ?? h.portalName }]);
+                          setShopQuery("");
+                        }}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-main hover:bg-main/5"
+                      >
+                        <span className="min-w-0 truncate">{h.name}</span>
+                        <span className="shrink-0 text-[10px] text-tone-500">{h.area ?? h.portalName ?? ""}</span>
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            ) : shopSearched ? (
+              <p className="text-[11px] text-tone-500">{t.photo.extraShopsNone}</p>
+            ) : null
+          ) : null}
+        </div>
       )}
       <label className="block space-y-1">
         <span className="text-xs text-tone-500">{t.photo.commentLabel}</span>

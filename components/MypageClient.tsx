@@ -10,7 +10,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StreamVideo } from "@/components/video/StreamVideo";
-import { ShopUserPhotoGrid } from "@/components/shop/ShopUserPhotoGrid";
+import { MyPostsLibrary } from "@/components/photo/MyPostsLibrary";
 import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
@@ -76,6 +76,7 @@ export function MypageClient({
   operatorShops = [],
   managementLinks = [],
   myPhotos = [],
+  portalNames = {},
   likedPhotos = [],
   showReservations = false,
 }: {
@@ -94,6 +95,8 @@ export function MypageClient({
   managementLinks?: { label: string; href: string }[];
   /** 自分が投稿した写真・動画(みんなのフォト)。新しい順。 */
   myPhotos?: PhotoPost[];
+  /** 街(ポータル)のスラッグ→表示名。投稿の「場所」ボタンに使う。 */
+  portalNames?: Record<string, string>;
   /** いいねした写真・動画(行きたい場所のストック)。いいねした新しい順。 */
   likedPhotos?: PhotoPost[];
   /** 優先予約の履歴リンクを出すか。 */
@@ -674,10 +677,7 @@ export function MypageClient({
               </Link>
             </div>
           ) : (
-            // タブ内は左右に余白があるので、画面端まで広げて格子にする。
-            <div className="-mx-4">
-              <ShopUserPhotoGrid posts={myPhotos} />
-            </div>
+            <MyPostsLibrary posts={myPhotos} portalNames={portalNames} />
           )
         )}
 

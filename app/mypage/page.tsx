@@ -135,7 +135,9 @@ export default async function MypagePage() {
   }
 
   // 自分が投稿した写真・動画(みんなのフォト)。取得に失敗してもマイページ全体は表示する。
-  const myPhotos = (await getMemberPhotos(user.id).catch(() => null))?.posts ?? [];
+  const myPhotos = (await getMemberPhotos(user.id, { all: true }).catch(() => null))?.posts ?? [];
+  const { data: portalRows } = await supabase.from("locapass_portals").select("slug, name");
+  const portalNames = Object.fromEntries((portalRows ?? []).map((p) => [p.slug, p.name]));
   // いいねした写真・動画(行きたい場所のストック)。
   const likedPhotos = await getLikedPosts(user.id).catch(() => []);
 
@@ -186,6 +188,7 @@ export default async function MypagePage() {
       postShops={postShops}
       managementLinks={managementLinks}
       myPhotos={myPhotos}
+      portalNames={portalNames}
       likedPhotos={likedPhotos}
       showReservations={showReservations}
       operatorShops={operatorShops}

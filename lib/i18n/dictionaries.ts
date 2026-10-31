@@ -248,6 +248,17 @@ export type Dictionary = {
     tabLikedPhotos: string;
     noLikedPhotos: string;
     unlikePhoto: string;
+    libSearchPlaceholder: string;
+    libAll: string;
+    libMonth: string;
+    libPlace: string;
+    libShop: string;
+    libTag: string;
+    libMore: string;
+    libNoResult: string;
+    libReset: string;
+    libNoPlace: string;
+    libCount: string;
     noSavedReels: string;
     noFollowedCasts: string;
     noFavoriteShops: string;
@@ -365,6 +376,11 @@ export type Dictionary = {
     nearbyTitle: string;
     spotLabel: string;
     spotPlaceholder: string;
+    extraShopsLabel: string;
+    extraShopsHint: string;
+    extraShopsPlaceholder: string;
+    extraShopsMax: string;
+    extraShopsNone: string;
     commentLabel: string;
     commentPlaceholder: string;
     asOperator: string;
@@ -686,6 +702,17 @@ const ja: Dictionary = {
     tabLikedPhotos: "いいね写真",
     noLikedPhotos: "いいね！した写真がここに保存されます。行きたい場所のストックに便利です。",
     unlikePhoto: "いいね解除",
+    libSearchPlaceholder: "店名・場所・タグ・一言で検索",
+    libAll: "すべて",
+    libMonth: "月",
+    libPlace: "場所",
+    libShop: "店舗",
+    libTag: "タグ",
+    libMore: "もっと見る",
+    libNoResult: "条件に合う投稿はありません",
+    libReset: "絞り込みをリセット",
+    libNoPlace: "場所なし",
+    libCount: "件",
     noSavedReels: "保存した動画はまだありません",
     noFollowedCasts: "フォロー中のFACESはまだいません",
     noFavoriteShops: "保存した店舗はまだありません",
@@ -803,6 +830,11 @@ const ja: Dictionary = {
     nearbyTitle: "近くの場所から選ぶ",
     spotLabel: "おすすめの場所・店名（必須）",
     spotPlaceholder: "例: 千波湖の桜並木",
+    extraShopsLabel: "ほかに紹介した店舗（任意）",
+    extraShopsHint: "動画で複数の店を紹介したときは、紹介した店を追加すると、その店舗のページにもこの投稿が表示されます。",
+    extraShopsPlaceholder: "店名で検索して追加（最大8件）",
+    extraShopsMax: "これ以上は追加できません（最大8件）",
+    extraShopsNone: "見つかりません",
     commentLabel: "ひとこと（任意）",
     commentPlaceholder: "どんな場所か、おすすめポイントなど",
     asOperator: "運営として投稿する（表示名: LOCAPASS運営）",
@@ -1124,6 +1156,17 @@ const en: Dictionary = {
     tabLikedPhotos: "Liked",
     noLikedPhotos: "Photos you like are saved here — handy for places you want to visit.",
     unlikePhoto: "Unlike",
+    libSearchPlaceholder: "Search shop, place, tag or comment",
+    libAll: "All",
+    libMonth: "Month",
+    libPlace: "Place",
+    libShop: "Shop",
+    libTag: "Tag",
+    libMore: "Show more",
+    libNoResult: "No posts match",
+    libReset: "Reset filters",
+    libNoPlace: "No place",
+    libCount: "posts",
     noSavedReels: "No saved reels yet.",
     noFollowedCasts: "You're not following any FACES yet.",
     noFavoriteShops: "No favorite shops yet.",
@@ -1241,6 +1284,11 @@ const en: Dictionary = {
     nearbyTitle: "Pick a nearby place",
     spotLabel: "Place or shop name (required)",
     spotPlaceholder: "e.g. Cherry blossoms along the lake",
+    extraShopsLabel: "Other shops featured (optional)",
+    extraShopsHint: "If your video features several shops, add them here and the post will also appear on each shop's page.",
+    extraShopsPlaceholder: "Search by shop name to add (up to 8)",
+    extraShopsMax: "You can add up to 8 shops",
+    extraShopsNone: "No shops found",
     commentLabel: "A few words (optional)",
     commentPlaceholder: "What's it like? Why do you recommend it?",
     asOperator: "Post as the operator (display name: LOCAPASS運営)",
@@ -1562,6 +1610,17 @@ const zh: Dictionary = {
     tabLikedPhotos: "喜欢",
     noLikedPhotos: "点赞的照片会保存在这里，方便收藏想去的地方。",
     unlikePhoto: "取消点赞",
+    libSearchPlaceholder: "按店名、地点、标签、文字搜索",
+    libAll: "全部",
+    libMonth: "月份",
+    libPlace: "地点",
+    libShop: "店铺",
+    libTag: "标签",
+    libMore: "查看更多",
+    libNoResult: "没有符合条件的投稿",
+    libReset: "重置筛选",
+    libNoPlace: "无地点",
+    libCount: "条",
     noSavedReels: "暂无已保存的帖子。",
     noFollowedCasts: "暂未关注任何FACES。",
     noFavoriteShops: "暂无收藏的店铺。",
@@ -1679,6 +1738,11 @@ const zh: Dictionary = {
     nearbyTitle: "从附近地点中选择",
     spotLabel: "推荐的地点/店名（必填）",
     spotPlaceholder: "例：湖畔的樱花道",
+    extraShopsLabel: "其他介绍的店铺（选填）",
+    extraShopsHint: "视频中介绍了多家店铺时，请在此添加，这条投稿也会显示在这些店铺的页面上。",
+    extraShopsPlaceholder: "按店名搜索添加（最多8家）",
+    extraShopsMax: "最多只能添加8家店铺",
+    extraShopsNone: "没有找到店铺",
     commentLabel: "一句话（选填）",
     commentPlaceholder: "这是个怎样的地方？有什么推荐理由？",
     asOperator: "以运营身份发布（显示名称：LOCAPASS运营）",
@@ -2001,6 +2065,17 @@ const ar: Dictionary = {
     "tabLikedPhotos": "المفضلة",
     "noLikedPhotos": "تُحفظ هنا الصور التي أعجبتك — مفيدة للأماكن التي تريد زيارتها.",
     "unlikePhoto": "إلغاء الإعجاب",
+    "libSearchPlaceholder": "ابحث بالمتجر أو المكان أو الوسم أو التعليق",
+    "libAll": "الكل",
+    "libMonth": "الشهر",
+    "libPlace": "المكان",
+    "libShop": "المتجر",
+    "libTag": "الوسم",
+    "libMore": "عرض المزيد",
+    "libNoResult": "لا توجد منشورات مطابقة",
+    "libReset": "إعادة ضبط التصفية",
+    "libNoPlace": "بدون مكان",
+    "libCount": "منشور",
     "noSavedReels": "لا توجد مقاطع محفوظة بعد.",
     "noFollowedCasts": "أنت لا تتابع أيًا من FACES بعد.",
     "noFavoriteShops": "لا توجد متاجر مفضلة بعد.",
@@ -2118,6 +2193,11 @@ const ar: Dictionary = {
     nearbyTitle: "اختر مكانًا قريبًا",
     spotLabel: "اسم المكان أو المتجر (مطلوب)",
     spotPlaceholder: "مثال: أشجار الكرز بجانب البحيرة",
+    extraShopsLabel: "متاجر أخرى تم تقديمها (اختياري)",
+    extraShopsHint: "إذا قدّم الفيديو عدة متاجر، أضفها هنا وسيظهر المنشور أيضًا في صفحة كل متجر.",
+    extraShopsPlaceholder: "ابحث باسم المتجر للإضافة (حتى 8)",
+    extraShopsMax: "يمكنك إضافة 8 متاجر كحد أقصى",
+    extraShopsNone: "لم يتم العثور على متاجر",
     commentLabel: "كلمة موجزة (اختياري)",
     commentPlaceholder: "كيف هو المكان؟ ولماذا تنصح به؟",
     asOperator: "النشر باسم المشغّل (الاسم المعروض: LOCAPASS运营)",

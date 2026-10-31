@@ -1,4 +1,4 @@
-import { resolvePostShops } from "@/lib/photo/resolvePostShops";
+import { resolvePostShopList, type PostShop } from "@/lib/photo/resolvePostShops";
 import { createStaticClient } from "@/lib/supabase/static";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
@@ -29,6 +29,8 @@ export type PhotoPost = {
   original: { lang: string; spotName: string; comment: string | null; address: string | null } | null;
   /** 掲載店の写真なら、その店舗ページへのリンク(店名をタップして店舗詳細へ飛ぶため)。 */
   shop: { name: string; href: string } | null;
+  /** 紹介している店舗すべて(複数店舗を紹介した動画用)。先頭が `shop`。マイページの店舗・エリア絞り込みに使う。 */
+  shops: PostShop[];
 };
 
 export type PhotoArea = { slug: string; name: string; nameEn: string | null };
@@ -44,6 +46,8 @@ export type PhotoProfile = {
 };
 
 export const PHOTO_PAGE_SIZE = 90;
+/** マイページの投稿ライブラリで取る投稿の上限(1人あたり)。 */
+export const MEMBER_PHOTO_MAX = 900;
 
 export const POST_COLUMNS =
   "id,member_id,user_name,avatar_url,image_url,latitude,longitude,address,spot_name,comment,tags,created_at,site,place_kind,place_id,place_name,venue_id,video_url,translations";
@@ -78,7 +82,7 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     const { data: likes } = await supabase.from("area_photo_likes").select("post_id").in("post_id", ids);
     for (const l of likes ?? []) likeCounts.set(l.post_id, (likeCounts.get(l.post_id) ?? 0) + 1);
   }
-  const shopByPost = await resolvePostShops(supabase, rows).catch(() => new Map());
+  const shopsByPost = await resolvePostShopList(supabase, rows).catch(() => new Map<string, PostShop[]>());
   // 閲覧者の言語に合わせて、場所名・一言・住所は翻訳があればそれを出す(無ければ原文)。
   const locale = await getServerLocale();
   const tr = (r: PostRow, original: string | null, key: string) => pickTranslation(locale, original, r.translations, key).text;
@@ -107,7 +111,8 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     videoUrl: r.video_url,
     likeCount: likeCounts.get(r.id) ?? 0,
     original: originalOf(r),
-    shop: shopByPost.get(r.id) ?? null,
+    shop: shopsByPost.get(r.id)?.[0] ? { name: shopsByPost.get(r.id)![0].name, href: shopsByPost.get(r.id)![0].href } : null,
+    shops: shopsByPost.get(r.id) ?? [],
   }));
 }
 
@@ -152,19 +157,31 @@ export async function getPhotoPosts(
 }
 
 /** 1人の会員の投稿とプロフィール(投稿数・もらったいいね・フォロワー数)。投稿が1件も無ければnull。 */
-export async function getMemberPhotos(memberId: string): Promise<{ profile: PhotoProfile; posts: PhotoPost[] } | null> {
+export async function getMemberPhotos(
+  memberId: string,
+  opts: { all?: boolean } = {},
+): Promise<{ profile: PhotoProfile; posts: PhotoPost[] } | null> {
   const supabase = createStaticClient();
 
-  const { data: rows, error } = await supabase
-    .from("area_photo_posts")
-    .select(POST_COLUMNS)
-    .eq("member_id", memberId)
-    .order("created_at", { ascending: false })
-    .limit(PHOTO_PAGE_SIZE);
-  if (error) throw error;
-  if (!rows || rows.length === 0) return null;
+  // all: マイページの投稿ライブラリ用。古い投稿まで全部(上限 MEMBER_PHOTO_MAX)を、PHOTO_PAGE_SIZE件ずつ取る
+  // (一度に取る件数が多いと、いいね数・店舗の紐づけを調べるURLが長くなりすぎるため)。
+  const total = opts.all ? MEMBER_PHOTO_MAX : PHOTO_PAGE_SIZE;
+  const rows: PostRow[] = [];
+  for (let from = 0; from < total; from += PHOTO_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("area_photo_posts")
+      .select(POST_COLUMNS)
+      .eq("member_id", memberId)
+      .order("created_at", { ascending: false })
+      .range(from, Math.min(from + PHOTO_PAGE_SIZE, total) - 1);
+    if (error) throw error;
+    rows.push(...((data ?? []) as PostRow[]));
+    if ((data ?? []).length < PHOTO_PAGE_SIZE) break;
+  }
+  if (rows.length === 0) return null;
 
-  const posts = await toPosts(supabase, rows as PostRow[]);
+  const posts: PhotoPost[] = [];
+  for (let i = 0; i < rows.length; i += PHOTO_PAGE_SIZE) posts.push(...(await toPosts(supabase, rows.slice(i, i + PHOTO_PAGE_SIZE))));
 
   const [{ count: followerCount }, { count: followingCount }, { count: postCount }] = await Promise.all([
     supabase.from("area_photo_follows").select("id", { count: "exact", head: true }).eq("followee_member_id", memberId),
