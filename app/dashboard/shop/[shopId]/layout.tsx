@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { path: "/reels", label: "リール投稿" },
   { path: "/photos", label: "写真の管理" },
   { path: "/boost", label: "⚡ブースト" },
+  { path: "/contract", label: "掲載プランの契約" },
   { path: "/reservations", label: "優先予約" },
   { path: "/messages", label: "お客様へのメッセージ" },
   { path: "/applicants", label: "応募者管理" },

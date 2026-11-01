@@ -62,6 +62,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               サポート質問
             </Link>
             <Link
+              href="/admin/billing"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+            >
+              掲載料・代理店
+            </Link>
+            <Link
               href="/admin/google-business"
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >
