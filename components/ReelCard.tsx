@@ -69,6 +69,8 @@ export type ReelCardProps = {
    * 全画面リールオーバーレイ(スマホ:100dvh、PC:h-[88vh]の枠いっぱい)で使う。
    */
   fullBleed?: boolean;
+  /** 渡すと、右の列の「全画面」が、全画面スワイプに入るボタンになる(全画面の中では、従来の動画の全画面に戻る)。 */
+  onEnterImmersive?: () => void;
   /** システム管理者が投稿したPR(広告)カード。いいね等のエンゲージメントUIを出さず、代わりにPRバッジを表示する。 */
   isAd?: boolean;
 };
@@ -98,6 +100,7 @@ export function ReelCard({
   isActive,
   containerRef,
   fullBleed = false,
+  onEnterImmersive,
   isAd = false,
 }: ReelCardProps) {
   const { t, locale } = useLocale();
@@ -223,7 +226,7 @@ export function ReelCard({
     <div data-surface="media"
       ref={containerRef}
       className={`relative w-full transform-gpu will-change-transform ${
-        fullBleed ? "h-full" : "aspect-[9/16] md:h-full md:w-auto"
+        fullBleed ? "h-full md:aspect-[9/16] md:w-auto" : "aspect-[9/16] md:h-full md:w-auto"
       }`}
     >
       {/* 動画/画像そのものはここでrounded+overflow-hiddenにして角を切る。
@@ -343,14 +346,14 @@ export function ReelCard({
             setMuted(!muted);
           }}
           aria-label={muted ? t.common.unmute : t.common.mute}
-          className="pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
+          className={`pointer-events-auto absolute right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm ${fullBleed ? "top-[calc(0.75rem+env(safe-area-inset-top))]" : "top-3"}`}
         >
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
       )}
 
       {isAd && (
-        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-hl-400/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-on-accent">
+        <span className={`pointer-events-none absolute rounded-full bg-hl-400/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-on-accent ${fullBleed ? "left-14 top-[calc(1rem+env(safe-area-inset-top))]" : "left-3 top-3"}`}>
           PR
         </span>
       )}
@@ -361,7 +364,7 @@ export function ReelCard({
 
       {/* 右下: アイコン(プロフィールへ)・いいね・コメント・シェア (TikTok同様の並び)。
           PC(md以上)では動画の外側(右)に配置し、映像に被らないようにする。 */}
-      <div className="pointer-events-auto absolute bottom-24 right-3 flex flex-col items-center gap-5 text-main md:bottom-28 md:right-[-64px]">
+      <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main md:right-[-64px] ${fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
         <div className="relative">
           <AvatarPeek
             href={profileUrl}
@@ -411,16 +414,29 @@ export function ReelCard({
             {commentsCount != null && <span className="text-[11px] drop-shadow">{commentsCount}</span>}
           </button>
         )}
-        {videoUrl && isActive && (
+        {onEnterImmersive && !fullBleed ? (
+          // 通常の一覧のとき: 全画面スワイプに入る(写真の投稿でも出る)。動画の全画面(横向き)は、全画面スワイプの中に出る。
           <button
             type="button"
-            onClick={handleFullscreen}
+            onClick={onEnterImmersive}
             aria-label={t.common.fullscreen}
             className="flex flex-col items-center gap-1"
           >
             <Maximize size={24} />
             <span className="text-[11px] drop-shadow">{t.common.fullscreen}</span>
           </button>
+        ) : (
+          videoUrl && isActive && (
+            <button
+              type="button"
+              onClick={handleFullscreen}
+              aria-label={t.common.fullscreen}
+              className="flex flex-col items-center gap-1"
+            >
+              <Maximize size={24} />
+              <span className="text-[11px] drop-shadow">{t.common.fullscreen}</span>
+            </button>
+          )
         )}
         <button
           type="button"
@@ -438,7 +454,7 @@ export function ReelCard({
       </div>
 
       {/* 左下: CTA + アカウント情報 */}
-      <div className="pointer-events-auto absolute bottom-4 left-3 right-16 space-y-2">
+      <div className={`pointer-events-auto absolute left-3 right-16 space-y-2 ${fullBleed ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]" : "bottom-4"}`}>
         {captionText && !isAd && (
           <button
             type="button"

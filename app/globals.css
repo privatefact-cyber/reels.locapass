@@ -377,3 +377,10 @@ summary {
 .luxela-venue-map .maplibregl-ctrl-attrib-button {
   filter: invert(1);
 }
+
+
+/* リールの全画面スワイプ中(ReelFeedが body[data-immersive="1"] を付ける)は、
+   ヘッダー・ボトムナビ・AIボタンを隠して、画面いっぱいにリールだけを出す。 */
+body[data-immersive="1"] [data-chrome] {
+  display: none !important;
+}

@@ -52,6 +52,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
       {!mapImmersive && (
         <header
           data-surface="header"
+          data-chrome
           className="sticky top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-main/10 bg-header/60 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
         >
           {/* 背景の光暈(装飾、クリック不可) */}
@@ -127,7 +128,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
       )}
 
       {/* 固定ボトムナビゲーション */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 transform-gpu border-t border-main/10 bg-main/5 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/20 pb-[env(safe-area-inset-bottom)] pt-2 px-3 flex items-center justify-between max-w-md mx-auto sm:max-w-none sm:px-6 md:hidden">
+      <nav data-chrome className="fixed bottom-0 left-0 right-0 z-50 transform-gpu border-t border-main/10 bg-main/5 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/20 pb-[env(safe-area-inset-bottom)] pt-2 px-3 flex items-center justify-between max-w-md mx-auto sm:max-w-none sm:px-6 md:hidden">
         <Link href="/" className="flex flex-col items-center gap-0.5 p-2 text-main" aria-label={t.nav.home}>
           <Home size={22} />
           <span className="text-[10px] leading-none">{t.nav.home}</span>

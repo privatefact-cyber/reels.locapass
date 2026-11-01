@@ -460,6 +460,7 @@ export function AiInquiryWidget({
   return (
     <div
       ref={rootRef}
+      data-chrome
       data-theme={theme}
       className={
         isMap

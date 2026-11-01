@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Search, ChevronLeft, Play, X } from "lucide-react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
@@ -642,14 +642,39 @@ export function ReelFeed({
     overlayItemRefs.current[openIndex]?.scrollIntoView({ behavior: "auto", block: "start" });
   }, [openIndex]);
 
+  // 全画面スワイプ: ヘッダー・ボトムナビ・AIボタンを隠して、リールを画面いっぱいに縦スワイプする。
+  // 隠すのはCSS(globals.cssの body[data-immersive] [data-chrome])。背景のページはスクロールさせない。
+  const [immersive, setImmersive] = useState(false);
+  const activeIndexRef = useRef(0);
+  activeIndexRef.current = overlayActiveIndex;
+  useEffect(() => {
+    if (openIndex === null) setImmersive(false);
+  }, [openIndex]);
+  useEffect(() => {
+    if (!immersive) return;
+    document.body.dataset.immersive = "1";
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      delete document.body.dataset.immersive;
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [immersive]);
+  // 全画面に入る・出るときも、今見ているリールの位置のまま続ける(先頭に戻らない)。
+  useLayoutEffect(() => {
+    overlayItemRefs.current[activeIndexRef.current]?.scrollIntoView({ behavior: "auto", block: "start" });
+  }, [immersive]);
+
   useEffect(() => {
     if (openIndex === null) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpenIndex(null);
+      if (e.key !== "Escape") return;
+      if (immersive) setImmersive(false);
+      else setOpenIndex(null);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [openIndex]);
+  }, [openIndex, immersive]);
 
   // 検索モーダルはEscキーでも閉じる(PC向け。スマホは背景タップで閉じる)。
   useEffect(() => {
@@ -892,15 +917,26 @@ export function ReelFeed({
       ) : (
         // 縦スワイプのリール一覧。ヘッダー・ボトムナビはページの通常コンテンツとして
         // そのまま表示され続ける(画面を覆う固定オーバーレイにはしない)。
-        <div className="space-y-4">
-          <button
-            type="button"
-            onClick={() => setOpenIndex(null)}
-            className="flex items-center gap-1 px-1 text-sm text-tone-300 hover:text-main"
-          >
-            <ChevronLeft size={18} />
-            グリッドに戻る
-          </button>
+        <div className={immersive ? "fixed inset-0 z-[55] snap-y snap-mandatory overflow-y-auto overscroll-contain bg-black" : "space-y-4"}>
+          {immersive ? (
+            <button
+              type="button"
+              onClick={() => setImmersive(false)}
+              aria-label="全画面を閉じる"
+              className="fixed left-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-[56] flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
+            >
+              <X size={18} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOpenIndex(null)}
+              className="flex items-center gap-1 px-1 text-sm text-tone-300 hover:text-main"
+            >
+              <ChevronLeft size={18} />
+              グリッドに戻る
+            </button>
+          )}
 
           {/* 現在アクティブな1本の「次」の動画だけ、先頭2〜3秒ぶんを裏で先読みしておく
               (実際にアクティブになったときの再生開始までの待ち時間を減らす)。 */}
@@ -912,8 +948,10 @@ export function ReelFeed({
             <div
               key={loopKey}
               ref={setOverlayItemRef(index)}
-              className={`relative mx-auto w-full overflow-hidden bg-black md:flex md:h-[85dvh] md:items-center md:justify-center ${
-                mounted ? "" : "aspect-[9/16] md:aspect-auto"
+              className={`relative mx-auto w-full overflow-hidden bg-black ${
+                immersive
+                  ? "h-[100dvh] snap-start snap-always md:flex md:items-center md:justify-center"
+                  : `md:flex md:h-[85dvh] md:items-center md:justify-center ${mounted ? "" : "aspect-[9/16] md:aspect-auto"}`
               }`}
             >
               {!mounted ? null : tile.kind === "cast" ? (
@@ -921,6 +959,8 @@ export function ReelFeed({
                   const media = tile.reel.media[0];
                   return (
                     <ReelCard
+                      fullBleed={immersive}
+                      onEnterImmersive={() => setImmersive(true)}
                       reelId={tile.reel.id}
                       castId={tile.reel.castId}
                       commentsEnabled={tile.reel.isCommentsEnabled}
@@ -953,6 +993,8 @@ export function ReelFeed({
                 })()
               ) : tile.kind === "shop" ? (
                 <ReelCard
+                      fullBleed={immersive}
+                      onEnterImmersive={() => setImmersive(true)}
                   isActive={index === overlayActiveIndex}
                   posterImageUrl={tile.shop.coverImageUrl ?? undefined}
                   posterCredit={tile.shop.coverAttribution}
@@ -966,6 +1008,8 @@ export function ReelFeed({
                 />
               ) : (
                 <ReelCard
+                      fullBleed={immersive}
+                      onEnterImmersive={() => setImmersive(true)}
                   isActive={index === overlayActiveIndex}
                   isAd
                   videoUrl={tile.ad.media.type === "video" ? tile.ad.media.url : undefined}
