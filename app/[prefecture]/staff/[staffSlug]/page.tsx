@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
+import { getServerLocale } from "@/lib/i18n/getServerLocale";
+import { withOriginal } from "@/lib/i18n/originalText";
 import { JsonLd } from "@/components/JsonLd";
 import {
   StaffDashboardClient,
@@ -104,6 +106,13 @@ export default async function StaffDetailPage({
   }
 
   const shop = Array.isArray(staff.shops) ? staff.shops[0] : staff.shops;
+  const locale = await getServerLocale();
+  const { data: bioRow } = await (supabase as any)
+    .from("locapass_shop_staff_members")
+    .select("bio_translations")
+    .eq("id", staff.id)
+    .maybeSingle();
+  const bioShown = withOriginal(locale, staff.bio, bioRow?.bio_translations, "bio");
 
   // ログイン中の本人がこのスタッフ自身かどうか(Instagramの「自分のプロフィール」判定と同じ)。
   const {
@@ -242,6 +251,8 @@ export default async function StaffDetailPage({
         qrDataUrl={qrDataUrl}
         initialName={staff.name}
         initialBio={staff.bio}
+        bioDisplay={bioShown.text}
+        bioOriginal={bioShown.original}
         initialAvatarUrl={staff.avatar_url}
         initialReels={myReels}
         initialEvents={shopEvents}

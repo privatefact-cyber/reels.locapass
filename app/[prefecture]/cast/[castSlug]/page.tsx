@@ -11,6 +11,8 @@ import { StoryRing } from "@/components/StoryRing";
 import { JsonLd } from "@/components/JsonLd";
 import { StreamThumb } from "@/components/video/StreamThumb";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
+import { TranslatedText } from "@/components/TranslatedText";
+import { withOriginal } from "@/lib/i18n/originalText";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
@@ -97,7 +99,6 @@ export default async function CastDetailPage({
   const { supabase, portal, cast, castError } = await resolveCast(resolvedParams);
   const locale = await getServerLocale();
   const t = dictionaries[locale];
-
   if (castError && castError.code !== "PGRST116") {
     throw new Error(`locapass_public_casts取得に失敗しました: ${castError.message}`);
   }
@@ -107,6 +108,13 @@ export default async function CastDetailPage({
   }
 
   const castId = cast.id!;
+  // 自己紹介の翻訳(列が生成済みの型に無いので別に引く)。母国語で書かれた自己紹介を閲覧言語で出す。
+  const { data: prRow } = await (supabase as any)
+    .from("locapass_public_casts")
+    .select("pr_text_translations")
+    .eq("id", castId)
+    .maybeSingle();
+  const prShown = withOriginal(locale, cast.pr_text, prRow?.pr_text_translations, "pr_text");
   const castName = cast.name ?? "";
 
   // それ以外の4クエリは互いに依存しない(すべてcastIdだけで絞り込める)ため、並列で投げる。
@@ -283,9 +291,13 @@ export default async function CastDetailPage({
         </div>
 
         {cast.pr_text && (
-          <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
-            {cast.pr_text}
-          </p>
+          <div className="mt-4">
+            <TranslatedText
+              className="whitespace-pre-wrap text-sm leading-relaxed text-tone-300"
+              text={prShown.text ?? cast.pr_text}
+              original={prShown.original}
+            />
+          </div>
         )}
 
         {shop && shopUrl && (

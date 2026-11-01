@@ -1,5 +1,6 @@
 "use client";
 
+import { TranslatedText } from "@/components/TranslatedText";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -106,6 +107,8 @@ export function StaffDashboardClient({
   qrDataUrl,
   initialName,
   initialBio,
+  bioDisplay,
+  bioOriginal,
   initialAvatarUrl,
   initialReels,
   initialEvents,
@@ -126,6 +129,9 @@ export function StaffDashboardClient({
   qrDataUrl: string | null;
   initialName: string;
   initialBio: string | null;
+  /** 閲覧言語に翻訳した紹介文と、4言語以外の原文(本人には原文のまま出す)。 */
+  bioDisplay?: string | null;
+  bioOriginal?: { text: string; lang: string } | null;
   initialAvatarUrl: string | null;
   initialReels: MyReel[];
   initialEvents: ShopEventRow[];
@@ -786,11 +792,20 @@ export function StaffDashboardClient({
           )}
         </div>
 
-        {bio && (
-          <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
-            {bio}
-          </p>
-        )}
+        {bio &&
+          (!isOwner && bioDisplay && bioDisplay !== bio ? (
+            <div className="mx-auto mt-3 max-w-xs">
+              <TranslatedText
+                className="whitespace-pre-wrap text-sm leading-relaxed text-tone-300"
+                text={bioDisplay}
+                original={bioOriginal}
+              />
+            </div>
+          ) : (
+            <p className="mx-auto mt-3 max-w-xs whitespace-pre-wrap text-sm leading-relaxed text-tone-300">
+              {bio}
+            </p>
+          ))}
 
         {profileError && <p className="mt-2 text-sm text-red-400">{profileError}</p>}
 
