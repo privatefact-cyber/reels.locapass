@@ -1474,6 +1474,9 @@ export type Database = {
       locapass_members: {
         Row: {
           avatar_url: string | null
+          sns_instagram: string | null
+          sns_website: string | null
+          sns_x: string | null
           created_at: string
           id: string
           last_login_at: string
@@ -1481,6 +1484,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          sns_instagram?: string | null
+          sns_website?: string | null
+          sns_x?: string | null
           created_at?: string
           id: string
           last_login_at?: string
@@ -1488,6 +1494,9 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          sns_instagram?: string | null
+          sns_website?: string | null
+          sns_x?: string | null
           created_at?: string
           id?: string
           last_login_at?: string
@@ -4601,6 +4610,9 @@ export type Database = {
           avatar_url: string | null
           id: string | null
           nickname: string | null
+          sns_instagram: string | null
+          sns_website: string | null
+          sns_x: string | null
         }
         Relationships: []
       }

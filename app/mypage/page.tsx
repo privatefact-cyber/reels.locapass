@@ -181,6 +181,7 @@ export default async function MypagePage() {
       userId={user.id}
       initialNickname={user.nickname}
       initialAvatarUrl={user.avatarUrl}
+      initialSns={user.sns}
       savedReels={savedReels}
       followedCasts={followedCasts}
       favoriteShops={favoriteShops}

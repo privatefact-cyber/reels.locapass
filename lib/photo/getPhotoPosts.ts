@@ -2,6 +2,7 @@ import { resolvePostShopList, type PostShop } from "@/lib/photo/resolvePostShops
 import { createStaticClient } from "@/lib/supabase/static";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { pickTranslation } from "@/lib/i18n/contentTranslation";
+import type { SnsLinks } from "@/lib/photo/snsLinks";
 import { extraSourceLang, nativeLanguageName } from "@/lib/i18n/originalText";
 
 export type PhotoPost = {
@@ -43,6 +44,7 @@ export type PhotoProfile = {
   likesReceived: number;
   followerCount: number;
   followingCount: number;
+  sns: SnsLinks;
 };
 
 export const PHOTO_PAGE_SIZE = 90;
@@ -192,7 +194,7 @@ export async function getMemberPhotos(
   // 表示名・アイコンは会員のプロフィール(公開用ビュー)を優先し、無ければ最新の投稿時点の値を使う。
   const { data: member } = await supabase
     .from("locapass_public_members")
-    .select("nickname,avatar_url")
+    .select("nickname,avatar_url,sns_instagram,sns_x,sns_website")
     .eq("id", memberId)
     .maybeSingle();
   const latest = posts[0];
@@ -205,6 +207,7 @@ export async function getMemberPhotos(
       likesReceived: posts.reduce((sum, p) => sum + p.likeCount, 0),
       followerCount: followerCount ?? 0,
       followingCount: followingCount ?? 0,
+      sns: { instagram: member?.sns_instagram ?? null, x: member?.sns_x ?? null, website: member?.sns_website ?? null },
     },
     posts,
   };

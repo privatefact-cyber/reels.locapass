@@ -17,7 +17,7 @@ export async function requireCurrentUser(redirectTo = "/mypage") {
 
   const { data: profile } = await supabase
     .from("locapass_members")
-    .select("id, nickname, avatar_url")
+    .select("id, nickname, avatar_url, sns_instagram, sns_x, sns_website")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -30,5 +30,6 @@ export async function requireCurrentUser(redirectTo = "/mypage") {
     id: user.id,
     nickname: profile?.nickname ?? "ゲスト",
     avatarUrl: profile?.avatar_url ?? null,
+    sns: { instagram: profile?.sns_instagram ?? null, x: profile?.sns_x ?? null, website: profile?.sns_website ?? null },
   };
 }

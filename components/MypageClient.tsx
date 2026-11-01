@@ -13,6 +13,7 @@ import { StreamVideo } from "@/components/video/StreamVideo";
 import { MyPostsLibrary } from "@/components/photo/MyPostsLibrary";
 import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
+import { parseInstagram, parseWebsite, parseX, type SnsLinks } from "@/lib/photo/snsLinks";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 import { shopPath, shopReelsPath, castPath } from "@/lib/locapass/publicUrls";
 
@@ -68,6 +69,7 @@ export function MypageClient({
   userId,
   initialNickname,
   initialAvatarUrl,
+  initialSns,
   savedReels,
   followedCasts: initialFollowedCasts,
   favoriteShops: initialFavoriteShops,
@@ -83,6 +85,7 @@ export function MypageClient({
   userId: string;
   initialNickname: string;
   initialAvatarUrl: string | null;
+  initialSns: SnsLinks;
   savedReels: SavedReel[];
   followedCasts: FollowedCast[];
   favoriteShops: FavoriteShop[];
@@ -141,6 +144,10 @@ export function MypageClient({
 
   const [editOpen, setEditOpen] = useState(false);
   const [editNickname, setEditNickname] = useState(initialNickname);
+  const [sns, setSns] = useState(initialSns);
+  const [editInstagram, setEditInstagram] = useState(initialSns.instagram ?? "");
+  const [editX, setEditX] = useState(initialSns.x ?? "");
+  const [editWebsite, setEditWebsite] = useState(initialSns.website ?? "");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -202,13 +209,23 @@ export function MypageClient({
       setProfileError(t.mypage.nicknameRequired);
       return;
     }
+    const instagram = parseInstagram(editInstagram);
+    const x = parseX(editX);
+    const website = parseWebsite(editWebsite);
+    if (instagram === undefined || x === undefined || website === undefined) {
+      setProfileError(t.mypage.snsInvalid);
+      return;
+    }
     setProfileSaving(true);
     setProfileError(null);
 
     const supabase = createClient();
     const { data, error } = await supabase
       .from("locapass_members")
-      .upsert({ id: userId, nickname: editNickname.trim() }, { onConflict: "id" })
+      .upsert(
+        { id: userId, nickname: editNickname.trim(), sns_instagram: instagram, sns_x: x, sns_website: website },
+        { onConflict: "id" },
+      )
       .select("id")
       .single();
 
@@ -218,6 +235,7 @@ export function MypageClient({
       return;
     }
     setNickname(editNickname.trim());
+    setSns({ instagram, x, website });
     setEditOpen(false);
   }
 
@@ -318,6 +336,9 @@ export function MypageClient({
           type="button"
           onClick={() => {
             setEditNickname(nickname);
+            setEditInstagram(sns.instagram ?? "");
+            setEditX(sns.x ?? "");
+            setEditWebsite(sns.website ?? "");
             setProfileError(null);
             setEditOpen(true);
           }}
@@ -754,6 +775,34 @@ export function MypageClient({
               type="text"
               value={editNickname}
               onChange={(e) => setEditNickname(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
+            />
+            <p className="mt-4 text-xs text-muted">{t.mypage.snsLinksLabel}</p>
+            <label className="mt-2 block text-xs text-tone-500">{t.mypage.snsInstagramLabel}</label>
+            <input
+              type="text"
+              value={editInstagram}
+              onChange={(e) => setEditInstagram(e.target.value)}
+              placeholder="@username"
+              autoCapitalize="none"
+              className="mt-1 w-full rounded-lg border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
+            />
+            <label className="mt-2 block text-xs text-tone-500">{t.mypage.snsXLabel}</label>
+            <input
+              type="text"
+              value={editX}
+              onChange={(e) => setEditX(e.target.value)}
+              placeholder="@username"
+              autoCapitalize="none"
+              className="mt-1 w-full rounded-lg border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
+            />
+            <label className="mt-2 block text-xs text-tone-500">{t.mypage.snsWebsiteLabel}</label>
+            <input
+              type="url"
+              value={editWebsite}
+              onChange={(e) => setEditWebsite(e.target.value)}
+              placeholder="https://"
+              autoCapitalize="none"
               className="mt-1 w-full rounded-lg border border-main/20 bg-main/5 px-3 py-2 text-[16px] text-main"
             />
             {profileError && <p className="mt-2 text-xs text-red-400">{profileError}</p>}

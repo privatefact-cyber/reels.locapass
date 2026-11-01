@@ -272,6 +272,11 @@ export type Dictionary = {
     closed: string;
     editProfileTitle: string;
     nicknameLabel: string;
+    snsLinksLabel: string;
+    snsInstagramLabel: string;
+    snsXLabel: string;
+    snsWebsiteLabel: string;
+    snsInvalid: string;
     cancel: string;
     save: string;
     saving: string;
@@ -728,6 +733,11 @@ const ja: Dictionary = {
     closed: "現在休止中",
     editProfileTitle: "プロフィールを編集",
     nicknameLabel: "ニックネーム",
+    snsLinksLabel: "SNSリンク(任意・写真ページに表示されます)",
+    snsInstagramLabel: "Instagramのユーザー名",
+    snsXLabel: "Xのユーザー名",
+    snsWebsiteLabel: "ウェブサイト(https)",
+    snsInvalid: "SNSの入力形式が正しくありません",
     cancel: "キャンセル",
     save: "保存する",
     saving: "保存中...",
@@ -1184,6 +1194,11 @@ const en: Dictionary = {
     closed: "Currently closed",
     editProfileTitle: "Edit Profile",
     nicknameLabel: "Nickname",
+    snsLinksLabel: "Social links (optional, shown on your photo page)",
+    snsInstagramLabel: "Instagram username",
+    snsXLabel: "X username",
+    snsWebsiteLabel: "Website (https)",
+    snsInvalid: "Please check the format of your social links",
     cancel: "Cancel",
     save: "Save",
     saving: "Saving...",
@@ -1640,6 +1655,11 @@ const zh: Dictionary = {
     closed: "暂停营业",
     editProfileTitle: "编辑资料",
     nicknameLabel: "昵称",
+    snsLinksLabel: "社交链接(选填,显示在照片主页)",
+    snsInstagramLabel: "Instagram 用户名",
+    snsXLabel: "X 用户名",
+    snsWebsiteLabel: "网站(https)",
+    snsInvalid: "社交链接格式不正确",
     cancel: "取消",
     save: "保存",
     saving: "保存中...",
@@ -2097,6 +2117,11 @@ const ar: Dictionary = {
     "closed": "مغلق حاليًا",
     "editProfileTitle": "تعديل الملف الشخصي",
     "nicknameLabel": "الاسم المستعار",
+    "snsLinksLabel": "روابط التواصل (اختياري، تظهر في صفحة صورك)",
+    "snsInstagramLabel": "اسم مستخدم Instagram",
+    "snsXLabel": "اسم مستخدم X",
+    "snsWebsiteLabel": "الموقع الإلكتروني (https)",
+    "snsInvalid": "يرجى التحقق من صيغة الروابط",
     "cancel": "إلغاء",
     "save": "حفظ",
     "saving": "جاري الحفظ...",

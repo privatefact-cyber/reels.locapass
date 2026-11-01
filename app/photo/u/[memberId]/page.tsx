@@ -6,6 +6,7 @@ import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { PhotoProfileStats } from "@/components/photo/PhotoProfileStats";
 import { RelatedMemberProfile } from "@/components/photo/RelatedMemberProfile";
 import { getMemberPhotos } from "@/lib/photo/getPhotoPosts";
+import { snsHrefs } from "@/lib/photo/snsLinks";
 import { photoText } from "@/lib/photo/serverText";
 
 export const revalidate = 60;
@@ -67,6 +68,24 @@ export default async function MemberPhotoPage({
           <PhotoProfileStats memberId={profile.memberId} name={profile.name} stats={profile} />
         </div>
       </header>
+
+      {snsHrefs(profile.sns).length > 0 && (
+        <ul className="flex flex-wrap gap-2 px-4">
+          {snsHrefs(profile.sns).map((l) => (
+            <li key={l.key}>
+              <a
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="inline-block max-w-[16rem] truncate rounded-full border border-main/20 px-3 py-1 text-xs text-tone-300 hover:text-main"
+              >
+                {l.key === "instagram" ? "Instagram " : l.key === "x" ? "X " : ""}
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <PhotoFeed posts={posts} areas={[]} areaSlug={null} initialPostId={post && UUID.test(post) ? post : undefined} />
     </div>
