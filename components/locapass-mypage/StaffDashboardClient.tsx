@@ -23,6 +23,7 @@ import { requestReelCaptions } from "@/lib/reels/requestReelCaptions";
 import { requestReelTags } from "@/lib/reels/requestReelTags";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
+import { ReelThumbEditButton } from "@/components/reels/ReelThumbEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges, ReelRatingBadge } from "@/components/reels/ReelOrganizer";
 import { ReelInsights } from "@/components/reels/ReelInsights";
 import { uploadReelPreview } from "@/lib/reels/uploadReelPreview";
@@ -1002,6 +1003,10 @@ export function StaffDashboardClient({
                     />
                   )}
                   <ReelTagEditButton
+                    reelId={r.id}
+                    className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
+                  />
+                  <ReelThumbEditButton
                     reelId={r.id}
                     className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-main"
                   />

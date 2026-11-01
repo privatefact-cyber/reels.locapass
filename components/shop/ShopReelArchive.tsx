@@ -17,6 +17,8 @@ export type ArchiveItem = {
   /** サムネが無いときだけ入る動画URL(先頭フレームを代用する)。 */
   videoUrl: string | null;
   isVideo: boolean;
+  /** 投稿者が指定した、正方形に見せる位置(0〜100%、CSSのobject-positionと同じ)。未指定は中央。 */
+  focus?: { x: number; y: number } | null;
   author: string;
   /** AIが付けたタグのID(辞書: lib/reels/tags/vocabulary.ts)。未処理なら空。 */
   tags: string[];
@@ -36,8 +38,16 @@ function intlLocale(locale: string): string {
 
 const Thumb = memo(function Thumb({ item, className = "" }: { item: ArchiveItem; className?: string }) {
   if (item.thumbUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={item.thumbUrl} alt="" loading="lazy" className={`h-full w-full object-cover ${className}`} />;
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={item.thumbUrl}
+        alt=""
+        loading="lazy"
+        style={item.focus ? { objectPosition: `${item.focus.x}% ${item.focus.y}%` } : undefined}
+        className={`h-full w-full object-cover ${className}`}
+      />
+    );
   }
   if (item.videoUrl) {
     return (
@@ -46,6 +56,7 @@ const Thumb = memo(function Thumb({ item, className = "" }: { item: ArchiveItem;
         muted
         playsInline
         preload="metadata"
+        style={item.focus ? { objectPosition: `${item.focus.x}% ${item.focus.y}%` } : undefined}
         className={`h-full w-full object-cover ${className}`}
       />
     );

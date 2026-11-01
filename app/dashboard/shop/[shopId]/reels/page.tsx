@@ -6,6 +6,7 @@ import { deleteReel, setMapPreviewReel } from "../actions";
 import { StreamThumb } from "@/components/video/StreamThumb";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
+import { ReelThumbEditButton } from "@/components/reels/ReelThumbEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges, ReelRatingBadge } from "@/components/reels/ReelOrganizer";
 import { ReelInsights } from "@/components/reels/ReelInsights";
 import { ConfirmSubmitButton } from "@/components/reels/ConfirmSubmitButton";
@@ -174,6 +175,7 @@ export default async function LocapassShopReelsPage({
                 <div className="absolute right-1 top-7 flex flex-col items-end gap-1">
                   {media?.type === "video" && <ReelCaptionEditButton reelId={r.id} />}
                   <ReelTagEditButton reelId={r.id} />
+                  <ReelThumbEditButton reelId={r.id} />
                 </div>
                 <ReelTagBadges id={r.id} className="pointer-events-none absolute left-1 top-7 flex max-w-[55%] flex-wrap gap-0.5" />
                 <ReelRatingBadge id={r.id} className="absolute left-1 top-1 z-10" />

@@ -48,7 +48,7 @@ export default async function ShopReelArchivePage({
   const { data: reelRows, error: reelError } = await supabase
     .from("locapass_reels")
     .select(
-      `id, ${LOCAPASS_REEL_MEDIA_SELECT}, published_at, updated_at, author_name, tags, cast_members:locapass_public_casts ( name ), staff_members:locapass_shop_staff_members ( name )`,
+      `id, ${LOCAPASS_REEL_MEDIA_SELECT}, published_at, updated_at, author_name, tags, thumb_focus_x, thumb_focus_y, cast_members:locapass_public_casts ( name ), staff_members:locapass_shop_staff_members ( name )`,
     )
     .eq("shop_id", shop.id)
     .eq("status", "publish")
@@ -75,6 +75,7 @@ export default async function ShopReelArchivePage({
       thumbUrl,
       videoUrl,
       isVideo: media.type === "video",
+      focus: row.thumb_focus_x == null && row.thumb_focus_y == null ? null : { x: row.thumb_focus_x ?? 50, y: row.thumb_focus_y ?? 50 },
       author: cast?.name ?? staff?.name ?? row.author_name ?? shop.name,
       tags: row.tags ?? [],
     });

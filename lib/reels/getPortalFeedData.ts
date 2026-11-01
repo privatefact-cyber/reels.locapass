@@ -30,6 +30,8 @@ export type ReelRow = {
   cast_id: string | null;
   posted_by_staff_id: string | null;
   is_comments_enabled: boolean;
+  thumb_focus_x: number | null;
+  thumb_focus_y: number | null;
   locapass_cast_members: { name: string | null; avatar_url: string | null; issue_no: number | null } | { name: string | null; avatar_url: string | null; issue_no: number | null }[] | null;
   locapass_shop_staff_members: { name: string; avatar_url: string | null; issue_no: number } | { name: string; avatar_url: string | null; issue_no: number }[] | null;
 };
@@ -80,11 +82,12 @@ export function toReelItem(row: ReelRow, locale: Locale = "ja"): ReelItem | null
     linkUrl: row.action_url,
     createdAt: row.published_at ?? row.updated_at,
     isCommentsEnabled: row.is_comments_enabled,
+    thumbFocus: row.thumb_focus_x == null && row.thumb_focus_y == null ? null : { x: row.thumb_focus_x ?? 50, y: row.thumb_focus_y ?? 50 },
   };
 }
 
 export const REEL_SELECT =
-  "id, caption, translations, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, posted_by_staff_id, is_comments_enabled, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url, issue_no )";
+  "id, caption, translations, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, posted_by_staff_id, is_comments_enabled, thumb_focus_x, thumb_focus_y, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url, issue_no )";
 
 export type PortalFeedData = {
   reels: ReelItem[];

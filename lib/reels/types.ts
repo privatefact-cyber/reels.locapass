@@ -28,6 +28,8 @@ export type ReelItem = {
   createdAt: string;
   /** falseの場合、このリールへの新規コメント・返信を受け付けない(既存コメントはRLS側で判定)。 */
   isCommentsEnabled: boolean;
+  /** 一覧タイル(正方形)に見せる位置(0〜100%、CSSのobject-positionと同じ)。投稿者が指定したときだけ入る。nullは従来どおり中央。 */
+  thumbFocus?: { x: number; y: number } | null;
 };
 
 /** システム管理者が投稿するPR(広告)。フィードに指定頻度で紛れ込ませる。 */

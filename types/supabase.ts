@@ -1926,6 +1926,8 @@ export type Database = {
           is_comments_enabled: boolean
           is_placeholder: boolean
           like_count: number
+          thumb_focus_x: number | null
+          thumb_focus_y: number | null
           pinned_at: string | null
           portal_id: number
           posted_by_staff_id: string | null
@@ -1966,6 +1968,8 @@ export type Database = {
           is_comments_enabled?: boolean
           is_placeholder?: boolean
           like_count?: number
+          thumb_focus_x?: number | null
+          thumb_focus_y?: number | null
           pinned_at?: string | null
           portal_id: number
           posted_by_staff_id?: string | null
@@ -2006,6 +2010,8 @@ export type Database = {
           is_comments_enabled?: boolean
           is_placeholder?: boolean
           like_count?: number
+          thumb_focus_x?: number | null
+          thumb_focus_y?: number | null
           pinned_at?: string | null
           portal_id?: number
           posted_by_staff_id?: string | null

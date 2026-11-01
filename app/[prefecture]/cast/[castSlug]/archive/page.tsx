@@ -56,7 +56,7 @@ export default async function CastReelArchivePage({
   // このキャストの公開中の全リール(ストーリーは除く)を軽量な列だけで取る。
   const { data: reelRows, error: reelError } = await supabase
     .from("locapass_reels")
-    .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, published_at, updated_at, tags`)
+    .select(`id, ${LOCAPASS_REEL_MEDIA_SELECT}, published_at, updated_at, tags, thumb_focus_x, thumb_focus_y`)
     .eq("cast_id", cast.id!)
     .eq("status", "publish")
     .eq("reel_type", "permanent")
@@ -79,6 +79,7 @@ export default async function CastReelArchivePage({
       thumbUrl,
       videoUrl,
       isVideo: media.type === "video",
+      focus: row.thumb_focus_x == null && row.thumb_focus_y == null ? null : { x: row.thumb_focus_x ?? 50, y: row.thumb_focus_y ?? 50 },
       author: castName,
       tags: row.tags ?? [],
     });

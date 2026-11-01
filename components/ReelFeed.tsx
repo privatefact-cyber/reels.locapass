@@ -18,7 +18,7 @@ import { genreLabel } from "@/lib/i18n/genreLabels";
 import { setAiSelectedContext } from "@/lib/aiContext";
 import { isHiddenByDefaultGenre } from "@/lib/shop/genres";
 import { photoResized } from "@/components/photo/photoUtils";
-import { gridThumb } from "@/lib/images/thumb";
+import { focusThumb, gridThumb } from "@/lib/images/thumb";
 
 export type { ReelItem } from "@/lib/reels/types";
 
@@ -194,7 +194,9 @@ const GridTile = memo(function GridTile({
   onShopPeekEnter: (shop: ShopGridItem, e: React.MouseEvent<HTMLElement>) => void;
   onShopPeekLeave: () => void;
 }) {
-  const thumbUrl = gridThumb(tileThumbUrl(tile));
+  // 投稿者が「見せる位置」を指定したタイルは、切り抜かずに取得して、画面側で位置を決める。
+  const focus = tile.kind === "cast" ? tile.reel.thumbFocus ?? null : null;
+  const thumbUrl = focus ? focusThumb(tileThumbUrl(tile)) : gridThumb(tileThumbUrl(tile));
   // カバー画像のリンク切れ時も、真っ黒にせずイメージを出す。
   const [thumbBroken, setThumbBroken] = useState(false);
   const fallbackVideoUrl = thumbUrl ? undefined : tileFallbackVideoUrl(tile);
@@ -216,6 +218,7 @@ const GridTile = memo(function GridTile({
           alt=""
           loading="lazy"
           decoding="async"
+          style={focus ? { objectPosition: `${focus.x}% ${focus.y}%` } : undefined}
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />
       ) : fallbackVideoUrl ? (
