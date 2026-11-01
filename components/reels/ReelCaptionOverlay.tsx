@@ -6,7 +6,7 @@ import { useReelCaptionsPreference } from "@/lib/reels/useReelCaptionsPreference
 
 type Cue = { s: number; e: number; t: string };
 type Zone = "none" | "top" | "middle" | "bottom";
-type CaptionData = { cues: Cue[]; zone: Zone; source: string };
+type CaptionData = { cues: Cue[]; zone: Zone; source: string; native: string | null };
 
 /** 字幕は ja / en / zh / ar の4言語(サイトの表示言語と同じ)。 */
 function captionLang(locale: string): "ja" | "en" | "zh" | "ar" {
@@ -15,6 +15,15 @@ function captionLang(locale: string): "ja" | "en" | "zh" | "ar" {
 }
 
 const CC_LABEL: Record<string, string> = { ja: "字幕", zh: "字幕", en: "Captions", ar: "الترجمة" };
+
+/** 言語コードを、見る人の言語での名前にする(ru → ロシア語)。 */
+function languageName(code: string, locale: string): string {
+  try {
+    return new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code.toUpperCase();
+  } catch {
+    return code.toUpperCase();
+  }
+}
 
 // 同じリールを何度も取りに行かない(スワイプで戻ったとき等)。取得失敗はキャッシュしない。
 const cache = new Map<string, CaptionData>();
@@ -40,37 +49,43 @@ export function ReelCaptionOverlay({
   const [on, setOn] = useReelCaptionsPreference();
   const [data, setData] = useState<CaptionData | null>(null);
   const [text, setText] = useState<string | null>(null);
+  // 動画の音声がja/en/zh/ar以外(タガログ語・ロシア語など)のとき、その母国語の字幕(原文)に切り替えられる。
+  const [nativeCode, setNativeCode] = useState<string | null>(null);
+  const [showNative, setShowNative] = useState(false);
+  const showLang = showNative && nativeCode ? nativeCode : lang;
 
   // 再生中の1本だけ字幕を取りに行く。
   useEffect(() => {
     if (!active) return;
-    const key = `${reelId}:${lang}`;
+    const key = `${reelId}:${showLang}`;
     const hit = cache.get(key);
     if (hit) {
       setData(hit);
+      if (hit.native) setNativeCode(hit.native);
       return;
     }
     let cancelled = false;
-    fetch(`/api/reels/${reelId}/captions?lang=${lang}`)
+    fetch(`/api/reels/${reelId}/captions?lang=${showLang}`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((json: { cues?: Cue[]; zone?: Zone; source?: string } | null) => {
+      .then((json: { cues?: Cue[]; zone?: Zone; source?: string; native?: string | null } | null) => {
         if (cancelled || !json) return;
-        const value: CaptionData = { cues: Array.isArray(json.cues) ? json.cues : [], zone: json.zone ?? "none", source: json.source ?? "ja" };
+        const value: CaptionData = { cues: Array.isArray(json.cues) ? json.cues : [], zone: json.zone ?? "none", source: json.source ?? "ja", native: json.native ?? null };
         // 字幕がまだ無い(生成中)結果は覚えない。次に表示されたときに取り直す。
         if (value.cues.length > 0) cache.set(key, value);
         setData(value);
+        if (value.native) setNativeCode(value.native);
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [reelId, lang, active]);
+  }, [reelId, showLang, active]);
 
   const cues = data?.cues ?? [];
   const zone = data?.zone ?? "none";
   // 焼き込み字幕は音声と同じ言語で入っていることが多い。同じ言語の字幕を出すとテロップが二重になるので出さない
   // (英語の動画を日本語で見るときは、焼き込みが英語なので日本語字幕を出す)。
-  const suppressed = zone !== "none" && lang === (data?.source ?? "ja");
+  const suppressed = zone !== "none" && showLang === (data?.source ?? "ja");
   const visible = active && on && !suppressed && cues.length > 0;
 
   // 再生位置に合わせて台詞を切り替える(動画のループでも currentTime が巻き戻るので追従する)。
@@ -120,6 +135,18 @@ export function ReelCaptionOverlay({
             {text}
           </p>
         </div>
+      )}
+      {nativeCode && on && !suppressed && (
+        <button
+          type="button"
+          onClick={() => setShowNative((v) => !v)}
+          aria-pressed={showNative}
+          className={`pointer-events-auto absolute right-14 top-14 z-10 flex h-8 items-center rounded-full px-2.5 text-[11px] font-bold backdrop-blur-sm ${
+            showNative ? "bg-white text-black" : "bg-black/50 text-main"
+          }`}
+        >
+          🌐 {languageName(nativeCode, locale)}
+        </button>
       )}
       <button
         type="button"

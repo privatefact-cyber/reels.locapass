@@ -25,6 +25,22 @@ export function sourceLangCode(whisperLanguage: string): CaptionLang | null {
   return null;
 }
 
+/**
+ * Whisperが返す言語名 → 母国語字幕として保存する言語コード(ISO 639)。サイトの字幕4言語(ja/en/zh/ar)以外で、
+ * 一覧に無い言語は null(母国語字幕は作らず、従来どおり翻訳だけにする)。
+ */
+const WHISPER_LANG_ISO: Record<string, string> = {
+  tagalog: "tl", russian: "ru", vietnamese: "vi", thai: "th", korean: "ko", portuguese: "pt", spanish: "es",
+  french: "fr", german: "de", italian: "it", indonesian: "id", malay: "ms", hindi: "hi", bengali: "bn",
+  nepali: "ne", burmese: "my", turkish: "tr", ukrainian: "uk", polish: "pl", dutch: "nl", swedish: "sv",
+  urdu: "ur", persian: "fa", mongolian: "mn", khmer: "km", lao: "lo", tamil: "ta", telugu: "te",
+  sinhala: "si", swahili: "sw", hebrew: "he", greek: "el", czech: "cs", romanian: "ro", hungarian: "hu",
+};
+
+export function nativeLangCode(whisperLanguage: string): string | null {
+  return WHISPER_LANG_ISO[whisperLanguage.trim().toLowerCase()] ?? null;
+}
+
 async function callGemini(parts: unknown[], maxOutputTokens: number): Promise<unknown> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY が設定されていません");

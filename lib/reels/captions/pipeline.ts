@@ -4,7 +4,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MAX_TRANSCRIBE_BYTES, transcribeVideo, type Cue } from "./transcribe";
-import { CAPTION_LANGS, detectBurnedInZone, sourceLangCode, translateCues, type CaptionLang } from "./translate";
+import { CAPTION_LANGS, detectBurnedInZone, nativeLangCode, sourceLangCode, translateCues, type CaptionLang } from "./translate";
 
 /** 動画の取得先は自前のR2だけ(任意のURLを取りに行かせない)。 */
 export const ALLOWED_VIDEO_PREFIX = "https://media.locapass.net/";
@@ -64,8 +64,11 @@ export async function runCaptionPipeline(db: SupabaseClient, reel: ReelForCaptio
     const targets = CAPTION_LANGS.filter((l) => l !== source);
     const translated = await translateCues(transcription.cues, targets, { shopName: reel.shopName });
 
-    const rows: { reel_id: string; lang: CaptionLang; cues: Cue[] }[] = [];
+    const rows: { reel_id: string; lang: string; cues: Cue[] }[] = [];
     if (source) rows.push({ reel_id: reel.id, lang: source, cues: transcription.cues });
+    // 母国語(ja/en/zh/ar以外。タガログ語・ロシア語など)の字幕も、書き起こしのまま残す。画面の「原文」ボタンで見られる。
+    const native = source ? null : nativeLangCode(transcription.language);
+    if (native) rows.push({ reel_id: reel.id, lang: native, cues: transcription.cues });
     for (const lang of targets) {
       const cues = translated[lang];
       if (cues) rows.push({ reel_id: reel.id, lang, cues });
@@ -80,7 +83,7 @@ export async function runCaptionPipeline(db: SupabaseClient, reel: ReelForCaptio
     const { error } = await db.from("locapass_reel_captions").upsert(rows, { onConflict: "reel_id,lang" });
     if (error) throw new Error(`字幕の保存に失敗: ${error.message}`);
 
-    await setStatus("ready", { caption_avoid_zone: zone, caption_source_lang: source ?? "other" });
+    await setStatus("ready", { caption_avoid_zone: zone, caption_source_lang: source ?? native ?? "other" });
   } catch (cause) {
     console.error("[captions] pipeline failed", reel.id, cause);
     await setStatus("failed");

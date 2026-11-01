@@ -176,13 +176,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   if (!UUID_RE.test(id)) return NextResponse.json({ cues: [] }, { status: 400 });
   const lang = new URL(req.url).searchParams.get("lang");
-  if (!isCaptionLang(lang)) return NextResponse.json({ cues: [] }, { status: 400 });
+  // ja/en/zh/ar のほか、母国語字幕(tl, ru など2〜3文字の言語コード)も返す。
+  if (!lang || !/^[a-z]{2,3}$/.test(lang)) return NextResponse.json({ cues: [] }, { status: 400 });
 
   const db = createStaticClient() as unknown as SupabaseClient;
-  const [captions, reel] = await Promise.all([
+  const [captions, reel, langRows] = await Promise.all([
     db.from("locapass_reel_captions").select("cues").eq("reel_id", id).eq("lang", lang).maybeSingle(),
     db.from("locapass_reels").select("caption_avoid_zone, caption_source_lang").eq("id", id).maybeSingle(),
+    db.from("locapass_reel_captions").select("lang").eq("reel_id", id),
   ]);
+  // ja/en/zh/ar以外の字幕があれば、それが動画の母国語。画面が「原文」ボタンを出すのに使う。
+  const native =
+    ((langRows.data ?? []) as { lang: string }[]).map((r) => r.lang).find((l) => !["ja", "en", "zh", "ar"].includes(l)) ?? null;
 
   const cues = Array.isArray(captions.data?.cues) ? captions.data.cues : [];
   return NextResponse.json(
@@ -192,6 +197,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       zone: reel.data?.caption_avoid_zone ?? "none",
       // 動画の音声の言語。焼き込み字幕と同じ言語の字幕だけ、二重表示を避けるのに使う。
       source: reel.data?.caption_source_lang ?? "ja",
+      native,
     },
     {
       headers: {
