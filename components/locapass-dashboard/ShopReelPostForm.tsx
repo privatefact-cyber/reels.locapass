@@ -181,6 +181,7 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
           <span className="text-sm font-medium text-slate-600">写真・動画を選択</span>
         )}
       </label>
+      <p className="rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600">🌐 母国語でも投稿できます！投稿文は自動で各国の言葉に翻訳されます。</p>
       <textarea
         value={caption}
         onChange={(e) => setCaption(e.target.value)}

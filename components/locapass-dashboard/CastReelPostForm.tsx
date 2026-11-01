@@ -217,6 +217,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
           <span className="text-sm font-medium text-slate-600">写真・動画を選択(任意)</span>
         )}
       </label>
+      <p className="rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600">🌐 母国語でも投稿できます！投稿文は自動で各国の言葉に翻訳されます。</p>
       <div>
         <textarea
           value={caption}

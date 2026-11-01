@@ -771,6 +771,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
           ) : null}
         </div>
       )}
+      <p className="rounded-lg bg-tone-800/60 px-3 py-2 text-[11px] text-tone-300">🌐 {t.photo.nativeLangNote}</p>
       <label className="block space-y-1">
         <span className="text-xs text-tone-500">{t.photo.commentLabel}</span>
         <textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} rows={3} className={input} placeholder={aiComment ?? t.photo.commentPlaceholder} />
