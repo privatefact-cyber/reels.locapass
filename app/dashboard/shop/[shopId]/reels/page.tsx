@@ -10,6 +10,10 @@ import { ReelThumbEditButton } from "@/components/reels/ReelThumbEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges, ReelRatingBadge } from "@/components/reels/ReelOrganizer";
 import { ReelInsights } from "@/components/reels/ReelInsights";
 import { ConfirmSubmitButton } from "@/components/reels/ConfirmSubmitButton";
+import { reelFileUrls } from "@/lib/reels/downloadable";
+
+/** 一括ダウンロードの1ファイルあたりの投稿数(app/api/shops/[shopId]/reels/download/route.ts の REELS_PER_ZIP と同じ)。 */
+const REELS_PER_ZIP = 30;
 
 /**
  * LUXELA本家のリール投稿画面(app/dashboard/reels/page.tsx)と同じ画面。一覧・投稿・削除は
@@ -66,6 +70,8 @@ export default async function LocapassShopReelsPage({
     };
   });
 
+  const downloadableCount = (reelRows ?? []).filter((r) => reelFileUrls(r).length > 0).length;
+  const zipParts = Math.ceil(downloadableCount / REELS_PER_ZIP);
   const mapVideoEnabled = shopRow?.map_video_enabled ?? false;
   const selectedReelId = shopRow?.map_preview_reel_id ?? null;
 
@@ -106,6 +112,30 @@ export default async function LocapassShopReelsPage({
           </form>
         )}
       </section>
+
+      {zipParts > 0 && (
+        <section className="rounded-xl border border-slate-200 bg-white p-4">
+          <h2 className="text-sm font-bold text-slate-900">リールをまとめて保存</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            店舗・FACES・スタッフが投稿した動画と写真(全{downloadableCount}件)を、ZIPで保存できます。
+            {zipParts > 1 ? `${REELS_PER_ZIP}件ずつに分けています。` : ""}
+            解約・移行の前に、保存しておいてください。
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {Array.from({ length: zipParts }, (_, i) => (
+              <a
+                key={i}
+                href={`/api/shops/${shop.id}/reels/download?part=${i + 1}`}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+              >
+                {zipParts > 1
+                  ? `${i * REELS_PER_ZIP + 1}〜${Math.min((i + 1) * REELS_PER_ZIP, downloadableCount)}件目を保存`
+                  : "すべて保存(ZIP)"}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       <ShopReelPostForm shopId={shop.id} portalId={shop.portal_id} />
 
@@ -176,6 +206,11 @@ export default async function LocapassShopReelsPage({
                   {media?.type === "video" && <ReelCaptionEditButton reelId={r.id} />}
                   <ReelTagEditButton reelId={r.id} />
                   <ReelThumbEditButton reelId={r.id} />
+                  {reelFileUrls({ video_url: r.media[0]?.type === "video" ? r.media[0].url : null, images: r.media.filter((m) => m.type === "image").map((m) => ({ url: m.url })) }).length > 0 && (
+                    <a href={`/api/reels/${r.id}/download`} className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white hover:bg-black">
+                      保存
+                    </a>
+                  )}
                 </div>
                 <ReelTagBadges id={r.id} className="pointer-events-none absolute left-1 top-7 flex max-w-[55%] flex-wrap gap-0.5" />
                 <ReelRatingBadge id={r.id} className="absolute left-1 top-1 z-10" />
