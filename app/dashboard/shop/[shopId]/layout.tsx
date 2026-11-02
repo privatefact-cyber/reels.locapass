@@ -49,7 +49,7 @@ export default async function LocapassShopDashboardLayout({
   const { data: portalRow } = await supabase.from("locapass_portals").select("features").eq("id", shop.portal_id).maybeSingle();
   const features: string[] = portalRow?.features ?? [];
   // 'mobile'(移動販売)のポータルは「今日の出店」、店舗オプション「開催場所のお知らせ」をオンにした店は「開催場所」を出す。
-  const { data: optRow } = await supabase.from("locapass_shops").select("spot_notice_enabled").eq("id", shop.id).maybeSingle();
+  const { data: optRow } = await supabase.from("locapass_shops").select("spot_notice_enabled, shop_code").eq("id", shop.id).maybeSingle();
   const spotNotice = Boolean(optRow?.spot_notice_enabled);
   const extraNav = [
     ...(features.includes("items") ? [{ path: "/items", label: "在庫" }] : []),
@@ -88,6 +88,17 @@ export default async function LocapassShopDashboardLayout({
             ))}
           </div>
           <div className="flex shrink-0 items-center gap-1 border-l border-slate-200 pl-2">
+            {optRow?.shop_code && (
+              // 更新した内容を、管理画面から離れずに確かめられるよう、掲載ページは別タブで開く。
+              <a
+                href={`/s/${optRow.shop_code}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="whitespace-nowrap rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
+              >
+                掲載ページを見る ↗
+              </a>
+            )}
             <Link href={`${basePath}/support`} className="whitespace-nowrap rounded-lg bg-sky-50 px-3 py-2 text-sm font-bold text-sky-700 hover:bg-sky-100">
               ❓ 使い方
             </Link>
