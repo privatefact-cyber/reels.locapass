@@ -114,8 +114,30 @@ export default async function MypagePage() {
   let postShops: PostShop[] = [];
   const roles = await fetchMyRoles(supabase);
   if (roles && roles.shop_admin_shop_ids.length > 0) {
-    const { data: shopRows } = await supabase.from("locapass_shops").select("id, name").in("id", roles.shop_admin_shop_ids);
-    postShops = (shopRows ?? []).map((r) => ({ id: r.id, name: r.name }));
+    const { data: shopRows } = await supabase
+      .from("locapass_shops")
+      .select("id, name, occupancy_status")
+      .in("id", roles.shop_admin_shop_ids);
+    const { data: openRows } = await supabase
+      .from("locapass_shop_inquiries")
+      .select("shop_id")
+      .in("shop_id", roles.shop_admin_shop_ids)
+      .eq("status", "open");
+    const openByShop = new Map<string, number>();
+    for (const r of openRows ?? []) openByShop.set(r.shop_id, (openByShop.get(r.shop_id) ?? 0) + 1);
+    const OCC_LABEL: Record<string, string> = { available: "空席あり", few_seats: "残りわずか", full: "満席" };
+    postShops = (shopRows ?? []).map((r) => {
+      const occ = r.occupancy_status as { status: string; captured_at: string } | null;
+      const time = occ
+        ? new Date(occ.captured_at).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
+        : null;
+      return {
+        id: r.id,
+        name: r.name,
+        occupancyText: occ ? `${OCC_LABEL[occ.status] ?? occ.status}(${time})` : null,
+        openInquiries: openByShop.get(r.id) ?? 0,
+      };
+    });
   }
   // システム管理者・エリア管理者は自分の店舗を持たないので、管理できる店舗を選んで投稿する(RLSで見える店舗=管理できる店舗)。
   let operatorShops: PostShop[] = [];

@@ -7,6 +7,7 @@ import { Camera, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Se
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ShopQuickButtons } from "@/components/locapass-mypage/ShopQuickButtons";
 import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StreamVideo } from "@/components/video/StreamVideo";
@@ -57,7 +58,14 @@ export type MyComment = {
   reelThumbnailUrl: string | null;
 };
 
-export type PostShop = { id: string; name: string };
+export type PostShop = {
+  id: string;
+  name: string;
+  /** AI判定した直近の空席状況(例: 空席あり(14:20))。未判定ならnull。 */
+  occupancyText?: string | null;
+  /** 未対応のお問い合わせ件数。 */
+  openInquiries?: number;
+};
 
 type Tab = "reels" | "casts" | "followers" | "shops" | "photos" | "liked" | "comments";
 
@@ -439,6 +447,7 @@ export function MypageClient({
                   <Zap size={16} className="fill-black" /> ブースト投稿
                 </Link>
               </div>
+              <ShopQuickButtons shopId={s.id} initialStatusText={s.occupancyText ?? null} openInquiries={s.openInquiries ?? 0} />
             </div>
           ))}
         </section>
