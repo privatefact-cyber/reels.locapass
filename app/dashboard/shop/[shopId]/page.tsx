@@ -66,7 +66,7 @@ export default async function LocapassShopSettingsPage({
       supabase
         .from("locapass_shops")
         .select(
-          "id, name, category, address, tel, business_hours, business_hours_weekly, description, cover_url, url, line_url, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code, tagline, translations, input_lang",
+          "id, name, category, address, tel, business_hours, business_hours_weekly, description, cover_url, url, line_url, booking_url, booking_label, lat, lng, occupancy_status, gallery_image_urls, area, sns_links, line_qr_image_url, hero_media_url, hero_media_type, usage_notes, price_info, shop_code, tagline, translations, input_lang",
         )
         .eq("id", currentShop.id)
         .single(),
@@ -139,6 +139,8 @@ export default async function LocapassShopSettingsPage({
     sns_links: (shopRow.sns_links ?? {}) as { x?: string; instagram?: string; line?: string },
     shop_code: shopRow.shop_code,
     line_url: shopRow.line_url,
+    booking_url: shopRow.booking_url,
+    booking_label: shopRow.booking_label,
     line_qr_image_url: shopRow.line_qr_image_url,
     lat: shopRow.lat,
     lng: shopRow.lng,
@@ -468,6 +470,26 @@ export default async function LocapassShopSettingsPage({
             />
             <p className="mt-1 text-[11px] text-slate-400">
               公式LINEの友だち追加URL、またはWEB予約ページ(ホットペッパー、STORES等)のURLを入力してください。
+            </p>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-slate-500">施設予約URL(民泊・宿泊など)</label>
+            <input
+              name="booking_url"
+              type="url"
+              defaultValue={shop.booking_url ?? ""}
+              placeholder="https://www.booking.com/hotel/..."
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            />
+            <input
+              name="booking_label"
+              maxLength={20}
+              defaultValue={shop.booking_label ?? ""}
+              placeholder="ボタンの文言(例: 空室を確認・予約する)"
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            />
+            <p className="mt-1 text-[11px] text-slate-400">
+              Booking.com・Airbnb・じゃらん・自社の予約ページなどのURL(https://)を入れると、店舗ページに「予約する」ボタンが出ます。空にすると非表示になります。
             </p>
           </div>
           <div className="sm:col-span-2">

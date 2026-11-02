@@ -2539,6 +2539,8 @@ export type Database = {
           lat: number | null
           line_qr_image_url: string | null
           line_url: string | null
+          booking_url: string | null
+          booking_label: string | null
           lng: number | null
           map_preview_reel_id: string | null
           map_video_enabled: boolean
@@ -2590,6 +2592,8 @@ export type Database = {
           lat?: number | null
           line_qr_image_url?: string | null
           line_url?: string | null
+          booking_url?: string | null
+          booking_label?: string | null
           lng?: number | null
           map_preview_reel_id?: string | null
           map_video_enabled?: boolean
@@ -2641,6 +2645,8 @@ export type Database = {
           lat?: number | null
           line_qr_image_url?: string | null
           line_url?: string | null
+          booking_url?: string | null
+          booking_label?: string | null
           lng?: number | null
           map_preview_reel_id?: string | null
           map_video_enabled?: boolean

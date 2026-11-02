@@ -61,6 +61,11 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   const coverImageUrl = String(formData.get("cover_image_url") ?? "").trim();
   const websiteUrl = String(formData.get("website_url") ?? "").trim();
   const lineUrl = String(formData.get("line_url") ?? "").trim();
+  const bookingUrlRaw = String(formData.get("booking_url") ?? "").trim();
+  const bookingLabel = String(formData.get("booking_label") ?? "").trim().slice(0, 20);
+  if (bookingUrlRaw && !/^https:\/\/[^\s]+$/.test(bookingUrlRaw)) {
+    throw new Error("予約URLは https:// から始まるURLを入力してください。");
+  }
   const area = String(formData.get("area") ?? "").trim();
   const snsX = String(formData.get("sns_x") ?? "").trim();
   const snsInstagram = String(formData.get("sns_instagram") ?? "").trim();
@@ -133,6 +138,8 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
       cover_url: coverImageUrl || null,
       url: websiteUrl || null,
       line_url: lineUrl || null,
+      booking_url: bookingUrlRaw || null,
+      booking_label: bookingLabel || null,
       area: area || null,
       sns_links: {
         ...(snsX ? { x: snsX } : {}),

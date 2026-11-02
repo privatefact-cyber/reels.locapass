@@ -23,6 +23,8 @@ export function ShopSectionNav({
   lineContactUrl,
   lineQrImageUrl,
   reserveHref = null,
+  bookingUrl = null,
+  bookingLabel = null,
   sections,
 }: {
   shopId: string;
@@ -31,6 +33,9 @@ export function ShopSectionNav({
   lineQrImageUrl: string | null;
   /** 優先予約(有料掲載店のみ・公開時)の行き先。無ければ非表示。 */
   reserveHref?: string | null;
+  /** 店舗が登録した外部予約ページ(民泊・宿泊など)。https のみ。 */
+  bookingUrl?: string | null;
+  bookingLabel?: string | null;
   /** 店舗ページに実際に表示されているセクションのid。未入力で非表示のセクションはナビにも出さない。 */
   sections: string[];
 }) {
@@ -89,6 +94,19 @@ export function ShopSectionNav({
               </li>
             );
           })}
+          {bookingUrl && /^https:\/\//.test(bookingUrl) && (
+            <li>
+              <a
+                href={bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow sponsored"
+                className="flex flex-col items-center gap-1 text-[10px] font-bold text-hl-300"
+              >
+                <CalendarCheck size={16} />
+                {bookingLabel || "予約"}
+              </a>
+            </li>
+          )}
           {reserveHref && (
             <li>
               <Link href={reserveHref} className="flex flex-col items-center gap-1 text-[10px] font-bold text-hl-300">
