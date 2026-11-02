@@ -688,8 +688,9 @@ export default async function ShopDetailPage({
           </section>
         )}
 
-        {/* 動画紹介(YouTube / TikTok / Instagram / Vimeo)。未設定なら何も出さない。 */}
-        {introVideo && (
+        {/* 動画紹介(YouTube / TikTok / Instagram / Vimeo)。未設定なら何も出さない。
+            ヒーローにこのYouTube動画を流す設定のときは、同じ動画が2か所に出ないよう、ここには出さない。 */}
+        {introVideo && !(introVideo.provider === "youtube" && ytRow?.hero_use_youtube) && (
           <section className="space-y-2">
             <ShopVideo provider={introVideo.provider} videoRef={introVideo.ref} title={`${shopRow.name}の動画紹介`} posterUrl={store.coverImageUrl} />
           </section>

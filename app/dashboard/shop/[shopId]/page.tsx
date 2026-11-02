@@ -418,7 +418,7 @@ export default async function LocapassShopSettingsPage({
               <input type="checkbox" name="hero_use_youtube" defaultChecked={shop.hero_use_youtube} className="mt-0.5 h-4 w-4" />
               <span>
                 店舗ページのトップ(ヒーロー)に、この YouTube 動画を流す
-                <span className="block text-[11px] text-slate-500">音なしで自動ループ再生されます(写真や動画より優先)。YouTube の動画URLを入れたときだけ有効です。</span>
+                <span className="block text-[11px] text-slate-500">音なしで自動ループ再生されます(写真や動画より優先)。YouTube の動画URLを入れたときだけ有効です。チェックを入れると、同じ動画が重ならないよう、下の「動画紹介」は表示されなくなります(音声や字幕の切り替えを使いたいときは、チェックを外してください)。</span>
               </span>
             </label>
             <details className="mt-1 text-[11px] leading-relaxed text-slate-500">
