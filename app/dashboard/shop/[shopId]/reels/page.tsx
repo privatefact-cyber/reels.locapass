@@ -10,10 +10,7 @@ import { ReelThumbEditButton } from "@/components/reels/ReelThumbEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges, ReelRatingBadge } from "@/components/reels/ReelOrganizer";
 import { ReelInsights } from "@/components/reels/ReelInsights";
 import { ConfirmSubmitButton } from "@/components/reels/ConfirmSubmitButton";
-import { reelFileUrls } from "@/lib/reels/downloadable";
-
-/** 一括ダウンロードの1ファイルあたりの投稿数(app/api/shops/[shopId]/reels/download/route.ts の REELS_PER_ZIP と同じ)。 */
-const REELS_PER_ZIP = 30;
+import { REELS_PER_ZIP, reelFileUrls } from "@/lib/reels/downloadable";
 
 /**
  * LUXELA本家のリール投稿画面(app/dashboard/reels/page.tsx)と同じ画面。一覧・投稿・削除は

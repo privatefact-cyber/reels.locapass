@@ -2,13 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { zipStream, type ZipEntry } from "@/lib/reels/zipStream";
-import { extensionOf, reelFileUrls } from "@/lib/reels/downloadable";
+import { REELS_PER_ZIP, extensionOf, reelFileUrls } from "@/lib/reels/downloadable";
 
 export const maxDuration = 300;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-/** 1つのZIPに入れる投稿の数。大きすぎるとZIPが4GBを超えたり、関数の実行時間に収まらないので、分けてダウンロードしてもらう。 */
-export const REELS_PER_ZIP = 30;
 
 /**
  * 店舗のリール(店舗アカウント・FACES・スタッフが投稿したもの全部)を、ZIPにまとめてダウンロードする。

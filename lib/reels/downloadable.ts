@@ -1,5 +1,8 @@
 import { R2_PUBLIC_BASE_URL } from "@/lib/storage/r2";
 
+/** 1つのZIPに入れる投稿の数。大きすぎるとZIPが4GBを超えたり、関数の実行時間に収まらないので、分けてダウンロードしてもらう。 */
+export const REELS_PER_ZIP = 30;
+
 /** 一括・個別ダウンロードで取りに行ってよいURL(自前のR2 と 自前のSupabase Storage)。ブラウザから届いたURLは使わず、DBの値だけを対象にする。 */
 export function isDownloadableUrl(url: string | null | undefined): url is string {
   if (!url) return false;
