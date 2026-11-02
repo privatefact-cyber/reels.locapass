@@ -9,6 +9,7 @@ import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { EventFormSection } from "@/components/locapass-dashboard/EventFormSection";
 import { ShopPinEditor } from "@/components/locapass-dashboard/ShopPinEditor";
 import { SingleImageDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
+import { ShopQuickActions } from "@/components/locapass-dashboard/ShopQuickActions";
 import { FloorStatusDropzone } from "@/components/locapass-dashboard/FloorStatusDropzone";
 import { ShopGalleryUploader } from "@/components/locapass-dashboard/ShopGalleryUploader";
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
@@ -224,9 +225,21 @@ export default async function LocapassShopSettingsPage({
     : null;
 
   const { data: contactTapStats } = await supabase.rpc("locapass_contact_tap_stats", { p_shop_id: currentShop.id });
+  const { count: openInquiries } = await supabase
+    .from("locapass_shop_inquiries")
+    .select("id", { count: "exact", head: true })
+    .eq("shop_id", currentShop.id)
+    .eq("status", "open");
 
   return (
     <div className="space-y-8">
+      <ShopQuickActions
+        shopId={currentShop.id}
+        basePath={basePath}
+        initialStatusText={initialOccupancyText}
+        openInquiries={openInquiries ?? 0}
+      />
+
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">店舗情報</h1>

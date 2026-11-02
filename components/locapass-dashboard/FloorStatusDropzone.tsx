@@ -2,13 +2,13 @@
 
 import { useRef, useState } from "react";
 
-const STATUS_LABEL: Record<string, string> = {
+export const STATUS_LABEL: Record<string, string> = {
   available: "空席あり",
   few_seats: "残りわずか",
   full: "満席",
 };
 
-function fileToBase64(file: File): Promise<string> {
+export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
