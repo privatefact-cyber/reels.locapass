@@ -20,4 +20,4 @@ export function toReelMedia(row: LocapassReelMediaColumns): ReelMediaItem[] {
 }
 
 /** 本家 reels 相当の列名で locapass_reels を選ぶための select 断片(media は toReelMedia で組み立てる)。 */
-export const LOCAPASS_REEL_MEDIA_SELECT = "video_url, images, poster_url";
+export const LOCAPASS_REEL_MEDIA_SELECT = "video_url, images, poster_url, embed_provider, embed_ref";

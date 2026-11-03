@@ -80,6 +80,10 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
   // 動画のURLは、サイトの種類と動画の識別子だけを保存する。空なら削除(店舗ページから「動画紹介」が消える)。URLが貼られたのに判別できないときは、保存せずエラーにする。
   const videoRaw = String(formData.get("video_url") ?? "").trim();
   const video = videoRaw ? await parseVideoUrlWithShortLinks(videoRaw) : null;
+  // トップ(ヒーロー)に流すYouTubeは、ページ内の動画紹介とは別の欄。YouTubeだけ受け付ける。
+  const heroVideoRaw = String(formData.get("hero_video_url") ?? "").trim();
+  const heroVideo = heroVideoRaw ? await parseVideoUrlWithShortLinks(heroVideoRaw) : null;
+  if (heroVideoRaw && heroVideo?.provider !== "youtube") throw new Error("トップ用の動画は、YouTubeのURLを入れてください");
   if (videoRaw && !video) throw new Error("動画のURLを判別できません。YouTubeの動画URL（watch?v=…、youtu.be/…、shorts/…）を貼ってください。");
 
   if (!name) throw new Error("店舗名は必須です");
@@ -170,7 +174,8 @@ export async function updateShopProfile(shopId: string, formData: FormData) {
       video_provider: video?.provider ?? null,
       video_ref: video?.ref ?? null,
       youtube_video_id: video?.provider === "youtube" ? video.ref : null,
-      hero_use_youtube: video?.provider === "youtube" && formData.get("hero_use_youtube") === "on",
+      hero_youtube_id: heroVideo?.ref ?? null,
+      hero_use_youtube: !!heroVideo,
     })
     .eq("id", shopId)
     .select("id");

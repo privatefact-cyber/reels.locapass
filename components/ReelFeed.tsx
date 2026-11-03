@@ -967,6 +967,7 @@ export function ReelFeed({
                       reelId={tile.reel.id}
                       castId={tile.reel.castId}
                       commentsEnabled={tile.reel.isCommentsEnabled}
+                      embed={tile.reel.embed}
                       isActive={index === overlayActiveIndex}
                       videoUrl={media?.type === "video" ? media.url : undefined}
                       posterImageUrl={media?.type === "video" ? media.poster : media?.url}

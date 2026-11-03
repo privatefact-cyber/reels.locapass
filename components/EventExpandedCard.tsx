@@ -6,6 +6,7 @@ import { Share2 } from "lucide-react";
 import type { PortalEvent } from "@/lib/types/shop";
 import { formatEventDateRange } from "@/lib/events/formatEventDateRange";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { EmbedPlayer } from "@/components/embed/EmbedPlayer";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
 /**
@@ -47,6 +48,16 @@ export function EventExpandedCard({ event }: { event: PortalEvent }) {
       <div className="absolute inset-0 overflow-hidden rounded-2xl bg-tone-950">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={event.imageUrl} alt={event.title} loading="lazy" className="h-full w-full object-cover" />
+        {event.embed && (
+          // 外部動画: タップでサイト内再生。右の共有ボタン・下の文章を避ける位置に置く。
+          <EmbedPlayer
+            provider={event.embed.provider}
+            refId={event.embed.ref}
+            title={event.title}
+            posterUrl={event.imageUrl}
+            className="absolute bottom-28 left-0 right-14 top-0 md:right-0"
+          />
+        )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
         <div className="absolute inset-x-3 top-3 flex flex-wrap gap-2">
           {event.area && (

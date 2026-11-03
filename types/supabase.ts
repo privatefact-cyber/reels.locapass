@@ -1944,6 +1944,8 @@ export type Database = {
           title_en: string | null
           updated_at: string
           video_url: string | null
+          embed_provider: string | null
+          embed_ref: string | null
           wp_created_at: string | null
           wp_post_id: number | null
         }
@@ -1986,6 +1988,8 @@ export type Database = {
           title_en?: string | null
           updated_at?: string
           video_url?: string | null
+          embed_provider?: string | null
+          embed_ref?: string | null
           wp_created_at?: string | null
           wp_post_id?: number | null
         }
@@ -2028,6 +2032,8 @@ export type Database = {
           title_en?: string | null
           updated_at?: string
           video_url?: string | null
+          embed_provider?: string | null
+          embed_ref?: string | null
           wp_created_at?: string | null
           wp_post_id?: number | null
         }
@@ -2210,6 +2216,8 @@ export type Database = {
           body: string | null
           created_at: string
           created_by_staff_id: string | null
+          embed_provider: string | null
+          embed_ref: string | null
           ends_at: string | null
           gallery_image_urls: string[]
           id: string
@@ -2224,6 +2232,8 @@ export type Database = {
           body?: string | null
           created_at?: string
           created_by_staff_id?: string | null
+          embed_provider?: string | null
+          embed_ref?: string | null
           ends_at?: string | null
           gallery_image_urls?: string[]
           id?: string
@@ -2238,6 +2248,8 @@ export type Database = {
           body?: string | null
           created_at?: string
           created_by_staff_id?: string | null
+          embed_provider?: string | null
+          embed_ref?: string | null
           ends_at?: string | null
           gallery_image_urls?: string[]
           id?: string

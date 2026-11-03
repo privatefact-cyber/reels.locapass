@@ -253,7 +253,7 @@ export default async function ShopDetailPage({
   };
   // 英語・アラビア語表示では住所もローマ字表記(address_en)にする。中国語の読者は漢字の住所が読めるので原文のまま。
   // 動画紹介(YouTube / TikTok / Instagram / Vimeo)。生成済みの型に列が無いため、小さな別クエリで取る(未設定ならnull)。
-  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_use_youtube").eq("id", shopRow.id).maybeSingle();
+  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", shopRow.id).maybeSingle();
   const introVideo = resolveStoredVideo(ytRow);
   const addressDisplay = (locale === "en" || locale === "ar") && shopRow.address_en ? shopRow.address_en : store.address;
 
@@ -483,8 +483,8 @@ export default async function ShopDetailPage({
           alt={store.name}
           category={store.genre}
           seed={store.id}
-          youtubeId={introVideo?.provider === "youtube" ? introVideo.ref : null}
-          preferYoutube={!!ytRow?.hero_use_youtube}
+          youtubeId={ytRow?.hero_youtube_id ?? null}
+          preferYoutube={!!ytRow?.hero_youtube_id}
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-tone-950 via-tone-950/60 to-transparent" />
@@ -688,9 +688,8 @@ export default async function ShopDetailPage({
           </section>
         )}
 
-        {/* 動画紹介(YouTube / TikTok / Instagram / Vimeo)。未設定なら何も出さない。
-            ヒーローにこのYouTube動画を流す設定のときは、同じ動画が2か所に出ないよう、ここには出さない。 */}
-        {introVideo && !(introVideo.provider === "youtube" && ytRow?.hero_use_youtube) && (
+        {/* 動画紹介(YouTube / TikTok / Instagram)。未設定なら何も出さない。トップ用のYouTube(hero_youtube_id)とは別の欄。 */}
+        {introVideo && (
           <section className="space-y-2">
             <ShopVideo provider={introVideo.provider} videoRef={introVideo.ref} title={`${shopRow.name}の動画紹介`} posterUrl={store.coverImageUrl} />
           </section>

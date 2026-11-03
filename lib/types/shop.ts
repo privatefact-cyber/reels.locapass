@@ -85,4 +85,6 @@ export interface PortalEvent {
   portalSlug: string;
   area: string | null;
   genre: string | null;
+  /** 運営者が追加した外部動画。あれば拡大カードの中でサイト内再生する。 */
+  embed?: { provider: "youtube" | "tiktok" | "instagram"; ref: string } | null;
 }

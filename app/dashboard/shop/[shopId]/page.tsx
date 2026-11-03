@@ -104,7 +104,7 @@ export default async function LocapassShopSettingsPage({
   // 本家shopsの列名に揃える(category→genre, tel→phone, url→website_url, cover_url→cover_image_url)。
   // YouTube動画ID(型に列が無いため別クエリ)。
   const { data: spotNoticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled").eq("id", currentShop.id).maybeSingle();
-  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_use_youtube").eq("id", currentShop.id).maybeSingle();
+  const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
 
   // 自動翻訳の確認・修正欄。原文が入っている項目だけ、原文と別の言語ぶんを出す。
@@ -135,7 +135,7 @@ export default async function LocapassShopSettingsPage({
     hero_media_type: shopRow.hero_media_type,
     website_url: shopRow.url,
     usage_notes: shopRow.usage_notes,
-    hero_use_youtube: !!ytRow?.hero_use_youtube,
+    hero_video_url: ytRow?.hero_youtube_id ? videoUrlFor("youtube", ytRow.hero_youtube_id) : "",
     video_url: storedVideo ? videoUrlFor(storedVideo.provider, storedVideo.ref) : "",
     sns_links: (shopRow.sns_links ?? {}) as { x?: string; instagram?: string; line?: string },
     shop_code: shopRow.shop_code,
@@ -413,14 +413,7 @@ export default async function LocapassShopSettingsPage({
               placeholder="YouTubeの動画URLを貼る"
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
-            <p className="mt-1 text-[11px] text-slate-500">YouTubeの動画URLを入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。</p>
-            <label className="mt-2 flex items-start gap-2 text-xs text-slate-600">
-              <input type="checkbox" name="hero_use_youtube" defaultChecked={shop.hero_use_youtube} className="mt-0.5 h-4 w-4" />
-              <span>
-                店舗ページのトップ(ヒーロー)に、この YouTube 動画を流す
-                <span className="block text-[11px] text-slate-500">音なしで自動ループ再生されます(写真や動画より優先)。YouTube の動画URLを入れたときだけ有効です。チェックを入れると、同じ動画が重ならないよう、下の「動画紹介」は表示されなくなります(音声や字幕の切り替えを使いたいときは、チェックを外してください)。</span>
-              </span>
-            </label>
+            <p className="mt-1 text-[11px] text-slate-500">YouTubeの動画URLを入力すると、店舗ページの中ほどに「動画紹介」が出ます(音声や字幕の切り替えもできます)。空にすると表示されません。ページ上部(トップ)に流す動画は、下の「トップ画像/動画」の欄で別に設定します。</p>
             <details className="mt-1 text-[11px] leading-relaxed text-slate-500">
               <summary className="cursor-pointer font-semibold">くわしい説明</summary>
               <div className="mt-1 space-y-1">
@@ -535,6 +528,14 @@ export default async function LocapassShopSettingsPage({
               acceptVideo
               boxClassName="aspect-[16/6] w-full max-w-md"
             />
+            <label className="mt-3 block text-xs font-semibold text-slate-500">トップに流すYouTube動画(任意)</label>
+            <input
+              name="hero_video_url"
+              defaultValue={shop.hero_video_url}
+              placeholder="YouTubeの動画URLを貼る"
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            />
+            <p className="mt-1 text-[11px] text-slate-500">入れると、店舗ページのトップに音なしで自動ループ再生されます(上の写真や動画より優先)。空にすると、上の写真/動画が表示されます。ページ内の「動画紹介」とは別の動画を入れられます。</p>
           </div>
           <div className="sm:col-span-2">
             <label className="block text-xs font-semibold text-slate-500" htmlFor="input_lang">

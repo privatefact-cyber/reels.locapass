@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
 import type { ReelItem } from "@/lib/reels/types";
+import { toEmbedRef } from "@/lib/embed";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { parseCastSlug, castPath } from "@/lib/locapass/publicUrls";
 
@@ -98,6 +99,7 @@ export default async function CastReelsPage({
     linkUrl: row.action_url,
     createdAt: row.published_at ?? row.updated_at,
     isCommentsEnabled: row.is_comments_enabled,
+      embed: toEmbedRef(row.embed_provider, row.embed_ref),
   }));
 
   // プロフィールのグリッドから特定の投稿をタップして来た場合、その投稿から再生を始める

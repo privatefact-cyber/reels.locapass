@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { EXCLUDE_OFFICIAL_FILTER, isHiddenByDefaultGenre } from "@/lib/shop/genres";
+import { toEmbedRef } from "@/lib/embed";
 import type { PortalEvent } from "@/lib/types/shop";
 
 /**
@@ -23,7 +24,7 @@ export async function getPortalEvents(portalId: number | null): Promise<{
     supabase
       .from("locapass_shop_events")
       .select(
-        "id, title, body, starts_at, ends_at, image_url, gallery_image_urls, shop_id, shops:locapass_shops ( name, slug, area, genre:category, status, portal_id, portal:locapass_portals ( slug ) )",
+        "id, title, body, starts_at, ends_at, image_url, gallery_image_urls, embed_provider, embed_ref, shop_id, shops:locapass_shops ( name, slug, area, genre:category, status, portal_id, portal:locapass_portals ( slug ) )",
       )
       .not("image_url", "is", null)
       .order("created_at", { ascending: false }),
@@ -53,6 +54,7 @@ export async function getPortalEvents(portalId: number | null): Promise<{
         portalSlug: portal.slug,
         area: shop.area,
         genre: shop.genre,
+        embed: toEmbedRef(row.embed_provider, row.embed_ref),
       },
     ];
   });

@@ -64,6 +64,7 @@ export function ReelLoopFeed({ reels }: { reels: ReelItem[] }) {
               reelId={reel.id}
               castId={reel.castId}
               commentsEnabled={reel.isCommentsEnabled}
+              embed={reel.embed}
               isActive={index === activeIndex}
               videoUrl={media?.type === "video" ? media.url : undefined}
               posterImageUrl={media?.type === "video" ? media.poster : media?.url}

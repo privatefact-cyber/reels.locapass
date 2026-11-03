@@ -218,6 +218,7 @@ export function MapReelOverlay({
                 reelId={reel.id}
                 castId={reel.castId}
                 commentsEnabled={reel.isCommentsEnabled}
+                embed={reel.embed}
                 isActive={!closing && index === activeIndex}
                 videoUrl={media?.type === "video" ? media.url : undefined}
                 posterImageUrl={media?.type === "video" ? media.poster : media?.url}

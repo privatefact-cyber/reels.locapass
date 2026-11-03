@@ -30,6 +30,8 @@ export type ReelItem = {
   isCommentsEnabled: boolean;
   /** 一覧タイル(正方形)に見せる位置(0〜100%、CSSのobject-positionと同じ)。投稿者が指定したときだけ入る。nullは従来どおり中央。 */
   thumbFocus?: { x: number; y: number } | null;
+  /** 運営者が追加した外部動画(YouTubeショート/TikTok/Instagram)。入っているときは、カードの中でサイト内再生する。 */
+  embed?: { provider: "youtube" | "tiktok" | "instagram"; ref: string } | null;
 };
 
 /** システム管理者が投稿するPR(広告)。フィードに指定頻度で紛れ込ませる。 */
