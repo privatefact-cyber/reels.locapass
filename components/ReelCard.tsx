@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { reelShareUrl, SITE_ORIGIN } from "@/lib/siteOrigin";
 import { Heart, Loader2, Maximize, MessageCircle, Plus, Share2, Volume2, VolumeX } from "lucide-react";
 import { AvatarPeek } from "@/components/AvatarPeek";
 import { ReelCommentSheet } from "@/components/ReelCommentSheet";
@@ -191,7 +192,8 @@ export function ReelCard({
   }, [isActive]);
 
   async function handleShare() {
-    const shareUrl = new URL(ctaUrl, window.location.origin).toString();
+    // リールはその1本の共有ページ、店舗カード等は遷移先を、常に正規ドメイン(vercel.appなどで開いていても)で渡す。
+    const shareUrl = reelId && !isAd ? reelShareUrl(reelId) : new URL(ctaUrl, SITE_ORIGIN).toString();
     const shareData = { title: `LOCAPASS | ${accountName}`, url: shareUrl };
 
     if (navigator.share) {
