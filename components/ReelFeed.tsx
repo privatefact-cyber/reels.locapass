@@ -248,14 +248,14 @@ const GridTile = memo(function GridTile({
 
       <span
         className={`pointer-events-none absolute left-1.5 top-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wide ${
-          tile.kind === "cast"
+          tile.kind === "cast" && tile.reel.castId
             ? "bg-accent/90 text-on-accent"
             : tile.kind === "ad"
               ? "bg-hl-400/90 text-on-accent"
               : "bg-main/20 text-main"
         }`}
       >
-        {tile.kind === "cast" ? "FACES" : tile.kind === "ad" ? "PR" : "SHOP"}
+        {tile.kind === "cast" ? (tile.reel.castId ? "FACES" : "SHOP.R") : tile.kind === "ad" ? "PR" : "SHOP"}
       </span>
 
       <span className="pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-4">
