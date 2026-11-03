@@ -112,7 +112,7 @@ export default async function AdminEmbedsPage() {
           <p className="mt-1 text-[11px] text-slate-500">YouTubeとTikTokは自動で取得します。Instagramなど自動で取れないときは、店舗の表紙画像を代わりに使います(あとから一覧で差し替えられます)。上限3MB。</p>
         </div>
         <button type="submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-          追加する
+          投稿する
         </button>
       </form>
 

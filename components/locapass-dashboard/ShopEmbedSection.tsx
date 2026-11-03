@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
 import { addShopEmbed } from "@/app/dashboard/shop/[shopId]/embeds/actions";
 
 const inputClass =
@@ -8,6 +11,25 @@ const inputClass =
  * 契約していない店舗(enabled=false)には、フォームを灰色にし、オプションのボタンも押せない状態で出す(準備中)。
  */
 export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; enabled: boolean; kind: "reel" | "event" }) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [pending, startTransition] = useTransition();
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    setStatus(null);
+    startTransition(async () => {
+      try {
+        await addShopEmbed.bind(null, shopId)(fd);
+        formRef.current?.reset();
+        setStatus({ ok: true, text: "投稿が完了しました" });
+      } catch (err) {
+        setStatus({ ok: false, text: err instanceof Error ? err.message : "投稿に失敗しました" });
+      }
+    });
+  }
+
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between gap-2">
@@ -21,8 +43,8 @@ export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; en
         説明文は自動で翻訳されます(動画の中身は原語のままです)。自分のアカウントの動画、または権利のある動画だけを使ってください。
       </p>
 
-      <form action={addShopEmbed.bind(null, shopId)}>
-        <fieldset disabled={!enabled} className="space-y-3 disabled:opacity-70">
+      <form ref={formRef} onSubmit={onSubmit}>
+        <fieldset disabled={!enabled || pending} className="space-y-3 disabled:opacity-70">
           <input type="hidden" name="kind" value={kind} />
           <div>
             <label className="block text-xs font-semibold text-slate-500">動画のURL</label>
@@ -66,9 +88,22 @@ export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; en
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {enabled ? (
-            <button type="submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-              追加する
-            </button>
+            <>
+              <button
+                type="submit"
+                disabled={pending}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+              >
+                {pending ? "投稿中…" : "投稿する"}
+              </button>
+              {pending && <span className="text-xs text-slate-500">動画を取り込んで、翻訳しています。しばらくお待ちください。</span>}
+              {status && (
+                <span className={`text-sm font-semibold ${status.ok ? "text-emerald-600" : "text-red-600"}`}>
+                  {status.ok ? "✓ " : ""}
+                  {status.text}
+                </span>
+              )}
+            </>
           ) : (
             <>
               {/* オプションの申し込みは準備中。押せない(グレーアウト)状態で見せておく。 */}
