@@ -40,7 +40,7 @@ export default async function ReelSharePage({ params }: { params: Promise<{ id: 
         <ChevronLeft size={18} />
         {reel.shopName}
       </Link>
-      <ReelLoopFeed reels={[reel]} />
+      <ReelLoopFeed reels={[reel]} loop={false} />
     </div>
   );
 }

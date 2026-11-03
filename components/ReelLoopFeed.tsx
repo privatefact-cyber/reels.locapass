@@ -15,7 +15,7 @@ const REEL_WINDOW = 4;
  * 縦スワイプのリール一覧。最後まで見きったら先頭へ戻るのではなく、
  * 同じ並びをもう一周ぶん継ぎ足して下スワイプを続けられるようにする(永遠にループ)。
  */
-export function ReelLoopFeed({ reels }: { reels: ReelItem[] }) {
+export function ReelLoopFeed({ reels, loop = true }: { reels: ReelItem[]; /** falseなら継ぎ足さず、1周で終わる(1本だけの共有ページ用)。 */ loop?: boolean }) {
   const [cycles, setCycles] = useState(1);
   const idsKey = reels.map((r) => r.id).join(",");
 
@@ -34,11 +34,11 @@ export function ReelLoopFeed({ reels }: { reels: ReelItem[] }) {
   const { liked, likeCounts, toggleLike } = useReelLikes(reels);
 
   useEffect(() => {
-    if (!reels.length) return;
+    if (!reels.length || !loop) return;
     if (activeIndex >= loopedReels.length - 3) {
       setCycles((c) => Math.min(c + 1, MAX_CYCLES));
     }
-  }, [activeIndex, loopedReels.length, reels.length]);
+  }, [activeIndex, loopedReels.length, reels.length, loop]);
 
   if (!reels.length) {
     return <p className="px-2 py-10 text-center text-sm text-tone-500">投稿はまだありません。</p>;
