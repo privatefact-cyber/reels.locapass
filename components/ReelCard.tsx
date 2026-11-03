@@ -18,6 +18,7 @@ import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 import { useReelViewTracking } from "@/lib/reels/useReelViewTracking";
 import { EmbedPlayer } from "@/components/embed/EmbedPlayer";
+import { useEmbedSoundPreference } from "@/lib/reels/useEmbedSoundPreference";
 import type { EmbedRef } from "@/lib/embed";
 
 export type ReelCardProps = {
@@ -113,10 +114,8 @@ export function ReelCard({
 }: ReelCardProps) {
   const { t, locale } = useLocale();
   // 外部動画(YouTube/TikTok)の音の入/切。自動再生は無音で始まる。カード右のスピーカーボタンで切り替える。
-  const [embedSound, setEmbedSound] = useState(false);
-  useEffect(() => {
-    if (!isActive) setEmbedSound(false);
-  }, [isActive]);
+  // 一度音を出したら、このタブでは次の外部動画も音ありで始める(カードごとに押し直さなくてよい)。
+  const [embedSound, setEmbedSound] = useEmbedSoundPreference();
   const embedHasSound = !!embed && embed.provider !== "instagram";
   // 投稿者向けインサイト用の閲覧記録(広告は対象外)。
   useReelViewTracking(isAd ? undefined : reelId, isActive);
@@ -401,7 +400,7 @@ export function ReelCard({
         {embedHasSound && isActive && (
           <button
             type="button"
-            onClick={() => setEmbedSound((v) => !v)}
+            onClick={() => setEmbedSound(!embedSound)}
             aria-label={embedSound ? "音を消す" : "音を出す"}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
           >

@@ -76,8 +76,16 @@ export function EmbedPlayer({
   }
 
   // 呼び出し側が音を持つときは、その値が変わったらプレーヤーへ伝える。
+  // プレーヤーの準備ができる前の指示は無視されるため、再生が始まってから数秒間、繰り返し送る。
   useEffect(() => {
-    if (controlled && playing) applySound(soundOnProp as boolean);
+    if (!controlled || !playing) return;
+    applySound(soundOnProp as boolean);
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      if (++tries > 10) return window.clearInterval(timer);
+      applySound(soundOnProp as boolean);
+    }, 700);
+    return () => window.clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soundOnProp, playing]);
 
@@ -111,7 +119,7 @@ export function EmbedPlayer({
     let tries = 0;
     const timer = window.setInterval(() => {
       if (started || ++tries > 12) return window.clearInterval(timer);
-      send("mute");
+      if (!soundOn) send("mute");
       send("play");
     }, 700);
     return () => {
