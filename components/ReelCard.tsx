@@ -23,6 +23,8 @@ import type { EmbedRef } from "@/lib/embed";
 export type ReelCardProps = {
   /** 運営者が追加した外部動画。あれば動画の代わりにサイト内の埋め込みプレーヤーを出す。 */
   embed?: EmbedRef | null;
+  /** 外部動画カードを、画面に出る直前から先読みしておく(次/前のカード)。 */
+  embedPreload?: boolean;
   /** コメント欄を開くのに必要なリールID。店舗タイルなど、コメント対象のリールが無いカードでは省略する(コメントアイコン自体を出さない)。 */
   reelId?: string;
   /** リール投稿者のキャストID(店舗投稿など、キャストに紐付かないリールはnull)。 */
@@ -107,6 +109,7 @@ export function ReelCard({
   onEnterImmersive,
   isAd = false,
   embed = null,
+  embedPreload = false,
 }: ReelCardProps) {
   const { t, locale } = useLocale();
   // 投稿者向けインサイト用の閲覧記録(広告は対象外)。
@@ -260,6 +263,7 @@ export function ReelCard({
             title={accountName}
             posterUrl={posterImageUrl ? posterImage(sanitizeImageUrl(posterImageUrl)) : null}
             active={isActive}
+            preload={embedPreload}
             className="absolute bottom-28 left-0 right-14 top-0 md:right-0"
           />
         </>

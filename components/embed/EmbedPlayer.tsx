@@ -26,6 +26,7 @@ export function EmbedPlayer({
   title,
   posterUrl,
   active = true,
+  preload = false,
   className = "absolute inset-0",
 }: {
   provider: VideoProvider;
@@ -34,6 +35,8 @@ export function EmbedPlayer({
   posterUrl?: string | null;
   /** falseになったら(画面から外れたら)再生を止めてサムネイルへ戻す。 */
   active?: boolean;
+  /** 画面に出る直前(次/前のカード)。Instagramは、スワイプで着いたときに待たないよう、ここから先読みを始める。 */
+  preload?: boolean;
   /** 配置(親の中で絶対配置する)。 */
   className?: string;
 }) {
@@ -41,19 +44,17 @@ export function EmbedPlayer({
   const [loaded, setLoaded] = useState(false);
   const label = VIDEO_PROVIDER_LABEL[provider];
   // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
-  const warm = active && provider === "instagram";
+  const warm = (active || preload) && provider === "instagram";
   const mounted = playing || warm;
 
   useEffect(() => {
-    if (!active) {
-      setPlaying(false);
-      setLoaded(false);
-    }
-  }, [active]);
+    if (!active) setPlaying(false);
+    if (!active && !preload) setLoaded(false);
+  }, [active, preload]);
 
   // 画面に出たら、埋め込み先への接続だけ先に済ませておく。
   useEffect(() => {
-    if (!active) return;
+    if (!active && !preload) return;
     const links = PRECONNECT_HOSTS[provider].map((href) => {
       const link = document.createElement("link");
       link.rel = "preconnect";
@@ -63,7 +64,7 @@ export function EmbedPlayer({
       return link;
     });
     return () => links.forEach((l) => l.remove());
-  }, [active, provider]);
+  }, [active, preload, provider]);
 
   return (
     <div className={`${className} overflow-hidden bg-black`}>
@@ -123,7 +124,7 @@ export function EmbedPlayer({
         <button type="button" onClick={() => setPlaying(true)} aria-label={`${title}(${label})を再生`} className="group absolute inset-0 z-10 block h-full w-full">
           {posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={posterUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            <img src={posterUrl} alt="" decoding="async" className="h-full w-full object-cover" />
           ) : (
             <span className="block h-full w-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black" />
           )}
