@@ -86,8 +86,6 @@ export default async function LocapassShopDashboardLayout({
                 {item.label}
               </Link>
             ))}
-          </div>
-          <div className="flex shrink-0 items-center gap-1 border-l border-slate-200 pl-2">
             {optRow?.shop_code && (
               // 更新した内容を、管理画面から離れずに確かめられるよう、掲載ページは別タブで開く。
               <a
@@ -99,6 +97,8 @@ export default async function LocapassShopDashboardLayout({
                 掲載ページを見る ↗
               </a>
             )}
+          </div>
+          <div className="flex shrink-0 items-center gap-1 border-l border-slate-200 pl-2">
             <Link href={`${basePath}/support`} className="whitespace-nowrap rounded-lg bg-sky-50 px-3 py-2 text-sm font-bold text-sky-700 hover:bg-sky-100">
               ❓ 使い方
             </Link>

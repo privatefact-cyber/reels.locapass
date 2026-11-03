@@ -21,7 +21,12 @@ export async function addShopEmbed(shopId: string, formData: FormData) {
   // 契約の確認は、店舗が書き換えられない値を、運営側の権限で読んで行う。
   const admin = createAdminClient();
   const { data: opt } = await (admin as any).from("locapass_shops").select("embed_enabled").eq("id", shopId).maybeSingle();
-  if (!opt?.embed_enabled) throw new Error("外部動画の追加は、オプションの契約が必要です");
+  // 運営者(ポータル管理者以上)は、契約の有無に関わらず追加できる。
+  const { data: shopPortal } = await (admin as any).from("locapass_shops").select("portal_id").eq("id", shopId).maybeSingle();
+  const { data: isOperator } = shopPortal?.portal_id
+    ? await supabase.rpc("locapass_is_portal_admin", { p_portal_id: shopPortal.portal_id })
+    : { data: false };
+  if (!opt?.embed_enabled && !isOperator) throw new Error("外部動画の追加は、オプションの契約が必要です");
 
   await createEmbedPostForShop(admin, shopId, formData);
   revalidatePath(`/dashboard/shop/${shopId}/reels`);
