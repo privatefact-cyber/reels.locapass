@@ -4,7 +4,8 @@
  * 低価格のAndroidで特に遅くなるため。変換できないURLは、そのまま返す。
  */
 
-const STORAGE_MARKER = "/storage/v1/object/public/";
+import { resizedUrl } from "@/lib/images/imgUrl";
+
 const STREAM_THUMB = /\/thumbnails\/thumbnail\.jpg(?:[?#].*)?$/;
 
 function placeholderThumb(url: string): string | null {
@@ -18,14 +19,8 @@ export function gridThumb(url: string | null | undefined, size = 360): string | 
   if (!url) return undefined;
   const ph = placeholderThumb(url);
   if (ph) return ph;
-  if (url.includes(STORAGE_MARKER)) {
-    const u = new URL(url.replace(STORAGE_MARKER, "/storage/v1/render/image/public/"));
-    u.searchParams.set("width", String(size));
-    u.searchParams.set("height", String(size));
-    u.searchParams.set("resize", "cover");
-    u.searchParams.set("quality", "70");
-    return u.toString();
-  }
+  const resized = resizedUrl(url, { width: size, height: size, fit: "cover", quality: 70 });
+  if (resized) return resized;
   if (STREAM_THUMB.test(url)) {
     const base = url.replace(/\?.*$/, "");
     return `${base}?width=${size}&height=${size}&fit=crop`;
@@ -44,13 +39,8 @@ export function focusThumb(url: string | null | undefined, size = 360): string |
   const width = size * 2;
   // 仮の画像(/placeholders/...)は、正方形に縮小済みの版しか無いので、位置の指定は使えない。元の画像をそのまま返す。
   if (placeholderThumb(url)) return url;
-  if (url.includes(STORAGE_MARKER)) {
-    const u = new URL(url.replace(STORAGE_MARKER, "/storage/v1/render/image/public/"));
-    u.searchParams.set("width", String(width));
-    u.searchParams.set("resize", "contain");
-    u.searchParams.set("quality", "70");
-    return u.toString();
-  }
+  const resized = resizedUrl(url, { width, fit: "contain", quality: 70 });
+  if (resized) return resized;
   if (STREAM_THUMB.test(url)) {
     return `${url.replace(/\?.*$/, "")}?width=${width}`;
   }
@@ -60,14 +50,8 @@ export function focusThumb(url: string | null | undefined, size = 360): string |
 /** 全画面のポスター(縦横比を保つ)用。 */
 export function posterImage(url: string | null | undefined, width = 720): string | undefined {
   if (!url) return undefined;
-  if (url.includes(STORAGE_MARKER)) {
-    const u = new URL(url.replace(STORAGE_MARKER, "/storage/v1/render/image/public/"));
-    u.searchParams.set("width", String(width));
-    u.searchParams.set("height", String(width * 2.4));
-    u.searchParams.set("resize", "contain");
-    u.searchParams.set("quality", "75");
-    return u.toString();
-  }
+  const resized = resizedUrl(url, { width, height: width * 2.4, fit: "contain", quality: 75 });
+  if (resized) return resized;
   if (STREAM_THUMB.test(url)) {
     return `${url.replace(/\?.*$/, "")}?width=${width}`;
   }

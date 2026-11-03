@@ -1,3 +1,5 @@
+import { isAllowedSource, resizeFromUrl } from "@/lib/images/resizeSource";
+
 /** 日本語を含む文字だけを切り出した Noto Sans JP を Google Fonts から取る(失敗したら null → 英数字だけで描く)。 */
 export async function loadFont(text: string): Promise<ArrayBuffer | null> {
   try {
@@ -16,19 +18,18 @@ export async function loadFont(text: string): Promise<ArrayBuffer | null> {
   }
 }
 
-/** 画像を取ってdata URLにする(webpはsatoriが読めないのでnull)。取れなければnull。 */
+/** 画像を横長(1200x630)に切り抜いてdata URLにする。自前の縮小処理を使う(Supabaseの画像変換は枚数課金のため使わない)。 */
 export async function loadPhoto(url: string): Promise<string | null> {
   try {
-    const marker = "/storage/v1/object/public/";
-    const src = url.includes(marker)
-      ? `${url.replace(marker, "/storage/v1/render/image/public/")}?width=1200&height=630&resize=cover&format=origin`
-      : url;
-    const res = await fetch(src);
+    if (isAllowedSource(url)) {
+      const out = await resizeFromUrl(url, { width: 1200, height: 630, fit: "cover", quality: 80, format: "jpeg" });
+      return out ? `data:${out.contentType};base64,${out.data.toString("base64")}` : null;
+    }
+    const res = await fetch(url);
     if (!res.ok) return null;
     const type = res.headers.get("content-type") ?? "image/jpeg";
-    if (!/^image\/(jpeg|png)/.test(type)) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    return `data:${type};base64,${buf.toString("base64")}`;
+    if (!/^image\/(jpeg|png)/.test(type)) return null; // satoriはwebpを読めない
+    return `data:${type};base64,${Buffer.from(await res.arrayBuffer()).toString("base64")}`;
   } catch {
     return null;
   }

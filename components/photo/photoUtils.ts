@@ -1,22 +1,12 @@
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
+import { resizedUrl } from "@/lib/images/imgUrl";
 
-// Supabase Storageの画像変換(render/image)で縮小して配信する。元画像は3000px超あるため、
+// 自前の縮小API(/api/img)で縮小して配信する(Supabaseの画像変換は枚数課金のため使わない)。元画像は3000px超あるため、
 // 格子(正方形)は小さく、全画面ビューは幅を絞って読み込む。変換できないURLはそのまま使う。
 export function photoResized(url: string, width: number, square: boolean) {
-  const marker = "/storage/v1/object/public/";
-  if (!url.includes(marker)) return url;
-  const u = new URL(url.replace(marker, "/storage/v1/render/image/public/"));
-  u.searchParams.set("width", String(width));
-  if (square) {
-    u.searchParams.set("height", String(width));
-    u.searchParams.set("resize", "cover");
-  } else {
-    // 幅だけ指定すると高さが元のまま残り、中央が切り取られてしまう(縦長写真が細い帯になる)。
-    // 縦横どちらにも上限を付けて「縦横比を保ったまま収める」(contain)にする。
-    u.searchParams.set("height", String(width * 2));
-    u.searchParams.set("resize", "contain");
-  }
-  return u.toString();
+  // 正方形は枠いっぱいに切り抜く(cover)。それ以外は、幅だけ指定すると縦長写真が細い帯になるので、
+  // 縦横どちらにも上限を付けて「縦横比を保ったまま収める」(contain)。
+  return resizedUrl(url, square ? { width, height: width, fit: "cover" } : { width, height: width * 2, fit: "contain" }) ?? url;
 }
 
 export function photoRouteUrl(post: PhotoPost) {

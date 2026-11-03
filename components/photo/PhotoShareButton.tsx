@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Download, ImageIcon, Link2, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoShareUrl } from "@/components/photo/sharePhoto";
-import { photoResized } from "@/components/photo/photoUtils";
+import { resizedUrl } from "@/lib/images/imgUrl";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /**
@@ -83,8 +83,8 @@ export function PhotoShareButton({
   /** 写真ファイルを取得する(元の画像形式のまま、幅1600pxに縮小)。 */
   async function fetchPhotoFile(): Promise<File | null> {
     try {
-      const src = photoResized(post.imageUrl, 1600, false);
-      const res = await fetch(src.includes("/render/image/") ? `${src}&format=origin` : src);
+      const src = resizedUrl(post.imageUrl, { width: 1600, height: 3200, fit: "contain", quality: 85, format: "jpeg" }) ?? post.imageUrl;
+      const res = await fetch(src);
       if (!res.ok) return null;
       const blob = await res.blob();
       const ext = blob.type.includes("png") ? "png" : "jpg";
