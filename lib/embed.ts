@@ -7,7 +7,8 @@ export function embedSrc(provider: VideoProvider, ref: string, autoplay = true, 
       // 終わったら頭に戻して繰り返す(ショート向け)。関連動画は同じチャンネルのものだけにする。
       return `https://www.youtube.com/embed/${ref}?playsinline=1&rel=0&loop=1&playlist=${ref}${autoplay ? "&autoplay=1" : ""}${muted ? "&mute=1" : ""}`;
     case "tiktok":
-      return `https://www.tiktok.com/embed/v2/${ref}`;
+      // TikTok現行の埋め込みプレーヤー(oEmbedが返す形式)。自動再生・無音・ループを指定できる。
+      return `https://www.tiktok.com/player/v1/${ref}?loop=1&music_info=1&description=1${autoplay ? "&autoplay=1" : ""}${muted ? "&muted=1" : ""}`;
     case "instagram":
       return `https://www.instagram.com/${ref}/embed/`;
   }

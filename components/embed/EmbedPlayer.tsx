@@ -18,7 +18,7 @@ const PRECONNECT_HOSTS: Record<VideoProvider, string[]> = {
  *
  * 読み込みが遅い(Instagramは数秒〜10秒ほど)ため、画面に出た時点で接続だけ先に済ませ、
  * Instagramはタップを待たずに見えない状態で先に読み込んでおく(再生ボタンを押した時には読み込み済みになる)。
- * YouTube/TikTokは、見られないまま音が出たり通信が増えたりしないよう、タップしてから読み込む。
+ * YouTube/TikTokは、画面に出ているカードだけ無音で自動再生する(見られていないカードでは読み込まない)。
  */
 export function EmbedPlayer({
   provider,
@@ -38,7 +38,7 @@ export function EmbedPlayer({
   active?: boolean;
   /** 画面に出る直前(次/前のカード)。Instagramは、スワイプで着いたときに待たないよう、ここから先読みを始める。 */
   preload?: boolean;
-  /** YouTubeを、画面に出たら無音で自動再生する(フィードのカード用)。音は再生画面の音量ボタンで出す。 */
+  /** YouTube/TikTokを、画面に出たら無音で自動再生する(フィードのカード用)。音は再生画面の音量ボタンで出す。 */
   autoStart?: boolean;
   /** 配置(親の中で絶対配置する)。 */
   className?: string;
@@ -47,7 +47,7 @@ export function EmbedPlayer({
   const [loaded, setLoaded] = useState(false);
   // 閉じるを押したら、そのカードでは自動再生を再開しない(画面から外れるまで)。
   const [dismissed, setDismissed] = useState(false);
-  const autoPlay = autoStart && provider === "youtube";
+  const autoPlay = autoStart && (provider === "youtube" || provider === "tiktok");
   const label = VIDEO_PROVIDER_LABEL[provider];
   // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
   const warm = (active || preload) && provider === "instagram";
