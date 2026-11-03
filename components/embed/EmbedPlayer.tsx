@@ -5,11 +5,20 @@ import { ExternalLink, Play, X } from "lucide-react";
 import { embedSrc } from "@/lib/embed";
 import { VIDEO_PROVIDER_LABEL, videoUrlFor, type VideoProvider } from "@/lib/video";
 
+const PRECONNECT_HOSTS: Record<VideoProvider, string[]> = {
+  youtube: ["https://www.youtube.com", "https://i.ytimg.com"],
+  tiktok: ["https://www.tiktok.com"],
+  instagram: ["https://www.instagram.com", "https://static.cdninstagram.com"],
+};
+
 /**
  * 外部動画(YouTubeショート / TikTok / Instagramリール)をサイト内で再生する。
- * 最初はサムネイルと再生ボタンだけを出し(埋め込みのスクリプトが重いため)、タップしたときに初めて読み込む。
- * 時間の制限は無い。再生中も右上の×でサムネイルに戻せる(縦スワイプで次へ送るため)。
+ * 時間の制限は無い。再生中も上の帯の×でサムネイルに戻せる(縦スワイプで次へ送るため)。
  * 元の投稿へのリンクは、埋め込みが開けない場合に備えた控えめなものだけにして、サイト内に留まってもらう。
+ *
+ * 読み込みが遅い(Instagramは数秒〜10秒ほど)ため、画面に出た時点で接続だけ先に済ませ、
+ * Instagramはタップを待たずに見えない状態で先に読み込んでおく(再生ボタンを押した時には読み込み済みになる)。
+ * YouTube/TikTokは、見られないまま音が出たり通信が増えたりしないよう、タップしてから読み込む。
  */
 export function EmbedPlayer({
   provider,
@@ -31,6 +40,9 @@ export function EmbedPlayer({
   const [playing, setPlaying] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const label = VIDEO_PROVIDER_LABEL[provider];
+  // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
+  const warm = active && provider === "instagram";
+  const mounted = playing || warm;
 
   useEffect(() => {
     if (!active) {
@@ -39,8 +51,39 @@ export function EmbedPlayer({
     }
   }, [active]);
 
+  // 画面に出たら、埋め込み先への接続だけ先に済ませておく。
+  useEffect(() => {
+    if (!active) return;
+    const links = PRECONNECT_HOSTS[provider].map((href) => {
+      const link = document.createElement("link");
+      link.rel = "preconnect";
+      link.href = href;
+      link.crossOrigin = "anonymous";
+      document.head.appendChild(link);
+      return link;
+    });
+    return () => links.forEach((l) => l.remove());
+  }, [active, provider]);
+
   return (
     <div className={`${className} overflow-hidden bg-black`}>
+      {/* 同じiframeを出し入れしないよう、読み込み中も再生中も同じ要素のまま、見た目だけ切り替える(切り替えで読み込み直しにならない)。 */}
+      {mounted && (
+        <iframe
+          src={embedSrc(provider, refId)}
+          title={title}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          tabIndex={playing ? 0 : -1}
+          aria-hidden={!playing}
+          onLoad={() => setTimeout(() => setLoaded(true), provider === "youtube" ? 400 : 3000)}
+          className={
+            playing
+              ? "absolute inset-x-0 bottom-0 top-8 h-[calc(100%-2rem)] w-full border-0 bg-black"
+              : "pointer-events-none absolute inset-0 h-full w-full border-0 opacity-0"
+          }
+        />
+      )}
       {playing ? (
         <>
           {!loaded && (
@@ -66,7 +109,8 @@ export function EmbedPlayer({
               type="button"
               onClick={() => {
                 setPlaying(false);
-                setLoaded(false);
+                // 先読みしているInstagramは、閉じても読み込み済みのまま残す(また開いたとき待たない)。
+                if (!warm) setLoaded(false);
               }}
               aria-label="閉じる"
               className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-white"
@@ -74,17 +118,9 @@ export function EmbedPlayer({
               <X size={14} />
             </button>
           </div>
-          <iframe
-            src={embedSrc(provider, refId)}
-            title={title}
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-            allowFullScreen
-            onLoad={() => setTimeout(() => setLoaded(true), provider === "youtube" ? 400 : 3000)}
-            className="absolute inset-x-0 bottom-0 top-8 h-[calc(100%-2rem)] w-full border-0 bg-black"
-          />
         </>
       ) : (
-        <button type="button" onClick={() => setPlaying(true)} aria-label={`${title}(${label})を再生`} className="group absolute inset-0 block h-full w-full">
+        <button type="button" onClick={() => setPlaying(true)} aria-label={`${title}(${label})を再生`} className="group absolute inset-0 z-10 block h-full w-full">
           {posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={posterUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
