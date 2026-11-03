@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Play, X } from "lucide-react";
+import { ExternalLink, Play, Volume2, VolumeX, X } from "lucide-react";
 import { embedSrc } from "@/lib/embed";
 import { VIDEO_PROVIDER_LABEL, videoUrlFor, type VideoProvider } from "@/lib/video";
 
@@ -50,6 +50,21 @@ export function EmbedPlayer({
   const autoPlay = autoStart && (provider === "youtube" || provider === "tiktok");
   const label = VIDEO_PROVIDER_LABEL[provider];
   const frame = useRef<HTMLIFrameElement>(null);
+  // 自動再生は無音で始まる。埋め込み側の音量ボタンは再生中に隠れることがあるため、こちらにも音のボタンを置く。
+  const [soundOn, setSoundOn] = useState(false);
+
+  function toggleSound() {
+    const next = !soundOn;
+    const w = frame.current?.contentWindow;
+    if (!w) return;
+    if (provider === "tiktok") {
+      w.postMessage({ "x-tiktok-player": true, type: next ? "unMute" : "mute", value: undefined }, "*");
+    } else if (provider === "youtube") {
+      w.postMessage(JSON.stringify({ event: "command", func: next ? "unMute" : "mute", args: [] }), "*");
+      if (next) w.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [100] }), "*");
+    }
+    setSoundOn(next);
+  }
   // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
   const warm = (active || preload) && provider === "instagram";
   const mounted = playing || warm;
@@ -57,6 +72,7 @@ export function EmbedPlayer({
   useEffect(() => {
     if (!active) {
       setPlaying(false);
+      setSoundOn(false);
       setDismissed(false);
     } else if (autoPlay && !dismissed) {
       setPlaying(true);
@@ -141,12 +157,24 @@ export function EmbedPlayer({
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-[10px] text-white/70"
             >
-              表示されない場合は {label} で見る <ExternalLink size={10} />
+              {label}で見る <ExternalLink size={10} />
             </a>
+            {autoPlay && (
+              <button
+                type="button"
+                onClick={toggleSound}
+                aria-label={soundOn ? "音を消す" : "音を出す"}
+                className="ml-auto mr-2 flex h-6 items-center gap-1 rounded-full bg-white/20 px-2 text-[11px] font-semibold text-white"
+              >
+                {soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                {soundOn ? "音あり" : "音を出す"}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => {
                 setPlaying(false);
+                setSoundOn(false);
                 setDismissed(true);
                 // 先読みしているInstagramは、閉じても読み込み済みのまま残す(また開いたとき待たない)。
                 if (!warm) setLoaded(false);
