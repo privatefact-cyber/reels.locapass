@@ -265,7 +265,7 @@ export function ReelCard({
             active={isActive}
             preload={embedPreload}
             autoStart
-            className="absolute bottom-28 left-0 right-14 top-0 md:right-0"
+            className={embed.provider === "instagram" ? "absolute bottom-28 left-0 right-14 top-0 md:right-0" : "absolute inset-0"}
           />
         </>
       ) : videoUrl && isActive ? (

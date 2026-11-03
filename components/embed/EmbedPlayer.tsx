@@ -133,7 +133,9 @@ export function EmbedPlayer({
           onLoad={() => setTimeout(() => setLoaded(true), provider === "youtube" ? 400 : 3000)}
           className={
             playing
-              ? "absolute inset-x-0 bottom-0 top-8 h-[calc(100%-2rem)] w-full border-0 bg-black"
+              ? autoPlay
+                ? "absolute inset-0 h-full w-full border-0 bg-black"
+                : "absolute inset-x-0 bottom-0 top-8 h-[calc(100%-2rem)] w-full border-0 bg-black"
               : "pointer-events-none absolute inset-0 h-full w-full border-0 opacity-0"
           }
         />
@@ -150,12 +152,12 @@ export function EmbedPlayer({
             </div>
           )}
           {/* 上の細い帯に「閉じる」と元の投稿へのリンクを置く(埋め込み側のボタンと重ならないように)。 */}
-          <div className="absolute inset-x-0 top-0 z-20 flex h-8 items-center justify-between bg-black px-2">
+          <div className={autoPlay ? "absolute inset-x-0 top-0 z-20 flex items-center gap-2 p-2" : "absolute inset-x-0 top-0 z-20 flex h-8 items-center justify-between bg-black px-2"}>
             <a
               href={videoUrlFor(provider, refId)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[10px] text-white/70"
+              className={`flex items-center gap-1 text-[10px] text-white/70 ${autoPlay ? "mr-auto rounded-full bg-black/60 px-2 py-1" : ""}`}
             >
               {label}で見る <ExternalLink size={10} />
             </a>
@@ -164,7 +166,7 @@ export function EmbedPlayer({
                 type="button"
                 onClick={toggleSound}
                 aria-label={soundOn ? "音を消す" : "音を出す"}
-                className="ml-auto mr-2 flex h-6 items-center gap-1 rounded-full bg-white/20 px-2 text-[11px] font-semibold text-white"
+                className="flex h-6 items-center gap-1 rounded-full bg-black/60 px-2 text-[11px] font-semibold text-white"
               >
                 {soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
                 {soundOn ? "音あり" : "音を出す"}
@@ -180,7 +182,7 @@ export function EmbedPlayer({
                 if (!warm) setLoaded(false);
               }}
               aria-label="閉じる"
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-white"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
             >
               <X size={14} />
             </button>
