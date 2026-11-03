@@ -14,8 +14,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * 呼べるのは、その店舗の管理者(shop_admin)・担当ポータルの管理者・運営者だけ(DBの locapass_is_shop_admin と同じ判定)。
  * ダミー(イメージ映像)は含めない。ZIPは無圧縮で、受け取った分をそのまま流す(メモリにためない)。
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ shopId: string }> }) {
-  const { shopId } = await params;
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: shopId } = await params;
   if (!UUID.test(shopId)) return NextResponse.json({ error: "不正なIDです" }, { status: 400 });
 
   const supabase = await createClient();

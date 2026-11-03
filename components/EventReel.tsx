@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Search, X } from "lucide-react";
 import { EventGridCard } from "@/components/EventGridCard";
 import { EventExpandedCard } from "@/components/EventExpandedCard";
@@ -8,6 +8,7 @@ import type { PortalEvent } from "@/lib/types/shop";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { OPEN_SEARCH_EVENT } from "@/lib/reels/events";
+import { EventDateCalendar, toDayKey, type DayKey } from "@/components/EventDateCalendar";
 
 export function EventReel({
   events,
@@ -21,10 +22,54 @@ export function EventReel({
   const [searchOpen, setSearchOpen] = useState(false);
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
+  const [dateFrom, setDateFrom] = useState<DayKey | null>(null);
+  const [dateTo, setDateTo] = useState<DayKey | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const overlayItemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const filtered = events.filter((e) => {
+  // 並びは、開催中(終了が近い順)→これから始まる(開始が近い順)。日付の無いイベントは開催中の末尾。
+  const sorted = useMemo(() => {
+    const now = Date.now();
+    const rank = (e: PortalEvent) => {
+      const start = e.startsAt ? new Date(e.startsAt).getTime() : null;
+      const end = e.endsAt ? new Date(e.endsAt).getTime() : null;
+      if (start !== null && start > now) return [1, start] as const;
+      return [0, end ?? Number.MAX_SAFE_INTEGER] as const;
+    };
+    return [...events].sort((a, b) => {
+      const [ga, ka] = rank(a);
+      const [gb, kb] = rank(b);
+      return ga - gb || ka - kb;
+    });
+  }, [events]);
+
+  // イベントのある日(カレンダーの点)。1件あたり最大62日分まで。
+  const eventDays = useMemo(() => {
+    const set = new Set<DayKey>();
+    for (const e of events) {
+      if (!e.startsAt) continue;
+      const start = new Date(e.startsAt).getTime();
+      const end = e.endsAt ? new Date(e.endsAt).getTime() : start;
+      for (let t = start, n = 0; t <= end + 1 && n < 62; t += 86400000, n++) set.add(toDayKey(t));
+      set.add(toDayKey(end));
+    }
+    return set;
+  }, [events]);
+
+  const dateActive = dateFrom !== null;
+  const dateLabel = dateFrom
+    ? `${Number(dateFrom.slice(5, 7))}/${Number(dateFrom.slice(8))}${dateTo && dateTo !== dateFrom ? `〜${Number(dateTo.slice(5, 7))}/${Number(dateTo.slice(8))}` : ""}`
+    : "";
+
+  const filtered = sorted.filter((e) => {
+    if (dateFrom) {
+      const rangeEnd = dateTo ?? dateFrom;
+      // 開始・終了の日(日本時間)が選んだ期間と重なるものだけ。日付の無いイベントは常に開催中扱い。
+      const startDay = e.startsAt ? toDayKey(new Date(e.startsAt).getTime()) : null;
+      const endDay = e.endsAt ? toDayKey(new Date(e.endsAt).getTime()) : null;
+      if (startDay && startDay > rangeEnd) return false;
+      if (endDay && endDay < dateFrom) return false;
+    }
     if (activeGenres.length && !(e.genre && activeGenres.includes(e.genre))) return false;
     if (keyword) {
       const haystack = `${e.title} ${e.shopName} ${e.area ?? ""}`.toLowerCase();
@@ -59,6 +104,12 @@ export function EventReel({
     setOpenIndex(null);
   }
 
+  function clearDates() {
+    setDateFrom(null);
+    setDateTo(null);
+    setOpenIndex(null);
+  }
+
   // 検索語は打つたびに絞り込む(ランキングと同じく少し待ってから確定)。
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -89,7 +140,7 @@ export function EventReel({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-2xl border border-main/10 bg-surface/95 p-4 shadow-2xl"
+            className="max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-2xl border border-main/10 bg-surface/95 p-4 shadow-2xl"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-main">イベント検索</h2>
@@ -122,11 +173,43 @@ export function EventReel({
                 className="w-full min-w-0 bg-transparent text-[16px] text-main placeholder:text-tone-500 focus:outline-none"
               />
             </form>
-            {keywordInput && (
-              <button type="button" onClick={clearKeyword} className="mx-auto mt-3 block text-xs text-accent underline">
-                {t.feed.resetFilters}
+            <EventDateCalendar
+              from={dateFrom}
+              to={dateTo}
+              eventDays={eventDays}
+              locale={locale}
+              onChange={(f, to) => {
+                setDateFrom(f);
+                setDateTo(to);
+                setOpenIndex(null);
+              }}
+            />
+            <div className="mt-3 flex items-center justify-between gap-3">
+              {keywordInput || dateActive ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearKeyword();
+                    clearDates();
+                  }}
+                  className="text-xs text-accent underline"
+                >
+                  {t.feed.resetFilters}
+                </button>
+              ) : (
+                <span />
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setKeyword(keywordInput.trim());
+                  setSearchOpen(false);
+                }}
+                className="rounded-full bg-accent px-5 py-1.5 text-sm font-semibold text-on-accent"
+              >
+                {dateActive ? `${filtered.length}件を見る` : "閉じる"}
               </button>
-            )}
+            </div>
           </div>
         </div>
       )}
@@ -148,6 +231,16 @@ export function EventReel({
               className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-accent bg-accent px-3 py-1 text-xs font-semibold text-on-accent"
             >
               {keyword}
+              <X size={12} strokeWidth={3} />
+            </button>
+          )}
+          {dateActive && (
+            <button
+              type="button"
+              onClick={clearDates}
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-accent bg-accent px-3 py-1 text-xs font-semibold text-on-accent"
+            >
+              {dateLabel}
               <X size={12} strokeWidth={3} />
             </button>
           )}
