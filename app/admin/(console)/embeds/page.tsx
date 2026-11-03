@@ -114,7 +114,7 @@ export default async function AdminEmbedsPage() {
         <div>
           <label className="block text-sm font-semibold text-slate-700">サムネイル画像(任意)</label>
           <input type="file" name="thumb" accept="image/*" className="mt-1 block text-sm" />
-          <p className="mt-1 text-[11px] text-slate-500">YouTubeとTikTokは自動で取得します。Instagramは自動で取れないため、イベントに使うときは画像が必要です(リールは無くても追加できます)。上限3MB。</p>
+          <p className="mt-1 text-[11px] text-slate-500">YouTubeとTikTokは自動で取得します。Instagramなど自動で取れないときは、店舗の表紙画像を代わりに使います(あとから一覧で差し替えられます)。上限3MB。</p>
         </div>
         <button type="submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
           追加する

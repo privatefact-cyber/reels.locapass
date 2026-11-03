@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { youtubeThumbUrl } from "@/lib/embed";
 import { expandShortVideoUrl, parseVideoUrlWithShortLinks } from "@/lib/video-resolve";
 import type { VideoRef } from "@/lib/video";
+import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 
 const MAX_THUMB_BYTES = 3 * 1024 * 1024;
 
@@ -65,10 +66,12 @@ export async function createEmbedPost(formData: FormData) {
   const video = await parseVideoUrlWithShortLinks(rawUrl);
   if (!video) throw new Error("動画のURLを判別できません。YouTube(ショート可)・TikTok・Instagram(リール)のURLを貼ってください");
 
-  const { data: shop } = await admin.from("locapass_shops").select("id, portal_id, name").eq("id", shopId).maybeSingle();
+  const { data: shop } = await admin.from("locapass_shops").select("id, portal_id, name, cover_url, icon_url").eq("id", shopId).maybeSingle();
   if (!shop) throw new Error("店舗が見つかりません");
 
-  const thumb = await resolveThumb(admin, video, rawUrl, formData.get("thumb"));
+  // 自動で取れない(Instagramなど)ときは、店舗の表紙画像で代用する。Google Places写真は撮影者クレジットの表示が必要なので使わない。
+  const shopImage = [shop.cover_url, shop.icon_url].find((u): u is string => !!u && !isPlacePhotoUrl(u)) ?? null;
+  const thumb = (await resolveThumb(admin, video, rawUrl, formData.get("thumb"))) ?? shopImage;
 
   if (kind === "event") {
     const title = String(formData.get("title") ?? "").trim();
