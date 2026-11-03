@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { ShopReelPostForm } from "@/components/locapass-dashboard/ShopReelPostForm";
+import { ShopEmbedSection } from "@/components/locapass-dashboard/ShopEmbedSection";
 import { deleteReel, setMapPreviewReel } from "../actions";
 import { StreamThumb } from "@/components/video/StreamThumb";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
@@ -29,7 +30,7 @@ export default async function LocapassShopReelsPage({
   const supabase = await createClient();
   const { data: shopRow } = await supabase
     .from("locapass_shops")
-    .select("map_video_enabled, map_preview_reel_id")
+    .select("map_video_enabled, map_preview_reel_id, embed_enabled")
     .eq("id", shop.id)
     .maybeSingle();
   const { data: reelRows } = await supabase
@@ -135,6 +136,8 @@ export default async function LocapassShopReelsPage({
       )}
 
       <ShopReelPostForm shopId={shop.id} portalId={shop.portal_id} />
+
+      <ShopEmbedSection shopId={shop.id} enabled={Boolean(shopRow?.embed_enabled)} />
 
       {reels && reels.length > 0 ? (
         <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>

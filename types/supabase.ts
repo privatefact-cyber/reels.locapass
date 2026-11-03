@@ -2538,6 +2538,7 @@ export type Database = {
           cover_image_attribution: Json | null
           cover_url: string | null
           created_at: string
+          embed_enabled: boolean
           description: string | null
           gallery_image_urls: string[]
           google_photo_name: string | null
@@ -2591,6 +2592,7 @@ export type Database = {
           cover_image_attribution?: Json | null
           cover_url?: string | null
           created_at?: string
+          embed_enabled?: boolean
           description?: string | null
           gallery_image_urls?: string[]
           google_photo_name?: string | null
@@ -2644,6 +2646,7 @@ export type Database = {
           cover_image_attribution?: Json | null
           cover_url?: string | null
           created_at?: string
+          embed_enabled?: boolean
           description?: string | null
           gallery_image_urls?: string[]
           google_photo_name?: string | null

@@ -1,7 +1,7 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
-import { createEmbedPost, deleteEmbedPost, updateEmbedThumb } from "./actions";
+import { createEmbedPost, deleteEmbedPost, setEmbedOption, updateEmbedThumb } from "./actions";
 
 type Row = { id: string; shop_id: string | null; title?: string | null; caption?: string | null; embed_provider: string; embed_ref: string; poster_url?: string | null; image_url?: string | null; created_at?: string; published_at?: string | null };
 
@@ -11,10 +11,11 @@ export default async function AdminEmbedsPage() {
   await requireRootAdmin();
   const admin = createAdminClient();
 
-  const [{ data: shops }, { data: reels }, { data: events }] = await Promise.all([
+  const [{ data: shops }, { data: reels }, { data: events }, { data: optionShops }] = await Promise.all([
     admin.from("locapass_shops").select("id, name, portal:locapass_portals ( name )").eq("status", "active").order("name"),
     (admin as any).from("locapass_reels").select("id, shop_id, caption, embed_provider, embed_ref, poster_url, published_at").not("embed_provider", "is", null).order("published_at", { ascending: false }).limit(100),
     (admin as any).from("locapass_shop_events").select("id, shop_id, title, embed_provider, embed_ref, image_url, created_at").not("embed_provider", "is", null).order("created_at", { ascending: false }).limit(100),
+    (admin as any).from("locapass_shops").select("id, name").eq("embed_enabled", true).order("name"),
   ]);
   const shopName = new Map((shops ?? []).map((s) => [s.id, s.name]));
 
@@ -101,6 +102,11 @@ export default async function AdminEmbedsPage() {
           <label className="block text-sm font-semibold text-slate-700">文章(リールの説明 / イベントの本文・任意)</label>
           <textarea name="text" rows={3} maxLength={500} className={inputClass} />
         </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700">リンク先URL(リールのみ・任意)</label>
+          <input type="url" name="link_url" placeholder="https://" className={inputClass} />
+          <p className="mt-1 text-[11px] text-slate-500">「詳しく見る」ボタンの飛び先です。空なら、その店舗の詳細ページへ飛びます。</p>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-semibold text-slate-700">開始日(イベントのみ・任意)</label>
@@ -120,6 +126,35 @@ export default async function AdminEmbedsPage() {
           追加する
         </button>
       </form>
+
+
+      <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-5">
+        <h2 className="text-sm font-semibold text-slate-900">店舗オプション「外部動画の追加」</h2>
+        <p className="text-xs text-slate-500">
+          オンにした店舗だけ、店舗の管理画面(リール)の「外部動画」から、自分で外部動画を追加できます。オフの店舗には、灰色の押せないボタンが出ます。
+        </p>
+        <form action={setEmbedOption} className="flex flex-wrap items-center gap-2">
+          <select name="shop_id" required defaultValue="" className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900">
+            <option value="" disabled>
+              店舗を選ぶ
+            </option>
+            {(shops ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <button type="submit" name="enabled" value="1" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">
+            オンにする
+          </button>
+          <button type="submit" name="enabled" value="0" className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700">
+            オフにする
+          </button>
+        </form>
+        <p className="text-xs text-slate-600">
+          オン中の店舗: {(optionShops ?? []).length === 0 ? "なし" : (optionShops as { id: string; name: string }[]).map((s) => s.name).join("、")}
+        </p>
+      </section>
 
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-900">追加したリール</h2>
