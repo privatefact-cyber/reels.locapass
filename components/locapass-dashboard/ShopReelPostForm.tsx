@@ -151,7 +151,7 @@ export function ShopReelPostForm({ shopId, portalId }: { shopId: string; portalI
         onClick={() => setOpen(true)}
         className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-main hover:bg-brand-dark"
       >
-        リールを投稿する
+        動画・写真のファイルを投稿する
       </button>
     );
   }

@@ -33,7 +33,7 @@ export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; en
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-slate-900">{kind === "event" ? "イベントに外部動画を追加(オプション)" : "外部動画の追加(オプション)"}</h2>
+        <h2 className="text-lg font-bold text-slate-900">{kind === "event" ? "リンクの動画でイベントを投稿(オプション)" : "リンクの動画を投稿(YouTube・TikTok・Instagram / オプション)"}</h2>
         {!enabled && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">準備中</span>}
       </div>
       <p className="text-sm text-slate-600">
@@ -94,7 +94,7 @@ export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; en
                 disabled={pending}
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               >
-                {pending ? "投稿中…" : "投稿する"}
+                {pending ? "投稿中…" : "リンクの動画を投稿する"}
               </button>
               {pending && <span className="text-xs text-slate-500">動画を取り込んで、翻訳しています。しばらくお待ちください。</span>}
               {status && (
