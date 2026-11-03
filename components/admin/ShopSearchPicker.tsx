@@ -13,12 +13,15 @@ export function ShopSearchPicker({
   search,
   placeholder = "店舗名で検索",
   showOption = false,
+  onSelect,
 }: {
   name: string;
   search: (q: string) => Promise<ShopHit[]>;
   placeholder?: string;
   /** 結果に「オン/オフ」の状態を出す(オプション設定用)。 */
   showOption?: boolean;
+  /** 店舗を選んだ(null=選び直し)ときに呼ぶ。 */
+  onSelect?: (shop: ShopHit | null) => void;
 }) {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<ShopHit[]>([]);
@@ -55,7 +58,7 @@ export function ShopSearchPicker({
             </span>
           )}
         </span>
-        <button type="button" onClick={() => { setSelected(null); setQ(""); setOpen(true); }} className="shrink-0 text-xs text-slate-500 underline hover:text-slate-900">
+        <button type="button" onClick={() => { setSelected(null); setQ(""); setOpen(true); onSelect?.(null); }} className="shrink-0 text-xs text-slate-500 underline hover:text-slate-900">
           変更
         </button>
       </div>
@@ -82,7 +85,7 @@ export function ShopSearchPicker({
             <li key={h.id}>
               <button
                 type="button"
-                onClick={() => { setSelected(h); setOpen(false); }}
+                onClick={() => { setSelected(h); setOpen(false); onSelect?.(h); }}
                 className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-slate-900 hover:bg-slate-100"
               >
                 <span className="min-w-0 truncate">

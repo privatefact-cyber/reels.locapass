@@ -62,6 +62,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               外部動画
             </Link>
             <Link
+              href="/admin/options"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+            >
+              オプション管理
+            </Link>
+            <Link
               href="/admin/support"
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >

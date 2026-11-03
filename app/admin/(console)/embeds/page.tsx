@@ -2,7 +2,7 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
 import { ShopSearchPicker } from "@/components/admin/ShopSearchPicker";
-import { searchShopsForEmbed, createEmbedPost, deleteEmbedPost, setEmbedOption, updateEmbedThumb } from "./actions";
+import { searchShopsForEmbed, createEmbedPost, deleteEmbedPost, updateEmbedThumb } from "./actions";
 
 type Row = { id: string; shop_id: string | null; title?: string | null; caption?: string | null; embed_provider: string; embed_ref: string; poster_url?: string | null; image_url?: string | null; created_at?: string; published_at?: string | null };
 
@@ -12,11 +12,10 @@ export default async function AdminEmbedsPage() {
   await requireRootAdmin();
   const admin = createAdminClient();
 
-  const [{ data: shops }, { data: reels }, { data: events }, { data: optionShops }] = await Promise.all([
+  const [{ data: shops }, { data: reels }, { data: events }] = await Promise.all([
     Promise.resolve({ data: null as { id: string; name: string }[] | null }),
     (admin as any).from("locapass_reels").select("id, shop_id, caption, embed_provider, embed_ref, poster_url, published_at").not("embed_provider", "is", null).order("published_at", { ascending: false }).limit(100),
     (admin as any).from("locapass_shop_events").select("id, shop_id, title, embed_provider, embed_ref, image_url, created_at").not("embed_provider", "is", null).order("created_at", { ascending: false }).limit(100),
-    (admin as any).from("locapass_shops").select("id, name").eq("embed_enabled", true).order("name"),
   ]);
   const usedIds = [...new Set([...(reels ?? []), ...(events ?? [])].map((r: { shop_id: string | null }) => r.shop_id).filter((x): x is string => Boolean(x)))];
   const { data: usedShops } = usedIds.length ? await admin.from("locapass_shops").select("id, name").in("id", usedIds) : { data: [] };
@@ -118,24 +117,9 @@ export default async function AdminEmbedsPage() {
       </form>
 
 
-      <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-slate-900">店舗オプション「外部動画の追加」</h2>
-        <p className="text-xs text-slate-500">
-          オンにした店舗だけ、店舗の管理画面(リール)の「外部動画」から、自分で外部動画を追加できます。オフの店舗には、灰色の押せないボタンが出ます。
-        </p>
-        <form action={setEmbedOption} className="flex flex-wrap items-center gap-2">
-          <ShopSearchPicker name="shop_id" search={searchShopsForEmbed} showOption />
-          <button type="submit" name="enabled" value="1" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">
-            オンにする
-          </button>
-          <button type="submit" name="enabled" value="0" className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700">
-            オフにする
-          </button>
-        </form>
-        <p className="text-xs text-slate-600">
-          オン中の店舗: {(optionShops ?? []).length === 0 ? "なし" : (optionShops as { id: string; name: string }[]).map((s) => s.name).join("、")}
-        </p>
-      </section>
+      <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        店舗ごとのオプション(外部動画の追加など)のオン/オフは、上のメニューの「<a href="/admin/options" className="font-semibold text-slate-900 underline">オプション管理</a>」でできます。
+      </p>
 
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-900">追加したリール</h2>

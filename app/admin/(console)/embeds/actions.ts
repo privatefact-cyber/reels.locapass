@@ -49,21 +49,6 @@ export async function updateEmbedThumb(kind: "reel" | "event", id: string, formD
   revalidatePath("/events");
 }
 
-/** 店舗オプション「外部動画の追加」の契約を、運営者が店舗ごとにオン/オフする(店舗は変更できない)。 */
-export async function setEmbedOption(formData: FormData) {
-  await requireRootAdmin();
-  const shopId = String(formData.get("shop_id") ?? "").trim();
-  const enabled = String(formData.get("enabled") ?? "") === "1";
-  if (!shopId) throw new Error("店舗を選んでください");
-  const admin = createAdminClient();
-  // 0件でもエラーにならないので.select()で確認する。
-  const { data, error } = await admin.from("locapass_shops").update({ embed_enabled: enabled }).eq("id", shopId).select("id");
-  if (error) throw new Error(`保存に失敗しました: ${error.message}`);
-  if (!data?.length) throw new Error("店舗が見つかりません");
-  revalidatePath("/admin/embeds");
-  revalidatePath(`/dashboard/shop/${shopId}/reels`);
-}
-
 /** 店舗名で検索(上位30件)。運営者の画面の店舗選択用。 */
 export async function searchShopsForEmbed(q: string) {
   await requireRootAdmin();
