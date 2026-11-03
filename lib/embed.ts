@@ -1,11 +1,11 @@
 import type { VideoProvider } from "@/lib/video";
 
 /** サイト内再生用の埋め込みURL。識別子だけを保存しているので、ここで組み立てる(lib/video.ts の ref と同じ形式)。 */
-export function embedSrc(provider: VideoProvider, ref: string, autoplay = true): string {
+export function embedSrc(provider: VideoProvider, ref: string, autoplay = true, muted = false): string {
   switch (provider) {
     case "youtube":
       // 終わったら頭に戻して繰り返す(ショート向け)。関連動画は同じチャンネルのものだけにする。
-      return `https://www.youtube.com/embed/${ref}?playsinline=1&rel=0&loop=1&playlist=${ref}${autoplay ? "&autoplay=1" : ""}`;
+      return `https://www.youtube.com/embed/${ref}?playsinline=1&rel=0&loop=1&playlist=${ref}${autoplay ? "&autoplay=1" : ""}${muted ? "&mute=1" : ""}`;
     case "tiktok":
       return `https://www.tiktok.com/embed/v2/${ref}`;
     case "instagram":

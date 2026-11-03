@@ -27,6 +27,7 @@ export function EmbedPlayer({
   posterUrl,
   active = true,
   preload = false,
+  autoStart = false,
   className = "absolute inset-0",
 }: {
   provider: VideoProvider;
@@ -37,20 +38,30 @@ export function EmbedPlayer({
   active?: boolean;
   /** 画面に出る直前(次/前のカード)。Instagramは、スワイプで着いたときに待たないよう、ここから先読みを始める。 */
   preload?: boolean;
+  /** YouTubeを、画面に出たら無音で自動再生する(フィードのカード用)。音は再生画面の音量ボタンで出す。 */
+  autoStart?: boolean;
   /** 配置(親の中で絶対配置する)。 */
   className?: string;
 }) {
   const [playing, setPlaying] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // 閉じるを押したら、そのカードでは自動再生を再開しない(画面から外れるまで)。
+  const [dismissed, setDismissed] = useState(false);
+  const autoPlay = autoStart && provider === "youtube";
   const label = VIDEO_PROVIDER_LABEL[provider];
   // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
   const warm = (active || preload) && provider === "instagram";
   const mounted = playing || warm;
 
   useEffect(() => {
-    if (!active) setPlaying(false);
+    if (!active) {
+      setPlaying(false);
+      setDismissed(false);
+    } else if (autoPlay && !dismissed) {
+      setPlaying(true);
+    }
     if (!active && !preload) setLoaded(false);
-  }, [active, preload]);
+  }, [active, preload, autoPlay, dismissed]);
 
   // 画面に出たら、埋め込み先への接続だけ先に済ませておく。
   useEffect(() => {
@@ -71,7 +82,7 @@ export function EmbedPlayer({
       {/* 同じiframeを出し入れしないよう、読み込み中も再生中も同じ要素のまま、見た目だけ切り替える(切り替えで読み込み直しにならない)。 */}
       {mounted && (
         <iframe
-          src={embedSrc(provider, refId)}
+          src={embedSrc(provider, refId, true, autoPlay)}
           title={title}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
@@ -110,6 +121,7 @@ export function EmbedPlayer({
               type="button"
               onClick={() => {
                 setPlaying(false);
+                setDismissed(true);
                 // 先読みしているInstagramは、閉じても読み込み済みのまま残す(また開いたとき待たない)。
                 if (!warm) setLoaded(false);
               }}
