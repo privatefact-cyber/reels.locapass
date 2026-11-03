@@ -124,3 +124,25 @@ export async function deleteEmbedPost(kind: "reel" | "event", id: string) {
   revalidatePath("/");
   revalidatePath("/events");
 }
+
+/** 追加済みの外部動画のサムネイル画像を、後から差し替える。 */
+export async function updateEmbedThumb(kind: "reel" | "event", id: string, formData: FormData) {
+  await requireRootAdmin();
+  const admin = createAdminClient();
+  const file = formData.get("thumb");
+  if (!(file instanceof File) || file.size === 0) throw new Error("画像を選んでください");
+  if (!file.type.startsWith("image/")) throw new Error("サムネイルは画像ファイルを選んでください");
+  if (file.size > MAX_THUMB_BYTES) throw new Error("サムネイル画像が大きすぎます(上限3MB)");
+  const url = await uploadThumb(admin, await file.arrayBuffer(), file.type);
+  if (!url) throw new Error("サムネイルのアップロードに失敗しました");
+  // 外部動画の行だけを更新する。0件でもエラーにならないので.select()で確認する。
+  const { data, error } =
+    kind === "event"
+      ? await (admin as any).from("locapass_shop_events").update({ image_url: url }).eq("id", id).not("embed_provider", "is", null).select("id")
+      : await (admin as any).from("locapass_reels").update({ poster_url: url }).eq("id", id).not("embed_provider", "is", null).select("id");
+  if (error) throw new Error(`保存に失敗しました: ${error.message}`);
+  if (!data?.length) throw new Error("保存できませんでした(対象が見つかりません)");
+  revalidatePath("/admin/embeds");
+  revalidatePath("/");
+  revalidatePath("/events");
+}

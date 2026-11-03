@@ -1,7 +1,7 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
-import { createEmbedPost, deleteEmbedPost } from "./actions";
+import { createEmbedPost, deleteEmbedPost, updateEmbedThumb } from "./actions";
 
 type Row = { id: string; shop_id: string | null; title?: string | null; caption?: string | null; embed_provider: string; embed_ref: string; poster_url?: string | null; image_url?: string | null; created_at?: string; published_at?: string | null };
 
@@ -37,6 +37,12 @@ export default async function AdminEmbedsPage() {
                 {shopName.get(r.shop_id ?? "") ?? "(店舗不明)"} ・ {VIDEO_PROVIDER_LABEL[r.embed_provider as VideoProvider] ?? r.embed_provider}
               </p>
             </div>
+            <form action={updateEmbedThumb.bind(null, kind, r.id)} className="flex items-center gap-1">
+              <input type="file" name="thumb" accept="image/*" required className="w-40 text-[11px]" />
+              <button type="submit" className="whitespace-nowrap text-xs text-blue-600 hover:underline">
+                サムネイル変更
+              </button>
+            </form>
             <form action={deleteEmbedPost.bind(null, kind, r.id)}>
               <button type="submit" className="text-xs text-red-600 hover:underline">
                 削除する
