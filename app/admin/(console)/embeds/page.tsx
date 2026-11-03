@@ -1,7 +1,8 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
-import { createEmbedPost, deleteEmbedPost, setEmbedOption, updateEmbedThumb } from "./actions";
+import { ShopSearchPicker } from "@/components/admin/ShopSearchPicker";
+import { searchShopsForEmbed, createEmbedPost, deleteEmbedPost, setEmbedOption, updateEmbedThumb } from "./actions";
 
 type Row = { id: string; shop_id: string | null; title?: string | null; caption?: string | null; embed_provider: string; embed_ref: string; poster_url?: string | null; image_url?: string | null; created_at?: string; published_at?: string | null };
 
@@ -12,12 +13,14 @@ export default async function AdminEmbedsPage() {
   const admin = createAdminClient();
 
   const [{ data: shops }, { data: reels }, { data: events }, { data: optionShops }] = await Promise.all([
-    admin.from("locapass_shops").select("id, name, portal:locapass_portals ( name )").eq("status", "active").order("name"),
+    Promise.resolve({ data: null as { id: string; name: string }[] | null }),
     (admin as any).from("locapass_reels").select("id, shop_id, caption, embed_provider, embed_ref, poster_url, published_at").not("embed_provider", "is", null).order("published_at", { ascending: false }).limit(100),
     (admin as any).from("locapass_shop_events").select("id, shop_id, title, embed_provider, embed_ref, image_url, created_at").not("embed_provider", "is", null).order("created_at", { ascending: false }).limit(100),
     (admin as any).from("locapass_shops").select("id, name").eq("embed_enabled", true).order("name"),
   ]);
-  const shopName = new Map((shops ?? []).map((s) => [s.id, s.name]));
+  const usedIds = [...new Set([...(reels ?? []), ...(events ?? [])].map((r: { shop_id: string | null }) => r.shop_id).filter((x): x is string => Boolean(x)))];
+  const { data: usedShops } = usedIds.length ? await admin.from("locapass_shops").select("id, name").in("id", usedIds) : { data: [] };
+  const shopName = new Map((usedShops ?? []).map((s) => [s.id, s.name]));
 
   const list = (kind: "reel" | "event", rows: Row[] | null) =>
     !rows || rows.length === 0 ? (
@@ -74,20 +77,7 @@ export default async function AdminEmbedsPage() {
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700">店舗(この店舗の投稿として表示されます)</label>
-          <select name="shop_id" required className={inputClass} defaultValue="">
-            <option value="" disabled>
-              選んでください
-            </option>
-            {(shops ?? []).map((s) => {
-              const portal = Array.isArray(s.portal) ? s.portal[0] : s.portal;
-              return (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                  {portal?.name ? `(${portal.name})` : ""}
-                </option>
-              );
-            })}
-          </select>
+          <div className="mt-1 flex"><ShopSearchPicker name="shop_id" search={searchShopsForEmbed} /></div>
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700">動画のURL</label>
@@ -134,16 +124,7 @@ export default async function AdminEmbedsPage() {
           オンにした店舗だけ、店舗の管理画面(リール)の「外部動画」から、自分で外部動画を追加できます。オフの店舗には、灰色の押せないボタンが出ます。
         </p>
         <form action={setEmbedOption} className="flex flex-wrap items-center gap-2">
-          <select name="shop_id" required defaultValue="" className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900">
-            <option value="" disabled>
-              店舗を選ぶ
-            </option>
-            {(shops ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <ShopSearchPicker name="shop_id" search={searchShopsForEmbed} showOption />
           <button type="submit" name="enabled" value="1" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">
             オンにする
           </button>

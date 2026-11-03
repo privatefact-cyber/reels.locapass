@@ -63,3 +63,21 @@ export async function setEmbedOption(formData: FormData) {
   revalidatePath("/admin/embeds");
   revalidatePath(`/dashboard/shop/${shopId}/reels`);
 }
+
+/** 店舗名で検索(上位30件)。運営者の画面の店舗選択用。 */
+export async function searchShopsForEmbed(q: string) {
+  await requireRootAdmin();
+  const term = q.replace(/[%_,()\\]/g, " ").trim();
+  let query = (createAdminClient() as any)
+    .from("locapass_shops")
+    .select("id, name, embed_enabled, portal:locapass_portals ( name )")
+    .eq("status", "active")
+    .order("name")
+    .limit(30);
+  if (term) query = query.ilike("name", `%${term}%`);
+  const { data } = await query;
+  return ((data ?? []) as { id: string; name: string; embed_enabled: boolean; portal: { name: string } | { name: string }[] | null }[]).map((s) => {
+    const portal = Array.isArray(s.portal) ? s.portal[0] : s.portal;
+    return { id: s.id, name: s.name, sub: portal?.name ?? null, embedEnabled: Boolean(s.embed_enabled) };
+  });
+}
