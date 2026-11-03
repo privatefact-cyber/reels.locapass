@@ -269,6 +269,27 @@ export async function addGalleryImage(shopId: string, url: string) {
   revalidateShop(shopId);
 }
 
+/** ギャラリーの並び順を入れ替える。いまの写真と同じ顔ぶれ(増減なし)の並べ替えだけを受け付ける。 */
+export async function reorderGalleryImages(shopId: string, urls: string[]) {
+  const supabase = await requireShopAccess(shopId);
+
+  const { data: current, error: fetchError } = await supabase
+    .from("locapass_shops")
+    .select("gallery_image_urls")
+    .eq("id", shopId)
+    .single();
+  if (fetchError) throw new Error(`ギャラリーの取得に失敗しました: ${fetchError.message}`);
+
+  const existing = current?.gallery_image_urls ?? [];
+  const sameSet = urls.length === existing.length && [...urls].sort().join("\n") === [...existing].sort().join("\n");
+  if (!sameSet) throw new Error("写真の並び替えに失敗しました。ページを開き直してください");
+
+  const { error } = await supabase.from("locapass_shops").update({ gallery_image_urls: urls }).eq("id", shopId);
+  if (error) throw new Error(`並び替えの保存に失敗しました: ${error.message}`);
+
+  revalidateShop(shopId);
+}
+
 export async function deleteGalleryImage(shopId: string, url: string) {
   const supabase = await requireShopAccess(shopId);
 

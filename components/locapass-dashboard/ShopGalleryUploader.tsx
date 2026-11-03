@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { addGalleryImage, deleteGalleryImage } from "@/app/dashboard/shop/[shopId]/actions";
+import { addGalleryImage, deleteGalleryImage, reorderGalleryImages } from "@/app/dashboard/shop/[shopId]/actions";
 
 const MAX_IMAGES = 10;
 
@@ -33,6 +33,8 @@ export function ShopGalleryUploader({ shopId, initialUrls }: { shopId: string; i
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const remainingSlots = MAX_IMAGES - urls.length;
 
@@ -55,6 +57,24 @@ export function ShopGalleryUploader({ shopId, initialUrls }: { shopId: string; i
     }
   }
 
+  /** from番目の写真を to番目へ移す。画面はすぐ入れ替え、保存に失敗したら元の並びに戻す。 */
+  async function handleMove(from: number, to: number) {
+    if (from === to || to < 0 || to >= urls.length) return;
+    const previous = urls;
+    const next = [...urls];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setUrls(next);
+    setError(null);
+    try {
+      await reorderGalleryImages(shopId, next);
+      router.refresh();
+    } catch (err) {
+      setUrls(previous);
+      setError(err instanceof Error ? err.message : "並び替えに失敗しました");
+    }
+  }
+
   async function handleDelete(url: string) {
     setDeletingUrl(url);
     setError(null);
@@ -71,11 +91,59 @@ export function ShopGalleryUploader({ shopId, initialUrls }: { shopId: string; i
 
   return (
     <div>
+      {urls.length > 1 && <p className="mb-2 text-[11px] text-slate-500">写真をドラッグして並び替えできます(スマホは ◀ ▶ で入れ替え)。1枚目が最初に表示されます。</p>}
       <div className="mb-3 flex flex-wrap gap-3">
-        {urls.map((url) => (
-          <div key={url} className="relative">
+        {urls.map((url, index) => (
+          <div
+            key={url}
+            // PCはドラッグで入れ替え。スマホなどドラッグできない端末は、下の ◀ ▶ ボタンで入れ替える。
+            draggable
+            onDragStart={(e) => {
+              setDragIndex(index);
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={(e) => {
+              if (dragIndex === null) return;
+              e.preventDefault();
+              setOverIndex(index);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragIndex !== null) void handleMove(dragIndex, index);
+              setDragIndex(null);
+              setOverIndex(null);
+            }}
+            onDragEnd={() => {
+              setDragIndex(null);
+              setOverIndex(null);
+            }}
+            className={`relative cursor-grab rounded transition ${dragIndex === index ? "opacity-40" : ""} ${
+              overIndex === index && dragIndex !== null && dragIndex !== index ? "ring-2 ring-sky-500" : ""
+            }`}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="" className="h-32 w-24 rounded object-cover" />
+            <img src={url} alt="" draggable={false} className="h-32 w-24 rounded object-cover" />
+            <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 text-[10px] font-bold text-white">{index + 1}</span>
+            <div className="mt-1 flex gap-1">
+              <button
+                type="button"
+                aria-label="前へ"
+                disabled={index === 0}
+                onClick={() => void handleMove(index, index - 1)}
+                className="flex-1 rounded bg-slate-50 py-0.5 text-xs text-slate-600 hover:bg-slate-200 disabled:opacity-30"
+              >
+                ◀
+              </button>
+              <button
+                type="button"
+                aria-label="後ろへ"
+                disabled={index === urls.length - 1}
+                onClick={() => void handleMove(index, index + 1)}
+                className="flex-1 rounded bg-slate-50 py-0.5 text-xs text-slate-600 hover:bg-slate-200 disabled:opacity-30"
+              >
+                ▶
+              </button>
+            </div>
             <button
               type="button"
               disabled={deletingUrl === url}
