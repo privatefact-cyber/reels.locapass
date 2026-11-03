@@ -29,7 +29,7 @@ export async function addShopEmbed(shopId: string, formData: FormData) {
   if (!opt?.embed_enabled && !isOperator) throw new Error("外部動画の追加は、オプションの契約が必要です");
 
   await createEmbedPostForShop(admin, shopId, formData);
-  revalidatePath(`/dashboard/shop/${shopId}/reels`);
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
   revalidatePath("/");
   revalidatePath("/events");
 }

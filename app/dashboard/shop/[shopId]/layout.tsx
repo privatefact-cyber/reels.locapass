@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { path: "/admins", label: "管理者ID" },
   { path: "/account", label: "アカウント" },
   { path: "/me", label: "マイページ" },
-  { path: "/reels", label: "リール投稿" },
+  { path: "/posts", label: "投稿" },
   { path: "/photos", label: "写真の管理" },
   { path: "/boost", label: "⚡ブースト" },
   { path: "/contract", label: "掲載プランの契約" },

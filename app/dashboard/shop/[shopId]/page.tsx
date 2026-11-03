@@ -6,8 +6,6 @@ import { sanitizeWeekly } from "@/lib/shop/businessHours";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
-import { ShopEmbedSection } from "@/components/locapass-dashboard/ShopEmbedSection";
-import { EventFormSection } from "@/components/locapass-dashboard/EventFormSection";
 import { ShopPinEditor } from "@/components/locapass-dashboard/ShopPinEditor";
 import { SingleImageDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
 import { ShopQuickActions } from "@/components/locapass-dashboard/ShopQuickActions";
@@ -27,14 +25,10 @@ import { LANGUAGES } from "@/lib/i18n/languages";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
-import type { ShopEvent } from "@/lib/types/shop";
 import { toJstDateString, getJstNow } from "@/lib/reels/nowWorking";
 import {
-  addEvent,
   addPriceItem,
-  deleteEvent,
   deletePriceItem,
-  updateEvent,
   updatePriceItem,
   updateShopProfile,
   upsertTodaySchedule,
@@ -59,7 +53,6 @@ export default async function LocapassShopSettingsPage({
   const today = toJstDateString(getJstNow());
   const [
     { data: shopRow },
-    { data: eventRows },
     { count: reelCount },
     { data: priceItemRows },
     { data: castRows },
@@ -72,11 +65,6 @@ export default async function LocapassShopSettingsPage({
         )
         .eq("id", currentShop.id)
         .single(),
-      supabase
-        .from("locapass_shop_events")
-        .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_at")
-        .eq("shop_id", currentShop.id)
-        .order("created_at", { ascending: false }),
       // 掲載の充実度用。公開中のリールだけを数える(ストーリー・非表示は含めない)。
       supabase
         .from("locapass_reels")
@@ -104,7 +92,6 @@ export default async function LocapassShopSettingsPage({
 
   // 本家shopsの列名に揃える(category→genre, tel→phone, url→website_url, cover_url→cover_image_url)。
   // YouTube動画ID(型に列が無いため別クエリ)。
-  const { data: embedOpt } = await (supabase as any).from("locapass_shops").select("embed_enabled").eq("id", currentShop.id).maybeSingle();
   const { data: spotNoticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled").eq("id", currentShop.id).maybeSingle();
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
@@ -177,17 +164,6 @@ export default async function LocapassShopSettingsPage({
     };
   });
 
-  const now = Date.now();
-  const events: ShopEvent[] = (eventRows ?? []).map((e) => ({
-    id: e.id,
-    title: e.title,
-    body: e.body,
-    startsAt: e.starts_at,
-    endsAt: e.ends_at,
-    imageUrl: e.image_url,
-    galleryImageUrls: e.gallery_image_urls ?? [],
-    isEnded: !!e.ends_at && new Date(e.ends_at).getTime() < now,
-  }));
 
   const basePath = `/dashboard/shop/${currentShop.id}`;
   const snsLinks = shop.sns_links ?? {};
@@ -612,20 +588,6 @@ export default async function LocapassShopSettingsPage({
         addPriceItem={addPriceItem.bind(null, currentShop.id)}
         updatePriceItem={updatePriceItem.bind(null, currentShop.id)}
         deletePriceItem={deletePriceItem.bind(null, currentShop.id)}
-      />
-
-      <ShopEmbedSection
-        kind="event"
-        shopId={currentShop.id}
-        enabled={Boolean((embedOpt as { embed_enabled?: boolean } | null)?.embed_enabled) || viewer.isOperator}
-      />
-
-      <EventFormSection
-        shopId={currentShop.id}
-        events={events}
-        addEvent={addEvent.bind(null, currentShop.id)}
-        updateEvent={updateEvent.bind(null, currentShop.id)}
-        deleteEvent={deleteEvent.bind(null, currentShop.id)}
       />
     </div>
   );

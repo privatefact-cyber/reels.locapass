@@ -63,10 +63,10 @@ export function ShopQuickActions({
             {statusText ? `現在: ${statusText}` : "フロアを撮るだけ"}
           </span>
         </button>
-        <Link href={`${basePath}/reels`} className={TILE}>
+        <Link href={`${basePath}/posts`} className={TILE}>
           <Clapperboard size={28} className="text-indigo-500" />
-          <span className="text-sm font-bold text-slate-900">リール投稿</span>
-          <span className="text-[11px] leading-tight text-slate-500">動画・写真を投稿</span>
+          <span className="text-sm font-bold text-slate-900">投稿</span>
+          <span className="text-[11px] leading-tight text-slate-500">リール・イベントを投稿</span>
         </Link>
         <Link href={`${basePath}/boost`} className={TILE}>
           <Zap size={28} className="text-amber-500" />

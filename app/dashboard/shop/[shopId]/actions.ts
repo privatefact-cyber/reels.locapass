@@ -36,6 +36,7 @@ async function requireShopAccess(shopId: string) {
 
 function revalidateShop(shopId: string) {
   revalidatePath(`/dashboard/shop/${shopId}`);
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
   revalidatePath(`/shops/${shopId}`);
   revalidatePath("/admin");
 }
@@ -330,7 +331,7 @@ export async function deleteReel(shopId: string, reelId: string) {
     throw new Error(`削除に失敗しました: ${error?.message ?? "対象が見つかりません"}`);
   }
 
-  revalidatePath(`/dashboard/shop/${shopId}/reels`);
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
   revalidatePath("/");
 }
 
@@ -362,7 +363,7 @@ export async function saveShopReelOrder(shopId: string, orderedIds: string[], pi
   if (failed.length > 0) {
     throw new Error(`並び順の保存に失敗しました: ${failed[0].error?.message ?? "対象が見つかりません"}`);
   }
-  revalidatePath(`/dashboard/shop/${shopId}/reels`);
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
   revalidatePath("/", "layout");
 }
 
@@ -619,6 +620,6 @@ export async function setMapPreviewReel(shopId: string, reelId: string | null) {
     throw new Error("カード動画の設定に失敗しました(対象の店舗が見つからないか、権限がありません)");
   }
 
-  revalidatePath(`/dashboard/shop/${shopId}/reels`);
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
   revalidatePath("/map");
 }

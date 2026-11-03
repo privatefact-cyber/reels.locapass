@@ -303,7 +303,7 @@ export async function deleteCastReel(shopId: string, castId: string, reelId: str
     throw new Error(`削除に失敗しました: ${error?.message ?? "対象が見つかりません"}`);
   }
   revalidatePath(castPath(shopId, castId));
-  revalidatePath(`/dashboard/shop/${shopId}/reels`);
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
   revalidatePath("/");
 }
 

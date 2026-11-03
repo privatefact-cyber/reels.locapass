@@ -435,7 +435,7 @@ export function MypageClient({
               <p className="truncate text-xs font-semibold text-muted">{s.name} に投稿</p>
               <div className="grid grid-cols-2 gap-2">
                 <Link
-                  href={`/dashboard/shop/${s.id}/reels`}
+                  href={`/dashboard/shop/${s.id}/posts`}
                   className="flex items-center justify-center gap-1.5 rounded-xl border border-main/20 bg-tone-800 py-3 text-sm font-bold text-main active:scale-95"
                 >
                   <PenSquare size={16} /> 通常投稿
@@ -468,7 +468,7 @@ export function MypageClient({
           </select>
           <div className="grid grid-cols-2 gap-2">
             <Link
-              href={opShopId ? `/dashboard/shop/${opShopId}/reels` : "#"}
+              href={opShopId ? `/dashboard/shop/${opShopId}/posts` : "#"}
               aria-disabled={!opShopId}
               className={`flex items-center justify-center gap-1.5 rounded-xl border border-main/20 bg-tone-800 py-3 text-sm font-bold text-main active:scale-95 ${opShopId ? "" : "pointer-events-none opacity-40"}`}
             >
