@@ -1,5 +1,6 @@
 "use server";
 
+import { MAX_SHOP_PINNED_REELS } from "@/lib/reels/shopOrder";
 import { parseVideoUrlWithShortLinks } from "@/lib/video-resolve";
 import { revalidatePath } from "next/cache";
 import { sanitizeWeekly, type WeeklyHours } from "@/lib/shop/businessHours";
@@ -331,6 +332,38 @@ export async function deleteReel(shopId: string, reelId: string) {
 
   revalidatePath(`/dashboard/shop/${shopId}/reels`);
   revalidatePath("/");
+}
+
+/** 店舗詳細ページのリール並び順とピン留め(最大10件)を保存する。ids は表示したい順。 */
+export async function saveShopReelOrder(shopId: string, orderedIds: string[], pinnedIds: string[]) {
+  const supabase = await requireShopAccess(shopId);
+  if (pinnedIds.length > MAX_SHOP_PINNED_REELS) {
+    throw new Error(`ピン留めは最大${MAX_SHOP_PINNED_REELS}件までです`);
+  }
+  const pinned = new Set(pinnedIds);
+  const now = new Date().toISOString();
+  const { data: current } = await supabase
+    .from("locapass_reels")
+    .select("id, shop_pinned_at")
+    .eq("shop_id", shopId)
+    .in("id", orderedIds);
+  const prev = new Map((current ?? []).map((r) => [r.id, r.shop_pinned_at]));
+  const results = await Promise.all(
+    orderedIds.map((id, index) =>
+      supabase
+        .from("locapass_reels")
+        .update({ shop_sort_order: index, shop_pinned_at: pinned.has(id) ? (prev.get(id) ?? now) : null })
+        .eq("id", id)
+        .eq("shop_id", shopId)
+        .select("id"),
+    ),
+  );
+  const failed = results.filter((r) => r.error || !r.data || r.data.length === 0);
+  if (failed.length > 0) {
+    throw new Error(`並び順の保存に失敗しました: ${failed[0].error?.message ?? "対象が見つかりません"}`);
+  }
+  revalidatePath(`/dashboard/shop/${shopId}/reels`);
+  revalidatePath("/", "layout");
 }
 
 // ---------- 料金表(本家 addPriceItem / deletePriceItem) ----------

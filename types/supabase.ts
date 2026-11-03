@@ -1946,6 +1946,8 @@ export type Database = {
           video_url: string | null
           embed_provider: string | null
           embed_ref: string | null
+          shop_pinned_at: string | null
+          shop_sort_order: number | null
           wp_created_at: string | null
           wp_post_id: number | null
         }
@@ -1990,6 +1992,8 @@ export type Database = {
           video_url?: string | null
           embed_provider?: string | null
           embed_ref?: string | null
+          shop_pinned_at?: string | null
+          shop_sort_order?: number | null
           wp_created_at?: string | null
           wp_post_id?: number | null
         }
@@ -2034,6 +2038,8 @@ export type Database = {
           video_url?: string | null
           embed_provider?: string | null
           embed_ref?: string | null
+          shop_pinned_at?: string | null
+          shop_sort_order?: number | null
           wp_created_at?: string | null
           wp_post_id?: number | null
         }

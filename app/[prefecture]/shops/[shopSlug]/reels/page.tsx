@@ -7,6 +7,7 @@ import { ReelLoopFeed } from "@/components/ReelLoopFeed";
 import type { ReelItem } from "@/lib/reels/types";
 import { toEmbedRef } from "@/lib/embed";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
+import { sortForShopPage } from "@/lib/reels/shopOrder";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
 export const revalidate = 60;
@@ -51,7 +52,7 @@ export default async function ShopReelsPage({
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
-      `id, caption, translations, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, action_url, published_at, updated_at, is_comments_enabled, posted_by_staff_id, author_name, author_icon_url, cast_members:locapass_public_casts ( name, avatar_url, issue_no ), shop_staff_members:locapass_shop_staff_members ( name, avatar_url, issue_no )`,
+      `id, caption, translations, ${LOCAPASS_REEL_MEDIA_SELECT}, like_count, cast_id, shop_id, shop_pinned_at, shop_sort_order, action_url, published_at, updated_at, is_comments_enabled, posted_by_staff_id, author_name, author_icon_url, cast_members:locapass_public_casts ( name, avatar_url, issue_no ), shop_staff_members:locapass_shop_staff_members ( name, avatar_url, issue_no )`,
     )
     .eq("shop_id", shop.id)
     .eq("status", "publish")
@@ -60,7 +61,7 @@ export default async function ShopReelsPage({
     .order("published_at", { ascending: false });
 
   const reelLocale = await getServerLocale();
-  const reels: ReelItem[] = (reelRows ?? []).map((row) => {
+  const reels: ReelItem[] = sortForShopPage(reelRows ?? []).map((row) => {
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;
     const staff = Array.isArray(row.shop_staff_members)
       ? row.shop_staff_members[0]

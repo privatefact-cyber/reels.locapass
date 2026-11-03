@@ -40,6 +40,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 import { streamThumbnailFromManifestUrl } from "@/lib/stream/playback";
 import type { Cast, PriceItem, ShopEvent, SnsLinks, Store } from "@/lib/types/shop";
+import { sortForShopPage } from "@/lib/reels/shopOrder";
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
@@ -194,7 +195,7 @@ export default async function ShopDetailPage({
     supabase
       .from("locapass_reels")
       .select(
-        `id, ${LOCAPASS_REEL_MEDIA_SELECT}, cast_id, posted_by_staff_id, shop_id, cast_members:locapass_public_casts ( name ), staff_members:locapass_shop_staff_members ( name )`,
+        `id, ${LOCAPASS_REEL_MEDIA_SELECT}, cast_id, posted_by_staff_id, shop_id, shop_pinned_at, shop_sort_order, cast_members:locapass_public_casts ( name ), staff_members:locapass_shop_staff_members ( name )`,
       )
       .eq("shop_id", shopId)
       .eq("status", "publish")
@@ -291,7 +292,7 @@ export default async function ShopDetailPage({
   // スタッフ投稿が複数あっても最初の1件しか出ない不具合があった)。
   const castReelPreviews: CastReelPreview[] = [];
   const PREVIEW_LIMIT = 12; // これ以前の動画は動画ストック(archive)ページで探す
-  for (const row of (allReelRows ?? []).slice(0, PREVIEW_LIMIT)) {
+  for (const row of sortForShopPage(allReelRows ?? []).slice(0, PREVIEW_LIMIT)) {
     const media = toReelMedia(row)[0] as { type: "image" | "video"; url: string; poster?: string } | undefined;
     if (!media) continue;
     const cast = Array.isArray(row.cast_members) ? row.cast_members[0] : row.cast_members;

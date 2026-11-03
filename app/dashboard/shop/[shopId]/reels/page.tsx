@@ -11,6 +11,8 @@ import { ReelThumbEditButton } from "@/components/reels/ReelThumbEditor";
 import { ReelOrganizerProvider, ReelOrganizerBar, ReelOrganizerItem, ReelTagBadges, ReelRatingBadge } from "@/components/reels/ReelOrganizer";
 import { ReelInsights } from "@/components/reels/ReelInsights";
 import { ConfirmSubmitButton } from "@/components/reels/ConfirmSubmitButton";
+import { ShopReelOrderManager, type OrderItem } from "@/components/locapass-dashboard/ShopReelOrderManager";
+import { sortForShopPage } from "@/lib/reels/shopOrder";
 import { REELS_PER_ZIP, reelFileUrls } from "@/lib/reels/downloadable";
 
 /**
@@ -36,7 +38,7 @@ export default async function LocapassShopReelsPage({
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
-      "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, tags, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
+      "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, tags, shop_pinned_at, shop_sort_order, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
     )
     .eq("shop_id", shop.id)
     // ダミー(イメージ映像)は店舗の投稿ではないので、管理画面の一覧・インサイトには出さない。
@@ -66,6 +68,17 @@ export default async function LocapassShopReelsPage({
       cast_members: r.locapass_cast_members,
       shop_staff_members: r.locapass_shop_staff_members,
     };
+  });
+
+  // 店舗詳細ページに出る投稿(公開中の通常リール)だけを、いまの店舗ページ上の並びで渡す。
+  const orderItems: OrderItem[] = sortForShopPage(
+    (reelRows ?? []).filter((r) => r.status === "publish" && r.reel_type === "permanent"),
+  ).flatMap((r) => {
+    const images = (r.images as { url: string }[] | null) ?? [];
+    const type = r.video_url ? "video" : "image";
+    const url = r.video_url ?? images[0]?.url ?? r.poster_url;
+    if (!url) return [];
+    return [{ id: r.id, type, url, label: r.caption?.trim().slice(0, 20) || "(説明なし)", pinned: Boolean(r.shop_pinned_at) } as OrderItem];
   });
 
   const downloadableCount = (reelRows ?? []).filter((r) => reelFileUrls(r).length > 0).length;
@@ -138,6 +151,8 @@ export default async function LocapassShopReelsPage({
       <ShopReelPostForm shopId={shop.id} portalId={shop.portal_id} />
 
       <ShopEmbedSection shopId={shop.id} enabled={Boolean(shopRow?.embed_enabled)} />
+
+      {orderItems.length > 1 && <ShopReelOrderManager shopId={shop.id} initial={orderItems} />}
 
       {reels && reels.length > 0 ? (
         <ReelOrganizerProvider items={reels.map((r) => ({ id: r.id, createdAt: r.createdAt, tags: r.tags }))}>
