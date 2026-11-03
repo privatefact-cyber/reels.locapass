@@ -6,6 +6,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { youtubeThumbUrl } from "@/lib/embed";
 import { expandShortVideoUrl, parseVideoUrlWithShortLinks } from "@/lib/video-resolve";
 import type { VideoRef } from "@/lib/video";
+import { refreshReelTranslation } from "@/lib/reels/reelTranslations";
+import { translateEventText } from "@/lib/shop/shopTranslations";
+import { shopInputLang } from "@/lib/shop/inputLang";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 
 const MAX_THUMB_BYTES = 3 * 1024 * 1024;
@@ -83,10 +86,13 @@ export async function createEmbedPost(formData: FormData) {
     const startsAt = startDate ? new Date(`${startDate}T00:00:00+09:00`).toISOString() : null;
     const endsAt = endDate ? new Date(`${endDate}T23:45:00+09:00`).toISOString() : null;
     if (startsAt && endsAt && endsAt < startsAt) throw new Error("終了日は開始日より後にしてください");
+    // タイトル・本文は、店舗の入力言語を原文として自動翻訳する(動画の中身は原語のまま)。
+    const translations = await translateEventText(title, text || null, await shopInputLang(admin, shop.id));
     const { error } = await (admin as any).from("locapass_shop_events").insert({
       shop_id: shop.id,
       title,
       body: text || null,
+      translations,
       starts_at: startsAt,
       ends_at: endsAt,
       image_url: thumb,
@@ -97,7 +103,7 @@ export async function createEmbedPost(formData: FormData) {
     if (error) throw new Error(`イベントの保存に失敗しました: ${error.message}`);
     revalidatePath("/events");
   } else {
-    const { error } = await (admin as any).from("locapass_reels").insert({
+    const { data: inserted, error } = await (admin as any).from("locapass_reels").insert({
       shop_id: shop.id,
       portal_id: shop.portal_id,
       caption: text || null,
@@ -108,8 +114,10 @@ export async function createEmbedPost(formData: FormData) {
       published_at: new Date().toISOString(),
       embed_provider: video.provider,
       embed_ref: video.ref,
-    });
+    }).select("id").single();
     if (error) throw new Error(`リールの保存に失敗しました: ${error.message}`);
+    // 説明文は、英語・中国語・アラビア語に自動翻訳する(動画の中身は原語のまま)。失敗しても投稿は残す。
+    if (text) await refreshReelTranslation(admin as any, inserted.id).catch(() => undefined);
     revalidatePath("/");
   }
   revalidatePath("/admin/embeds");
