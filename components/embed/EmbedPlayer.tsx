@@ -52,33 +52,36 @@ export function EmbedPlayer({
               <span className="relative rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white">読み込み中…</span>
             </div>
           )}
+          {/* 上の細い帯に「閉じる」と元の投稿へのリンクを置く(埋め込み側のボタンと重ならないように)。 */}
+          <div className="absolute inset-x-0 top-0 z-20 flex h-8 items-center justify-between bg-black px-2">
+            <a
+              href={videoUrlFor(provider, refId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[10px] text-white/70"
+            >
+              表示されない場合は {label} で見る <ExternalLink size={10} />
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setPlaying(false);
+                setLoaded(false);
+              }}
+              aria-label="閉じる"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-white"
+            >
+              <X size={14} />
+            </button>
+          </div>
           <iframe
             src={embedSrc(provider, refId)}
             title={title}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
             onLoad={() => setTimeout(() => setLoaded(true), provider === "youtube" ? 400 : 3000)}
-            className="absolute inset-0 h-full w-full border-0 bg-black"
+            className="absolute inset-x-0 bottom-0 top-8 h-[calc(100%-2rem)] w-full border-0 bg-black"
           />
-          <button
-            type="button"
-            onClick={() => {
-              setPlaying(false);
-              setLoaded(false);
-            }}
-            aria-label="閉じる"
-            className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white"
-          >
-            <X size={16} />
-          </button>
-          <a
-            href={videoUrlFor(provider, refId)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute left-2 top-2 z-20 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] text-white/80"
-          >
-            表示されない場合は {label} で見る <ExternalLink size={10} />
-          </a>
         </>
       ) : (
         <button type="button" onClick={() => setPlaying(true)} aria-label={`${title}(${label})を再生`} className="group absolute inset-0 block h-full w-full">
