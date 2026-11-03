@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Play, X } from "lucide-react";
 import { embedSrc } from "@/lib/embed";
 import { VIDEO_PROVIDER_LABEL, videoUrlFor, type VideoProvider } from "@/lib/video";
@@ -49,6 +49,7 @@ export function EmbedPlayer({
   const [dismissed, setDismissed] = useState(false);
   const autoPlay = autoStart && (provider === "youtube" || provider === "tiktok");
   const label = VIDEO_PROVIDER_LABEL[provider];
+  const frame = useRef<HTMLIFrameElement>(null);
   // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
   const warm = (active || preload) && provider === "instagram";
   const mounted = playing || warm;
@@ -62,6 +63,30 @@ export function EmbedPlayer({
     }
     if (!active && !preload) setLoaded(false);
   }, [active, preload, autoPlay, dismissed]);
+
+  // TikTokは、URLの自動再生指定だけでは始まらないことがある(ブラウザの設定など)ため、
+  // 再生が始まるまで「無音にして再生」の指示をプレーヤーへ繰り返し送る(再生位置が進み始めたら止める)。
+  useEffect(() => {
+    if (!(playing && autoPlay && provider === "tiktok")) return;
+    let started = false;
+    const onMessage = (e: MessageEvent) => {
+      if (e.source !== frame.current?.contentWindow) return;
+      const d = e.data as { "x-tiktok-player"?: boolean; type?: string; value?: { currentTime?: number } } | null;
+      if (d?.["x-tiktok-player"] && d.type === "onCurrentTime" && (d.value?.currentTime ?? 0) > 0.2) started = true;
+    };
+    window.addEventListener("message", onMessage);
+    const send = (type: string) => frame.current?.contentWindow?.postMessage({ "x-tiktok-player": true, type, value: undefined }, "*");
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      if (started || ++tries > 12) return window.clearInterval(timer);
+      send("mute");
+      send("play");
+    }, 700);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("message", onMessage);
+    };
+  }, [playing, autoPlay, provider]);
 
   // 画面に出たら、埋め込み先への接続だけ先に済ませておく。
   useEffect(() => {
@@ -82,6 +107,7 @@ export function EmbedPlayer({
       {/* 同じiframeを出し入れしないよう、読み込み中も再生中も同じ要素のまま、見た目だけ切り替える(切り替えで読み込み直しにならない)。 */}
       {mounted && (
         <iframe
+          ref={frame}
           src={embedSrc(provider, refId, true, autoPlay)}
           title={title}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
