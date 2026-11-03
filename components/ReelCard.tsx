@@ -112,6 +112,12 @@ export function ReelCard({
   embedPreload = false,
 }: ReelCardProps) {
   const { t, locale } = useLocale();
+  // 外部動画(YouTube/TikTok)の音の入/切。自動再生は無音で始まる。カード右のスピーカーボタンで切り替える。
+  const [embedSound, setEmbedSound] = useState(false);
+  useEffect(() => {
+    if (!isActive) setEmbedSound(false);
+  }, [isActive]);
+  const embedHasSound = !!embed && embed.provider !== "instagram";
   // 投稿者向けインサイト用の閲覧記録(広告は対象外)。
   useReelViewTracking(isAd ? undefined : reelId, isActive);
   const resolvedCtaText = ctaText ?? t.common.learnMore;
@@ -265,6 +271,7 @@ export function ReelCard({
             active={isActive}
             preload={embedPreload}
             autoStart
+            soundOn={embedSound}
             className={embed.provider === "instagram" ? "absolute bottom-28 left-0 right-14 top-0 md:right-0" : "absolute inset-0"}
           />
         </>
@@ -391,6 +398,16 @@ export function ReelCard({
       {/* 右下: アイコン(プロフィールへ)・いいね・コメント・シェア (TikTok同様の並び)。
           PC(md以上)では動画の外側(右)に配置し、映像に被らないようにする。 */}
       <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main md:right-[-64px] ${fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
+        {embedHasSound && isActive && (
+          <button
+            type="button"
+            onClick={() => setEmbedSound((v) => !v)}
+            aria-label={embedSound ? "音を消す" : "音を出す"}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
+          >
+            {embedSound ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+        )}
         <div className="relative">
           <AvatarPeek
             href={profileUrl}

@@ -28,6 +28,7 @@ export function EmbedPlayer({
   active = true,
   preload = false,
   autoStart = false,
+  soundOn: soundOnProp,
   className = "absolute inset-0",
 }: {
   provider: VideoProvider;
@@ -40,6 +41,8 @@ export function EmbedPlayer({
   preload?: boolean;
   /** YouTube/TikTokを、画面に出たら無音で自動再生する(フィードのカード用)。音は再生画面の音量ボタンで出す。 */
   autoStart?: boolean;
+  /** 指定すると音の入/切を呼び出し側(カード右のスピーカーボタン)が持つ。指定しなければ、上の帯のボタンで操作する。 */
+  soundOn?: boolean;
   /** 配置(親の中で絶対配置する)。 */
   className?: string;
 }) {
@@ -50,11 +53,12 @@ export function EmbedPlayer({
   const autoPlay = autoStart && (provider === "youtube" || provider === "tiktok");
   const label = VIDEO_PROVIDER_LABEL[provider];
   const frame = useRef<HTMLIFrameElement>(null);
-  // 自動再生は無音で始まる。埋め込み側の音量ボタンは再生中に隠れることがあるため、こちらにも音のボタンを置く。
-  const [soundOn, setSoundOn] = useState(false);
+  // 自動再生は無音で始まる。音の入/切は、呼び出し側(soundOn)か、上の帯のボタンで操作する。
+  const [soundOnInner, setSoundOnInner] = useState(false);
+  const controlled = soundOnProp !== undefined;
+  const soundOn = controlled ? soundOnProp : soundOnInner;
 
-  function toggleSound() {
-    const next = !soundOn;
+  function applySound(next: boolean) {
     const w = frame.current?.contentWindow;
     if (!w) return;
     if (provider === "tiktok") {
@@ -63,8 +67,20 @@ export function EmbedPlayer({
       w.postMessage(JSON.stringify({ event: "command", func: next ? "unMute" : "mute", args: [] }), "*");
       if (next) w.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [100] }), "*");
     }
-    setSoundOn(next);
   }
+
+  function toggleSound() {
+    const next = !soundOnInner;
+    applySound(next);
+    setSoundOnInner(next);
+  }
+
+  // 呼び出し側が音を持つときは、その値が変わったらプレーヤーへ伝える。
+  useEffect(() => {
+    if (controlled && playing) applySound(soundOnProp as boolean);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soundOnProp, playing]);
+
   // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
   const warm = (active || preload) && provider === "instagram";
   const mounted = playing || warm;
@@ -72,7 +88,7 @@ export function EmbedPlayer({
   useEffect(() => {
     if (!active) {
       setPlaying(false);
-      setSoundOn(false);
+      setSoundOnInner(false);
       setDismissed(false);
     } else if (autoPlay && !dismissed) {
       setPlaying(true);
@@ -161,7 +177,7 @@ export function EmbedPlayer({
             >
               {label}で見る <ExternalLink size={10} />
             </a>
-            {autoPlay && (
+            {autoPlay && !controlled && (
               <button
                 type="button"
                 onClick={toggleSound}
@@ -176,7 +192,7 @@ export function EmbedPlayer({
               type="button"
               onClick={() => {
                 setPlaying(false);
-                setSoundOn(false);
+                setSoundOnInner(false);
                 setDismissed(true);
                 // 先読みしているInstagramは、閉じても読み込み済みのまま残す(また開いたとき待たない)。
                 if (!warm) setLoaded(false);
