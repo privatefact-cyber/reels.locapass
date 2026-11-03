@@ -6,6 +6,7 @@ import { sanitizeWeekly } from "@/lib/shop/businessHours";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
+import { ShopEmbedSection } from "@/components/locapass-dashboard/ShopEmbedSection";
 import { EventFormSection } from "@/components/locapass-dashboard/EventFormSection";
 import { ShopPinEditor } from "@/components/locapass-dashboard/ShopPinEditor";
 import { SingleImageDropzone } from "@/components/locapass-dashboard/EventImageDropzone";
@@ -103,6 +104,7 @@ export default async function LocapassShopSettingsPage({
 
   // 本家shopsの列名に揃える(category→genre, tel→phone, url→website_url, cover_url→cover_image_url)。
   // YouTube動画ID(型に列が無いため別クエリ)。
+  const { data: embedOpt } = await (supabase as any).from("locapass_shops").select("embed_enabled").eq("id", currentShop.id).maybeSingle();
   const { data: spotNoticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled").eq("id", currentShop.id).maybeSingle();
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
@@ -610,6 +612,12 @@ export default async function LocapassShopSettingsPage({
         addPriceItem={addPriceItem.bind(null, currentShop.id)}
         updatePriceItem={updatePriceItem.bind(null, currentShop.id)}
         deletePriceItem={deletePriceItem.bind(null, currentShop.id)}
+      />
+
+      <ShopEmbedSection
+        kind="event"
+        shopId={currentShop.id}
+        enabled={Boolean((embedOpt as { embed_enabled?: boolean } | null)?.embed_enabled) || viewer.isOperator}
       />
 
       <EventFormSection

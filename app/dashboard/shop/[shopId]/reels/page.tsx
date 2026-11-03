@@ -150,7 +150,7 @@ export default async function LocapassShopReelsPage({
 
       <ShopReelPostForm shopId={shop.id} portalId={shop.portal_id} />
 
-      <ShopEmbedSection shopId={shop.id} enabled={Boolean(shopRow?.embed_enabled) || viewer.isOperator} />
+      <ShopEmbedSection kind="reel" shopId={shop.id} enabled={Boolean(shopRow?.embed_enabled) || viewer.isOperator} />
 
       {orderItems.length > 1 && <ShopReelOrderManager shopId={shop.id} initial={orderItems} />}
 
