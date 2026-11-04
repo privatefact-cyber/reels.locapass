@@ -653,6 +653,31 @@ export function ReelFeed({
   useEffect(() => {
     if (openIndex === null) setImmersive(false);
   }, [openIndex]);
+  // スマホを横向きにしたら、自動で全画面スワイプに入る(YouTubeアプリと同じ)。
+  // 横向きのスマホは幅がmd以上になり、通常の一覧のままだとPC用の縦長の小さいカードが並んでしまうため。
+  // 縦に戻したら、自動で入ったときだけ通常の一覧に戻す(自分で「全画面」を押して入ったときはそのまま)。
+  const autoImmersiveRef = useRef(false);
+  useEffect(() => {
+    if (!immersive) autoImmersiveRef.current = false;
+  }, [immersive]);
+  useEffect(() => {
+    if (openIndex === null) return;
+    const phoneLandscape = window.matchMedia("(orientation: landscape) and (max-height: 500px) and (pointer: coarse)");
+    const apply = () => {
+      if (phoneLandscape.matches) {
+        setImmersive((prev) => {
+          if (!prev) autoImmersiveRef.current = true;
+          return true;
+        });
+      } else if (autoImmersiveRef.current) {
+        autoImmersiveRef.current = false;
+        setImmersive(false);
+      }
+    };
+    apply();
+    phoneLandscape.addEventListener("change", apply);
+    return () => phoneLandscape.removeEventListener("change", apply);
+  }, [openIndex]);
   useEffect(() => {
     if (!immersive) return;
     document.body.dataset.immersive = "1";
@@ -943,7 +968,9 @@ export function ReelFeed({
       ) : (
         // 縦スワイプのリール一覧。ヘッダー・ボトムナビはページの通常コンテンツとして
         // そのまま表示され続ける(画面を覆う固定オーバーレイにはしない)。
-        <div className={immersive ? "fixed inset-0 z-[55] snap-y snap-mandatory overflow-y-auto overscroll-contain bg-black" : "space-y-4"}>
+        // 全画面のとき、親の space-y-3 が付ける上の余白(12px)が fixed の枠にも効いて、枠が12px下にずれて短くなり、
+        // 1画面ぶんの高さの各リールが枠に収まらず、スワイプのたびにずれていた。!mt-0 で打ち消す。
+        <div className={immersive ? "fixed inset-0 z-[55] !mt-0 snap-y snap-mandatory overflow-y-auto overscroll-contain bg-black" : "space-y-4"}>
           {immersive ? (
             <button
               type="button"
