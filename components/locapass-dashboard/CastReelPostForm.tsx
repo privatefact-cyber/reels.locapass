@@ -217,6 +217,7 @@ export function CastReelPostForm({ castId, shopId, portalId }: { castId: string;
           <span className="text-sm font-medium text-slate-600">写真・動画を選択(任意)</span>
         )}
       </label>
+      <p className="-mt-2 text-[11px] leading-relaxed text-slate-500">おすすめ: 縦長(9:16)・1080×1920px以上。縦向きの画像・動画が画面いっぱいにきれいに表示されます。</p>
       <p className="rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600">🌐 母国語でも投稿できます！投稿文は自動で各国の言葉に翻訳されます。</p>
       <div>
         <textarea
