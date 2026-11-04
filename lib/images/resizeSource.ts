@@ -34,7 +34,7 @@ export async function resizeFromUrl(url: string, p: ResizeParams): Promise<{ dat
 
     let img = sharp(buf, { failOn: "none", limitInputPixels: 120_000_000 })
       .rotate() // スマホ写真の向き情報を反映
-      .resize({ width: p.width, height: p.height, fit: p.fit, withoutEnlargement: true, position: "centre" });
+      .resize({ width: p.width, height: p.height, fit: p.fit === "contain" ? "inside" : "cover", withoutEnlargement: true, position: "centre" });
     img = p.format === "jpeg" ? img.jpeg({ quality: p.quality, mozjpeg: true }) : img.webp({ quality: p.quality });
     const data = await img.toBuffer();
     return { data, contentType: p.format === "jpeg" ? "image/jpeg" : "image/webp" };
