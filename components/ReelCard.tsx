@@ -298,7 +298,10 @@ export function ReelCard({
             className={
                 embed.provider === "instagram"
                   ? "absolute bottom-[84px] left-0 right-14 top-0 md:right-0"
-                  : "absolute inset-0"
+                  : embed.provider === "youtube"
+                    ? // スマホでは、YouTube自身の操作バー(全画面ボタン)が下の文章に隠れないよう、文章より上に置く。横幅はカードいっぱいのまま。
+                      "absolute inset-x-0 top-0 bottom-[170px] md:inset-0"
+                    : "absolute inset-0"
               }
           />
         </>
@@ -425,7 +428,7 @@ export function ReelCard({
 
       {/* 右下: アイコン(プロフィールへ)・いいね・コメント・シェア (TikTok同様の並び)。
           PC(md以上)では動画の外側(右)に配置し、映像に被らないようにする。 */}
-      <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main ${wideInFullBleed ? "" : "md:right-[-64px]"} ${fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
+      <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main ${wideInFullBleed ? "" : "md:right-[-64px]"} ${embed?.provider === "youtube" ? "bottom-[190px] md:bottom-28" : fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
         {embedHasSound && isActive && (
           <button
             type="button"
