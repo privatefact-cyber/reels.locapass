@@ -44,6 +44,21 @@
   "ru": "• Первое фото станет обложкой в списке)",
   "es": "• La primera foto será la foto principal en la lista)"
  },
+ "・契約月から$": {
+  "en": "・From contract month $",
+  "zh": "・自签约月份起 $",
+  "zh-TW": "・自簽約月份起 $",
+  "ne": "・सम्झौता महिनाबाट$",
+  "vi": "・$ từ tháng ký hợp đồng",
+  "id": "• Bulan kontrak dari $",
+  "my": "・စာချုပ်ချုပ်သည့်လမှ $",
+  "th": "・นับจากเดือนที่เริ่มสัญญา $",
+  "pt": "・A partir do mês do contrato $",
+  "tr": "• Sözleşme ayından itibaren $",
+  "ru": "・ С месяца заключения договора $",
+  "es": "・$ desde el mes de contratación",
+  "ar": "• من شهر العقد $"
+ },
  ": ページの中で、その場で再生されます。終わるとサムネイルに戻り、お客様が外へ移動しにくく、音楽の入った動画も、そのまま再生できます。": {
   "en": ": Plays directly on the page. Once finished, it returns to the thumbnail, keeping customers on your page. Videos with music can also be played as is.",
   "zh": "：直接在页面内播放。播放结束后返回缩略图，防止顾客离开页面，带背景音乐的视频也可以直接播放。",
@@ -179,6 +194,21 @@
   "ru": "(Не публиковать)",
   "es": "(No publicar)"
  },
+ "(割引 -{0})": {
+  "en": "(Discount -{0})",
+  "zh": "(折扣 -{0})",
+  "zh-TW": "(折扣 -{0})",
+  "ne": "(छूट -{0})",
+  "vi": "(Giảm giá -{0})",
+  "id": "(Diskon -{0})",
+  "my": "(လျှော့စျေး -{0})",
+  "th": "(ส่วนลด -{0})",
+  "pt": "(Desconto -{0})",
+  "tr": "(İndirim -{0})",
+  "ru": "(Скидка -{0})",
+  "es": "(Descuento -{0})",
+  "ar": "(خصم -{0})"
+ },
  "(店舗のパスワードは変更されていません)": {
   "en": "(Store password has not been changed)",
   "zh": "(店铺密码未更改)",
@@ -208,6 +238,21 @@
   "tr": "(Metin yok, sadece yıldız)",
   "ru": "(Без текста, только звезды)",
   "es": "(Sin texto, solo estrellas)"
+ },
+ "(説明なし)": {
+  "en": "(No description)",
+  "zh": "(无说明)",
+  "zh-TW": "(無說明)",
+  "ne": "(विवरण छैन)",
+  "vi": "(Không có mô tả)",
+  "id": "(Tanpa deskripsi)",
+  "my": "(ရှင်းလင်းချက်မရှိပါ)",
+  "th": "(ไม่มีคำอธิบาย)",
+  "pt": "(Sem descrição)",
+  "tr": "(Açıklama yok)",
+  "ru": "(Без описания)",
+  "es": "(Sin descripción)",
+  "ar": "(بدون وصف)"
  },
  "(電話/SMS)": {
   "en": "(Phone/SMS)",
@@ -269,6 +314,21 @@
   "ru": "Перемещено в {0}. Если метка смещена, перетащите пин.",
   "es": "Se movió a {0}. Si el pin no está ajustado, arrástralo."
  },
+ "{0}〜{1}件目を保存": {
+  "en": "Save items {0} to {1}",
+  "zh": "保存第 {0} 至 {1} 条",
+  "zh-TW": "儲存第 {0}～{1} 筆",
+  "ne": "{0} देखि {1} औं वस्तु बचत गर्नुहोस्",
+  "vi": "Lưu mục {0} đến {1}",
+  "id": "Simpan item ke-{0} hingga {1}",
+  "my": "{0} မှ {1} ခုမြောက်အထိ သိမ်းဆည်းရန်",
+  "th": "บันทึกรายการที่ {0} ถึง {1}",
+  "pt": "Salvar itens {0} a {1}",
+  "tr": "{0} - {1} arası öğeleri kaydet",
+  "ru": "Сохранить записи с {0} по {1}",
+  "es": "Guardar del {0} al {1}",
+  "ar": "حفظ العناصر من {0} إلى {1}"
+ },
  "{0}(店舗)": {
   "en": "{0} (Store)",
   "zh": "{0}（店铺）",
@@ -298,6 +358,21 @@
   "tr": "{0} (Çekim: {1})",
   "ru": "{0} (съемка {1})",
   "es": "{0} (Foto: {1})"
+ },
+ "{0}%引き": {
+  "en": "{0}% off",
+  "zh": "{0}% 折扣",
+  "zh-TW": "{0}% 折扣",
+  "ne": "{0}% छूट",
+  "vi": "Giảm {0}%",
+  "id": "Diskon {0}%",
+  "my": "{0}% လျှော့စျေး",
+  "th": "ลด {0}%",
+  "pt": "{0}% de desconto",
+  "tr": "%{0} indirim",
+  "ru": "Скидка {0}%",
+  "es": "{0}% de descuento",
+  "ar": "خصم {0}%"
  },
  "{0}さんのマイページ用リンクです。タップして、別途お伝えする暗証番号でログインしてください。 {1}": {
   "en": "This is the My Page link for {0}. Tap to log in using the PIN provided separately. {1}",
@@ -359,6 +434,21 @@
   "ru": "Отправлено пользователям: {0}",
   "es": "Enviado a {0} personas"
  },
+ "{0}件ずつに分けています。": {
+  "en": "Divided into sets of {0}.",
+  "zh": "已分为每组 {0} 条。",
+  "zh-TW": "已分成每組 {0} 筆。",
+  "ne": "{0} वटाका दरले विभाजन गरिएको छ।",
+  "vi": "Đã chia thành mỗi nhóm {0} mục.",
+  "id": "Dibagi per {0} item.",
+  "my": "{0} ခုစီ ခွဲခြားထားပါသည်။",
+  "th": "แบ่งออกเป็นชุดละ {0} รายการ",
+  "pt": "Dividido em blocos de {0}.",
+  "tr": "{0}'ar öğe halinde ayrılmıştır.",
+  "ru": "Разделено по {0} шт.",
+  "es": "Dividido en bloques de {0}.",
+  "ar": "مقسمة إلى {0} عناصر لكل مجموعة."
+ },
  "{0}件の予定をまとめて登録": {
   "en": "Batch register {0} schedules",
   "zh": "批量注册 {0} 条日程",
@@ -373,6 +463,21 @@
   "tr": "{0} randevuyu toplu kaydet",
   "ru": "Зарегистрировать {0} событий",
   "es": "Registrar {0} eventos a la vez"
+ },
+ "{0}引き": {
+  "en": "{0} off",
+  "zh": "减免 {0}",
+  "zh-TW": "折價 {0}",
+  "ne": "{0} छूट",
+  "vi": "Giảm {0}",
+  "id": "Diskon {0}",
+  "my": "{0} လျှော့စျေး",
+  "th": "ลด {0}",
+  "pt": "{0} de desconto",
+  "tr": "{0} indirim",
+  "ru": "Скидка {0}",
+  "es": "{0} de descuento",
+  "ar": "خصم {0}"
  },
  "{0}日ぶんの予定を登録しました。": {
   "en": "Registered schedules for {0} days.",
@@ -449,6 +554,21 @@
   "ru": "Удалить «{0}»? Это действие нельзя отменить. Продолжить? (Проданные автомобили можно отметить как «Продано», чтобы сохранить их в истории)",
   "es": "Se eliminará \"{0}\". Esta acción no se puede deshacer. ¿Deseas continuar? (Los autos vendidos se pueden marcar como \"Vendido\" para conservarlos en el historial)"
  },
+ "「詳しく見る」ボタンの飛び先です。空なら、この店舗のページへ飛びます。": {
+  "en": "Destination URL for the \"Learn More\" button. If left blank, it will link to this store's page.",
+  "zh": "这是“查看详情”按钮跳转的链接。如果留空，将跳转至本店铺页面。",
+  "zh-TW": "這是「查看詳情」按鈕的跳轉目標網址。若留空，將跳轉至此店家的頁面。",
+  "ne": "यो \"विस्तृत हेर्नुहोस्\" बटनको लिङ्क हो। खाली छोडेमा, यो पसलको पृष्ठमा जानेछ।",
+  "vi": "Liên kết đích của nút \"Xem chi tiết\". Nếu để trống, nút sẽ chuyển hướng đến trang của cửa hàng này.",
+  "id": "Tujuan tombol \"Lihat Selengkapnya\". Jika dikosongkan, akan mengarah ke halaman toko ini.",
+  "my": "\"အသေးစိတ်ကြည့်ရန်\" ခလုတ်၏ လင့်ခ်နေရာ ဖြစ်သည်။ ဗလာထားပါက ဤဆိုင်၏ စာမျက်နှာသို့ သွားပါမည်။",
+  "th": "ปลายทางของปุ่ม \"ดูรายละเอียด\" หากเว้นว่างไว้ ระบบจะลิงก์ไปยังหน้าของร้านนี้",
+  "pt": "Destino do botão \"Ver mais\". Se estiver em branco, direcionará para a página deste estabelecimento.",
+  "tr": "\"Daha Fazla Bilgi\" butonunun yönlendirme bağlantısıdır. Boş bırakılırsa bu mağazanın sayfasına gider.",
+  "ru": "Ссылка для кнопки «Подробнее». Если оставить пустым, будет вести на страницу этого заведения.",
+  "es": "Es el destino del botón \"Ver más\". Si está en blanco, dirigirá a la página de esta tienda.",
+  "ar": "هذا هو وجهة زر \"عرض التفاصيل\". إذا تركته فارغًا، سينتقل إلى صفحة هذا المتجر."
+ },
  "」を編集中": {
   "en": "\" Editing",
   "zh": "”正在编辑",
@@ -463,6 +583,51 @@
   "tr": "\" düzenleniyor",
   "ru": "» (редактирование)",
   "es": "(Editando)"
+ },
+ "/ 期間割引: {0} × 契約月から{1}か月": {
+  "en": "/ Term discount: {0} × {1} month(s) from contract month",
+  "zh": "/ 限时优惠: {0} × 签约起{1}个月",
+  "zh-TW": "/ 期間折扣：{0} × 自簽約月份起 {1} 個月",
+  "ne": "/ अवधि छूट: {0} × सम्झौता महिनाबाट {1} महिना",
+  "vi": "/ Giảm giá theo thời hạn: {0} × {1} tháng kể từ tháng ký hợp đồng",
+  "id": "/ Diskon periode: {0} × {1} bulan dari bulan kontrak",
+  "my": "/ ကာလ လျှော့စျေး: {0} × စာချုပ်ချုပ်သည့်လမှ {1} လ",
+  "th": "/ ส่วนลดตามระยะเวลา: {0} × {1} เดือน นับจากเดือนที่เริ่มสัญญา",
+  "pt": "/ Desconto por período: {0} × {1} mês(es) a partir do mês do contrato",
+  "tr": "/ Süre indirimi: {0} × sözleşme ayından itibaren {1} ay",
+  "ru": "/ Скидка за период: {0} × {1} мес. с месяца заключения договора",
+  "es": "/ Descuento por periodo: {0} × {1} meses desde el mes de contratación",
+  "ar": "/ خصم المدة: {0} × {1} شهرًا من شهر العقد"
+ },
+ "/月": {
+  "en": "/month",
+  "zh": "/月",
+  "zh-TW": "/月",
+  "ne": "/महिना",
+  "vi": "/tháng",
+  "id": "/bulan",
+  "my": "/လ",
+  "th": "/เดือน",
+  "pt": "/mês",
+  "tr": "/ay",
+  "ru": "/мес.",
+  "es": "/mes",
+  "ar": "/شهر"
+ },
+ "/月)": {
+  "en": "/month)",
+  "zh": "/月)",
+  "zh-TW": "/月)",
+  "ne": "/महिना)",
+  "vi": "/tháng)",
+  "id": "/bulan)",
+  "my": "/လ)",
+  "th": "/เดือน)",
+  "pt": "/mês)",
+  "tr": "/ay)",
+  "ru": "/мес.)",
+  "es": "/mes)",
+  "ar": "/شهر)"
  },
  "※ ステータスの変更は詳細ページで行ってください": {
   "en": "* Please change the status on the details page.",
@@ -644,6 +809,21 @@
   "ru": "❓ Как использовать",
   "es": "❓ Cómo usar"
  },
+ "🌐 母国語でも投稿できます！投稿文は自動で各国の言葉に翻訳されます。": {
+  "en": "🌐 You can also post in your native language! Your posts will be automatically translated into various languages.",
+  "zh": "🌐 您也可以用母语发布！发布内容会自动翻译成各国语言。",
+  "zh-TW": "🌐 您也可以使用母語發布！發布內容將會自動翻譯成各國語言。",
+  "ne": "🌐 तपाईं आफ्नो मातृभाषामा पनि पोस्ट गर्न सक्नुहुन्छ! पोस्टको पाठ स्वतः विभिन्न भाषाहरूमा अनुवाद हुनेछ।",
+  "vi": "🌐 Bạn cũng có thể đăng bằng ngôn ngữ mẹ đẻ! Bài đăng sẽ tự động được dịch sang ngôn ngữ của từng quốc gia.",
+  "id": "🌐 Anda juga dapat memposting dalam bahasa ibu Anda! Teks postingan akan diterjemahkan secara otomatis ke berbagai bahasa.",
+  "my": "🌐 မိခင်ဘာသာစကားဖြင့်လည်း ပို့စ်တင်နိုင်ပါသည်။ ပို့စ်စာသားများကို သက်ဆိုင်ရာ နိုင်ငံအလိုက် ဘာသာစကားများသို့ အလိုအလျောက် ဘာသာပြန်ပေးပါမည်।",
+  "th": "🌐 คุณสามารถโพสต์เป็นภาษาแม่ของคุณได้เช่นกัน! ข้อความที่โพสต์จะถูกแปลเป็นภาษาต่างๆ โดยอัตโนมัติ",
+  "pt": "🌐 Você também pode publicar no seu idioma nativo! O texto da publicação será traduzido automaticamente para vários idiomas.",
+  "tr": "🌐 Kendi ana dilinizde de paylaşım yapabilirsiniz! Gönderi metni otomatik olarak farklı dillere çevrilir.",
+  "ru": "🌐 Вы можете публиковать записи на родном языке! Текст автоматически переводится на разные языки.",
+  "es": "🌐 ¡También puede publicar en su idioma nativo! El texto de la publicación se traducirá automáticamente a varios idiomas.",
+  "ar": "🌐 يمكنك النشر بلغتك الأم أيضًا! سيتم ترجمة نص المنشور تلقائيًا إلى مختلف اللغات."
+ },
  "📍 開催場所": {
   "en": "📍 Location",
   "zh": "📍 活动地点",
@@ -778,6 +958,21 @@
   "tr": "7 gün",
   "ru": "7 дней",
   "es": "7 días"
+ },
+ "AI判定中…": {
+  "en": "AI analyzing...",
+  "zh": "AI判定中…",
+  "zh-TW": "AI 判定中…",
+  "ne": "AI जाँच गर्दैछ…",
+  "vi": "AI đang đánh giá…",
+  "id": "Menganalisis dengan AI…",
+  "my": "AI မှ စစ်ဆေးနေသည်...",
+  "th": "กำลังวิเคราะห์โดย AI...",
+  "pt": "Análise por IA em andamento...",
+  "tr": "AI değerlendiriyor...",
+  "ru": "Анализ ИИ…",
+  "es": "Analizando con IA...",
+  "ar": "جاري التقييم بواسطة الذكاء الاصطناعي..."
  },
  "Android: Chromeで開いて、メニュー →「ホーム画面に追加」": {
   "en": "Android: Open in Chrome, Menu → \"Add to Home screen\"",
@@ -1274,6 +1469,51 @@
   "ru": "Скопировать URL",
   "es": "Copiar URL"
  },
+ "YouTubeショート / TikTok / Instagramリールのリンク": {
+  "en": "YouTube Shorts / TikTok / Instagram Reels link",
+  "zh": "YouTube Shorts / TikTok / Instagram Reels 链接",
+  "zh-TW": "YouTube Shorts / TikTok / Instagram Reel 連結",
+  "ne": "YouTube Shorts / TikTok / Instagram Reels को लिङ्क",
+  "vi": "Liên kết YouTube Shorts / TikTok / Instagram Reels",
+  "id": "Tautan YouTube Shorts / TikTok / Instagram Reels",
+  "my": "YouTube Shorts / TikTok / Instagram Reels လင့်ခ်",
+  "th": "ลิงก์ YouTube Shorts / TikTok / Instagram Reels",
+  "pt": "Link do YouTube Shorts / TikTok / Instagram Reels",
+  "tr": "YouTube Shorts / TikTok / Instagram Reels bağlantısı",
+  "ru": "Ссылка на YouTube Shorts / TikTok / Instagram Reels",
+  "es": "Enlace de YouTube Shorts / TikTok / Instagram Reels",
+  "ar": "رابط مقاطع YouTube Shorts / TikTok / Instagram Reels"
+ },
+ "YouTubeショート・TikTok・Instagramリールのリンクを貼ると、イベント一覧のカード1枚として、開催期間のあいだ表示されます。タップすると、サイトの中で再生されます。": {
+  "en": "Pasting a link to a YouTube Short, TikTok, or Instagram Reel will display it as a card in the event list during the event period. Tapping it will play it directly on the site.",
+  "zh": "粘贴 YouTube Shorts、TikTok 或 Instagram Reels 的链接后，在活动举办期间将作为活动列表中的一张卡片显示。点击即可在网站内播放。",
+  "zh-TW": "貼上 YouTube Shorts、TikTok 或 Instagram Reel 的連結後，在活動期間內會作為活動列表中的一張卡片顯示。點擊後可在網站內播放。",
+  "ne": "YouTube Shorts, TikTok, वा Instagram Reels को लिङ्क राख्नुभयो भने, कार्यक्रम अवधिभर कार्यक्रम सूचीको एउटा कार्डको रूपमा देखिनेछ। ट्याप गर्दा, यो साइट भित्रै प्ले हुनेछ।",
+  "vi": "Khi dán liên kết YouTube Shorts, TikTok hoặc Instagram Reels, nó sẽ hiển thị dưới dạng 1 thẻ trong danh sách sự kiện trong suốt thời gian diễn ra. Khi nhấn vào, video sẽ được phát ngay trong trang web.",
+  "id": "Menempelkan tautan YouTube Shorts, TikTok, atau Instagram Reels akan meenampilkannya sebagai salah satu kartu di daftar acara selama periode acara berlangsung. Saat diketuk, video akan diputar di dalam situs.",
+  "my": "YouTube Shorts၊ TikTok၊ Instagram Reels လင့်ခ်ကို ထည့်သွင်းပါက ပွဲလမ်းသဘင် စာရင်းတွင် ကတ်တစ်ခုအဖြစ် ပွဲကျင်းပသည့် ကာလအတွင်း ပြသပေးပါမည်။ နှိပ်လိုက်ပါက ဝဘ်ဆိုက်အတွင်း ဖွင့်ပြပေးပါမည်။",
+  "th": "หากวางลิงก์ YouTube Shorts, TikTok หรือ Instagram Reels วิดีโอจะแสดงเป็นการ์ด 1 ใบในรายการกิจกรรมตามช่วงเวลาที่จัดกิจกรรม เมื่อแตะแล้วจะเล่นวิดีโอภายในเว็บไซต์",
+  "pt": "Cole o link de um YouTube Shorts, TikTok ou Instagram Reels para exibi-lo como um cartão na lista de eventos durante o período do evento. Ao tocar, ele será reproduzido dentro do site.",
+  "tr": "YouTube Shorts, TikTok veya Instagram Reels bağlantısı yapıştırdığınızda, etkinlik süresince etkinlik listesinde bir kart olarak gösterilir. Dokunulduğunda site içinde oynatılır.",
+  "ru": "Если вставить ссылку на YouTube Shorts, TikTok или Instagram Reels, видео будет отображаться как карточка в списке мероприятий на время их проведения. При нажатии оно будет воспроизводиться прямо на сайте.",
+  "es": "Al pegar un enlace de YouTube Shorts, TikTok o Instagram Reels, se mostrará como una tarjeta en la lista de eventos durante el periodo de realización. Al tocarla, se reproducirá dentro del sitio.",
+  "ar": "عند لصق رابط مقاطع YouTube Shorts أو TikTok أو Instagram Reels، سيتم عرضه كبطاقة واحدة في قائمة الفعاليات خلال فترة الفعالية. عند الضغط عليه، سيتم تشغيله داخل الموقع."
+ },
+ "YouTubeショート・TikTok・Instagramリールのリンクを貼ると、リールの1枚として表示されます。タップすると、サイトの中で再生されます。": {
+  "en": "Pasting a link to a YouTube Short, TikTok, or Instagram Reel will display it as a Reel card. Tapping it will play it directly on the site.",
+  "zh": "粘贴 YouTube Shorts、TikTok 或 Instagram Reels 的链接后，将作为其中一条 Reels 显示。点击即可在网站内播放。",
+  "zh-TW": "貼上 YouTube Shorts、TikTok 或 Instagram Reel 的連結後，將作為 Reel 的其中一張顯示。點擊後可在網站內播放。",
+  "ne": "YouTube Shorts, TikTok, वा Instagram Reels को लिङ्क राख्नुभयो भने, यो एउटा Reel को रूपमा देखिनेछ। ट्याप गर्दा, यो साइट भित्रै प्ले हुनेछ।",
+  "vi": "Khi dán liên kết YouTube Shorts, TikTok hoặc Instagram Reels, nó sẽ hiển thị dưới dạng 1 Reel. Khi nhấn vào, video sẽ được phát ngay trong trang web.",
+  "id": "Menempelkan tautan YouTube Shorts, TikTok, atau Instagram Reels akan meenampilkannya sebagai salah satu Reel. Saat diketuk, video akan diputar di dalam situs.",
+  "my": "YouTube Shorts၊ TikTok၊ Instagram Reels လင့်ခ်ကို ထည့်သွင်းပါက Reel တစ်ခုအဖြစ် ပြသပေးပါမည်။ နှိပ်လိုက်ပါက ဝဘ်ဆိုက်အတွင်း ဖွင့်ပြပေးပါမည်။",
+  "th": "หากวางลิงก์ YouTube Shorts, TikTok หรือ Instagram Reels วิดีโอจะแสดงเป็น Reels 1 รายการ เมื่อแตะแล้วจะเล่นวิดีโอภายในเว็บไซต์",
+  "pt": "Cole o link de um YouTube Shorts, TikTok ou Instagram Reels para exibi-lo como um Reel. Ao tocar, ele será reproduzido dentro do site.",
+  "tr": "YouTube Shorts, TikTok veya Instagram Reels bağlantısı yapıştırdığınızda, Reels kartlarından biri olarak gösterilir. Dokunulduğunda site içinde oynatılır.",
+  "ru": "Если вставить ссылку на YouTube Shorts, TikTok или Instagram Reels, оно будет отображаться как один из Reels. При нажатии оно будет воспроизводиться прямо на сайте.",
+  "es": "Al pegar un enlace de YouTube Shorts, TikTok o Instagram Reels, se mostrará como un Reel. Al tocarlo, se reproducirá dentro del sitio.",
+  "ar": "عند لصق رابط مقاطع YouTube Shorts أو TikTok أو Instagram Reels، سيتم عرضه كـ Reel واحد. عند الضغط عليه، سيتم تشغيله داخل الموقع."
+ },
  "YouTubeの動画URLを入力すると、店舗ページに「動画紹介」が出ます。空にすると表示されません。": {
   "en": "Entering a YouTube video URL will display a \"Video Introduction\" on your store page. If left blank, it will not be displayed.",
   "zh": "输入YouTube视频URL后，店铺页面上将显示“视频介绍”。留空则不显示。",
@@ -1289,6 +1529,21 @@
   "ru": "Если ввести URL видео YouTube, на странице заведения появится раздел «Видеопрезентация». Если оставить поле пустым, он отображаться не будет.",
   "es": "Si ingresas la URL de un video de YouTube, aparecerá \"Presentación en video\" en la página del local. Si la dejas en blanco, no se mostrará."
  },
+ "YouTubeの動画URLを入力すると、店舗ページの中ほどに「動画紹介」が出ます(音声や字幕の切り替えもできます)。空にすると表示されません。ページ上部(トップ)に流す動画は、下の「トップ画像/動画」の欄で別に設定します。": {
+  "en": "Entering a YouTube video URL will display a \"Video Introduction\" section in the middle of your store page (audio and subtitles can also be toggled). If left blank, it will not be displayed. The video played at the top of the page is set separately in the \"Top Image/Video\" section below.",
+  "zh": "输入YouTube视频URL后，店铺页面中部将显示“视频介绍”（支持切换声音和字幕）。留空则不显示。如需在页面顶部播放视频，请在下方的“顶部图片/视频”栏中另行设置。",
+  "zh-TW": "輸入 YouTube 影片網址後，店家頁面中部將會顯示「影片介紹」（可切換音訊與字幕）。若留空則不顯示。若要在頁面頂部播放影片，請在下方的「頂部圖片/影片」欄位另外設定。",
+  "ne": "YouTube भिडियोको URL प्रविष्ट गर्नुभयो भने, पसलको पृष्ठको बिचमा \"भिडियो परिचय\" देखिनेछ (आवाज र उपशीर्षकहरू पनि परिवर्तन गर्न सकिन्छ)। खाली छोडेमा यो देखिने छैन। पृष्ठको माथिल्लो (शीर्ष) भागमा बजाउने भिडियो तलको \"शीर्ष तस्विर/भिडियो\" सेक्सनमा छुट्टै सेट गरिन्छ।",
+  "vi": "Nếu nhập URL video YouTube, phần \"Giới thiệu video\" sẽ xuất hiện ở giữa trang cửa hàng (có thể chuyển đổi âm thanh và phụ đề). Nếu để trống, mục này sẽ không hiển thị. Video phát ở đầu trang (Top) được thiết lập riêng ở mục \"Hình ảnh/Video trang đầu\" bên dưới.",
+  "id": "Memasukkan URL video YouTube akan menampilkan \"Pengenalan Video\" di bagian tengah halaman toko (suara dan subtitle dapat diubah). Jika dikosongkan, bagian ini tidak akan ditampilkan. Video yang diputar di bagian atas halaman (header) diatur secara terpisah pada kolom \"Gambar/Video Utama\" di bawah.",
+  "my": "YouTube ဗီဒီယို URL ကို ထည့်သွင်းပါက ဆိုင်စာမျက်နှာ၏ အလယ်တွင် \"ဗီဒီယို မိတ်ဆက်\" ပေါ်လာပါမည် (အသံ သို့မဟုတ် စာတန်းထိုးများကို ပြောင်းလဲနိုင်သည်)။ ဗလာထားပါက ပြသမည်မဟုတ်ပါ။ စာမျက်နှာ ထိပ်ဆုံးတွင် ပြသရန် ဗီဒီယိုကို အောက်ပါ \"ထိပ်ဆုံး ဓာတ်ပုံ/ဗီဒီယို\" ကွက်တွင် သီးခြား သတ်မှတ်ပါ။",
+  "th": "หากใส่ URL วิดีโอ YouTube \"คำแนะนำวิดีโอ\" จะปรากฏขึ้นบริเวณส่วนกลางของหน้าหน้าร้าน (สามารถเปลี่ยนเสียงและซับไตเติลได้) หากเว้นว่างไว้จะไม่แสดงผล สำหรับวิดีโอที่เล่นด้านบนสุด (ท็อป) ของหน้า ให้ตั้งค่าแยกกันในช่อง \"รูปภาพ/วิดีโอส่วนบน\" ด้านล่าง",
+  "pt": "Se você inserir a URL de um vídeo do YouTube, a \"Apresentação em vídeo\" será exibida no meio da página do estabelecimento (também é possível alternar áudio e legendas). Se deixar em branco, não será exibido. O vídeo a ser reproduzido no topo da página deve ser configurado separadamente no campo \"Imagem/Vídeo do topo\" abaixo.",
+  "tr": "Bir YouTube video URL'si girdiğinizde, mağaza sayfasının ortasında \"Video Tanıtımı\" görünür (ses ve altyazı değiştirilebilir). Boş bırakırsanız görünmez. Sayfanın en üstünde gösterilecek video, aşağıdaki \"Üst Görsel/Video\" alanında ayrıca ayarlanır.",
+  "ru": "Если ввести URL видео с YouTube, в середине страницы заведения появится блок «Видеопрезентация» (с возможностью переключения звука и субтитров). Если оставить поле пустым, он отображаться не будет. Видео для верхней части (шапки) страницы настраивается отдельно в поле «Изображение/видео для шапки» ниже.",
+  "es": "Si ingresas la URL de un video de YouTube, aparecerá una sección de \"Presentación en video\" en la parte media de la página de la tienda (también se puede cambiar el audio y los subtítulos). Si lo dejas en blanco, no se mostrará. El video que se reproduce en la parte superior (inicio) se configura por separado en el campo \"Imagen/Video principal\" a continuación.",
+  "ar": "عند إدخال رابط فيديو YouTube، سيظهر قسم \"تقديم بالفيديو\" في منتصف صفحة المتجر (يمكن أيضًا تغيير الصوت والترجمة). إذا تركته فارغًا، فلن يتم عرضه. يتم إعداد الفيديو الذي يعمل في أعلى الصفحة (الرئيسية) بشكل منفصل في حقل \"صورة/فيديو الصفحة الرئيسية\" أدناه."
+ },
  "YouTubeの動画URLを貼る": {
   "en": "Paste YouTube Video URL",
   "zh": "粘贴YouTube视频URL",
@@ -1303,6 +1558,21 @@
   "tr": "YouTube video URL'si yapıştır",
   "ru": "Вставить URL видео YouTube",
   "es": "Pegar URL del video de YouTube"
+ },
+ "YouTubeは自動で付きます。TikTok・Instagramなど自動で取れないときは、お店の表紙画像を使います(上限3MB)。": {
+  "en": "YouTube thumbnails are attached automatically. If they cannot be fetched automatically from TikTok, Instagram, etc., your store cover image will be used (max 3MB).",
+  "zh": "YouTube封面会自动获取。若无法自动获取TikTok、Instagram等封面，将使用店铺的封面图片（上限3MB）。",
+  "zh-TW": "YouTube 會自動取得。TikTok、Instagram 等無法自動取得時，將使用店面封面圖片（上限 3MB）。",
+  "ne": "YouTube स्वतः थपिनेछ। TikTok, Instagram आदि स्वतः प्राप्त गर्न नसकिँदा, पसलको कभर तस्विर प्रयोग गरिनेछ (अधिकतम 3MB)।",
+  "vi": "Hình thu nhỏ từ YouTube sẽ tự động được lấy. Nếu không thể lấy tự động từ TikTok, Instagram, v.v., hình ảnh ảnh bìa của cửa hàng sẽ được sử dụng (tối đa 3MB).",
+  "id": "YouTube akan diambil secara otomatis. Jika tidak dapat diambil secara otomatis dari TikTok, Instagram, dll., gambar sampul toko akan digunakan (maks. 3MB).",
+  "my": "YouTube ကို အလိုအလျောက် ပူးတွဲပေးပါမည်။ TikTok၊ Instagram စသည်တို့မှ အလိုအလျောက် မယူနိုင်ပါက ဆိုင်၏ မျက်နှာဖုံးဓာတ်ပုံကို အသုံးပြုပါမည် (အများဆုံး 3MB)။",
+  "th": "YouTube จะดึงข้อมูลโดยอัตโนมัติ หากไม่สามารถดึงข้อมูลอัตโนมัติจาก TikTok, Instagram ฯลฯ ได้ ระบบจะใช้รูปปกของร้านแทน (ขนาดไม่เกิน 3MB)",
+  "pt": "O YouTube é obtido automaticamente. Quando não puder ser obtido automaticamente do TikTok, Instagram, etc., a imagem de capa do estabelecimento será usada (limite de 3 MB).",
+  "tr": "YouTube otomatik olarak eklenir. TikTok veya Instagram gibi otomatik alınamadığı durumlarda mağazanın kapak görseli kullanılır (en fazla 3 MB).",
+  "ru": "Для YouTube обложка добавляется автоматически. Если не удается получить ее автоматически (например, для TikTok или Instagram), будет использовано обложечное изображение вашего заведения (макс. 3 МБ).",
+  "es": "La miniatura de YouTube se obtiene automáticamente. Si no se puede obtener automáticamente desde TikTok, Instagram, etc., se usará la imagen de portada de la tienda (máx. 3 MB).",
+  "ar": "يتم إرفاق YouTube تلقائيًا. إذا تعذر الحصول عليه تلقائيًا من TikTok أو Instagram وما إلى ذلك، فستُستخدم صورة الغلاف الخاصة بالمتجر (الحد الأقصى 3 ميجابايت)."
  },
  "YouTube動画(任意)": {
   "en": "YouTube Video (Optional)",
@@ -1514,6 +1784,21 @@
   "ru": "Нет.",
   "es": "No hay."
  },
+ "イベント": {
+  "en": "Events",
+  "zh": "活动",
+  "zh-TW": "活動",
+  "ne": "कार्यक्रम",
+  "vi": "Sự kiện",
+  "id": "Acara",
+  "my": "ပွဲလမ်းသဘင်",
+  "th": "กิจกรรม",
+  "pt": "Eventos",
+  "tr": "Etkinlik",
+  "ru": "Мероприятия",
+  "es": "Eventos",
+  "ar": "الفعاليات"
+ },
  "イベントの削除に失敗しました: {0}": {
   "en": "Failed to delete event: {0}",
   "zh": "删除活动失败：{0}",
@@ -1603,6 +1888,21 @@
   "tr": "Etkinlik Reels için küçük resim görseli zorunludur",
   "ru": "Миниатюра для Reels мероприятия обязательна",
   "es": "La imagen en miniatura para el reel del evento es obligatoria."
+ },
+ "イベント名": {
+  "en": "Event name",
+  "zh": "活动名称",
+  "zh-TW": "活動名稱",
+  "ne": "कार्यक्रमको नाम",
+  "vi": "Tên sự kiện",
+  "id": "Nama Acara",
+  "my": "ပွဲအမည်",
+  "th": "ชื่อกิจกรรม",
+  "pt": "Nome do evento",
+  "tr": "Etkinlik Adı",
+  "ru": "Название мероприятия",
+  "es": "Nombre del evento",
+  "ar": "اسم الفعالية"
  },
  "イベント告知": {
   "en": "Event Announcement",
@@ -1724,6 +2024,36 @@
   "ru": "Владелец",
   "es": "Propietario"
  },
+ "おすすめ: 縦長(9:16)・1080×1920px以上。縦向きの画像・動画が画面いっぱいにきれいに表示されます。": {
+  "en": "Recommended: Vertical (9:16), 1080×1920px or higher. Vertical images and videos will be displayed nicely in full screen.",
+  "zh": "推荐：竖屏(9:16)・1080×1920px以上。竖向图片/视频将完美铺满屏幕显示。",
+  "zh-TW": "推薦：直式 (9:16)、1080×1920px 以上。直向圖片/影片能完美滿版顯示。",
+  "ne": "सिफारिस गरिएको: ठाडो (9:16)・1080×1920px वा सोभन्दा बढी। ठाडो तस्विर/भिडियोहरू स्क्रिनभरि सफासँग देखिनेछन्।",
+  "vi": "Khuyến nghị: Tỷ lệ dọc (9:16), 1080×1920px trở lên. Hình ảnh/video theo chiều dọc sẽ hiển thị đẹp mắt và đầy màn hình.",
+  "id": "Rekomendasi: Potret (9:16) • 1080×1920px atau lebih tinggi. Gambar/video orientasi vertikal akan ditampilkan secara penuh dan rapi di layar.",
+  "my": "အကြံပြုချက်- ဒေါင်လိုက် (9:16)၊ 1080×1920px သို့မဟုတ် ထိုထက်ပိုကြီးရမည်။ ဒေါင်လိုက် ဓာတ်ပုံ/ဗီဒီယိုများသည် မျက်နှာပြင်အပြည့် လှပစွာ ပေါ်လာပါမည်။",
+  "th": "แนะนำ: แนวตั้ง (9:16) ขนาด 1080×1920px ขึ้นไป รูปภาพหรือวิดีโอแนวตั้งจะแสดงเต็มหน้าจอได้อย่างสวยงาม",
+  "pt": "Recomendado: Vertical (9:16) e 1080×1920px ou superior. Imagens e vídeos verticais serão exibidos perfeitamente em tela cheia.",
+  "tr": "Önerilen: Dikey (9:16), 1080×1920px veya üzeri. Dikey görseller ve videolar ekranda tam boyutta güzel görünür.",
+  "ru": "Рекомендуется: вертикальный формат (9:16), от 1080×1920px. Вертикальные фото и видео будут красиво отображаться во весь экран.",
+  "es": "Recomendado: Formato vertical (9:16), 1080×1920 px o superior. Las imágenes y videos verticales se mostrarán de forma óptima a pantalla completa.",
+  "ar": "الموصى به: رأسي (9:16)، 1080×1920 بكسل أو أكثر. سيتم عرض الصور والفيديوهات الرأسية بشكل جميل ملء الشاشة."
+ },
+ "オプション": {
+  "en": "Options",
+  "zh": "附加选项",
+  "zh-TW": "附加功能",
+  "ne": "विकल्पहरू",
+  "vi": "Tùy chọn",
+  "id": "Opsi",
+  "my": "အပိုဝန်ဆောင်မှု",
+  "th": "ออปชัน",
+  "pt": "Opções",
+  "tr": "Seçenekler",
+  "ru": "Опции",
+  "es": "Opciones",
+  "ar": "الخيارات"
+ },
  "オプション:開催場所のお知らせ": {
   "en": "Option: Location Announcement",
   "zh": "选项：举办地点通知",
@@ -1738,6 +2068,36 @@
   "tr": "İsteğe bağlı: Etkinlik yeri bildirimi",
   "ru": "Опция: объявление о месте проведения",
   "es": "Opcional: aviso de ubicación del evento"
+ },
+ "オプションを追加": {
+  "en": "Add option",
+  "zh": "添加选项",
+  "zh-TW": "新增附加功能",
+  "ne": "विकल्प थप्नुहोस्",
+  "vi": "Thêm tùy chọn",
+  "id": "Tambah Opsi",
+  "my": "အပိုဝန်ဆောင်မှု ထည့်ရန်",
+  "th": "เพิ่มออปชัน",
+  "pt": "Adicionar opção",
+  "tr": "Seçenek Ekle",
+  "ru": "Добавить опцию",
+  "es": "Añadir opción",
+  "ar": "إضافة خيار"
+ },
+ "オプションを追加(準備中)": {
+  "en": "Add option (Coming Soon)",
+  "zh": "添加选项（准备中）",
+  "zh-TW": "新增附加功能（準備中）",
+  "ne": "विकल्प थप्नुहोस् (तयारी हुँदैछ)",
+  "vi": "Thêm tùy chọn (Đang chuẩn bị)",
+  "id": "Tambah Opsi (Dalam Persiapan)",
+  "my": "အပိုဝန်ဆောင်မှု ထည့်ရန် (ပြင်ဆင်နေဆဲ)",
+  "th": "เพิ่มออปชัน (กำลังเตรียมการ)",
+  "pt": "Adicionar opção (Em breve)",
+  "tr": "Seçenek Ekle (Hazırlanıyor)",
+  "ru": "Добавить опцию (в разработке)",
+  "es": "Añadir opción (En preparación)",
+  "ar": "إضافة خيار (قيد الإعداد)"
  },
  "オフにしました。": {
   "en": "Turned off.",
@@ -1964,6 +2324,36 @@
   "ru": "Описание заведения, часы работы и правила использования после сохранения автоматически переводятся на английский и китайский языки и отображаются иностранным клиентам.",
   "es": "Al guardar la descripción del local, el horario de atención y las instrucciones de uso, se traducirán automáticamente al inglés y chino para mostrarse a los clientes internacionales."
  },
+ "お支払い待ち": {
+  "en": "Pending payment",
+  "zh": "待支付",
+  "zh-TW": "待付款",
+  "ne": "भुक्तानी बाँकी",
+  "vi": "Chờ thanh toán",
+  "id": "Menunggu Pembayaran",
+  "my": "ငွေပေးချေမှုကို စောင့်ဆိုင်းနေသည်",
+  "th": "รอการชำระเงิน",
+  "pt": "Aguardando pagamento",
+  "tr": "Ödeme bekleniyor",
+  "ru": "Ожидает оплаты",
+  "es": "Pendiente de pago",
+  "ar": "في انتظار الدفع"
+ },
+ "お支払い済み": {
+  "en": "Paid",
+  "zh": "已支付",
+  "zh-TW": "已付款",
+  "ne": "भुक्तानी सम्पन्न भयो",
+  "vi": "Đã thanh toán",
+  "id": "Sudah Dibayar",
+  "my": "ငွေပေးချေပြီးပါပြီ",
+  "th": "ชำระเงินแล้ว",
+  "pt": "Pago",
+  "tr": "Ödendi",
+  "ru": "Оплачено",
+  "es": "Pagado",
+  "ar": "تم الدفع"
+ },
  "お気に入りユーザーへのメッセージ": {
   "en": "Message to favorite users",
   "zh": "给收藏用户的信息",
@@ -2128,6 +2518,21 @@
   "tr": "Takvimde ayarla",
   "ru": "Настроить в календаре",
   "es": "Configurar en el calendario"
+ },
+ "か月)を適用する": {
+  "en": "months) Apply",
+  "zh": "个月）应用",
+  "zh-TW": "個月）套用",
+  "ne": "महिना) लागू गर्नुहोस्",
+  "vi": "Áp dụng (... tháng)",
+  "id": "bulan) diterapkan",
+  "my": "လ) ကို အသုံးပြုရန်",
+  "th": "เดือน) ปรับใช้",
+  "pt": "Aplicar mês(es))",
+  "tr": "ay) uygula",
+  "ru": "мес.) применить",
+  "es": "meses)",
+  "ar": "تطبيق (أشهر)"
  },
  "キャッチコピー": {
   "en": "Tagline",
@@ -2398,6 +2803,21 @@
   "tr": "Bu alanda paylaşılan en son fotoğraflardan (80 taneye kadar) şu anda görüntülenmeyenlerdir. Konum adı farklı yazıldığı için otomatik olarak bağlanamayan fotoğrafları buradan ekleyebilirsiniz.",
   "ru": "Из последних фото (до 80 штук), опубликованных в этом районе, здесь показаны те, которые еще не отображаются. Вы можете вручную добавить фото, которые не были привязаны автоматически из-за различий в написании названия места.",
   "es": "Estas son las fotos más recientes (hasta 80) publicadas en esta área que no se están mostrando actualmente. Puede agregar desde aquí las fotos que no se vincularon automáticamente debido a diferencias en el nombre de la ubicación."
+ },
+ "このオプションは現在準備中です。": {
+  "en": "This option is currently under preparation.",
+  "zh": "该选项目前正在准备中。",
+  "zh-TW": "此附加功能目前準備中。",
+  "ne": "यो विकल्प हाल तयारीको क्रममा छ।",
+  "vi": "Tùy chọn này hiện đang được chuẩn bị.",
+  "id": "Opsi ini saat ini sedang dalam persiapan.",
+  "my": "ဤအပိုဝန်ဆောင်မှုကို လက်ရှိတွင် ပြင်ဆင်နေဆဲ ဖြစ်ပါသည်။",
+  "th": "ออปชันนี้กำลังอยู่ระหว่างจัดเตรียม",
+  "pt": "Esta opção está em preparação no momento.",
+  "tr": "Bu seçenek şu anda hazırlanıyor.",
+  "ru": "Эта опция сейчас находится в разработке.",
+  "es": "Esta opción está actualmente en preparación.",
+  "ar": "هذا الخيار قيد الإعداد حاليًا."
  },
  "このお店は、まだGoogleマップと連携していません。連携をご希望の場合は、運営にご相談ください。": {
   "en": "This store is not yet linked with Google Maps. If you wish to link it, please contact support.",
@@ -2879,6 +3299,21 @@
   "ru": "URL для бронирования и запросов",
   "es": "URL de reservas y consultas"
  },
+ "ご予約はこちら(任意の文字を設定できます)": {
+  "en": "Book here (custom text can be set)",
+  "zh": "前往预约（可自定义文字）",
+  "zh-TW": "預約請點此（可自訂文字）",
+  "ne": "यहाँ आरक्षण गर्नुहोस् (तपाईं जुनसुकै पाठ पनि सेट गर्न सक्नुहुन्छ)",
+  "vi": "Đặt chỗ tại đây (có thể cài đặt văn bản tùy chọn)",
+  "id": "Reservasi di sini (teks dapat disesuaikan)",
+  "my": "ဒီနေရာတွင် ကြိုတင်ဘိုကင်လုပ်ပါ (စိတ်ကြိုက် စာသား သတ်မှတ်နိုင်သည်)",
+  "th": "จองได้ที่นี่ (สามารถกำหนดข้อความตามต้องการได้)",
+  "pt": "Reserve aqui (você pode personalizar este texto)",
+  "tr": "Rezervasyon Yapın (İstediğiniz metni belirleyebilirsiniz)",
+  "ru": "Забронировать (можно указать любой текст)",
+  "es": "Reserve aquí (puede personalizar este texto)",
+  "ar": "احجز من هنا (يمكنك تعيين أي نص مخصص)"
+ },
  "ご利用の流れ、注意事項など": {
   "en": "Usage process, precautions, etc.",
   "zh": "使用流程、注意事项等",
@@ -2893,6 +3328,21 @@
   "tr": "Kullanım Adımları, Uyarılar vb.",
   "ru": "Порядок использования, примечания и т. д.",
   "es": "Proceso de uso, precauciones, etc."
+ },
+ "ご利用中": {
+  "en": "Active",
+  "zh": "使用中",
+  "zh-TW": "使用中",
+  "ne": "प्रयोगमा छ",
+  "vi": "Đang sử dụng",
+  "id": "Sedang Digunakan",
+  "my": "အသုံးပြုနေသည်",
+  "th": "กำลังใช้งาน",
+  "pt": "Em uso",
+  "tr": "Kullanımda",
+  "ru": "Используется",
+  "es": "En uso",
+  "ar": "قيد الاستخدام"
  },
  "ご担当者様の生年月日": {
   "en": "Contact person's date of birth",
@@ -2968,6 +3418,36 @@
   "tr": "Talebiniz:",
   "ru": "Пожелания:",
   "es": "Solicitudes:"
+ },
+ "ご請求の履歴": {
+  "en": "Billing history",
+  "zh": "账单历史",
+  "zh-TW": "帳單紀錄",
+  "ne": "बिलिङ इतिहास",
+  "vi": "Lịch sử thanh toán",
+  "id": "Riwayat Tagihan",
+  "my": "ငွေတောင်းခံမှု မှတ်တမ်း",
+  "th": "ประวัติการเรียกเก็บเงิน",
+  "pt": "Histórico de cobranças",
+  "tr": "Fatura Geçmişi",
+  "ru": "История счетов",
+  "es": "Historial de facturación",
+  "ar": "سجل الفواتير"
+ },
+ "サムネイル画像(任意)": {
+  "en": "Thumbnail image (optional)",
+  "zh": "缩略图（可选）",
+  "zh-TW": "縮圖（選填）",
+  "ne": "थम्बनेल तस्विर (ऐच्छिक)",
+  "vi": "Ảnh thu nhỏ (tùy chọn)",
+  "id": "Gambar Miniatur (Opsional)",
+  "my": "နမူနာပုံ (စိတ်ကြိုက်)",
+  "th": "รูปย่อ (ไม่บังคับ)",
+  "pt": "Imagem de miniatura (opcional)",
+  "tr": "Küçük Görsel (İsteğe bağlı)",
+  "ru": "Миниатюра (необязательно)",
+  "es": "Imagen de miniatura (opcional)",
+  "ar": "الصورة المصغرة (اختياري)"
  },
  "しない(この日だけ)": {
   "en": "Disable (this day only)",
@@ -3088,6 +3568,21 @@
   "tr": "Tüm alanlar tamamlandı. Müşteriler tarafından tercih edilmeye uygun durumda.",
   "ru": "Все поля заполнены. Ваша страница полностью готова для привлечения клиентов.",
   "es": "Todos los campos están completos. Su perfil está listo para atraer a más clientes."
+ },
+ "すべて保存(ZIP)": {
+  "en": "Save all (ZIP)",
+  "zh": "全部保存 (ZIP)",
+  "zh-TW": "全部儲存 (ZIP)",
+  "ne": "सबै बचत गर्नुहोस् (ZIP)",
+  "vi": "Lưu tất cả (ZIP)",
+  "id": "Simpan Semua (ZIP)",
+  "my": "အားလုံးကို သိမ်းဆည်းရန် (ZIP)",
+  "th": "บันทึกทั้งหมด (ZIP)",
+  "pt": "Salvar tudo (ZIP)",
+  "tr": "Tümünü Kaydet (ZIP)",
+  "ru": "Сохранить все (ZIP)",
+  "es": "Guardar todo (ZIP)",
+  "ar": "حفظ الكل (ZIP)"
  },
  "スマホのログイン用URL": {
   "en": "Mobile Login URL",
@@ -3254,6 +3749,36 @@
   "ru": "Где вы хотите это использовать?",
   "es": "¿Dónde lo usarás?"
  },
+ "トップに流すYouTube動画(任意)": {
+  "en": "YouTube video for top section (optional)",
+  "zh": "顶部播放的 YouTube 视频（可选）",
+  "zh-TW": "頁面頂部播放的 YouTube 影片（選填）",
+  "ne": "शीर्ष भागमा बजाउने YouTube भिडियो (ऐच्छिक)",
+  "vi": "Video YouTube phát ở đầu trang (tùy chọn)",
+  "id": "Video YouTube Utama (Opsional)",
+  "my": "ထိပ်ဆုံးတွင် ဖွင့်ပြမည့် YouTube ဗီဒီယို (စိတ်ကြိုက်)",
+  "th": "วิดีโอ YouTube ด้านบนสุด (ไม่บังคับ)",
+  "pt": "Vídeo do YouTube para o topo (opcional)",
+  "tr": "Üst kısımda oynatılacak YouTube videosu (İsteğe bağlı)",
+  "ru": "YouTube-видео для шапки (необязательно)",
+  "es": "Video de YouTube para la portada (opcional)",
+  "ar": "فيديو YouTube في أعلى الصفحة (اختياري)"
+ },
+ "トップ用の動画は、YouTubeのURLを入れてください": {
+  "en": "Please enter a YouTube URL for the top video.",
+  "zh": "顶部使用的视频，请输入 YouTube 的 URL",
+  "zh-TW": "頁面頂部用的影片，請輸入 YouTube 網址",
+  "ne": "शीर्ष भागको भिडियोका लागि, कृपया YouTube URL प्रविष्ट गर्नुहोस्",
+  "vi": "Vui lòng nhập URL YouTube cho video phát ở đầu trang",
+  "id": "Untuk video utama, silakan masukkan URL YouTube",
+  "my": "ထိပ်ဆုံးအတွက် ဗီဒီယိုကို YouTube URL ထည့်သွင်းပေးပါ",
+  "th": "สำหรับวิดีโอด้านบนสุด กรุณาใส่ URL ของ YouTube",
+  "pt": "Insira a URL do YouTube para o vídeo do topo",
+  "tr": "Üst kısımdaki video için lütfen bir YouTube URL'si girin",
+  "ru": "Для видео в шапке укажите URL-адрес YouTube",
+  "es": "Para el video de portada, ingrese una URL de YouTube",
+  "ar": "بالنسبة لفيديو الصفحة الرئيسية، يرجى إدخال رابط YouTube"
+ },
  "トップ画像": {
   "en": "Top Image",
   "zh": "顶部图片",
@@ -3419,6 +3944,36 @@
   "ru": "Введите краткий комментарий",
   "es": "Ingresa un comentario breve"
  },
+ "ピン留めは最大{0}件までです": {
+  "en": "You can pin up to {0} items",
+  "zh": "最多可置顶 {0} 项",
+  "zh-TW": "最多可釘選 {0} 筆",
+  "ne": "अधिकतम {0} वटा सम्म पिन गर्न सकिन्छ",
+  "vi": "Ghim tối đa {0} mục",
+  "id": "Maksimal {0} item yang dapat disematkan",
+  "my": "ပင်ထိုးခြင်းကို အများဆုံး {0} ခုအထိသာ ပြုလုပ်နိုင်ပါသည်",
+  "th": "ปักหมุดได้สูงสุด {0} รายการ",
+  "pt": "É possível fixar no máximo {0} itens",
+  "tr": "En fazla {0} öğe sabitlenebilir",
+  "ru": "Можно закрепить не более {0}",
+  "es": "Puede fijar un máximo de {0} elementos",
+  "ar": "يمكن تثبيت {0} عناصر كحد أقصى"
+ },
+ "ブースト": {
+  "en": "Boost",
+  "zh": "Boost",
+  "zh-TW": "Boost",
+  "ne": "Boost",
+  "vi": "Boost",
+  "id": "Boost",
+  "my": "Boost",
+  "th": "Boost",
+  "pt": "Boost",
+  "tr": "Boost",
+  "ru": "Boost",
+  "es": "Boost",
+  "ar": "Boost"
+ },
  "フォロワー": {
   "en": "Followers",
   "zh": "关注者",
@@ -3433,6 +3988,51 @@
   "tr": "Takipçiler",
   "ru": "Подписчики",
   "es": "Seguidores"
+ },
+ "プランを選び、契約内容に同意すると、その場で契約が完了します。": {
+  "en": "Select a plan and agree to the contract terms to complete your contract instantly.",
+  "zh": "选择套餐并同意合同内容后，即可当场完成签约。",
+  "zh-TW": "選擇方案並同意合約內容後，即可立即完成簽約。",
+  "ne": "योजना छनोट गरी सम्झौताका शर्तहरूमा सहमत भएपछि, सम्झौता तुरुन्तै पूरा हुनेछ।",
+  "vi": "Khi chọn gói dịch vụ và đồng ý với điều khoản hợp đồng, hợp đồng sẽ được hoàn tất ngay lập tức.",
+  "id": "Pilih paket dan setujui isi kontrak untuk menyelesaikan kontrak secara langsung.",
+  "my": "အစီအစဉ်ကို ရွေးချယ်ပြီး စာချုပ်ပါ အကြောင်းအရာများကို သဘောတူပါက စာချုပ်ချုပ်ဆိုမှု ချက်ချင်း ပြီးမြောက်ပါမည်။",
+  "th": "เมื่อเลือกแพ็กเกจและยอมรับข้อตกลง สัญญาจะเสร็จสมบูรณ์ทันที",
+  "pt": "Escolha um plano e concorde com os termos do contrato para concluir a contratação imediatamente.",
+  "tr": "Bir plan seçip sözleşme şartlarını onayladığınızda sözleşme anında tamamlanır.",
+  "ru": "Выберите тариф и примите условия договора, чтобы мгновенно оформить подписку.",
+  "es": "Al elegir un plan y aceptar los términos del contrato, la suscripción se completará al instante.",
+  "ar": "اختر خطة ووافق على شروط العقد لإكمال العقد فورًا."
+ },
+ "プランを選ぶ": {
+  "en": "Select plan",
+  "zh": "选择套餐",
+  "zh-TW": "選擇方案",
+  "ne": "योजना छान्नुहोस्",
+  "vi": "Chọn gói",
+  "id": "Pilih Paket",
+  "my": "အစီအစဉ် ရွေးချယ်ရန်",
+  "th": "เลือกแพ็กเกจ",
+  "pt": "Escolher plano",
+  "tr": "Plan Seç",
+  "ru": "Выбрать тариф",
+  "es": "Elegir plan",
+  "ar": "اختيار خطة"
+ },
+ "プランを選んでください": {
+  "en": "Please select a plan",
+  "zh": "请选择套餐",
+  "zh-TW": "請選擇方案",
+  "ne": "कृपया एउटा योजना छान्नुहोस्",
+  "vi": "Vui lòng chọn gói",
+  "id": "Silakan pilih paket",
+  "my": "အစီအစဉ်တစ်ခု ရွေးချယ်ပါ",
+  "th": "กรุณาเลือกแพ็กเกจ",
+  "pt": "Por favor, escolha um plano",
+  "tr": "Lütfen bir plan seçin",
+  "ru": "Выберите тариф",
+  "es": "Por favor, elija un plan",
+  "ar": "يرجى اختيار خطة"
  },
  "フリガナ": {
   "en": "Furigana",
@@ -3478,6 +4078,21 @@
   "tr": "Önizleme",
   "ru": "Предпросмотр",
   "es": "Vista previa"
+ },
+ "フロアを撮るだけ": {
+  "en": "Just shoot the floor",
+  "zh": "只需拍摄店内",
+  "zh-TW": "只需拍攝現場",
+  "ne": "तल्ला (फ्लोर) को फोटो मात्र खिच्नुहोस्",
+  "vi": "Chỉ cần chụp không gian",
+  "id": "Cukup Foto Area Toko",
+  "my": "ဆိုင်ခန်း/အထပ်ကို ရိုက်ကူးရုံဖြင့်",
+  "th": "เพียงถ่ายภาพชั้น/พื้นที่",
+  "pt": "Basta fotografar o ambiente",
+  "tr": "Sadece katı çekin",
+  "ru": "Просто сфотографируйте зал",
+  "es": "Solo tomar fotos del local",
+  "ar": "فقط تصوير الطابق"
  },
  "フロア写真をアップロード": {
   "en": "Upload floor photo",
@@ -3568,6 +4183,21 @@
   "tr": "Diğer fotoğrafları bu mağazada göster",
   "ru": "Показывать другие фото для этого заведения",
   "es": "Mostrar otras fotos en este negocio"
+ },
+ "ホットペッパー・Booking.com・Airbnb・自社の予約ページなど、LOCAPASS以外の予約サイトのURL(https://)を入れると、店舗ページに予約ボタンが出ます。ボタンの文言は上の欄で変えられます(空なら「予約」)。URLを空にするとボタンは出ません。": {
+  "en": "If you enter a URL (https://) for a booking site other than LOCAPASS, such as Hot Pepper, Booking.com, Airbnb, or your own reservation page, a reservation button will appear on your store page. The button text can be customized in the field above (defaults to \"Reserve\" if left blank). If the URL is left blank, the button will not appear.",
+  "zh": "如果输入 Hot Pepper、Booking.com、Airbnb 或自家预约页面等 LOCAPASS 以外的预约网站 URL (https://)，店铺页面上将显示预约按钮。按钮文字可在上方的栏中修改（若留空则显示“预约”）。若 URL 留空则不显示按钮。",
+  "zh-TW": "輸入 Hot Pepper、Booking.com、Airbnb 或自家預約頁面等 LOCAPASS 以外的預約網站網址 (https://)，店家頁面上就會顯示預約按鈕。按鈕文字可在上方欄位變更（若留空則顯示「預約」）。若將網址留空，則不會顯示按鈕。",
+  "ne": "Hot Pepper, Booking.com, Airbnb, वा तपाईंको आफ्नै आरक्षण पृष्ठ जस्ता LOCAPASS बाहेकका आरक्षण साइटहरूको URL (https://) प्रविष्ट गर्नुभयो भने, पसलको पृष्ठमा एउटा आरक्षण बटन देखिनेछ। बटनको पाठ माथिको फिल्डमा परिवर्तन गर्न सकिन्छ (खाली भएमा \"आरक्षण\")। URL खाली राखेमा बटन देखिने छैन।",
+  "vi": "Nếu nhập URL (https://) của trang web đặt chỗ ngoài LOCAPASS như Hot Pepper, Booking.com, Airbnb hoặc trang đặt chỗ riêng của bạn, nút đặt chỗ sẽ xuất hiện trên trang cửa hàng. Nội dung nút có thể thay đổi ở ô phía trên (nếu để trống sẽ là \"Đặt chỗ\"). Nếu để trống URL, nút sẽ không hiển thị.",
+  "id": "Memasukkan URL situs reservasi selain LOCAPASS (https://) seperti Hot Pepper, Booking.com, Airbnb, atau halaman reservasi Anda sendiri akan menampilkan tombol reservasi di halaman toko. Teks tombol dapat diubah pada kolom di atas (jika dikosongkan, akan menampilkan \"Reservasi\"). Jika URL dikosongkan, tombol tidak akan muncul.",
+  "my": "Hot Pepper၊ Booking.com၊ Airbnb၊ မိမိ၏ စာမျက်နှာ စသည့် LOCAPASS မဟုတ်သော အခြားဘိုကင်ဝဘ်ဆိုက် URL (https://) ကို ထည့်သွင်းပါက ဆိုင်စာမျက်နှာတွင် ဘိုကင်ခလုတ် ပေါ်လာပါမည်။ ခလုတ်၏ စာသားကို အထက်ပါကွက်တွင် ပြောင်းလဲနိုင်သည် (ဗလာထားပါက \"ဘိုကင်လုပ်ရန်\")။ URL ကို ဗလာထားပါက ခလုတ် ပေါ်လာမည် မဟုတ်ပါ။",
+  "th": "หากใส่ URL (https://) ของไซต์จองอื่นที่ไม่ใช่ LOCAPASS เช่น Hot Pepper, Booking.com, Airbnb หรือหน้าการจองของร้านเอง ปุ่มจองจะปรากฏขึ้นบนหน้าร้าน ข้อความบนปุ่มสามารถเปลี่ยนได้ที่ช่องด้านบน (หากเว้นว่างไว้จะเป็น \"จอง\") หากเว้นว่าง URL ไว้ ปุ่มจะไม่แสดง",
+  "pt": "Ao inserir a URL (https://) de um site de reservas externo ao LOCAPASS, como Hot Pepper, Booking.com, Airbnb ou sua própria página de reservas, um botão de reserva será exibido na página do estabelecimento. O texto do botão pode ser alterado no campo acima (se estiver em branco, será \"Reservar\"). Se a URL ficar em branco, o botão não será exibido.",
+  "tr": "Hot Pepper, Booking.com, Airbnb veya kendi rezervasyon sayfanız gibi LOCAPASS dışındaki bir rezervasyon sitesinin URL'sini (https://) girerseniz, mağaza sayfasında bir rezervasyon butonu görünür. Buton metni yukarıdaki alandan değiştirilebilir (boşsa \"Rezervasyon\"). URL boşsa buton görünmez.",
+  "ru": "Если ввести URL-адрес (https://) стороннего сайта бронирования (Hot Pepper, Booking.com, Airbnb, ваш собственный сайт и т.д.), на странице заведения появится кнопка бронирования. Текст кнопки можно изменить в поле выше (по умолчанию — «Забронировать»). Если оставить URL пустым, кнопка не отобразится.",
+  "es": "Si ingresa la URL (https://) de un sitio de reservas externo a LOCAPASS, como Hot Pepper, Booking.com, Airbnb o su propio sitio web de reservas, aparecerá un botón de reserva en la página de su tienda. El texto del botón se puede cambiar en el campo de arriba (si está en blanco, será \"Reservar\"). Si la URL está en blanco, el botón no aparecerá.",
+  "ar": "عند إدخال رابط موقع حجز آخر غير LOCAPASS (بصيغة https://) مثل Hot Pepper أو Booking.com أو Airbnb أو صفحة الحجز الخاصة بك، سيظهر زر حجز في صفحة المتجر. يمكنك تغيير نص الزر في الحقل أعلاه (إذا تُرك فارغًا فسيكون \"حجز\"). إذا تركت الرابط فارغًا، فلن يظهر الزر."
  },
  "マイページ": {
   "en": "My Page",
@@ -3869,6 +4499,21 @@
   "ru": "Отмена",
   "es": "Cancelar"
  },
+ "よく使う操作": {
+  "en": "Quick actions",
+  "zh": "常用操作",
+  "zh-TW": "常用操作",
+  "ne": "प्रायः प्रयोग हुने कार्यहरू",
+  "vi": "Thao tác thường dùng",
+  "id": "Tindakan Sering Digunakan",
+  "my": "အသုံးများသော လုပ်ဆောင်ချက်များ",
+  "th": "เมนูที่ใช้งานบ่อย",
+  "pt": "Ações frequentes",
+  "tr": "Sık Kullanılan İşlemler",
+  "ru": "Частые действия",
+  "es": "Acciones frecuentes",
+  "ar": "الإجراءات الشائعة"
+ },
  "ラスト(深夜3時まで)": {
   "en": "Last (Until 3:00 AM)",
   "zh": "末班（至凌晨3点）",
@@ -3883,6 +4528,51 @@
   "tr": "Kapanış (Gece 03:00'e kadar)",
   "ru": "До последнего клиента (до 3:00)",
   "es": "Cierre (hasta las 3:00 a. m.)"
+ },
+ "リール": {
+  "en": "Reels",
+  "zh": "Reels",
+  "zh-TW": "Reel",
+  "ne": "Reels",
+  "vi": "Reels",
+  "id": "Reels",
+  "my": "Reels",
+  "th": "Reels",
+  "pt": "Reels",
+  "tr": "Reels",
+  "ru": "Reels",
+  "es": "Reels",
+  "ar": "Reels"
+ },
+ "リール・イベントを投稿": {
+  "en": "Post Reels / Events",
+  "zh": "发布 Reels / 活动",
+  "zh-TW": "投稿 Reel / 活動",
+  "ne": "Reels / कार्यक्रम पोस्ट गर्नुहोस्",
+  "vi": "Đăng Reels / Sự kiện",
+  "id": "Posting Reels / Acara",
+  "my": "Reels / ပွဲလမ်းသဘင် တင်ရန်",
+  "th": "โพสต์ Reels / กิจกรรม",
+  "pt": "Publicar Reels / Eventos",
+  "tr": "Reels / Etkinlik Yayınla",
+  "ru": "Опубликовать Reels / мероприятие",
+  "es": "Publicar Reel / Evento",
+  "ar": "نشر Reels / فعاليات"
+ },
+ "リールをまとめて保存": {
+  "en": "Save all Reels",
+  "zh": "批量保存 Reels",
+  "zh-TW": "批次儲存 Reel",
+  "ne": "सबै Reels बचत गर्नुहोस्",
+  "vi": "Lưu hàng loạt Reels",
+  "id": "Simpan Semua Reels",
+  "my": "Reels များကို စုစည်း၍ သိမ်းဆည်းရန်",
+  "th": "บันทึก Reels ทั้งหมด",
+  "pt": "Salvar Reels em lote",
+  "tr": "Reels öğelerini topluca kaydet",
+  "ru": "Сохранить все Reels",
+  "es": "Guardar todos los Reels",
+  "ar": "حفظ جميع الـ Reels"
  },
  "リールを投稿する": {
   "en": "Post a Reel",
@@ -3959,6 +4649,51 @@
   "ru": "Не удалось перевыпустить ссылку: {0}",
   "es": "Error al volver a generar el enlace: {0}"
  },
+ "リンクの動画でイベントを投稿(オプション)": {
+  "en": "Post event with linked video (optional)",
+  "zh": "通过视频链接发布活动（可选）",
+  "zh-TW": "透過連結影片投稿活動（附加功能）",
+  "ne": "लिङ्क गरिएको भिडियोको साथ कार्यक्रम पोस्ट गर्नुहोस् (विकल्प)",
+  "vi": "Đăng sự kiện bằng video từ liên kết (Tùy chọn)",
+  "id": "Posting Acara dengan Video Tautan (Opsional)",
+  "my": "လင့်ခ်ဗီဒီယိုဖြင့် ပွဲလမ်းသဘင် တင်ရန် (အပိုဝန်ဆောင်မှု)",
+  "th": "โพสต์กิจกรรมด้วยวิดีโอจากลิงก์ (ออปชัน)",
+  "pt": "Publicar evento com vídeo do link (opcional)",
+  "tr": "Bağlantıdaki video ile etkinlik yayınla (İsteğe bağlı)",
+  "ru": "Опубликовать мероприятие с видео по ссылке (опция)",
+  "es": "Publicar evento con video desde enlace (Opcional)",
+  "ar": "نشر فعالية باستخدام فيديو من رابط (اختياري)"
+ },
+ "リンクの動画を投稿(YouTube・TikTok・Instagram / オプション)": {
+  "en": "Post linked video (YouTube, TikTok, Instagram / optional)",
+  "zh": "发布视频链接（YouTube / TikTok / Instagram，可选）",
+  "zh-TW": "投稿連結影片（YouTube、TikTok、Instagram / 附加功能）",
+  "ne": "लिङ्क गरिएको भिडियो पोस्ट गर्नुहोस् (YouTube, TikTok, Instagram / विकल्प)",
+  "vi": "Đăng video từ liên kết (YouTube, TikTok, Instagram / Tùy chọn)",
+  "id": "Posting Video Tautan (YouTube, TikTok, Instagram / Opsional)",
+  "my": "လင့်ခ်ဗီဒီယို တင်ရန် (YouTube・TikTok・Instagram / အပိုဝန်ဆောင်မှု)",
+  "th": "โพสต์วิดีโอจากลิงก์ (YouTube・TikTok・Instagram / ออปชัน)",
+  "pt": "Publicar vídeo do link (YouTube, TikTok, Instagram / opcional)",
+  "tr": "Bağlantıdaki videoyu yayınla (YouTube, TikTok, Instagram / İsteğe bağlı)",
+  "ru": "Опубликовать видео по ссылке (YouTube, TikTok, Instagram / опция)",
+  "es": "Publicar video desde enlace (YouTube, TikTok, Instagram / Opcional)",
+  "ar": "نشر فيديو من رابط (YouTube / TikTok / Instagram / اختياري)"
+ },
+ "リンクの動画を投稿する": {
+  "en": "Post linked video",
+  "zh": "发布视频链接",
+  "zh-TW": "投稿連結影片",
+  "ne": "लिङ्क गरिएको भिडियो पोस्ट गर्नुहोस्",
+  "vi": "Đăng video từ liên kết",
+  "id": "Posting Video Tautan",
+  "my": "လင့်ခ်ဗီဒီယို တင်ရန်",
+  "th": "โพสต์วิดีโอจากลิงก์",
+  "pt": "Publicar vídeo do link",
+  "tr": "Bağlantıdaki videoyu yayınla",
+  "ru": "Опубликовать видео по ссылке",
+  "es": "Publicar video desde enlace",
+  "ar": "نشر فيديو من رابط"
+ },
  "リンクを再発行する(旧リンクは無効化)": {
   "en": "Reissue link (Old link will be invalidated)",
   "zh": "重新生成链接（旧链接将失效）",
@@ -3973,6 +4708,21 @@
   "tr": "Bağlantıyı yeniden oluştur (Eski bağlantı geçersiz kılınır)",
   "ru": "Перевыпустить ссылку (старая ссылка станет недействительной)",
   "es": "Volver a generar el enlace (el enlace anterior quedará inhabilitado)"
+ },
+ "リンク先URL(リールのみ・任意)": {
+  "en": "Destination URL (Reels only, optional)",
+  "zh": "目标链接 URL（仅限 Reels・可选）",
+  "zh-TW": "連結網址（僅限 Reel・選填）",
+  "ne": "लिङ्क URL (Reel को लागी मात्र・ऐच्छिक)",
+  "vi": "URL đích (Chỉ dành cho Reels, tùy chọn)",
+  "id": "URL Tautan (Khusus Reels, Opsional)",
+  "my": "သွားရောက်မည့် လင့်ခ် URL (Reels သာ・စိတ်ကြိုက်)",
+  "th": "URL ปลายทาง (เฉพาะ Reels / ไม่บังคับ)",
+  "pt": "URL de destino (apenas Reels, opcional)",
+  "tr": "Hedef URL (Yalnızca Reels / İsteğe bağlı)",
+  "ru": "Целевой URL (только для Reels, необязательно)",
+  "es": "URL de destino (solo Reels, opcional)",
+  "ar": "رابط الوجهة (للـ Reels فقط، اختياري)"
  },
  "リンク先URL(任意)": {
   "en": "Destination URL (Optional)",
@@ -4304,6 +5054,21 @@
   "ru": "QR-код создается автоматически из URL выше и отображается в модальном окне «Контакты». Загружайте сюда изображение только если хотите использовать фирменный QR-код (например, официального LINE).",
   "es": "Se generará automáticamente un código QR a partir de la URL anterior y se mostrará en la ventana emergente de \"Contacto\". Suba una imagen aquí solo si desea usar la imagen de QR oficial de LINE u otra en su lugar."
  },
+ "上記の契約書の内容と、選んだプランの金額・期間割引に同意します。(同意した日時と契約書の版が記録されます)": {
+  "en": "I agree to the terms of the contract above, as well as the price and term discount of the selected plan. (The date, time, and contract version of your agreement will be recorded.)",
+  "zh": "我同意上述合同内容以及所选套餐的金额和限时优惠。（将记录同意的具体时间及合同版本）",
+  "zh-TW": "我同意上述合約內容以及所選方案的金額與期間折扣。（系統將記錄同意的日期時間與合約版本）",
+  "ne": "म माथिको सम्झौताका सामग्रीहरू, चयन गरिएको योजनाको रकम र अवधि छूटमा सहमत छु। (सहमति जनाएको मिति, समय र सम्झौताको संस्करण रेकर्ड गरिनेछ)",
+  "vi": "Tôi đồng ý với nội dung hợp đồng nêu trên cùng với số tiền và mức giảm giá theo thời hạn của gói đã chọn. (Thời gian đồng ý và phiên bản hợp đồng sẽ được ghi lại)",
+  "id": "Saya menyetujui isi perjanjian kontrak di atas, serta jumlah biaya dan diskon periode untuk paket yang dipilih. (Tanggal/waktu persetujuan dan versi perjanjian akan dicatat)",
+  "my": "အထက်ပါ စာချုပ်ပါ အကြောင်းအရာများ၊ ရွေးချယ်ထားသော အစီအစဉ်၏ ကျသင့်ငွေနှင့် ကာလ လျှော့စျေးတို့ကို သဘောတူပါသည်။ (သဘောတူညီခဲ့သည့် ရက်စွဲ၊ အချိန်နှင့် စာချုပ်မူဗားရှင်းကို မှတ်တမ်းတင်ထားမည်ဖြစ်သည်)",
+  "th": "ข้าพเจ้ายอมรับเงื่อนไขในข้อตกลงสัญญาข้างต้น รวมถึงราคาของแพ็กเกจและส่วนลดตามระยะเวลาที่เลือก (วันเวลาที่ยอมรับและเวอร์ชันของข้อตกลงสัญญาจะถูกบันทึกไว้)",
+  "pt": "Concordo com o conteúdo do contrato acima e com o valor e o desconto por período do plano selecionado. (A data e hora da concordância e a versão do contrato serão registradas)",
+  "tr": "Yukarıdaki sözleşme içeriğini, seçilen planın tutarını ve süre indirimini kabul ediyorum. (Kabul edilen tarih, saat ve sözleşme sürümü kaydedilir)",
+  "ru": "Я согласен(на) с условиями приведенного выше договора, а также со стоимостью выбранного тарифа и скидкой за период. (Дата/время согласия и версия договора будут сохранены)",
+  "es": "Acepto los términos del contrato anterior, así como el monto del plan seleccionado y el descuento por periodo. (Se registrará la fecha y hora de la aceptación y la versión del contrato)",
+  "ar": "أوافق على شروط العقد أعلاه، بالإضافة إلى مبلغ الخطة المختارة وخصم المدة. (سيتم تسجيل تاريخ ووقت الموافقة وإصدار العقد)"
+ },
  "上限の": {
   "en": "Limit of",
   "zh": "上限的",
@@ -4408,6 +5173,66 @@
   "tr": "Kredi Kontrol Sonucu:",
   "ru": "Результат проверки кредитоспособности:",
   "es": "Resultado de la consulta de crédito:"
+ },
+ "並び替えに失敗しました": {
+  "en": "Failed to reorder",
+  "zh": "排序失败",
+  "zh-TW": "排序失敗",
+  "ne": "क्रम मिलाउन सकिएन",
+  "vi": "Sắp xếp thất bại",
+  "id": "Gagal mengubah urutan",
+  "my": "အစဉ်လိုက်စီခြင်း မအောင်မြင်ပါ",
+  "th": "เรียงลำดับไม่สำเร็จ",
+  "pt": "Falha ao reordenar.",
+  "tr": "Yeniden sıralama başarısız oldu",
+  "ru": "Не удалось изменить порядок",
+  "es": "Error al reordenar",
+  "ar": "فشل إعادة الترتيب"
+ },
+ "並び替えの保存に失敗しました: {0}": {
+  "en": "Failed to save order: {0}",
+  "zh": "保存排序失败：{0}",
+  "zh-TW": "儲存排序失敗：{0}",
+  "ne": "क्रम सेभ गर्न सकिएन: {0}",
+  "vi": "Lưu thứ tự sắp xếp thất bại: {0}",
+  "id": "Gagal menyimpan urutan: {0}",
+  "my": "အစဉ်လိုက်စီခြင်းကို သိမ်းဆည်းရန် မအောင်မြင်ပါ: {0}",
+  "th": "บันทึกการเรียงลำดับไม่สำเร็จ: {0}",
+  "pt": "Falha ao salvar a reordenação: {0}",
+  "tr": "Sıralamayı kaydetme başarısız oldu: {0}",
+  "ru": "Не удалось сохранить порядок: {0}",
+  "es": "Error al guardar el orden: {0}",
+  "ar": "فشل حفظ الترتيب: {0}"
+ },
+ "並び順の保存に失敗しました: {0}": {
+  "en": "Failed to save display order: {0}",
+  "zh": "保存排列顺序失败：{0}",
+  "zh-TW": "儲存排列順序失敗：{0}",
+  "ne": "क्रम मिलाइ सेभ गर्न सकिएन: {0}",
+  "vi": "Lưu thứ tự sắp xếp thất bại: {0}",
+  "id": "Gagal menyimpan urutan: {0}",
+  "my": "ပြသသည့်အစဉ်လိုက်ကို သိမ်းဆည်းရန် မအောင်မြင်ပါ: {0}",
+  "th": "บันทึกลำดับการแสดงผลไม่สำเร็จ: {0}",
+  "pt": "Falha ao salvar a ordem: {0}",
+  "tr": "Sıralama sırasını kaydetme başarısız oldu: {0}",
+  "ru": "Не удалось сохранить порядок отображения: {0}",
+  "es": "Error al guardar el orden: {0}",
+  "ar": "فشل حفظ ترتيب العرض: {0}"
+ },
+ "並び順を保存": {
+  "en": "Save Order",
+  "zh": "保存排序",
+  "zh-TW": "儲存排列順序",
+  "ne": "क्रम सेभ गर्नुहोस्",
+  "vi": "Lưu thứ tự",
+  "id": "Simpan urutan",
+  "my": "အစဉ်လိုက်ကို သိမ်းဆည်းပါ",
+  "th": "บันทึกลำดับการแสดงผล",
+  "pt": "Salvar ordem",
+  "tr": "Sıralamayı Kaydet",
+  "ru": "Сохранить порядок",
+  "es": "Guardar orden",
+  "ar": "حفظ الترتيب"
  },
  "中文": {
   "en": "Chinese",
@@ -4514,6 +5339,21 @@
   "ru": "Событие зарегистрировано. Оно появится на карте в время начала.",
   "es": "Se ha registrado el evento. Aparecerá en el mapa cuando llegue la hora de inicio."
  },
+ "予約URLは https:// から始まるURLを入力してください。": {
+  "en": "Please enter a reservation URL starting with https://",
+  "zh": "预约网址请输入以 https:// 开头的URL。",
+  "zh-TW": "預約網址請輸入以 https:// 開頭的網址。",
+  "ne": "कृपया https:// बाट सुरु हुने बुकिङ URL प्रविष्ट गर्नुहोस्।",
+  "vi": "Vui lòng nhập URL đặt chỗ bắt đầu bằng https://.",
+  "id": "Silakan masukkan URL pemesanan yang dimulai dengan https://.",
+  "my": "ကြိုတင်ဘွတ်ကင် URL အတွက် https:// ဖြင့် စတင်သော URL ကို ထည့်သွင်းပါ။",
+  "th": "กรุณากรอก URL การจองที่ขึ้นต้นด้วย https://",
+  "pt": "Insira um URL de reserva que comece com https://.",
+  "tr": "Rezervasyon URL'si için lütfen https:// ile başlayan bir URL girin.",
+  "ru": "Введите URL бронирования, начинающийся с https://.",
+  "es": "Ingrese una URL de reserva que comience con https://.",
+  "ar": "يرجى إدخال رابط الحجز يبدأ بـ https://."
+ },
  "人)": {
   "en": "people)",
   "zh": "人）",
@@ -4573,6 +5413,21 @@
   "tr": "kişilik sınıra ulaşıldı. Yeni eklemek için lütfen kullanılmayan yöneticileri çıkarın.",
   "ru": "чел. Достигнут лимит. Чтобы добавить новых, удалите неиспользуемых администраторов.",
   "es": "personas. Para agregar más, elimine los administradores que no utilice."
+ },
+ "今すぐ宣伝する": {
+  "en": "Promote Now",
+  "zh": "立即推广",
+  "zh-TW": "立即推廣",
+  "ne": "अहिले नै प्रवर्द्धन गर्नुहोस्",
+  "vi": "Quảng cáo ngay",
+  "id": "Promosikan Sekarang",
+  "my": "ယခုပဲ ကြော်ငြာမည်",
+  "th": "โปรโมตทันที",
+  "pt": "Promover agora",
+  "tr": "Şimdi Tanıt",
+  "ru": "Продвигать сейчас",
+  "es": "Promocionar ahora",
+  "ar": "ترويج الآن"
  },
  "今後ログインID・パスワードを忘れた際に、運営に問い合わせず自分で再発行できるようにするための登録です。最初に一度だけお願いしています。": {
   "en": "This registration allows you to reset your login ID and password by yourself if you forget them in the future without contacting support. We ask you to complete this only once at the beginning.",
@@ -4678,6 +5533,51 @@
   "ru": "шт.",
   "es": "elementos",
   "tr": "öğe"
+ },
+ "件・いま": {
+  "en": "items · Now",
+  "zh": "个·现在",
+  "zh-TW": "件・目前",
+  "ne": "वटा・अहिले",
+  "vi": "mục · Hiện tại",
+  "id": "item · Saat ini",
+  "my": "ခု・ယခု",
+  "th": "รายการ · ตอนนี้",
+  "pt": "item(ns) · agora",
+  "tr": "adet · Şimdi",
+  "ru": "шт. · Сейчас",
+  "es": "elementos · Ahora",
+  "ar": "عنصرًا · الآن"
+ },
+ "件)。 リール一覧やフィードの並びは変わりません。": {
+  "en": "items). This will not change the order of the reels list or feed.",
+  "zh": "个）。Reels列表和动态列表的顺序不会改变。",
+  "zh-TW": "件）。連續短片與動態消息的排序不會改變。",
+  "ne": "वटा)। रील्स सूची वा फिडको क्रम परिवर्तन हुनेछैन।",
+  "vi": "mục). Thứ tự trong danh sách Reel hoặc nguồn cấp dữ liệu sẽ không thay đổi.",
+  "id": "item). Urutan daftar Reels dan umpan tidak akan berubah.",
+  "my": "ခု)။ Reels စာရင်းနှင့် Feed အစဉ်လိုက် ပြောင်းလဲမည် မဟုတ်ပါ။",
+  "th": "รายการ) ลำดับในรายการรีลและฟีดจะไม่เปลี่ยนแปลง",
+  "pt": "item(ns)). A ordem da lista de reels e do feed não será alterada.",
+  "tr": "adet). Reels listesi veya akış sıralaması değişmez.",
+  "ru": "шт.). Порядок в списке Reels и ленте не изменится.",
+  "es": "elemento(s)). El orden de la lista de reels y del feed no cambiará.",
+  "ar": "عنصرًا). لن يتغير ترتيب قائمة مقاطع Reels أو الخلاصات."
+ },
+ "件)を、ZIPで保存できます。": {
+  "en": "items) as a ZIP file.",
+  "zh": "个），可以保存为ZIP格式。",
+  "zh-TW": "件），可以儲存為 ZIP 檔。",
+  "ne": "वटा) ZIP मा सेभ गर्न सकिन्छ।",
+  "vi": "mục) có thể lưu dưới dạng tệp ZIP.",
+  "id": "item) dapat disimpan sebagai file ZIP.",
+  "my": "ခု) ကို ZIP ဖိုင်အဖြစ် သိမ်းဆည်းနိုင်ပါသည်။",
+  "th": "รายการ) สามารถบันทึกเป็นไฟล์ ZIP ได้",
+  "pt": "item(ns)) podem ser salvos em um arquivo ZIP.",
+  "tr": "adet) ZIP olarak kaydedilebilir.",
+  "ru": "шт.) можно сохранить в ZIP-архиве.",
+  "es": "elemento(s)) se pueden guardar en un archivo ZIP.",
+  "ar": "عنصرًا) كملف ZIP."
  },
  "位置の列がまだ用意されていません(データベースの準備が必要です)。": {
   "en": "The location column is not ready yet (database setup required).",
@@ -5084,6 +5984,21 @@
   "es": "Guardado. Se mostrará en esta posición en el mapa.",
   "tr": "Kaydedildi. Haritada bu konumda gösterilecektir."
  },
+ "保存しました。店舗ページに反映されます。": {
+  "en": "Saved. It will be reflected on your store page.",
+  "zh": "已保存。将反映在店铺页面中。",
+  "zh-TW": "已儲存。將會反映在店家頁面上。",
+  "ne": "सेभ गरियो। स्टोर पृष्ठमा देखिनेछ।",
+  "vi": "Đã lưu. Thay đổi sẽ được phản ánh trên trang cửa hàng.",
+  "id": "Berhasil disimpan. Ini akan tercermin pada halaman toko.",
+  "my": "သိမ်းဆည်းပြီးပါပြီ။ ဆိုင်စာမျက်နှာတွင် ဖော်ပြပေးပါမည်။",
+  "th": "บันทึกแล้ว จะสะท้อนไปยังหน้าร้านค้า",
+  "pt": "Salvo. As alterações serão refletidas na página do estabelecimento.",
+  "tr": "Kaydedildi. Mağaza sayfasına yansıtılacaktır.",
+  "ru": "Сохранено. Изменения отобразятся на странице заведения.",
+  "es": "Se ha guardado. Se reflejará en la página del establecimiento.",
+  "ar": "تم الحفظ. سيتم تطبيقه على صفحة المتجر."
+ },
  "保存しました(反映まで最大5分ほどかかります)": {
   "en": "Saved. (It may take up to 5 minutes to reflect)",
   "zh": "已保存（最多需要约5分钟才能生效）",
@@ -5278,6 +6193,21 @@
   "ru": "Наверх",
   "es": "Ir al inicio",
   "tr": "Başa Dön"
+ },
+ "入れると、店舗ページのトップに音なしで自動ループ再生されます(上の写真や動画より優先)。空にすると、上の写真/動画が表示されます。ページ内の「動画紹介」とは別の動画を入れられます。": {
+  "en": "If added, it will automatically loop silently at the top of your store page (takes priority over the photos/videos above). If left empty, the photos/videos above will be displayed. You can add a different video from the \"Video Showcase\" on the page.",
+  "zh": "设置后，将在店铺页面顶部无声自动循环播放（优先于上方的照片和视频）。如果留空，则显示上方的照片/视频。您可以设置与页面内“视频介绍”不同的视频。",
+  "zh-TW": "設定後，將會在店家頁面頂端自動無聲循環播放（優先於上方的照片或影片）。若留空，則會顯示上方的照片/影片。您可以加入與頁面內「影片介紹」不同的影片。",
+  "ne": "यदि राख्नुभयो भने, स्टोर पृष्ठको माथि बिना आवाज स्वतः लुपमा बज्नेछ (माथिको फोटो वा भिडियो भन्दा बढी प्राथमिकता पाउनेछ)। खाली छाडेमा, माथिको फोटो/भिडियो देखिनेछ। पृष्ठ भित्रको \"भिडियो परिचय\" भन्दा छुट्टै भिडियो राख्न सकिन्छ।",
+  "vi": "Nếu nhập vào, video sẽ tự động phát lặp lại không có tiếng ở đầu trang cửa hàng (được ưu tiên hơn ảnh hoặc video ở trên). Nếu để trống, ảnh/video ở trên sẽ hiển thị. Bạn có thể thêm video khác với video trong phần \"Giới thiệu video\" trên trang.",
+  "id": "Jika diisi, video akan diputar ulang secara otomatis tanpa suara di bagian atas halaman toko (diprioritaskan dibanding foto/video di atas). Jika dikosongkan, foto/video di atas akan ditampilkan. Anda dapat memasukkan video yang berbeda dari \"Perkenalan Video\" di dalam halaman.",
+  "my": "ထည့်သွင်းပါက ဆိုင်စာမျက်နှာ၏ ထိပ်ဆုံးတွင် အသံမပါဘဲ အလိုအလျောက် ပတ်ထုတ်လွှင့်ပါမည် (အထက်ပါ ဓာတ်ပုံ/ဗီဒီယိုများထက် ဦးစားပေးပါသည်)။ ဘာမှမထည့်ပါက အထက်ပါ ဓာတ်ပုံ/ဗီဒီယိုများကို ပြသပေးပါမည်။ စာမျက်နှာရှိ \"ဗီဒီယို မိတ်ဆက်\" နှင့် မတူသော အခြားဗီဒီယိုကို ထည့်သွင်းနိုင်ပါသည်။",
+  "th": "หากใส่ วิดีโอจะเล่นวนลูปโดยอัตโนมัติแบบไม่มีเสียงที่ด้านบนสุดของหน้าร้านค้า (แสดงก่อนรูปภาพหรือวิดีโอด้านบน) หากปล่อยว่างไว้ รูปภาพ/วิดีโอด้านบนจะแสดงแทน คุณสามารถใส่วิดีโอที่ต่างจาก \"แนะนำวิดีโอ\" ในหน้าเว็บได้",
+  "pt": "Ao adicionar, o vídeo será reproduzido automaticamente em loop e sem som no topo da página do estabelecimento (prioridade sobre fotos e vídeos acima). Se deixar em branco, as fotos/vídeos acima serão exibidos. É possível adicionar um vídeo diferente da seção \"Apresentação em Vídeo\" da página.",
+  "tr": "Eklediğinizde, mağaza sayfasının en üstünde sessizce otomatik döngüde oynatılır (yukarıdaki fotoğraf veya videolara göre önceliklidir). Boş bırakılırsa yukarıdaki fotoğraf/video görüntülenir. Sayfadaki \"Video Tanıtımı\" bölümünden farklı bir video ekleyebilirsiniz.",
+  "ru": "Если добавить, видео будет автоматически циклично воспроизводиться без звука вверху страницы заведения (в приоритете перед фото и видео выше). Если оставить пустым, будут отображаться фото/видео выше. Можно добавить видео, отличное от раздела «Видеознакомство».",
+  "es": "Si agrega uno, se reproducirá automáticamente en bucle sin sonido en la parte superior de la página del establecimiento (prioridad sobre las fotos/videos de arriba). Si lo deja vacío, se mostrarán las fotos/videos anteriores. Puede usar un video diferente al de la sección \"Presentación en video\".",
+  "ar": "عند إضافته، سيتم تشغيله تلقائيًا بدون صوت وبشكل متكرر في أعلى صفحة المتجر (له الأولوية على الصور أو الفيديوهات أعلاه). إذا تركت المجال فارغًا، ستظهر الصور/الفيديوهات أعلاه. يمكنك إضافة فيديو مختلف عن قسم \"الفيديو التعريفي\" في الصفحة."
  },
  "入力する": {
   "en": "Enter",
@@ -5579,6 +6509,21 @@
   "ru": "Без фото",
   "es": "Sin fotos"
  },
+ "写真の並び替えに失敗しました。ページを開き直してください": {
+  "en": "Failed to reorder photos. Please reload the page.",
+  "zh": "照片排序失败。请重新打开页面",
+  "zh-TW": "相片排序失敗。請重新開啟頁面",
+  "ne": "फोटोहरूको क्रम मिलाउन सकिएन। कृपया पृष्ठ पुनः खोल्नुहोस्।",
+  "vi": "Sắp xếp lại ảnh thất bại. Vui lòng tải lại trang",
+  "id": "Gagal mengubah urutan foto. Silakan muat ulang halaman.",
+  "my": "ဓာတ်ပုံများ အစဉ်လိုက်စီခြင်း မအောင်မြင်ပါ။ စာမျက်နှာကို ပြန်ဖွင့်ပါ။",
+  "th": "เรียงลำดับรูปภาพไม่สำเร็จ กรุณารีโหลดหน้านี้ใหม่อีกครั้ง",
+  "pt": "Falha ao reordenar as fotos. Recarregue a página.",
+  "tr": "Fotoğraf sıralaması başarısız oldu. Lütfen sayfayı yeniden açın.",
+  "ru": "Не удалось изменить порядок фото. Пожалуйста, обновите страницу",
+  "es": "Error al reordenar las fotos. Por favor, vuelva a cargar la página.",
+  "ar": "فشل إعادة ترتيب الصور. يرجى إعادة تحميل الصفحة."
+ },
  "写真の取り込みに失敗しました": {
   "en": "Failed to import photos",
   "zh": "导入照片失败",
@@ -5653,6 +6598,21 @@
   "tr": "Fotoğrafları sürükleyip bırakın veya seçmek için dokunun (Kalan {0} adet)",
   "ru": "Перетащите фото сюда или нажмите, чтобы выбрать (осталось {0})",
   "es": "Arrastre y suelte las fotos, o toque para seleccionar (quedan {0})"
+ },
+ "写真をドラッグして並び替えできます(スマホは ◀ ▶ で入れ替え)。1枚目が最初に表示されます。": {
+  "en": "Drag photos to reorder them (use ◀ ▶ on smartphones). The first photo will be displayed first.",
+  "zh": "可拖拽照片进行排序（手机端使用 ◀ ▶ 调整）。第1张照片将首先显示。",
+  "zh-TW": "可透過拖曳相片來調整排序（手機請使用 ◀ ▶ 切換）。第 1 張相片將優先顯示。",
+  "ne": "फोटोहरू ड्र्याग गरेर क्रम मिलाउन सक्नुहुन्छ (स्मार्टफोनमा ◀ ▶ बाट साट्न सकिन्छ)। पहिलो फोटो पहिले देखिनेछ।",
+  "vi": "Bạn có thể kéo ảnh để sắp xếp lại (trên điện thoại, dùng ◀ ▶ để đổi vị trí). Ảnh đầu tiên sẽ hiển thị trước.",
+  "id": "Anda dapat menyeret foto untuk mengubah urutannya (pada smartphone, gunakan ◀ ▶ untuk menukar). Foto pertama akan ditampilkan paling awal.",
+  "my": "ဓာတ်ပုံများကို Drag ဆွဲ၍ အစဉ်လိုက် စီနိုင်ပါသည်။ (စမတ်ဖုန်းတွင် ◀ ▶ ဖြင့် ပြောင်းပါ)။ ၁ ခုမြောက် ဓာတ်ပုံကို ပထမဆုံး ပြသပါမည်။",
+  "th": "คุณสามารถลากรูปภาพเพื่อเรียงลำดับได้ (สำหรับสมาร์ทโฟน ให้ใช้ ◀ ▶ เพื่อสลับ) รูปแรกจะแสดงเป็นรูปแรก",
+  "pt": "Arraste as fotos para reordenar (no celular, use ◀ ▶ para trocar). A primeira foto será exibida primeiro.",
+  "tr": "Fotoğrafları sürükleyerek sıralayabilirsiniz (akıllı telefonlarda ◀ ▶ ile değiştirin). İlk fotoğraf en başta gösterilir.",
+  "ru": "Перетаскивайте фото для изменения порядка (на смартфоне используйте ◀ ▶). Первое фото будет показываться первым.",
+  "es": "Puede arrastrar las fotos para reordenarlas (en teléfonos use ◀ ▶). La primera foto se mostrará primero.",
+  "ar": "يمكنك سحب الصور لإعادة ترتيبها (استخدم ◀ ▶ على الهواتف الذكية). ستظهر الصورة الأولى أولاً."
  },
  "写真を追加(複数選択可)": {
   "en": "Add photos (multiple selections allowed)",
@@ -6029,6 +6989,21 @@
   "ru": "Предыдущий месяц",
   "es": "Mes anterior"
  },
+ "前へ": {
+  "en": "Previous",
+  "zh": "向前",
+  "zh-TW": "向前",
+  "ne": "अघिल्लो",
+  "vi": "Trước",
+  "id": "Sebelumnya",
+  "my": "ရှေ့သို့",
+  "th": "ก่อนหน้า",
+  "pt": "Anterior",
+  "tr": "Önceki",
+  "ru": "Назад",
+  "es": "Anterior",
+  "ar": "السابق"
+ },
  "前回の場所と時間帯をフォームに入れました。日時を確認して「予定を登録」を押してください。": {
   "en": "The previous location and time slot have been filled into the form. Please check the date and time, then press \"Register Schedule\".",
   "zh": "已将上次的地点和时间段填入表单。请确认日期和时间，然后点击“登记计划”。",
@@ -6044,6 +7019,21 @@
   "ru": "Предыдущее место и время внесены в форму. Проверьте дату и время и нажмите «Зарегистрировать график».",
   "es": "Se ha completado el formulario con la ubicación y el horario anteriores. Verifique la fecha y la hora y presione \"Registrar agenda\"."
  },
+ "動画・写真のファイルを投稿する": {
+  "en": "Post Video/Photo Files",
+  "zh": "发布视频/照片文件",
+  "zh-TW": "發布影片/相片檔案",
+  "ne": "भिडियो/फोटो फाइल पोस्ट गर्नुहोस्",
+  "vi": "Đăng tệp video/hình ảnh",
+  "id": "Posting file video/foto",
+  "my": "ဗီဒီယို/ဓာတ်ပုံ ဖိုင်များကို တင်မည်",
+  "th": "โพสต์ไฟล์วิดีโอ/รูปภาพ",
+  "pt": "Publicar arquivos de vídeo/foto",
+  "tr": "Video/Fotoğraf Dosyası Paylaş",
+  "ru": "Опубликовать видео и фото",
+  "es": "Publicar archivos de video/foto",
+  "ar": "نشر ملفات الفيديو والصور"
+ },
  "動画オプション:": {
   "en": "Video options:",
   "zh": "视频选项：",
@@ -6058,6 +7048,21 @@
   "tr": "Video seçenekleri:",
   "ru": "Параметры видео:",
   "es": "Opciones de video:"
+ },
+ "動画のURL": {
+  "en": "Video URL",
+  "zh": "视频URL",
+  "zh-TW": "影片網址",
+  "ne": "भिडियो URL",
+  "vi": "URL video",
+  "id": "URL Video",
+  "my": "ဗီဒီယို URL",
+  "th": "URL วิดีโอ",
+  "pt": "URL do vídeo",
+  "tr": "Video URL'si",
+  "ru": "URL видео",
+  "es": "URL del video",
+  "ar": "رابط الفيديو"
  },
  "動画のURLを判別できません。YouTubeの動画URL（watch?v=…、youtu.be/…、shorts/…）を貼ってください。": {
   "en": "Unable to recognize video URL. Please paste a YouTube video URL (watch?v=..., youtu.be/..., shorts/...).",
@@ -6103,6 +7108,36 @@
   "tr": "Video mobil cihazlar için optimize ediliyor...",
   "ru": "Оптимизация видео для мобильных устройств...",
   "es": "Optimizando el video para teléfonos inteligentes..."
+ },
+ "動画をドラッグ(スマホは長押ししてから移動)すると、店舗詳細ページの並びが変わります。「固定」を押した動画は先頭に固定されます(最大": {
+  "en": "Drag videos (press and hold on smartphones to move) to change their order on the store details page. Videos marked with \"Pin\" will be pinned to the top (up to",
+  "zh": "拖拽视频（手机端请长按后移动）可调整店铺详情页面的顺序。点击“置顶”的视频将固定在最前（最多",
+  "zh-TW": "拖曳影片（手機請長按後移動）即可變更店家詳細頁面的排序。點擊「置頂」的影片將會置頂於最前邊（最多",
+  "ne": "भिडियो ड्र्याग गर्दा (स्मार्टफोनमा थिचिराखेर सारेमा) स्टोर विवरण पृष्ठको क्रम परिवर्तन हुनेछ। \"पिन गर्नुहोस्\" थिचिएका भिडियोहरू सुरुमा पिन हुनेछन् (अधिकतम",
+  "vi": "Kéo video (trên điện thoại, nhấn giữ rồi di chuyển) để thay đổi thứ tự trên trang chi tiết cửa hàng. Video nhấn \"Ghim\" sẽ được ghim ở đầu (tối đa",
+  "id": "Menyeret video (pada smartphone, tekan lama lalu geser) akan mengubah urutannya di halaman detail toko. Video yang disematkan dengan menekan \"Sematkan\" akan difiksasi di paling atas (maksimal",
+  "my": "ဗီဒီယိုများကို Drag ဆွဲပါက (စမတ်ဖုန်းတွင် ဖိထားပြီး ရွှေ့ပါ) ဆိုင်အသေးစိတ် စာမျက်နှာ၏ အစဉ်လိုက် ပြောင်းလဲပါမည်။ \"Pin တင်မည်\" ကို နှိပ်ထားသော ဗီဒီယိုသည် ထိပ်ဆုံးတွင် Pin ဖြစ်နေမည် (အများဆုံး",
+  "th": "ลากวิดีโอ (สำหรับสมาร์ทโฟน ให้กดค้างไว้แล้วย้าย) เพื่อเปลี่ยนลำดับในรายละเอียดหน้าร้าน วิดีโอที่กด \"ปักหมุด\" จะถูกปักหมุดไว้ที่ด้านบนสุด (สูงสุด",
+  "pt": "Arraste os vídeos (no celular, toque e segure antes de mover) para alterar a ordem na página de detalhes do estabelecimento. Vídeos fixados com \"Fixar\" ficarão no topo (máximo",
+  "tr": "Videoları sürüklediğinizde (akıllı telefonda basılı tutup taşıyın) mağaza detay sayfasındaki sıralama değişir. \"Sabitle\" düğmesine basılan videolar en başa sabitlenir (maksimum",
+  "ru": "Перетащите видео (на смартфоне удерживайте, затем перемещайте), чтобы изменить порядок на странице заведения. Видео с кнопкой «Закрепить» будут закреплены вверху (макс.",
+  "es": "Al arrastrar los videos (en teléfonos, mantenga presionado y mueva), cambiará el orden en la página de detalles del establecimiento. Los videos fijados con \"Fijar\" permanecerán al inicio (máx.",
+  "ar": "سيؤدي سحب الفيديو (على الهواتف الذكية، اضغط مع الاستمرار ثم حرك) إلى تغيير الترتيب في صفحة تفاصيل المتجر. سيتم تثبيت الفيديو الذي تضغط فيه على \"تثبيت\" في المقدمة (بحد أقصى"
+ },
+ "動画を取り込んで、翻訳しています。しばらくお待ちください。": {
+  "en": "Importing and translating video. Please wait a moment.",
+  "zh": "正在导入并翻译视频，请稍候。",
+  "zh-TW": "正在匯入影片並進行翻譯，請稍候。",
+  "ne": "भिडियो इम्पोर्ट गरेर अनुवाद गरिँदैछ। कृपया एकैछिन पर्खनुहोस्।",
+  "vi": "Đang tải video lên và dịch. Vui lòng chờ trong giây lát.",
+  "id": "Mengimpor dan menerjemahkan video. Mohon tunggu sebentar.",
+  "my": "ဗီဒီယိုကို ထည့်သွင်းပြီး ဘာသာပြန်ဆိုနေပါသည်။ ခဏစောင့်ဆိုင်းပေးပါ။",
+  "th": "กำลังนำเข้าและแปลวิดีโอ กรุณารอสักครู่",
+  "pt": "Importando o vídeo e traduzindo. Por favor, aguarde um momento.",
+  "tr": "Video içe aktarılıyor ve çevriliyor. Lütfen bekleyin.",
+  "ru": "Загрузка и перевод видео. Пожалуйста, подождите.",
+  "es": "Importando y traduciendo el video. Por favor, espere un momento.",
+  "ar": "جاري استيراد الفيديو وترجمته. يرجى الانتظار قليلاً."
  },
  "原文と同じ言語の文章は、店舗情報の入力欄で編集してください": {
   "en": "Please edit text in the original language directly in the store information fields.",
@@ -6164,6 +7199,21 @@
   "ru": "Применение…",
   "es": "Aplicando..."
  },
+ "取り消し": {
+  "en": "Cancel",
+  "zh": "取消",
+  "zh-TW": "取消",
+  "ne": "रद्द गर्नुहोस्",
+  "vi": "Hủy",
+  "id": "Batal",
+  "my": "ပယ်ဖျက်မည်",
+  "th": "ยกเลิก",
+  "pt": "Cancelar",
+  "tr": "İptal",
+  "ru": "Отмена",
+  "es": "Cancelar",
+  "ar": "إلغاء"
+ },
  "取り込む写真・文章は当店が権利を持つもの(または使用の許可を得たもの)です。": {
   "en": "The imported photos and text are owned by our store (or permitted for use).",
   "zh": "导入的照片和文字归本店内拥有权利（或已获得使用许可）。",
@@ -6223,6 +7273,21 @@
   "tr": "Her dildeki görünümü kontrol edin/düzenleyin",
   "ru": "Просмотр и редактирование для каждого языка",
   "es": "Revisar y corregir la visualización en cada idioma"
+ },
+ "同意して契約する": {
+  "en": "Agree and Subscribe",
+  "zh": "同意并订阅",
+  "zh-TW": "同意並簽約",
+  "ne": "स्वीकार गरी सम्झौता गर्नुहोस्",
+  "vi": "Đồng ý và đăng ký",
+  "id": "Setujui dan Berlangganan",
+  "my": "သဘောတူပြီး စာချုပ်မည်",
+  "th": "ยอมรับและทำสัญญา",
+  "pt": "Concordar e contratar",
+  "tr": "Kabul Et ve Sözleşme Yap",
+  "ru": "Принять и оформить",
+  "es": "Aceptar y contratar",
+  "ar": "الموافقة والاشتراك"
  },
  "同時に掲載できるブーストは3件までです。終了してから発射してください": {
   "en": "You can publish up to 3 Boosts at the same time. Please end an active one before launching a new Boost.",
@@ -6494,6 +7559,36 @@
   "ru": "раз)",
   "es": "veces)"
  },
+ "固定": {
+  "en": "Pin",
+  "zh": "置顶",
+  "zh-TW": "置頂",
+  "ne": "पिन गर्नुहोस्",
+  "vi": "Ghim",
+  "id": "Sematkan",
+  "my": "Pin တင်မည်",
+  "th": "ปักหมุด",
+  "pt": "Fixar",
+  "tr": "Sabitle",
+  "ru": "Закрепить",
+  "es": "Fijar",
+  "ar": "تثبيت"
+ },
+ "固定中": {
+  "en": "Pinned",
+  "zh": "已置顶",
+  "zh-TW": "已置頂",
+  "ne": "पिन गरिएको",
+  "vi": "Đang ghim",
+  "id": "Disematkan",
+  "my": "Pin တင်ထားသည်",
+  "th": "ปักหมุดอยู่",
+  "pt": "Fixado",
+  "tr": "Sabitlendi",
+  "ru": "Закреплено",
+  "es": "Fijado",
+  "ar": "مثبّت"
+ },
  "土": {
   "en": "Sat",
   "zh": "周六",
@@ -6674,6 +7769,36 @@
   "ru": "Убрать",
   "es": "Quitar"
  },
+ "外部予約サイトURL": {
+  "en": "External Reservation URL",
+  "zh": "外部预约网站URL",
+  "zh-TW": "外部預約網站網址",
+  "ne": "बाह्य बुकिङ साइट URL",
+  "vi": "URL trang đặt chỗ bên ngoài",
+  "id": "URL situs pemesanan eksternal",
+  "my": "ပြင်ပ ကြိုတင်ဘွတ်ကင် ဝဘ်ဆိုက် URL",
+  "th": "URL เว็บไซต์การจองภายนอก",
+  "pt": "URL do site de reservas externo",
+  "tr": "Harici Rezervasyon Sitesi URL'si",
+  "ru": "URL внешнего сайта бронирования",
+  "es": "URL del sitio de reserva externo",
+  "ar": "رابط موقع الحجز الخارجي"
+ },
+ "外部動画の追加は、オプションの契約が必要です": {
+  "en": "Adding external videos requires an add-on subscription.",
+  "zh": "添加外部视频需要订阅附加功能",
+  "zh-TW": "新增外部影片需要加購方案",
+  "ne": "बाह्य भिडियो थप्नको लागि ऐच्छिक प्लानको सम्झौता आवश्यक छ",
+  "vi": "Để thêm video bên ngoài, cần đăng ký gói tùy chọn",
+  "id": "Penambahan video eksternal memerlukan langganan opsi",
+  "my": "ပြင်ပဗီဒီယို ထည့်သွင်းရန် အပိုဝန်ဆောင်မှု (Option) စာချုပ်ချုပ်ဆိုရန် လိုအပ်ပါသည်။",
+  "th": "การเพิ่มวิดีโอภายนอกจำเป็นต้องสมัครแพ็กเกจเสริม",
+  "pt": "A adição de vídeos externos requer a contratação de um opcional.",
+  "tr": "Harici video eklemek için ek bir opsiyonel sözleşme gereklidir",
+  "ru": "Для добавления внешних видео требуется подключение опции",
+  "es": "Para agregar videos externos se requiere contratar una opción adicional",
+  "ar": "إضافة فيديو خارجي تتطلب الاشتراك في خيار إضافي"
+ },
  "失敗しました": {
   "en": "Failed",
   "zh": "失败",
@@ -6703,6 +7828,36 @@
   "tr": "Aktif Sözleşme",
   "ru": "Действующий контракт",
   "es": "Contrato activo"
+ },
+ "契約内容に同意する場合は、チェックを入れてください": {
+  "en": "Please check the box if you agree to the contract terms.",
+  "zh": "如同意合同内容，请勾选此项",
+  "zh-TW": "若同意合約內容，請勾選此方塊",
+  "ne": "यदि तपाईं सम्झौताका शर्तहरूमा सहमत हुनुहुन्छ भने, कृपया टिक लगाउनुहोस्",
+  "vi": "Vui lòng tích vào ô nếu bạn đồng ý với các điều khoản hợp đồng",
+  "id": "Silakan beri tanda centang jika Anda menyetujui persyaratan kontrak",
+  "my": "စာချုပ်ပါ အကြောင်းအရာများကို သဘောတူပါက အမှတ်အသား ပြုလုပ်ပေးပါ။",
+  "th": "กรุณาทำเครื่องหมายในช่องหากคุณยอมรับข้อตกลงในสัญญา",
+  "pt": "Marque a caixa se concordar com os termos do contrato.",
+  "tr": "Sözleşme şartlarını kabul ediyorsanız lütfen kutucuğu işaretleyin",
+  "ru": "Поставьте галочку, если вы согласны с условиями договора",
+  "es": "Marque la casilla si está de acuerdo con los términos del contrato",
+  "ar": "يرجى تحديد المربع إذا كنت توافق على شروط العقد"
+ },
+ "契約日": {
+  "en": "Contract Date",
+  "zh": "签约日期",
+  "zh-TW": "簽約日期",
+  "ne": "सम्झौता मिति",
+  "vi": "Ngày đăng ký",
+  "id": "Tanggal Kontrak",
+  "my": "စာချုပ်ချုပ်ဆိုသည့် ရက်စွဲ",
+  "th": "วันที่ทำสัญญา",
+  "pt": "Data do contrato",
+  "tr": "Sözleşme Tarihi",
+  "ru": "Дата договора",
+  "es": "Fecha de contrato",
+  "ar": "تاريخ العقد"
  },
  "字幕": {
   "en": "Subtitles",
@@ -6959,6 +8114,21 @@
   "es": "Puede registrar hasta 10 fotos que muestren el ambiente del local. Se mostrarán en la página pública del negocio.",
   "ru": "Можно добавить до 10 фотографий, передающих атмосферу заведения. Они будут отображаться на публичной странице."
  },
+ "店舗・FACES・スタッフが投稿した動画と写真(全": {
+  "en": "Videos and photos posted by store, FACES, and staff (Total",
+  "zh": "店铺、FACES、员工发布的视频和照片（共",
+  "zh-TW": "店家、FACES 及員工發布的影片與相片（共",
+  "ne": "स्टोर, FACES र कर्मचारीहरूले पोस्ट गरेका भिडियो तथा फोटोहरू (कुल",
+  "vi": "Video và ảnh do cửa hàng, FACES, nhân viên đã đăng (tổng cộng",
+  "id": "Video dan foto yang diposting oleh toko, FACES, dan staf (total",
+  "my": "ဆိုင်၊ FACES နှင့် ဝန်ထမ်းများ တင်ထားသော ဗီဒီယိုနှင့် ဓာတ်ပုံများ (စုစုပေါင်း",
+  "th": "วิดีโอและรูปภาพที่โพสต์โดยร้านค้า, FACES และสตาฟ (ทั้งหมด",
+  "pt": "Vídeos e fotos publicados pelo estabelecimento, FACES e equipe (total",
+  "tr": "Mağaza, FACES ve personel tarafından paylaşılan videolar ve fotoğraflar (Toplam",
+  "ru": "Видео и фото, опубликованные заведением, FACES и персоналом (всего",
+  "es": "Videos y fotos publicados por el establecimiento, FACES y el personal (total",
+  "ar": "الفيديوهات والصور المنشورة بواسطة المتجر وFACES وطاقم العمل (الإجمالي"
+ },
  "店舗・ポータルの管理画面を開く。": {
   "en": "Open the store/portal admin dashboard.",
   "zh": "打开店铺/门户网站管理页面。",
@@ -7078,6 +8248,21 @@
   "tr": "Bu YouTube videosunu mağaza sayfasının üst kısmında (hero) oynat",
   "es": "Reproducir este video de YouTube en la parte superior (banner principal) de la página del negocio",
   "ru": "Воспроизводить это видео YouTube в шапке (герое) страницы заведения"
+ },
+ "店舗ページの並び順": {
+  "en": "Store Page Display Order",
+  "zh": "店铺页面排序",
+  "zh-TW": "店家頁面排序",
+  "ne": "स्टोर पृष्ठको क्रम",
+  "vi": "Thứ tự trên trang cửa hàng",
+  "id": "Urutan halaman toko",
+  "my": "ဆိုင်စာမျက်နှာ၏ ပြသသည့်အစဉ်လိုက်",
+  "th": "ลำดับการแสดงผลในหน้าร้านค้า",
+  "pt": "Ordem da página do estabelecimento",
+  "tr": "Mağaza Sayfası Sıralaması",
+  "ru": "Порядок отображения на странице заведения",
+  "es": "Orden de la página del establecimiento",
+  "ar": "ترتيب عرض صفحة المتجر"
  },
  "店舗ページの背景に、小さな写真を貼った壁を薄く敷きます。投稿が少ないうちは雰囲気の近いダミー写真が並び、投稿が増えるほどお客様の写真に入れ替わります。": {
   "en": "A subtle photo wall featuring small images will be set as the background for the store page. While posts are few, dummy photos with a similar vibe will be displayed, and as posts increase, they will be replaced with customer photos.",
@@ -7273,6 +8458,21 @@
   "tr": "Koordinatlar geçersiz",
   "es": "Coordenadas no válidas",
   "ru": "Некорректные координаты"
+ },
+ "後ろへ": {
+  "en": "Next",
+  "zh": "向后",
+  "zh-TW": "向後",
+  "ne": "पछाडि",
+  "vi": "Sau",
+  "id": "Selanjutnya",
+  "my": "နောက်သို့",
+  "th": "ถัดไป",
+  "pt": "Próximo",
+  "tr": "Sonraki",
+  "ru": "Вперед",
+  "es": "Siguiente",
+  "ar": "التالي"
  },
  "従業者名簿": {
   "en": "Employee roster",
@@ -7484,6 +8684,36 @@
   "es": "Corregido",
   "ru": "Исправлено"
  },
+ "投稿": {
+  "en": "Post",
+  "zh": "发布",
+  "zh-TW": "發布",
+  "ne": "पोस्ट गर्नुहोस्",
+  "vi": "Đăng",
+  "id": "Posting",
+  "my": "ပို့စ်တင်မည်",
+  "th": "โพสต์",
+  "pt": "Publicar",
+  "tr": "Paylaş",
+  "ru": "Опубликовать",
+  "es": "Publicar",
+  "ar": "نشر"
+ },
+ "投稿が完了しました": {
+  "en": "Posted successfully",
+  "zh": "发布完成",
+  "zh-TW": "已完成發布",
+  "ne": "पोस्ट गर्ने कार्य सम्पन्न भयो",
+  "vi": "Đăng thành công",
+  "id": "Posting berhasil",
+  "my": "ပို့စ်တင်ခြင်း ပြီးစီးပါပြီ",
+  "th": "โพสต์เสร็จสมบูรณ์",
+  "pt": "Publicação concluída.",
+  "tr": "Paylaşım tamamlandı",
+  "ru": "Публикация завершена",
+  "es": "Publicación completada",
+  "ar": "اكتمل النشر"
+ },
  "投稿する": {
   "en": "Post",
   "zh": "发布",
@@ -7498,6 +8728,21 @@
   "tr": "Paylaş",
   "es": "Publicar",
   "ru": "Опубликовать"
+ },
+ "投稿に失敗しました": {
+  "en": "Failed to post",
+  "zh": "发布失败",
+  "zh-TW": "發布失敗",
+  "ne": "पोस्ट गर्न सकिएन",
+  "vi": "Đăng thất bại",
+  "id": "Gagal memposting",
+  "my": "ပို့စ်တင်ရန် မအောင်မြင်ပါ",
+  "th": "โพสต์ไม่สำเร็จ",
+  "pt": "Falha ao publicar.",
+  "tr": "Paylaşım başarısız oldu",
+  "ru": "Не удалось опубликовать",
+  "es": "Error al publicar",
+  "ar": "فشل النشر"
  },
  "投稿の保存に失敗しました: {0}": {
   "en": "Failed to save post: {0}",
@@ -7528,6 +8773,21 @@
   "tr": "Paylaşılıyor...",
   "es": "Publicando...",
   "ru": "Публикация..."
+ },
+ "投稿中…": {
+  "en": "Posting...",
+  "zh": "正在发布…",
+  "zh-TW": "發布中…",
+  "ne": "पोस्ट हुँदैछ...",
+  "vi": "Đang đăng…",
+  "id": "Memposting...",
+  "my": "ပို့စ်တင်နေသည်…",
+  "th": "กำลังโพสต์...",
+  "pt": "Publicando...",
+  "tr": "Paylaşılıyor...",
+  "ru": "Публикация…",
+  "es": "Publicando...",
+  "ar": "جاري النشر..."
  },
  "投稿用リンク(マイページ)": {
   "en": "Posting link (My Page)",
@@ -7678,6 +8938,66 @@
   "tr": "İçerik Eksiksizliği",
   "ru": "Полнота информации",
   "es": "Nivel de detalle de la publicación"
+ },
+ "掲載プランのご契約": {
+  "en": "Listing Plan Subscription",
+  "zh": "订阅刊登套餐",
+  "zh-TW": "刊登方案簽約",
+  "ne": "सूचीकरण प्लानको सम्झौता",
+  "vi": "Đăng ký gói hiển thị",
+  "id": "Langganan paket publikasi",
+  "my": "ကြော်ငြာအစီအစဉ် စာချုပ်ချုပ်ဆိုခြင်း",
+  "th": "สัญญาแพ็กเกจการลงประกาศ",
+  "pt": "Contratação do plano de anúncio",
+  "tr": "Yayın Planı Sözleşmesi",
+  "ru": "Оформление тарифного плана",
+  "es": "Contratación de plan de publicación",
+  "ar": "الاشتراك في خطة الإدراج"
+ },
+ "掲載プランの契約": {
+  "en": "Listing Plan Subscription",
+  "zh": "订阅刊登套餐",
+  "zh-TW": "刊登方案簽約",
+  "ne": "सूचीकरण प्लानको सम्झौता",
+  "vi": "Đăng ký gói hiển thị",
+  "id": "Langganan paket publikasi",
+  "my": "ကြော်ငြာအစီအစဉ် စာချုပ်",
+  "th": "สัญญาแพ็กเกจการลงประกาศ",
+  "pt": "Contrato do plano de anúncio",
+  "tr": "Yayın Planı Sözleşmesi",
+  "ru": "Подписка на тарифный план",
+  "es": "Contrato de plan de publicación",
+  "ar": "الاشتراك في خطة الإدراج"
+ },
+ "掲載プランの契約は、まもなくご利用いただけます。": {
+  "en": "Listing plan subscriptions will be available soon.",
+  "zh": "刊登套餐订阅即将上线。",
+  "zh-TW": "刊登方案簽約即將開放使用。",
+  "ne": "सूचीकरण प्लानको सम्झौता चाँडै उपलब्ध हुनेछ।",
+  "vi": "Dịch vụ đăng ký gói hiển thị sẽ sớm có sẵn.",
+  "id": "Langganan paket publikasi akan segera tersedia.",
+  "my": "ကြော်ငြာအစီအစဉ် စာချုပ်ချုပ်ဆိုခြင်းကို မကြာမီ အသုံးပြုနိုင်တော့မည် ဖြစ်သည်။",
+  "th": "สัญญาแพ็กเกจการลงประกาศจะพร้อมใช้งานเร็วๆ นี้",
+  "pt": "A contratação do plano de anúncio estará disponível em breve.",
+  "tr": "Yayın planı sözleşmesi çok yakında kullanıma sunulacaktır.",
+  "ru": "Подписка на тарифные планы скоро станет доступна.",
+  "es": "La contratación del plan de publicación estará disponible próximamente.",
+  "ar": "سيكون الاشتراك في خطة الإدراج متاحًا قريبًا."
+ },
+ "掲載ページを見る ↗": {
+  "en": "View Listing Page ↗",
+  "zh": "查看展示页面 ↗",
+  "zh-TW": "查看刊登頁面 ↗",
+  "ne": "प्रकाशित पृष्ठ हेर्नुहोस् ↗",
+  "vi": "Xem trang hiển thị ↗",
+  "id": "Lihat Halaman Publikasi ↗",
+  "my": "ဖော်ပြထားသော စာမျက်နှာကို ကြည့်မည် ↗",
+  "th": "ดูหน้าประกาศ ↗",
+  "pt": "Ver página publicada ↗",
+  "tr": "Yayın Sayfasını Gör ↗",
+  "ru": "Посмотреть страницу ↗",
+  "es": "Ver página publicada ↗",
+  "ar": "عرض صفحة الإدراج ↗"
  },
  "掲載中": {
   "en": "Published",
@@ -8429,6 +9749,21 @@
   "ru": "Скопировать расписание понедельника на все дни",
   "es": "Copiar el contenido del lunes a todos los días"
  },
+ "期間割引を使わない": {
+  "en": "Do not use limited-time discount",
+  "zh": "不使用限时优惠",
+  "zh-TW": "不使用期間折扣",
+  "ne": "अवधि छुट प्रयोग नगर्नुहोस्",
+  "vi": "Không sử dụng giảm giá theo thời hạn",
+  "id": "Jangan gunakan diskon periode",
+  "my": "ကာလအပိုင်းအခြား အလျှော့အတင်းကို မသုံးပါ",
+  "th": "ไม่ใช้ส่วนลดตามช่วงเวลา",
+  "pt": "Não usar desconto de período",
+  "tr": "Dönem indirimini kullanma",
+  "ru": "Не использовать скидку за период",
+  "es": "No aplicar descuento de período",
+  "ar": "عدم استخدام خصم الفترة"
+ },
  "木": {
   "en": "Thu",
   "zh": "周四",
@@ -8473,6 +9808,36 @@
   "tr": "Yanıtlanmadı",
   "ru": "Не обработано",
   "es": "Sin atender"
+ },
+ "未対応 {0}件": {
+  "en": "Pending: {0}",
+  "zh": "未处理 {0}件",
+  "zh-TW": "未處理 {0} 件",
+  "ne": "प्रक्रिया बाँकी {0} वटा",
+  "vi": "Chưa xử lý: {0}",
+  "id": "Belum ditangani {0} item",
+  "my": "မဆောင်ရွက်ရသေးသော {0} ခု",
+  "th": "ยังไม่ได้ดำเนินการ {0} รายการ",
+  "pt": "Pendente: {0}",
+  "tr": "İşlem bekleniyor: {0}",
+  "ru": "Необработанно: {0}",
+  "es": "Sin atender: {0}",
+  "ar": "غير معالج: {0}"
+ },
+ "未対応はありません": {
+  "en": "No pending items",
+  "zh": "没有未处理事项",
+  "zh-TW": "無未處理項目",
+  "ne": "कुनै प्रक्रिया बाँकी छैन",
+  "vi": "Không có mục chưa xử lý",
+  "id": "Tidak ada yang belum ditangani",
+  "my": "မဆောင်ရွက်ရသေးသည်များ မရှိပါ",
+  "th": "ไม่มีรายการที่ยังไม่ได้ดำเนินการ",
+  "pt": "Não há itens pendentes.",
+  "tr": "Bekleyen işlem yok",
+  "ru": "Нет необработанных запросов",
+  "es": "No hay elementos pendientes",
+  "ar": "لا توجد عناصر غير معالجة"
  },
  "未発行です。発行するまでこのリンクではログインできません。": {
   "en": "Not issued yet. You cannot log in with this link until it is issued.",
@@ -9014,6 +10379,21 @@
   "ru": "Псевдоним:",
   "es": "Nombre artístico:"
  },
+ "準備中": {
+  "en": "Coming Soon",
+  "zh": "准备中",
+  "zh-TW": "準備中",
+  "ne": "तयारी हुँदैछ",
+  "vi": "Đang chuẩn bị",
+  "id": "Dalam persiapan",
+  "my": "ပြင်ဆင်နေသည်",
+  "th": "กำลังเตรียมการ",
+  "pt": "Em preparação",
+  "tr": "Hazırlanıyor",
+  "ru": "В разработке",
+  "es": "En preparación",
+  "ar": "قيد الإعداد"
+ },
  "火": {
   "en": "Tue",
   "zh": "周二",
@@ -9119,6 +10499,21 @@
   "ru": "Некорректный статус",
   "es": "El estado no es correcto."
  },
+ "現在、ご契約いただけるプランはありません。": {
+  "en": "There are currently no plans available for subscription.",
+  "zh": "目前没有可订阅的套餐。",
+  "zh-TW": "目前沒有可申辦的方案。",
+  "ne": "हाल कुनै सम्झौता योग्य प्लानहरू उपलब्ध छैनन्।",
+  "vi": "Hiện tại không có gói nào để đăng ký.",
+  "id": "Saat ini tidak ada paket yang dapat dilanggani.",
+  "my": "လက်ရှိတွင် ရယူနိုင်သော အစီအစဉ် မရှိသေးပါ။",
+  "th": "ในขณะนี้ยังไม่มีแพ็กเกจที่สามารถสมัครได้",
+  "pt": "No momento, não há planos disponíveis para contratação.",
+  "tr": "Şu anda sözleşme yapabileceğiniz bir plan bulunmamaktadır.",
+  "ru": "В настоящее время нет доступных тарифных планов.",
+  "es": "Actualmente no hay planes disponibles para contratar.",
+  "ar": "لا توجد خطط متاحة للاشتراك حاليًا."
+ },
  "現在:": {
   "en": "Current:",
   "zh": "当前：",
@@ -9134,6 +10529,21 @@
   "ru": "Сейчас:",
   "es": "Actual:"
  },
+ "現在: {0}": {
+  "en": "Current: {0}",
+  "zh": "当前：{0}",
+  "zh-TW": "目前：{0}",
+  "ne": "हाल: {0}",
+  "vi": "Hiện tại: {0}",
+  "id": "Saat ini: {0}",
+  "my": "လက်ရှိ: {0}",
+  "th": "ปัจจุบัน: {0}",
+  "pt": "Atual: {0}",
+  "tr": "Mevcut: {0}",
+  "ru": "Текущий: {0}",
+  "es": "Actual: {0}",
+  "ar": "حاليًا: {0}"
+ },
  "現在のお気に入り数": {
   "en": "Current favorites count",
   "zh": "当前收藏数",
@@ -9148,6 +10558,21 @@
   "tr": "Mevcut favori sayısı",
   "ru": "Текущее количество в избранном",
   "es": "Número actual de favoritos"
+ },
+ "現在のご契約:": {
+  "en": "Current Subscription:",
+  "zh": "当前订阅：",
+  "zh-TW": "目前的合約：",
+  "ne": "हालको सम्झौता:",
+  "vi": "Gói đăng ký hiện tại:",
+  "id": "Langganan saat ini:",
+  "my": "လက်ရှိ စာချုပ်:",
+  "th": "สัญญาปัจจุบัน:",
+  "pt": "Plano atual:",
+  "tr": "Mevcut Sözleşme:",
+  "ru": "Текущая подписка:",
+  "es": "Contrato actual:",
+  "ar": "اشتراكك الحالي:"
  },
  "現在マップのカードには店舗のトップ画像が表示されます。動画を流すには動画オプションのご契約が必要です(運営者にお問い合わせください)。選んでおいた動画は契約後に反映されます。": {
   "en": "Currently, the main store image is displayed on the map card. To play videos, a video option subscription is required (please contact support). Selected videos will take effect after subscribing.",
@@ -9929,6 +11354,21 @@
   "ru": "Есть свободные места",
   "es": "Lugares disponibles"
  },
+ "空席を更新": {
+  "en": "Update Seat Availability",
+  "zh": "更新空位",
+  "zh-TW": "更新空位資訊",
+  "ne": "खाली सिट अद्यावधिक गर्नुहोस्",
+  "vi": "Cập nhật chỗ trống",
+  "id": "Perbarui ketersediaan tempat",
+  "my": "လွတ်လပ်သောနေရာ အခြေအနေကို အပ်ဒိတ်လုပ်မည်",
+  "th": "อัปเดตที่นั่งว่าง",
+  "pt": "Atualizar disponibilidade de lugares",
+  "tr": "Müsaitliği Güncelle",
+  "ru": "Обновить свободные места",
+  "es": "Actualizar disponibilidad",
+  "ar": "تحديث المقاعد الشاغرة"
+ },
  "空欄ならFACESのプロフィールページへのリンクになります。": {
   "en": "If left blank, it will link to the FACES profile page.",
   "zh": "若留空，将自动链接至 FACES 个人资料页面。",
@@ -10469,6 +11909,21 @@
   "ru": "Отклонено",
   "es": "Descartado"
  },
+ "解約・移行の前に、保存しておいてください。": {
+  "en": "Please save before canceling or transferring.",
+  "zh": "解约或迁移前，请先进行保存。",
+  "zh-TW": "解約或轉移前，請先儲存備份。",
+  "ne": "रद्द वा स्थानान्तरण गर्नु अघि, कृपया सेभ गर्नुहोस्।",
+  "vi": "Vui lòng lưu lại trước khi hủy hoặc chuyển đổi.",
+  "id": "Silakan simpan sebelum membatalkan atau memindahkan.",
+  "my": "စာချုပ်ဖျက်သိမ်းခြင်း သို့မဟုတ် ပြောင်းလဲခြင်း မပြုမီ သိမ်းဆည်းထားပါ။",
+  "th": "กรุณาบันทึกไว้ก่อนทำการยกเลิกหรือย้ายข้อมูล",
+  "pt": "Por favor, salve antes de cancelar ou migrar.",
+  "tr": "İptal etmeden veya geçiş yapmadan önce lütfen verilerinizi kaydedin.",
+  "ru": "Пожалуйста, сохраните данные перед отменой подписки или переходом.",
+  "es": "Por favor, guarde la información antes de cancelar o transferir.",
+  "ar": "يرجى الحفظ قبل الإلغاء أو الانتقال."
+ },
  "言語が正しくありません": {
   "en": "Invalid language.",
   "zh": "语言不正确",
@@ -10678,6 +12133,36 @@
   "tr": "Lütfen açıklamayı 1000 karakter dahilinde tutun",
   "ru": "Описание должно содержать не более 1000 символов",
   "es": "La descripción debe tener 1000 caracteres o menos"
+ },
+ "説明文(任意)": {
+  "en": "Description (Optional)",
+  "zh": "说明文字（选填）",
+  "zh-TW": "說明文字（選填）",
+  "ne": "विवरण (ऐच्छिक)",
+  "vi": "Mô tả (tùy chọn)",
+  "id": "Deskripsi (opsional)",
+  "my": "ရှင်းလင်းချက် (စိတ်ကြိုက်)",
+  "th": "คำอธิบาย (ไม่บังคับ)",
+  "pt": "Descrição (opcional)",
+  "tr": "Açıklama (isteğe bağlı)",
+  "ru": "Описание (необязательно)",
+  "es": "Descripción (opcional)",
+  "ar": "الوصف (اختياري)"
+ },
+ "説明文は自動で翻訳されます(動画の中身は原語のままです)。自分のアカウントの動画、または権利のある動画だけを使ってください。": {
+  "en": "Descriptions are automatically translated (the video content remains in its original language). Please only use videos from your own account or videos you have rights to.",
+  "zh": "说明文字会自动翻译（视频内容将保持原语言）。请仅使用您自己账号的视频或拥有相应权限的视频。",
+  "zh-TW": "說明文字將會自動翻譯（影片內容將保留原語言）。請僅使用您自己帳號的影片或擁有權利的影片。",
+  "ne": "विवरण स्वतः अनुवाद हुनेछ (भिडियोको सामग्री मूल भाषामै रहनेछ)। कृपया आफ्नै खाताको भिडियो वा अधिकार प्राप्त भिडियो मात्र प्रयोग गर्नुहोस्।",
+  "vi": "Mô tả sẽ được dịch tự động (nội dung video vẫn giữ nguyên ngôn ngữ gốc). Chỉ sử dụng video từ tài khoản của bạn hoặc video bạn có bản quyền.",
+  "id": "Deskripsi akan diterjemahkan secara otomatis (konten video tetap dalam bahasa aslinya). Harap gunakan hanya video dari akun Anda sendiri atau video yang hak ciptanya Anda miliki.",
+  "my": "ရှင်းလင်းချက်ကို အလိုအလျောက် ဘာသာပြန်ပေးပါမည် (ဗီဒီယိုအတွင်းမှ အကြောင်းအရာသည် မူရင်းဘာသာအတိုင်း ဖြစ်ပါသည်)။ မိမိ အကောင့်ရှိ ဗီဒီယို သို့မဟုတ် သုံးစွဲခွင့်ရှိသော ဗီဒီယိုများကိုသာ အသုံးပြုပါ။",
+  "th": "คำอธิบายจะได้รับการแปลโดยอัตโนมัติ (เนื้อหาในวิดีโอจะยังคงเป็นภาษาต้นฉบับ) กรุณาใช้เฉพาะวิดีโอจากบัญชีของคุณเองหรือวิดีโอที่คุณมีสิทธิ์ใช้งานเท่านั้น",
+  "pt": "A descrição será traduzida automaticamente (o conteúdo do vídeo permanecerá no idioma original). Use apenas vídeos da sua própria conta ou vídeos sobre os quais você tenha direitos.",
+  "tr": "Açıklama metni otomatik olarak çevrilir (video içeriği orijinal dilinde kalır). Lütfen yalnızca kendi hesabınıza ait veya haklarına sahip olduğunuz videoları kullanın.",
+  "ru": "Описание переводится автоматически (содержание видео остается на языке оригинала). Используйте только видео из своего аккаунта или видео, на которые у вас есть права.",
+  "es": "La descripción se traducirá automáticamente (el contenido del video permanecerá en el idioma original). Utilice solo videos de su propia cuenta o videos sobre los que tenga derechos.",
+  "ar": "سيتم ترجمة الوصف تلقائيًا (سيظل محتوى الفيديو بلغته الأصلية). يرجى استخدام الفيديوهات من حسابك الخاص أو الفيديوهات التي تمتلك حقوقها فقط."
  },
  "読み取りに失敗しました": {
   "en": "Failed to read",
@@ -11233,6 +12718,21 @@
   "tr": "Ekle",
   "ru": "Добавить",
   "es": "Agregar"
+ },
+ "追加でご利用いただける機能の一覧です。ご利用中のオプションにチェックが付きます。お申し込みの受付は準備中です。": {
+  "en": "This is a list of additional features available. Options currently in use are checked. Application registration is coming soon.",
+  "zh": "这是可供使用的附加功能列表。使用中的附加选项将被勾选。目前正准备开放申请。",
+  "zh-TW": "此為可額外使用的功能清單。使用中的加購項目將會顯示勾選。申請受理目前正準備中。",
+  "ne": "यो अतिरिक्त रूपमा उपलब्ध सुविधाहरूको सूची हो। हाल प्रयोगमा रहेका विकल्पहरूमा टिक लगाइनेछ। आवेदन दर्ताको तयारी भइरहेको छ।",
+  "vi": "Đây là danh sách các tính năng bổ sung có sẵn. Các tùy chọn bạn đang sử dụng sẽ được tích chọn. Việc tiếp nhận đăng ký hiện đang được chuẩn bị.",
+  "id": "Ini adalah daftar fitur tambahan yang tersedia. Opsi yang sedang digunakan akan diberi tanda centang. Pendaftaran saat ini sedang dalam persiapan.",
+  "my": "ထပ်မံ အသုံးပြုနိုင်သော လုပ်ဆောင်ချက်များ စာရင်းဖြစ်ပါသည်။ လက်ရှိ အသုံးပြုနေသော အပိုဝန်ဆောင်မှုများကို အမှတ်အသား ပြုလုပ်ထားပါသည်။ လျှောက်လွှာလက်ခံခြင်းကို ပြင်ဆင်နေပါသည်။",
+  "th": "นี่คือรายการคุณสมบัติเพิ่มเติมที่สามารถใช้งานได้ ตัวเลือกที่ใช้งานอยู่จะถูกทำเครื่องหมายไว้ การเปิดรับสมัครกำลังอยู่ระหว่างการเตรียมการ",
+  "pt": "Esta é a lista de recursos adicionais disponíveis. Os opcionais em uso estarão marcados. O recebimento de solicitações está em preparação.",
+  "tr": "Kullanabileceğiniz ek özelliklerin listesidir. Aktif opsiyonlarınız işaretlenmiş olacaktır. Başvuru alımı yakında açılacaktır.",
+  "ru": "Список дополнительных функций. Подключенные опции отмечены галочкой. Прием заявок находится в процессе подготовки.",
+  "es": "Esta es la lista de funciones adicionales disponibles. Las opciones en uso están marcadas. La recepción de solicitudes está en preparación.",
+  "ar": "هذه قائمة بالميزات الإضافية المتاحة. الميزات الاختيارية قيد الاستخدام محددة. قبول الطلبات قيد الإعداد حاليًا."
  },
  "追加を解除": {
   "en": "Remove",
