@@ -821,7 +821,7 @@ export function ReelFeed({
         </div>
       )}
 
-      <div className="sticky top-[calc(81px+env(safe-area-inset-top))] z-30 flex items-center gap-2 px-1 py-2 bg-tone-950/90 backdrop-blur-md border-b border-main/5">
+      <div className="sticky [@media(max-height:500px)]:static top-[calc(81px+env(safe-area-inset-top))] z-30 flex items-center gap-2 px-1 py-2 bg-tone-950/90 backdrop-blur-md border-b border-main/5">
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
@@ -954,7 +954,7 @@ export function ReelFeed({
               className={`relative mx-auto w-full overflow-hidden bg-black ${
                 immersive
                   ? "h-[100dvh] snap-start snap-always md:flex md:items-center md:justify-center"
-                  : `md:flex md:h-[85dvh] md:items-center md:justify-center ${mounted ? "" : "aspect-[9/16] md:aspect-auto"}`
+                  : `md:flex md:h-[85dvh] md:[@media(max-height:500px)]:h-[100dvh] md:items-center md:justify-center ${mounted ? "" : "aspect-[9/16] md:aspect-auto"}`
               }`}
             >
               {!mounted ? null : tile.kind === "cast" ? (

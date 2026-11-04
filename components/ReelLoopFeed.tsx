@@ -55,7 +55,7 @@ export function ReelLoopFeed({ reels, loop = true }: { reels: ReelItem[]; /** fa
           <div
             key={loopKey}
             ref={registerItem(index)}
-            className={`mx-auto w-full md:flex md:h-[85dvh] md:items-center md:justify-center ${
+            className={`mx-auto w-full md:flex md:h-[85dvh] md:[@media(max-height:500px)]:h-[100dvh] md:items-center md:justify-center ${
               Math.abs(index - activeIndex) <= REEL_WINDOW ? "" : "aspect-[9/16] md:aspect-auto"
             }`}
           >

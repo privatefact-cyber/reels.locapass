@@ -53,7 +53,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
         <header
           data-surface="header"
           data-chrome
-          className="sticky top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-main/10 bg-header/60 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
+          className="sticky [@media(max-height:500px)]:static top-0 z-50 overflow-hidden pt-[env(safe-area-inset-top)] border-b border-main/10 bg-header/60 backdrop-blur-xl backdrop-saturate-150 shadow-lg shadow-black/30"
         >
           {/* 背景の光暈(装飾、クリック不可) */}
           <div
@@ -68,7 +68,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
 
           {/* メインヘッダー行 */}
           <div className="relative mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3 sm:max-w-none md:max-w-[1400px] md:px-6">
-            <nav className="hidden items-center gap-6 text-sm font-medium text-tone-300 md:flex">
+            <nav className="hidden items-center gap-6 whitespace-nowrap text-sm font-medium text-tone-300 md:flex">
               <Link href="/" className="transition hover:text-accent">
                 {t.nav.home}
               </Link>
