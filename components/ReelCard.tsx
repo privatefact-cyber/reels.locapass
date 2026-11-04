@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { reelShareUrl, SITE_ORIGIN } from "@/lib/siteOrigin";
 import { Heart, Loader2, Maximize, MessageCircle, Plus, Share2, Volume2, VolumeX } from "lucide-react";
@@ -122,6 +122,14 @@ export function ReelCard({
   useReelViewTracking(isAd ? undefined : reelId, isActive);
   const resolvedCtaText = ctaText ?? t.common.learnMore;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const setCardEl = useCallback(
+    (el: HTMLDivElement | null) => {
+      cardRef.current = el;
+      containerRef?.(el);
+    },
+    [containerRef],
+  );
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
   const [muted, setMuted] = useReelMutedPreference();
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
@@ -159,6 +167,12 @@ export function ReelCard({
 
   // 全画面: iPhoneは標準プレイヤー(横向き動画は自動で横向きに)、Android・パソコンは全画面＋横向き固定(YouTubeと同じ)。
   async function handleFullscreen() {
+    // YouTube/TikTokの埋め込みは、プレーヤー自身の全画面ボタンが右の列・下の文章に隠れるので、こちらから枠ごと全画面にする。
+    if (embed) {
+      const frame = cardRef.current?.querySelector("iframe");
+      if (frame?.requestFullscreen) await frame.requestFullscreen().catch(() => undefined);
+      return;
+    }
     const v = videoRef.current as
       | (HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitRequestFullscreen?: () => Promise<void> })
       | null;
@@ -239,7 +253,7 @@ export function ReelCard({
 
   return (
     <div data-surface="media"
-      ref={containerRef}
+      ref={setCardEl}
       className={`relative w-full transform-gpu will-change-transform ${
         fullBleed ? "h-full md:aspect-[9/16] md:w-auto" : "aspect-[9/16] md:h-full md:w-auto"
       }`}
@@ -470,7 +484,7 @@ export function ReelCard({
             <span className="text-[11px] drop-shadow">{t.common.fullscreen}</span>
           </button>
         ) : (
-          videoUrl && isActive && (
+          (videoUrl || (embed && embed.provider !== "instagram")) && isActive && (
             <button
               type="button"
               onClick={handleFullscreen}
