@@ -298,10 +298,7 @@ export function ReelCard({
             className={
                 embed.provider === "instagram"
                   ? "absolute bottom-[84px] left-0 right-14 top-0 md:right-0"
-                  : embed.provider === "youtube"
-                    ? // YouTube自身の操作バー(全画面ボタンは右端)が、下の文章と右のアイコン列に隠れないよう、スマホでは枠を少し上・左に寄せる。
-                      "absolute bottom-[150px] left-0 right-14 top-0 md:inset-0"
-                    : "absolute inset-0"
+                  : "absolute inset-0"
               }
           />
         </>
