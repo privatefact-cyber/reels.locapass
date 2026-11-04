@@ -48,9 +48,9 @@ export function focusThumb(url: string | null | undefined, size = 360): string |
 }
 
 /** 全画面のポスター(縦横比を保つ)用。 */
-export function posterImage(url: string | null | undefined, width = 720): string | undefined {
+export function posterImage(url: string | null | undefined, width = 1200): string | undefined {
   if (!url) return undefined;
-  const resized = resizedUrl(url, { width, height: width * 2.4, fit: "contain", quality: 75 });
+  const resized = resizedUrl(url, { width, height: width * 2.4, fit: "contain", quality: 82 });
   if (resized) return resized;
   if (STREAM_THUMB.test(url)) {
     return `${url.replace(/\?.*$/, "")}?width=${width}`;
