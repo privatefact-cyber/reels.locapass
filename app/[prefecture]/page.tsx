@@ -12,6 +12,9 @@ import { boostText } from "@/lib/boost/text";
 import { PortalHero } from "@/components/portal/PortalHero";
 import { PortalThemeScope } from "@/components/portal/PortalThemeScope";
 import { isSiteTheme } from "@/lib/theme";
+import type { Metadata } from "next";
+import { portalMeta } from "@/lib/seo/portalMeta";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 // 注記: このディレクトリ名は[prefecture]だが、既存の/[prefecture]/[city]/[category]
 // (LUXELA側のSEO用ルート、lib/seo/area.tsのPREFECTURE_SLUG="tokyo"固定)と同じNext.jsの
@@ -31,6 +34,24 @@ async function resolvePortal(slug: string) {
     .eq("slug", slug)
     .maybeSingle();
   return data;
+}
+
+/**
+ * ポータルごとのタイトル・説明文(lib/seo/portalMeta.ts)。個別の文が無いポータル(水戸など)は、サイト共通のまま。
+ * 存在しないポータルや、公開前で見られないポータルでは何も返さない(ページ側が404にする)。
+ */
+export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
+  const { prefecture: slug } = await params;
+  const meta = portalMeta(slug, await getServerLocale());
+  if (!meta) return {};
+  const { url, alternates } = await localizedPageUrls(`/${slug}`);
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates,
+    openGraph: { title: meta.title, description: meta.description, url, siteName: "LOCAPASS", type: "website" },
+    twitter: { card: "summary_large_image", title: meta.title, description: meta.description },
+  };
 }
 
 export default async function AreaPortalPage({ params }: { params: Promise<PageParams> }) {

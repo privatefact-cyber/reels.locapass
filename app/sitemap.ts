@@ -5,6 +5,7 @@ import { PREFECTURE_SLUG, listAreaCategorySlugs } from "@/lib/seo/area";
 import { genreToSlug } from "@/lib/shop/genres";
 import { shopPath, castPath } from "@/lib/locapass/publicUrls";
 import { listPublishedJournalPosts } from "@/lib/journal/queries";
+import { isLowProfilePortal } from "@/lib/seo/portalMeta";
 import { LOCALES } from "@/lib/i18n/locale";
 import { localeLanguageAlternates, localeUrl } from "@/lib/i18n/localePath";
 
@@ -36,6 +37,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabase.from("locapass_public_casts").select("issue_no, shop:locapass_shops ( slug, portal:locapass_portals ( slug ) )"),
   ]);
 
+  // ポータルトップ。これまでサイトマップに無く、検索エンジンが各ポータルのトップを見つけにくかった。
+  const { data: portalRows } = await supabase.from("locapass_portals").select("slug").eq("status", "active");
+  const portalEntries: MetadataRoute.Sitemap = (portalRows ?? [])
+    .filter((p) => p.slug && p.slug !== "locapass")
+    .map((p) => ({
+      url: `${BASE_URL}/${p.slug}`,
+      changeFrequency: "daily" as const,
+      priority: isLowProfilePortal(p.slug) ? 0.3 : 0.9,
+    }));
+
   const staticEntries: MetadataRoute.Sitemap = [
     { url: BASE_URL, changeFrequency: "hourly", priority: 1 },
     { url: `${BASE_URL}/events`, changeFrequency: "daily", priority: 0.6 },
@@ -59,7 +70,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${BASE_URL}${shopPath(portal.slug, s.slug)}`,
         lastModified: s.created_at ? new Date(s.created_at) : undefined,
         changeFrequency: "daily" as const,
-        priority: 0.8,
+        // 水戸は検索で一押しにしない方針なので、優先度を下げる(除外はしない)。
+        priority: isLowProfilePortal(portal.slug) ? 0.3 : 0.8,
       };
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
@@ -72,7 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return {
         url: `${BASE_URL}${castPath(portal.slug, shop.slug, c.issue_no!)}`,
         changeFrequency: "daily" as const,
-        priority: 0.7,
+        priority: isLowProfilePortal(portal.slug) ? 0.2 : 0.7,
       };
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
@@ -85,5 +97,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  return withLanguages([...staticEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]);
+  return withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]);
 }
