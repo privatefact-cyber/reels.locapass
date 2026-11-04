@@ -663,6 +663,29 @@ export function ReelFeed({
       document.body.style.overflow = prevOverflow;
     };
   }, [immersive]);
+  // PC・Android・iPadでは、全画面スワイプに入るとき、ブラウザの全画面にもする(アドレスバー等が消える)。
+  // iPhoneのSafariはページ全体の全画面に対応していないので、何もしない(ホーム画面に追加したPWAなら、もともとバーが無い)。
+  // Escキー等でブラウザの全画面だけ解除されたときは、全画面スワイプも閉じる。
+  useEffect(() => {
+    if (!immersive) return;
+    const root = document.documentElement;
+    if (!root.requestFullscreen) return;
+    let entered = false;
+    root
+      .requestFullscreen({ navigationUI: "hide" })
+      .then(() => {
+        entered = true;
+      })
+      .catch(() => undefined);
+    const onChange = () => {
+      if (entered && !document.fullscreenElement) setImmersive(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
+    };
+  }, [immersive]);
   // 全画面に入る・出るときも、今見ているリールの位置のまま続ける(先頭に戻らない)。
   useLayoutEffect(() => {
     overlayItemRefs.current[activeIndexRef.current]?.scrollIntoView({ behavior: "auto", block: "start" });
