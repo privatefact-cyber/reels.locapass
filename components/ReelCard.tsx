@@ -137,6 +137,8 @@ export function ReelCard({
   );
   // 動画の最初のコマが出るまでは動画を透明にして、下に敷いたサムネイルを見せる(一瞬の真っ黒/暗転を防ぐ)。
   const [firstFrame, setFirstFrame] = useState(false);
+  // 横向きの動画かどうか。全画面スワイプのPCでは、横向きの動画だけ縦長の枠をやめて画面の幅いっぱいに広げる。
+  const [landscapeVideo, setLandscapeVideo] = useState(false);
   useEffect(() => {
     setFirstFrame(false);
   }, [videoUrl, isActive]);
@@ -251,11 +253,17 @@ export function ReelCard({
     }
   }
 
+  const wideInFullBleed = fullBleed && (embed?.provider === "youtube" || landscapeVideo);
+
   return (
     <div data-surface="media"
       ref={setCardEl}
       className={`relative w-full transform-gpu will-change-transform ${
-        fullBleed ? "h-full md:aspect-[9/16] md:w-auto" : "aspect-[9/16] md:h-full md:w-auto"
+        fullBleed
+          ? wideInFullBleed
+            ? "h-full"
+            : "h-full md:aspect-[9/16] md:w-auto"
+          : "aspect-[9/16] md:h-full md:w-auto"
       }`}
     >
       {/* 動画/画像そのものはここでrounded+overflow-hiddenにして角を切る。
@@ -316,6 +324,7 @@ export function ReelCard({
             muted={muted}
             loop
             preload="metadata"
+            onLoadedMetadata={(e) => setLandscapeVideo(e.currentTarget.videoWidth > e.currentTarget.videoHeight)}
             onLoadedData={() => {
               setStatus("ready");
               setFirstFrame(true);
