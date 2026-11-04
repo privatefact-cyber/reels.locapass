@@ -5,8 +5,22 @@ import { PREFECTURE_SLUG, listAreaCategorySlugs } from "@/lib/seo/area";
 import { genreToSlug } from "@/lib/shop/genres";
 import { shopPath, castPath } from "@/lib/locapass/publicUrls";
 import { listPublishedJournalPosts } from "@/lib/journal/queries";
+import { LOCALES } from "@/lib/i18n/locale";
+import { localeLanguageAlternates, localeUrl } from "@/lib/i18n/localePath";
 
 const BASE_URL = "https://locapass.net";
+
+/**
+ * 1ページぶん(日本語URL)を、4言語のURLそれぞれのエントリに展開する。
+ * 各エントリに hreflang(alternates.languages = ja/en/zh/ar/x-default)を付ける。
+ */
+function withLanguages(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
+  return entries.flatMap((entry) => {
+    const path = entry.url.slice(BASE_URL.length) || "/";
+    const languages = localeLanguageAlternates(path);
+    return LOCALES.map((locale) => ({ ...entry, url: localeUrl(path, locale), alternates: { languages } }));
+  });
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createStaticClient();
@@ -71,5 +85,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  return [...staticEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries];
+  return withLanguages([...staticEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]);
 }

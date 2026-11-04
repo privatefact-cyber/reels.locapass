@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { notFound } from "next/navigation";
 import { ArticleView } from "@/components/journal/ArticleView";
 import { Cover } from "@/components/journal/Cover";
@@ -8,6 +8,7 @@ import { getPublishedJournalPost, listPublishedJournalPosts } from "@/lib/journa
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { journalText } from "@/lib/journal/text";
 import { localizeJournalPost } from "@/lib/journal/translate";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 // 記事は保存のたびに作り直される(保存の処理が一覧と記事のキャッシュを捨てる)。
 // 下書きのURLを開いたときの「ページなし」が残らないよう、短い間隔(60秒)でも作り直す。
@@ -18,12 +19,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const found = await getPublishedJournalPost(slug);
   if (!found) return {};
   const post = localizeJournalPost(found, await getServerLocale());
-  const url = `https://locapass.net/journal/${post.slug}`;
+  const { url, alternates } = await localizedPageUrls(`/journal/${post.slug}`);
   const image = post.cover ? (post.cover.src.startsWith("/") ? `https://locapass.net${post.cover.src}` : post.cover.src) : null;
   return {
     title: post.title,
     description: post.description,
-    alternates: { canonical: url },
+    alternates,
     openGraph: {
       type: "article",
       url,

@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "⚡ 緊急ブースト | locapass",
   description: "ドタキャン・作りすぎ…1〜3時間限定のお得情報。見てそのままお店へ。",
-  alternates: { canonical: "https://locapass.net/boost" },
 };
 
 export default async function BoostPage() {

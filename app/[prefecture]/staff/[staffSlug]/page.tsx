@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import QRCode from "qrcode";
@@ -16,6 +16,7 @@ import {
 import { LOCAPASS_REEL_MEDIA_SELECT, toReelMedia } from "@/lib/reels/locapassReelMedia";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { staffPath, parseStaffSlug } from "@/lib/locapass/publicUrls";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 // 他の公開ページ(店舗・パートナー)と同じ60秒キャッシュ。本人が見ている場合はcookie読み取りが
 // 発生するため実際には毎回動的レンダリングされる。
@@ -77,13 +78,13 @@ export async function generateMetadata({
 
   const title = `${staff.name}｜${shop?.name ?? "LOCAPASS"}のスタッフ`;
   const description = staff.bio?.slice(0, 120) || `${shop?.name ?? ""}のスタッフ「${staff.name}」のプロフィール・投稿リール。`;
-  const url = `https://locapass.net${staffPath(portal.slug, shop!.slug, staff.issue_no)}`;
+  const { url, alternates } = await localizedPageUrls(staffPath(portal.slug, shop!.slug, staff.issue_no));
   const image = sanitizeImageUrl(staff.avatar_url);
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates,
     openGraph: { title, description, url, siteName: "LOCAPASS", images: image ? [{ url: image }] : undefined },
     twitter: { card: "summary_large_image", title, description, images: image ? [image] : undefined },
   };

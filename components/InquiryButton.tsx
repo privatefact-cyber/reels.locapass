@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getViewerId } from "@/lib/reels/viewer-id";
 import { saveLocalInquiry } from "@/lib/inquiries/local-inquiries";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 /** 一般ユーザーがログイン不要で店舗宛てに来店予約・問い合わせDMを送るボタン+モーダル。 */
 export function InquiryButton({ shopId, shopName }: { shopId: string; shopName: string }) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");

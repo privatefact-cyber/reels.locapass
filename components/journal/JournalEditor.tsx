@@ -1,8 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/i18n/LocaleLink";
 import { ImagePlus, Link as LinkIcon, Loader2, Trash2 } from "lucide-react";
 import { ArticleView } from "@/components/journal/ArticleView";
 import { deleteJournalPost, saveJournalPost } from "@/app/journal/actions";
@@ -15,6 +14,7 @@ import {
   type JournalCategory,
   type JournalPost,
 } from "@/lib/journal/posts";
+import { useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 export type JournalEditorInitial = {
   id?: string;
@@ -89,7 +89,7 @@ const labelText = "text-xs text-tone-500";
 
 /** 記事を書く・直す画面。ルート管理者と投稿担当だけが開ける(開けるかどうかは、ページ側で確認している)。 */
 export function JournalEditor({ initial, articles = [] }: { initial: JournalEditorInitial; articles?: JournalLinkTarget[] }) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const isNew = !initial.id;
   const [initialBody] = useState(() => toEditorText(initial.bodyText));
   const [f, setF] = useState({ ...initial, bodyText: initialBody.text });

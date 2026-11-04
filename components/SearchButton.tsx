@@ -1,9 +1,8 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
 import { Search } from "lucide-react";
 import { OPEN_SEARCH_EVENT } from "@/lib/reels/events";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, usePublicPathname, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 // マップは/mapと/[prefecture]/[city]/mapの2パターンあるので末尾一致で判定する。
 // マップにはモーダルが無く、常時表示の住所検索欄にフォーカスするだけ(グリッド絞り込みには繋がない)。
@@ -15,8 +14,8 @@ const MAP_PATH_PATTERN = /(^|\/)map$/;
  * (?search=1をReelFeed側で拾う、MenuButtonと同じ思想)。
  */
 export function SearchButton({ home = "/" }: { home?: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router = useLocaleRouter();
+  const pathname = usePublicPathname();
   const { t } = useLocale();
 
   function handleClick() {

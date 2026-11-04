@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search, Store } from "lucide-react";
 import { PhotoShareButton } from "@/components/photo/PhotoShareButton";

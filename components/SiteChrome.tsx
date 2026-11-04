@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/i18n/LocaleLink";
 import { useState } from "react";
 import { Home, Map as MapIcon, PartyPopper, User } from "lucide-react";
 import { MenuButton } from "@/components/MenuButton";
@@ -11,7 +10,8 @@ import { NowButton } from "@/components/NowButton";
 import { AiInquiryWidget } from "@/components/AiInquiryWidget";
 import { NotificationBell } from "@/components/NotificationBell";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { LocaleSuggestion } from "@/components/i18n/LocaleSuggestion";
+import { useLocale, usePublicPathname } from "@/components/i18n/LocaleProvider";
 
 type Props = {
   myPageAvatarUrl: string | null;
@@ -35,7 +35,7 @@ function isExcludedPath(pathname: string): boolean {
 }
 
 export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasManagement = false, accountHref = "/mypage" }: Props) {
-  const pathname = usePathname();
+  const pathname = usePublicPathname();
   const { t } = useLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   if (isExcludedPath(pathname ?? "")) return null;
@@ -66,6 +66,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
           <div className="relative border-b border-main/5 px-4 py-1.5 text-center text-[11px] text-tone-300">
             {t.nav.tagline}
           </div>
+          <LocaleSuggestion />
 
           {/* メインヘッダー行 */}
           <div className="relative mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3 sm:max-w-none md:max-w-[1400px] md:px-6">

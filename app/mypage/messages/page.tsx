@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { requireCurrentUser } from "@/lib/user/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { FollowersPanel } from "@/components/locapass-mypage/FollowersPanel";

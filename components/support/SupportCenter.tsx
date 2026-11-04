@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { RotateCcw, Send, Sparkles } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SAMPLE_QUESTIONS, supportText } from "@/lib/support/text";

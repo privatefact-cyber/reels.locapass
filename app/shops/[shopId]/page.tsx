@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { localizedPath } from "@/lib/i18n/getServerLocale";
 
 // 旧UUID直リンク(/shops/[UUID])。過去に配布・インデックス済みのURLを生かすため、
 // slugベースの新URL(/{portalSlug}/shops/[shopSlug])へ301相当で送る。
@@ -24,5 +25,5 @@ export default async function LegacyShopDetailRedirect({
     notFound();
   }
 
-  permanentRedirect(shopPath(portal.slug, shop.slug));
+  permanentRedirect(await localizedPath(shopPath(portal.slug, shop.slug)));
 }

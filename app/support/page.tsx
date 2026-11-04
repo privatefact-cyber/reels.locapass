@@ -3,10 +3,11 @@ import { docsFor } from "@/lib/support/docs";
 import { SupportCenter } from "@/components/support/SupportCenter";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { supportText } from "@/lib/support/text";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
-  return { title: `${supportText(locale).title} | locapass`, alternates: { canonical: "https://locapass.net/support" } };
+  return { title: `${supportText(locale).title} | locapass`, alternates: (await localizedPageUrls("/support")).alternates };
 }
 
 export default async function SupportPage() {

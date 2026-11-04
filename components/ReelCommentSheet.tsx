@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { containsNgWord } from "@/lib/reels/ngWords";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { X } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 

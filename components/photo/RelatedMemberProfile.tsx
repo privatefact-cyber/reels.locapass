@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { StaffDmButton } from "@/components/StaffDmButton";

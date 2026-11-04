@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 
 /**
  * 「店舗ページ(1枚目) / 動画ストック(2枚目)」を示す2点のドットインジケーター。

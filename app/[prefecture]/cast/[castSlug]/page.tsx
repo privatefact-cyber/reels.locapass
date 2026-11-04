@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import type { Metadata } from "next";
 import { Heart, Pin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -20,6 +20,7 @@ import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { PageDots } from "@/components/shop/PageDots";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { parseCastSlug, shopPath, castPath, castReelsPath, castArchivePath } from "@/lib/locapass/publicUrls";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 // トップページと同じ60秒キャッシュ。長押しプレビュー(iframe埋め込み)で毎回フルSSRを
 // 待たされる体感の遅さを緩和する(初回以外はキャッシュから即座に返る)。
@@ -78,13 +79,13 @@ export async function generateMetadata({
   const description =
     cast.pr_text?.slice(0, 120) ||
     `${shop?.area ?? ""}${shop?.genre ?? ""}「${shop?.name ?? ""}」のFACES、${cast.name}のプロフィール・出勤情報・投稿リール。`;
-  const url = `https://locapass.net${castPath(portal.slug, shop!.slug, cast.issue_no!)}`;
+  const { url, alternates } = await localizedPageUrls(castPath(portal.slug, shop!.slug, cast.issue_no!));
   const image = sanitizeImageUrl(cast.avatar_url);
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates,
     openGraph: { title, description, url, siteName: "LOCAPASS", images: image ? [{ url: image }] : undefined },
     twitter: { card: "summary_large_image", title, description, images: image ? [image] : undefined },
   };

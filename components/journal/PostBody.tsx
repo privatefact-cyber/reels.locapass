@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { isSafeLinkUrl, type JournalBlock } from "@/lib/journal/posts";
 
 // 文章の中の [表示する文字](リンク先) を、リンクにする。リンク先は、サイト内のパス(/journal/…)かhttp(s)のURLだけ。

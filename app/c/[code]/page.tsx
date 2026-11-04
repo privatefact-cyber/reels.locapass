@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { castPath } from "@/lib/locapass/publicUrls";
+import { localizedPath } from "@/lib/i18n/getServerLocale";
 
 // インスタのプロフィール欄などに貼るための短縮URL(/c/AB12CD)。
 // 6桁の短いコード(cast_code)から、slugベースの公開プロフィール
@@ -26,5 +27,5 @@ export default async function CastShortLinkPage({
     notFound();
   }
 
-  redirect(castPath(portal.slug, shop.slug, cast.issue_no!));
+  redirect(await localizedPath(castPath(portal.slug, shop.slug, cast.issue_no!)));
 }

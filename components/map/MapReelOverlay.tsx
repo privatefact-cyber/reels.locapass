@@ -53,7 +53,7 @@ export function MapReelOverlay({
   onActiveVenueChange: (venueId: string) => void;
   onClosed: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   // タップした店舗から後ろの、リールがある店舗だけを順に流す。
   const [queue] = useState(() => {
@@ -93,7 +93,8 @@ export function MapReelOverlay({
         const venue = queue[index];
         index += 1;
         try {
-          const res = await fetch(`/api/venues/${venue.id}/reels`);
+          // 言語ごとにCDNキャッシュを分けるため、言語をURLに入れる
+          const res = await fetch(`/api/venues/${venue.id}/reels?lang=${locale}`);
           if (!res.ok) continue;
           const { reels } = (await res.json()) as { reels: ReelItem[] };
           if (reels?.length) {
@@ -110,7 +111,7 @@ export function MapReelOverlay({
       loadingRef.current = false;
       setLoadingMore(false);
     }
-  }, [nextQueueIndex, queue]);
+  }, [nextQueueIndex, queue, locale]);
 
   // 最初の店舗のリールを読み込む。
   useEffect(() => {

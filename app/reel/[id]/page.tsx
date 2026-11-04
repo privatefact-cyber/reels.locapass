@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { ChevronLeft } from "lucide-react";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
 import { getReelById } from "@/lib/reels/getReelById";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
-import { reelShareUrl } from "@/lib/siteOrigin";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 export const revalidate = 60;
 
@@ -17,11 +17,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!reel) return {};
   const title = `${reel.shopName} | LOCAPASS`;
   const description = reel.caption?.trim() || `${reel.castName} | LOCAPASS`;
-  const url = reelShareUrl(id);
+  const { url, alternates } = await localizedPageUrls(`/reel/${id}`);
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates,
     // 画像は同じフォルダの opengraph-image.tsx(サムネイル+店名の横長カード)が自動で付く。
     openGraph: { title, description, url, type: "article" },
     twitter: { card: "summary_large_image", title, description },

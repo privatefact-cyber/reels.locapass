@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 // 横スクロールできる要素(動画帯・丸アイコン列・ギャラリー等)の上で始まったスワイプは
 // その要素自身のスクロールに任せ、ページ遷移には使わない。
@@ -32,7 +32,7 @@ export function ShopSwipeToArchive({
   href: string;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const start = useRef<{ x: number; y: number; t: number } | null>(null);
 
   return (

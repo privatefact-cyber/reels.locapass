@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useRouter } from "next/navigation";
 import { Camera, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";

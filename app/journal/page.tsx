@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Cover } from "@/components/journal/Cover";
 import { EditorBar } from "@/components/journal/EditorBar";
 import { listPublishedJournalPosts } from "@/lib/journal/queries";
@@ -7,10 +7,11 @@ import type { JournalCategory } from "@/lib/journal/posts";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { formatJournalDateFor, journalText } from "@/lib/journal/text";
 import { localizeJournalPost } from "@/lib/journal/translate";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = journalText(await getServerLocale());
-  return { title: "Journal", description: t.description, alternates: { canonical: "https://locapass.net/journal" } };
+  return { title: "Journal", description: t.description, alternates: (await localizedPageUrls("/journal")).alternates };
 }
 
 const CATEGORIES: JournalCategory[] = ["topics", "tips"];

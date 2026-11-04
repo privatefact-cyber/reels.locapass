@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { reelShareUrl, SITE_ORIGIN } from "@/lib/siteOrigin";
 import { Heart, Loader2, Maximize, MessageCircle, Plus, Share2, Volume2, VolumeX } from "lucide-react";
 import { AvatarPeek } from "@/components/AvatarPeek";

@@ -3,7 +3,7 @@
 import { TranslatedText } from "@/components/TranslatedText";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Camera, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";

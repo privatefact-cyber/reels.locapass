@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { localizedPath } from "@/lib/i18n/getServerLocale";
 
 // 店舗版の短縮URL(/s/AB12CD)。QRコード等で配布する用の恒久的なコードで、
 // 着地先はslugベースの公開ページ(/{portalSlug}/shops/[shopSlug])。
@@ -24,5 +25,5 @@ export default async function ShopShortLinkPage({
     notFound();
   }
 
-  redirect(shopPath(portal.slug, shop.slug));
+  redirect(await localizedPath(shopPath(portal.slug, shop.slug)));
 }

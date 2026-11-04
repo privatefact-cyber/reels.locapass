@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Camera, MessageCircle, SlidersHorizontal } from "lucide-react";
 import { STATUS_LABEL, fileToBase64 } from "@/components/locapass-dashboard/FloorStatusDropzone";
 

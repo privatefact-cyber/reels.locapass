@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 // closeModal()でフェードアウト(opacity/transform)を開始してから、実際にDOMから
 // 完全にunmountするまでの猶予(トランジション用CSSのduration-200より長く取る)。
@@ -47,8 +47,8 @@ export function AvatarPeek({
    */
   prefetch?: boolean;
 }) {
-  const router = useRouter();
-  const { t } = useLocale();
+  const router = useLocaleRouter();
+  const { t, localize } = useLocale();
   const pathname = usePathname();
   const [peeking, setPeeking] = useState(false);
   const [hovering, setHovering] = useState(false);
@@ -158,7 +158,7 @@ export function AvatarPeek({
             style={{ width: HOVER_PEEK_WIDTH, height: HOVER_PEEK_HEIGHT }}
           >
             <iframe
-              src={href}
+              src={localize(href)}
               title={label}
               tabIndex={-1}
               scrolling="no"
@@ -195,7 +195,7 @@ export function AvatarPeek({
               </div>
             )}
             <iframe
-              src={href}
+              src={localize(href)}
               title={label}
               onLoad={() => setLoaded(true)}
               className="pointer-events-none h-full w-full"

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { ChevronLeft } from "lucide-react";
 import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { getPhotoPostById } from "@/lib/photo/getPhotoPosts";
 import { photoText } from "@/lib/photo/serverText";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 export const revalidate = 60;
 
@@ -18,11 +19,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!post) return {};
   const title = `${post.spotName} | LOCAPASS`;
   const description = post.comment ?? post.address ?? "LOCA SNAP | LOCAPASS";
-  const url = `https://locapass.net/photo/p/${id}`;
+  const { url, alternates } = await localizedPageUrls(`/photo/p/${id}`);
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates,
     // 画像は同じフォルダの opengraph-image.tsx(店名入りの横長カード)が自動で付く。
     openGraph: { title, description, url, type: "article" },
     twitter: { card: "summary_large_image", title, description },

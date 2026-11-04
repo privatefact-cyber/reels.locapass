@@ -6,7 +6,7 @@ import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getNowReels } from "@/lib/reels/getNowReels";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { getActiveBoosts } from "@/lib/boost/getBoosts";
 import { boostText } from "@/lib/boost/text";
 import { PortalHero } from "@/components/portal/PortalHero";

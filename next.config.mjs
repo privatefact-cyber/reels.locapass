@@ -5,12 +5,19 @@ const nextConfig = {
   // 地図は全国で1系統(/map)。旧ポータル地図 /{ポータル}/{エリア}/map は、そのポータルの初期設定で開く全国地図へ恒久的に転送する。
   // ページ内の permanentRedirect だと、レイアウトの描画が始まった後なので 200+meta refresh になってしまうため、ここで308を返す。
   // ポータル以外の固定ルート(/admin/… など)と、ポータル配下の固定ルート(/{ポータル}/shops/… など)は対象外。
+  // 言語別URL(/en /zh /ar。lib/i18n/localePath.ts)の旧ポータル地図は、同じ言語の全国地図へ転送する。
   async redirects() {
+    const localePrefixes = "en|zh|ar";
     const topRoutes = "admin|api|auth|boost|c|cast|dashboard|embed|events|gate|inquiries|journal|legal|login|lp|map|mypage|notifications|photo|privacy|reel|reserve|s|shop-recover|shops|staff|support|terms";
     const portalRoutes = "boost|cast|events|shops|staff";
     return [
       {
-        source: `/:portal((?!(?:${topRoutes})/)[^/]+)/:city((?!(?:${portalRoutes})/)[^/]+)/map`,
+        source: `/:lang(${localePrefixes})/:portal((?!(?:${topRoutes})/)[^/]+)/:city((?!(?:${portalRoutes})/)[^/]+)/map`,
+        destination: "/:lang/map?preset=:portal",
+        permanent: true,
+      },
+      {
+        source: `/:portal((?!(?:${topRoutes}|${localePrefixes})/)[^/]+)/:city((?!(?:${portalRoutes})/)[^/]+)/map`,
         destination: "/map?preset=:portal",
         permanent: true,
       },

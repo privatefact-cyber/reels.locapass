@@ -3,8 +3,9 @@ import { SiteChrome } from "@/components/SiteChrome";
 import { AppShell } from "@/components/AppShell";
 import { ImageInteractionGuard } from "@/components/ImageInteractionGuard";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
-import { getServerLocale } from "@/lib/i18n/getServerLocale";
-import { localeDir } from "@/lib/i18n/locale";
+import { getPublicPath, getServerLocale } from "@/lib/i18n/getServerLocale";
+import { localeDir, type Locale } from "@/lib/i18n/locale";
+import { localeAlternates } from "@/lib/i18n/localePath";
 import { createClient } from "@/lib/supabase/server";
 import { isSiteTheme, themeInitScript } from "@/lib/theme";
 import { ThemeSync } from "@/components/ThemeSync";
@@ -46,7 +47,12 @@ const SITE_META: Record<string, { brand: string; title: string; description: str
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const m = SITE_META[await getServerLocale()] ?? SITE_META.ja;
+  const locale: Locale = await getServerLocale();
+  const m = SITE_META[locale] ?? SITE_META.ja;
+  // 公開ページの canonical(そのページ自身の言語のURL)と hreflang(ja/en/zh/ar/x-default)の既定値。
+  // 店舗ページ等は各ページの generateMetadata が同じ共通関数で上書きする。管理画面等の対象外パスでは付けない。
+  const publicPath = await getPublicPath();
+  const alternates = publicPath ? localeAlternates(publicPath, locale) : undefined;
   return {
     // 自前で多言語化しているので、ブラウザの自動翻訳(Chrome等)の案内は出さない
     other: { google: "notranslate" },
@@ -58,12 +64,12 @@ export async function generateMetadata(): Promise<Metadata> {
       title: m.title,
       description: m.description,
       siteName: "LOCAPASS",
-      url: "https://locapass.net",
+      url: alternates?.canonical ?? "https://locapass.net",
       locale: m.ogLocale,
       type: "website",
     },
     twitter: { card: "summary_large_image", title: m.title, description: m.short },
-    alternates: { canonical: "https://locapass.net" },
+    alternates,
   };
 }
 

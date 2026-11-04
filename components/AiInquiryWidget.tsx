@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/i18n/LocaleLink";
 import { X, Send, RotateCcw, ExternalLink, Mic, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAiSelectedContext } from "@/lib/aiContext";
 import { LOCALES, LOCALE_SHORT_LABEL, type Locale } from "@/lib/i18n/locale";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, usePublicPathname } from "@/components/i18n/LocaleProvider";
 
 // app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_portals.slug
 // (例: "mito", "oarai")を受け取る動的ルートだが、Next.jsは静的ルートを優先するため、
@@ -178,7 +177,7 @@ export function AiInquiryWidget({
 }) {
   const isMap = placement === "map";
   const { t, locale } = useLocale();
-  const pathname = usePathname();
+  const pathname = usePublicPathname();
   const currentAreaSlug = guessCurrentAreaSlug(pathname);
   const [open, setOpen] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);

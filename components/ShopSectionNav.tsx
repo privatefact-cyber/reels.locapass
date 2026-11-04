@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Calendar, CalendarCheck, Car, Users, Star, MapPin, Phone } from "lucide-react";
 import { ShopContactModal } from "@/components/ShopContactModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";

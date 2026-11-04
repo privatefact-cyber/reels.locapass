@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Phone, MapPin, Zap, MessageCircle, Store } from "lucide-react";
 import { BoostCountdown } from "./BoostCountdown";
 import type { BoostItem } from "@/lib/boost/types";

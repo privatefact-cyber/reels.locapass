@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { shopReelsPath } from "@/lib/locapass/publicUrls";
+import { localizedPath } from "@/lib/i18n/getServerLocale";
 
 // 旧UUID直リンク(/shops/[UUID]/reels)。slugベースの新URLへ301相当で送る。
 export default async function LegacyShopReelsRedirect({
@@ -27,5 +28,5 @@ export default async function LegacyShopReelsRedirect({
   }
 
   const query = start ? `?start=${encodeURIComponent(start)}` : "";
-  permanentRedirect(`${shopReelsPath(portal.slug, shop.slug)}${query}`);
+  permanentRedirect(await localizedPath(`${shopReelsPath(portal.slug, shop.slug)}${query}`));
 }

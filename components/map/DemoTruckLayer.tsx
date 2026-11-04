@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import * as maplibregl from "maplibre-gl";
 import { DEMO_TRUCK_ROUTES } from "@/lib/map/demoTruckRoutes";
 import type { VenuePin } from "@/types/venue";
+import { useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 /**
  * デモ用の「走る広告トラック」。出店予定のあるデモ店が、決めた出発地から次の出店場所まで道路沿いに走り、
@@ -83,7 +83,7 @@ function routesBbox(): string {
 }
 
 export function DemoTruckLayer({ map }: { map: maplibregl.Map | null }) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   // 映している範囲に関係なく、ルートが通る周辺の移動販売ピンを取得する(着地点が画面の外でも、トラックは走っている)。
   const [pins, setPins] = useState<VenuePin[]>([]);
   useEffect(() => {

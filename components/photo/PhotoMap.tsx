@@ -7,7 +7,7 @@ import * as maplibreNs from "maplibre-gl";
 // maplibre-glはCJS(UMD)なので、読み込み経路(サーバー描画を含む初期表示か、クリック後の遅延読み込みか)によって
 // 名前空間に直接Mapが無く default の下にだけある場合がある。どちらでも使えるようにここで解決する。
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Navigation, Play, Route as RouteIcon, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";

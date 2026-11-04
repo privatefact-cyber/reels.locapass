@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { ChevronLeft } from "lucide-react";
 import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { PhotoProfileStats } from "@/components/photo/PhotoProfileStats";

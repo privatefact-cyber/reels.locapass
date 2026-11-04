@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { MessageCircle } from "lucide-react";
 import { listLocalInquiries, type LocalInquiry } from "@/lib/inquiries/local-inquiries";
 

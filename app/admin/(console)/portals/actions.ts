@@ -7,6 +7,7 @@ import { isBusinessType, VERTICALS } from "@/lib/verticals/registry";
 import { requireAdmin, requireRootAdmin } from "@/lib/admin/require-admin";
 import { isSiteTheme, type SiteTheme } from "@/lib/theme";
 import { parseVideoUrl } from "@/lib/video";
+import { PREFIXED_LOCALES } from "@/lib/i18n/localePath";
 
 /**
  * ポータル/店舗の発行・権限付与チェーン。
@@ -147,6 +148,10 @@ export async function createPortal(_prev: CreatePortalState, formData: FormData)
   if (!slug) return { status: "error", message: "スラッグは必須です" };
   if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(slug)) {
     return { status: "error", message: "スラッグは半角英小文字・数字・ハイフンで2〜41文字にしてください" };
+  }
+  // /en /zh /ar は公開ページの言語別URLの接頭辞(lib/i18n/localePath.ts)なので、ポータルslugには使えない。
+  if ((PREFIXED_LOCALES as string[]).includes(slug)) {
+    return { status: "error", message: `「${slug}」は言語別URL用の予約語のため、スラッグに使えません` };
   }
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adminEmail)) {
     return { status: "error", message: "管理者メールアドレスの形式が正しくありません" };

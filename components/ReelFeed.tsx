@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Search, ChevronLeft, Play, X } from "lucide-react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
@@ -110,9 +110,9 @@ function GateOverlay({
         </div>
       </div>
       <nav aria-label="運営情報" className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-6 text-[11px] text-main/50">
-        <a href="/terms" className="hover:text-main/80">利用規約</a>
-        <a href="/privacy" className="hover:text-main/80">プライバシーポリシー</a>
-        <a href="/legal" className="hover:text-main/80">特定商取引法に基づく表記</a>
+        <Link href="/terms" className="hover:text-main/80">利用規約</Link>
+        <Link href="/privacy" className="hover:text-main/80">プライバシーポリシー</Link>
+        <Link href="/legal" className="hover:text-main/80">特定商取引法に基づく表記</Link>
         <span>運営 Private Factory</span>
       </nav>
     </div>

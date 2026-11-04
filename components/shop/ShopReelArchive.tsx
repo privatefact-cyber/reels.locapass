@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { createPortal } from "react-dom";
 import { CalendarSearch, ChevronLeft, ChevronRight, Film, LayoutGrid, CalendarDays, Play, X } from "lucide-react";
 import { PageDots } from "@/components/shop/PageDots";

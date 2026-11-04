@@ -3,12 +3,13 @@ import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { PhotoIntroModal } from "@/components/photo/PhotoIntroModal";
 import { getPhotoPosts } from "@/lib/photo/getPhotoPosts";
 import { photoText } from "@/lib/photo/serverText";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await photoText();
-  return { title: t.title, description: t.description, alternates: { canonical: "https://locapass.net/photo" } };
+  return { title: t.title, description: t.description, alternates: (await localizedPageUrls("/photo")).alternates };
 }
 
 export default async function PhotoPage({ searchParams }: { searchParams: Promise<{ area?: string; view?: string }> }) {

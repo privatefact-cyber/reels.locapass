@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePublicPathname } from "@/components/i18n/LocaleProvider";
 import { resolveSiteTheme, type SiteTheme } from "@/lib/theme";
 import { usePageTheme } from "@/lib/pageTheme";
 
@@ -10,7 +10,7 @@ import { usePageTheme } from "@/lib/pageTheme";
  * 子ポータルのページで個別のテーマが選ばれていれば(PortalThemeScope)、そちらを優先する。
  */
 export function ThemeSync({ manual }: { manual: SiteTheme | null }) {
-  const pathname = usePathname();
+  const pathname = usePublicPathname();
   const pageTheme = usePageTheme();
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", pageTheme ?? resolveSiteTheme(pathname ?? "/", manual));

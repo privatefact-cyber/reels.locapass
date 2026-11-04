@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { castReelsPath } from "@/lib/locapass/publicUrls";
+import { localizedPath } from "@/lib/i18n/getServerLocale";
 
 // 旧UUID直リンク(/cast/[UUID]/reels)。slugベースの新URLへ301相当で送る。
 export default async function LegacyCastReelsRedirect({
@@ -28,5 +29,5 @@ export default async function LegacyCastReelsRedirect({
   }
 
   const query = start ? `?start=${encodeURIComponent(start)}` : "";
-  permanentRedirect(`${castReelsPath(portal.slug, shop.slug, cast.issue_no!)}${query}`);
+  permanentRedirect(await localizedPath(`${castReelsPath(portal.slug, shop.slug, cast.issue_no!)}${query}`));
 }

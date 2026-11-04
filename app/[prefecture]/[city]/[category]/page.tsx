@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { JsonLd } from "@/components/JsonLd";
@@ -11,6 +11,7 @@ import { shopPath } from "@/lib/locapass/publicUrls";
 import { latestReelStillsByShop } from "@/lib/map/getVenues";
 import { sinkStale } from "@/lib/shop/freshness";
 import { hasRealPhoto, sinkWithoutPhoto } from "@/lib/shop/sinkWithoutPhoto";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 // この動的ルートは generateStaticParams を持たない(=ビルド時の事前レンダリング対象に
 // 含めない)。店舗詳細・キャスト詳細ページと同じく、初回アクセス時にオンデマンドで
@@ -40,12 +41,12 @@ export async function generateMetadata({
 
   const title = `${area}の${genre}｜本日の出勤・FACES一覧 - LOCAPASS`;
   const description = `${area}エリアの${genre}求人・出勤情報をリールでチェック。${area} ${genre} 出勤中のFACESを今すぐ探せる。`;
-  const url = `https://locapass.net/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`;
+  const { url, alternates } = await localizedPageUrls(`/${PREFECTURE_SLUG}/${areaToSlug(area)}/${genreToSlug(genre)}`);
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates,
     openGraph: { title, description, url, siteName: "LOCAPASS" },
     twitter: { card: "summary", title, description },
   };

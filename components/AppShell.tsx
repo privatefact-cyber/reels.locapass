@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePublicPathname } from "@/components/i18n/LocaleProvider";
+
 
 // マップページ(/tokyo/[city]/map)はUber風の没入型フルスクリーンUIのため、
 // ヘッダー・ボトムナビ用に確保されている余白(main の max-w、body の pb-20)を
@@ -9,7 +10,7 @@ import { usePathname } from "next/navigation";
 const FULL_BLEED_PATTERN = /^\/map$|^\/[^/]+\/[^/]+\/map$/;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePublicPathname();
   const isFullBleed = FULL_BLEED_PATTERN.test(pathname ?? "");
 
   if (isFullBleed) {

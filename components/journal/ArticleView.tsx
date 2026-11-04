@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Cover } from "@/components/journal/Cover";
 import { PostBody } from "@/components/journal/PostBody";
 import { isSafeLinkUrl, type JournalPost } from "@/lib/journal/posts";

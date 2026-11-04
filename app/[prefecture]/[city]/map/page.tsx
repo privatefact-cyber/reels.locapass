@@ -1,4 +1,5 @@
 import { permanentRedirect } from "next/navigation";
+import { localizedPath } from "@/lib/i18n/getServerLocale";
 
 type PageParams = { prefecture: string; city: string };
 
@@ -9,5 +10,5 @@ type PageParams = { prefecture: string; city: string };
  */
 export default async function LegacyAreaMapPage({ params }: { params: Promise<PageParams> }) {
   const { prefecture } = await params;
-  permanentRedirect(`/map?preset=${encodeURIComponent(prefecture)}`);
+  permanentRedirect(await localizedPath(`/map?preset=${encodeURIComponent(prefecture)}`));
 }

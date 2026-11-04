@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "@/components/i18n/LocaleLink";
 import { Bell, BookOpen, Camera, ChevronRight, CircleHelp, Settings, User, X, Zap } from "lucide-react";
 import { SELECT_FEED_EVENT, type FeedKind } from "@/lib/reels/events";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, usePublicPathname, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 type Props = {
   open: boolean;
@@ -29,8 +28,8 @@ const FEEDS: { kind: FeedKind; label: string }[] = [
  * その下にサービス・アカウント・規約への入口をまとめる。入口が増えたら、ここに足す。
  */
 export function MenuSheet({ open, onClose, home, boostHref, accountHref, hasManagement }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router = useLocaleRouter();
+  const pathname = usePublicPathname();
   const { t } = useLocale();
   // マウント直後は画面の下に置き、次のフレームで引き上げてスライドさせる。
   const [shown, setShown] = useState(false);

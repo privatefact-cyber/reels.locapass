@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { castPath } from "@/lib/locapass/publicUrls";
+import { localizedPath } from "@/lib/i18n/getServerLocale";
 
 // 旧UUID直リンク(/cast/[UUID])。過去に配布・インデックス済みのURLを生かすため、
 // slugベースの新URL(/{portalSlug}/cast/{shopSlug}-{発行番号})へ301相当で送る。
@@ -25,5 +26,5 @@ export default async function LegacyCastDetailRedirect({
     notFound();
   }
 
-  permanentRedirect(castPath(portal.slug, shop.slug, cast.issue_no!));
+  permanentRedirect(await localizedPath(castPath(portal.slug, shop.slug, cast.issue_no!)));
 }

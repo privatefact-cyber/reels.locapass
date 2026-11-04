@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronLeft, Phone } from "lucide-react";

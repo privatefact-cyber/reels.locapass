@@ -1,9 +1,8 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
 import { Radio } from "lucide-react";
 import { TOGGLE_NOW_EVENT } from "@/lib/reels/events";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, usePublicPathname, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 /**
  * ボトムナビの「NOW」ボタン。トップページのフィードにある「今稼働中」絞り込みを開く。
@@ -11,8 +10,8 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
  * (?now=1をReelFeed側で拾う、SearchButton/MenuButtonと同じ思想)。
  */
 export function NowButton({ home = "/" }: { home?: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router = useLocaleRouter();
+  const pathname = usePublicPathname();
   const { t } = useLocale();
 
   function handleClick() {

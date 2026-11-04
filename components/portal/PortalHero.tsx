@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { AutoplayVideo } from "@/components/portal/AutoplayVideo";
 import { HeroYoutubeBackground } from "@/components/shop/HeroYoutubeBackground";

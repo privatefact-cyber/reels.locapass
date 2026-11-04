@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/i18n/LocaleLink";
 import { ChevronLeft, ImagePlus, Loader2, MapPin, Sparkles } from "lucide-react";
 import exifr from "exifr";
 import { geocode, reverseGeocode } from "@/lib/map/geocode";
 import { PHOTO_MAX_BYTES } from "@/lib/photo/tags";
 import { uploadPhotoVideoToR2 } from "@/lib/storage/uploadToR2";
 import { readVideoGps } from "@/lib/photo/videoGps";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
 type Candidate = {
   kind: "listed" | "spot";
@@ -231,7 +230,7 @@ export type PhotoComposerPreset = {
 
 export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; preset?: PhotoComposerPreset }) {
   const { t } = useLocale();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

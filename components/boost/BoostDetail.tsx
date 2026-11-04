@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { ChevronLeft } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { boostText } from "@/lib/boost/text";

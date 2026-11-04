@@ -2,8 +2,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/i18n/LocaleLink";
 import * as maplibregl from "maplibre-gl";
 import { MapReelOverlay, type CardRect } from "@/components/map/MapReelOverlay";
 import { DemoTruckLayer } from "@/components/map/DemoTruckLayer";
@@ -11,7 +10,7 @@ import { CheckCircle2, Globe2, Navigation, Play, Search, X } from "lucide-react"
 import { AFTER_GENRE } from "@/lib/shop/genres";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { setAiSelectedContext } from "@/lib/aiContext";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useLocale, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { geocode } from "@/lib/map/geocode";
 import { estimateTimeFromDistance } from "@/lib/map/estimateTime";
@@ -201,7 +200,7 @@ export function VenueMapExplorer({
   const syncThumbsRef = useRef<() => void>(() => {});
 
   const { t, locale } = useLocale();
-  const router = useRouter();
+  const router = useLocaleRouter();
   // 全画面リールを開いている店舗(開いた起点)。nullなら閉じている。
   const [reelOverlayVenueId, setReelOverlayVenueId] = useState<string | null>(null);
   const [genre, setGenre] = useState<NightlifeGenre>("all");

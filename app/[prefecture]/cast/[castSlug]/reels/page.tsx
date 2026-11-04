@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { captionFields } from "@/lib/reels/getPortalFeedData";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { createClient } from "@/lib/supabase/server";
 import { ReelLoopFeed } from "@/components/ReelLoopFeed";
 import type { ReelItem } from "@/lib/reels/types";

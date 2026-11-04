@@ -1,7 +1,7 @@
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { notFound } from "next/navigation";
 import { sanitizeWeekly, weeklyToText } from "@/lib/shop/businessHours";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import QRCode from "qrcode";
 import type { Metadata } from "next";
 import {
@@ -63,6 +63,7 @@ import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
 import { getPublicShopAttributes } from "@/lib/verticals/shopAttributes";
 import { ShopAttributeBadges } from "@/components/shop/ShopAttributeBadges";
 import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
+import { localizedPageUrls } from "@/lib/i18n/metadata";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
@@ -114,13 +115,13 @@ export async function generateMetadata({
       (shopRow.description ? shopRow.description.slice(0, 120) : null) ||
       `「${shopRow.name}」の店舗情報・リールを今すぐチェック。`
     : `${shopRow.name} — shop info and reels on LOCAPASS.`;
-  const url = `https://locapass.net${shopPath(portal.slug, shopRow.slug)}`;
+  const { url, alternates } = await localizedPageUrls(shopPath(portal.slug, shopRow.slug));
   const image = shopRow.cover_url ?? shopRow.icon_url ?? undefined;
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates,
     openGraph: {
       title,
       description,
