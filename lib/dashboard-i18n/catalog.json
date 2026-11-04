@@ -1279,6 +1279,22 @@
   "es": "Reseñas de Google",
   "tl": "Mga review sa Google"
  },
+ "Googleの口コミの確認と返信": {
+  "en": "View and reply to Google reviews",
+  "zh": "查看与回复 Google 评价",
+  "zh-TW": "查看與回覆 Google 評論",
+  "ne": "Google समीक्षाहरू जाँच र जवाफ",
+  "vi": "Xem và phản hồi đánh giá trên Google",
+  "id": "Cek & Balas Ulasan Google",
+  "my": "Google သုံးသပ်ချက်များ စစ်ဆေးခြင်းနှင့် အကြောင်းပြန်ခြင်း",
+  "th": "ตรวจสอบและตอบกลับรีวิว Google",
+  "pt": "Ver e responder avaliações do Google",
+  "tr": "Google Yorumlarını Kontrol Etme ve Yanıtlama",
+  "ru": "Просмотр и ответы на отзывы Google",
+  "es": "Ver y responder reseñas de Google",
+  "tl": "Tingnan at sagutin ang mga review sa Google",
+  "ar": "مراجعة والرد على تقييمات Google"
+ },
  "Googleマップとの連携をご利用の場合、ここに入力した店名・住所・電話番号・営業時間は、入力したとおりにGoogleマップへ送られます。 Googleには、看板どおりの店名を入力してください。Googleから修正の連絡があったときは、お店の側で対応をお願いします。": {
   "en": "When using Google Maps integration, the store name, address, phone number, and business hours entered here will be sent to Google Maps exactly as entered. Please enter the store name as it appears on your physical sign. If Google contacts you regarding corrections, please handle it on your end.",
   "zh": "如果使用 Google 地图关联功能，在此输入的店名、地址、电话号码和营业时间将按原样发送至 Google 地图。请在 Google 中输入与招牌一致的店名。如果收到 Google 的修改通知，请店铺自行处理。",
@@ -2318,6 +2334,22 @@
   "es": "No se encontraron consultas",
   "tl": "Walang nahanap na pagtatanong"
  },
+ "お客様からのお問い合わせ": {
+  "en": "Customer inquiries",
+  "zh": "顾客咨询",
+  "zh-TW": "顧客諮詢",
+  "ne": "ग्राहकहरूबाट सोधपुछ",
+  "vi": "Liên hệ từ khách hàng",
+  "id": "Pertanyaan Pelanggan",
+  "my": "သုံးစွဲသူများထံမှ စုံစမ်းမေးမြန်းချက်များ",
+  "th": "การสอบถามจากลูกค้า",
+  "pt": "Mensagens de clientes",
+  "tr": "Müşterilerden Gelen Sorular",
+  "ru": "Запросы клиентов",
+  "es": "Consultas de los clientes",
+  "tl": "Mga inquiry ng customer",
+  "ar": "استفسارات العملاء"
+ },
  "お客様から連絡があった場合": {
   "en": "When contacted by a customer",
   "zh": "收到顾客联系时",
@@ -2333,6 +2365,22 @@
   "ru": "Если клиент связался с вами",
   "es": "Si el cliente se pone en contacto",
   "tl": "Kapag nakipag-ugnayan ang customer"
+ },
+ "お客様が投稿した写真の表示・非表示": {
+  "en": "Show/hide photos posted by customers",
+  "zh": "显示/隐藏顾客发布的照片",
+  "zh-TW": "顯示／隱藏顧客發布的照片",
+  "ne": "ग्राहकहरूले पोस्ट गरेका फोटोहरू देखाउने/लुकाउने",
+  "vi": "Ẩn/Hiện ảnh do khách hàng đăng",
+  "id": "Tampilkan/Sembunyikan Foto Pelanggan",
+  "my": "သုံးစွဲသူများ တင်ထားသော ဓာတ်ပုံများ ပြသခြင်း/ဝှက်ခြင်း",
+  "th": "แสดง/ซ่อนรูปภาพที่ลูกค้าโพสต์",
+  "pt": "Exibir/ocultar fotos enviadas por clientes",
+  "tr": "Müşteri Fotoğraflarını Göster/Gizle",
+  "ru": "Показ и скрытие фото клиентов",
+  "es": "Mostrar/ocultar fotos publicadas por los clientes",
+  "tl": "Ipakita/itago ang mga larawang i-nipost ng customer",
+  "ar": "إظهار/إخفاء الصور التي نشرها العملاء"
  },
  "お客様が無料で取り消せる期限です。それ以降の取り消しは「判断待ち」としてここに届き、「請求なし」か「キャンセル料を請求」をワンタップで選べます。事前連絡があった場合も、同じボタンで選べます。": {
   "en": "This is the deadline for free customer cancellations. Cancellations after this will appear here as \"Pending Decision\", where you can select \"No Charge\" or \"Charge Cancellation Fee\" with one tap. If prior notification was provided, you can also use the same button.",
@@ -2366,6 +2414,22 @@
   "es": "URL corta y código QR para que los clientes accedan a la página pública de este local.",
   "tl": "Ito ang pinaliksing URL at QR code para ma-access ng mga customer ang pampublikong pahina ng store na ito."
  },
+ "お客様に見えているページを別タブで開く": {
+  "en": "Open public page in a new tab",
+  "zh": "在新标签页打开顾客可见页面",
+  "zh-TW": "在新分頁開啟顧客看到的頁面",
+  "ne": "ग्राहकहरूले देख्ने पृष्ठ नयाँ ट्याबमा खोल्नुहोस्",
+  "vi": "Mở trang hiển thị với khách hàng trong thẻ mới",
+  "id": "Buka Halaman Publik di Tab Baru",
+  "my": "သုံးစွဲသူများ မြင်တွေ့ရသော စာမျက်နှာကို တက်ဘ်အသစ်တွင် ဖွင့်ရန်",
+  "th": "เปิดหน้าเว็บที่ลูกค้าเห็นในแท็บใหม่",
+  "pt": "Abrir página pública em uma nova aba",
+  "tr": "Müşterilerin Gördüğü Sayfayı Yeni Sekmede Aç",
+  "ru": "Открыть страницу для клиентов в новой вкладке",
+  "es": "Abrir la página pública en una nueva pestaña",
+  "tl": "Buksan sa bagong tab ang page na nakikita ng customer",
+  "ar": "فتح الصفحة الظاهرة للعملاء في تبويب جديد"
+ },
  "お客様へのメッセージ": {
   "en": "Message to customers",
   "zh": "给顾客的信息",
@@ -2398,6 +2462,38 @@
   "es": "Ver vista del cliente",
   "tl": "Tingnan ang Tinging-Customer"
  },
+ "お客様対応": {
+  "en": "Customer service",
+  "zh": "顾客服务",
+  "zh-TW": "顧客服務",
+  "ne": "ग्राहक सेवा",
+  "vi": "Hỗ trợ khách hàng",
+  "id": "Layanan Pelanggan",
+  "my": "သုံးစွဲသူ ဝန်ဆောင်မှု",
+  "th": "การดูแลลูกค้า",
+  "pt": "Atendimento ao cliente",
+  "tr": "Müşteri Hizmetleri",
+  "ru": "Работа с клиентами",
+  "es": "Atención al cliente",
+  "tl": "Serbisyo sa customer",
+  "ar": "خدمة العملاء"
+ },
+ "お店": {
+  "en": "Shop",
+  "zh": "店铺",
+  "zh-TW": "店家",
+  "ne": "पसल",
+  "vi": "Cửa hàng",
+  "id": "Toko",
+  "my": "ဆိုင်",
+  "th": "ร้านค้า",
+  "pt": "Estabelecimento",
+  "tr": "İşletme",
+  "ru": "Заведение",
+  "es": "Negocio",
+  "tl": "Tindahan",
+  "ar": "المتجر"
+ },
  "お店からの返信": {
   "en": "Reply from store",
   "zh": "店家回复",
@@ -2429,6 +2525,22 @@
   "ru": "Введите URL официального сайта вашего заведения, чтобы автоматически считать описание, часы работы, номер телефона, прейскурант и фотографии. Вы сможете проверить данные и применить только нужные пункты. Соцсети, такие как Instagram и X, не импортируются из-за правил их сервисов.",
   "es": "Al ingresar la URL del sitio web oficial del local, se importará la descripción, horario de atención, número de teléfono, lista de precios y fotos. Puedes revisar el contenido e importar solo los elementos que desees. Las redes sociales como Instagram y X no se pueden importar debido a los términos de cada servicio.",
   "tl": "Kapag inilagay mo ang URL ng opisyal na website ng store, babasahin nito ang paglalarawan, oras ng negosyo, numero ng telepono, listahan ng presyo, at mga larawan. Suriin ang nilalaman at ilapat lamang ang mga item na gusto mong gamitin. Hindi ma-import ang mga SNS tulad ng Instagram at X dahil sa mga tuntunin ng bawat serbisyo."
+ },
+ "お店の顔として投稿するメンバーの登録・管理": {
+  "en": "Register and manage members posting on behalf of the shop",
+  "zh": "注册与管理店铺代表人员",
+  "zh-TW": "註冊與管理代表店家發布內容的成員",
+  "ne": "पसलको तर्फबाट पोस्ट गर्ने सदस्यहरूको दर्ता र व्यवस्थापन",
+  "vi": "Đăng ký và quản lý thành viên đại diện cửa hàng đăng bài",
+  "id": "Pendaftaran & Pengelolaan Anggota Profil Toko",
+  "my": "ဆိုင်၏ ကိုယ်စားလှယ်အဖြစ် ပို့စ်တင်မည့် အဖွဲ့ဝင်များ မှတ်ပုံတင်ခြင်းနှင့် စီမံခန့်ခွဲခြင်း",
+  "th": "ลงทะเบียนและจัดการสมาชิกที่โพสต์ในนามของร้าน",
+  "pt": "Cadastro e gestão de membros em destaque",
+  "tr": "İşletme Adına Gönderi Paylaşacak Personelin Kaydı ve Yönetimi",
+  "ru": "Регистрация и управление участниками, публикующими от имени заведения",
+  "es": "Registro y gestión de miembros que publican en nombre del negocio",
+  "tl": "Pagpaparehistro at pamamahala ng mga miyembrong magpo-post para sa tindahan",
+  "ar": "تسجيل وإدارة الأعضاء الذين ينشرون باسم المتجر"
  },
  "お店紹介文": {
   "en": "Store Description",
@@ -2541,6 +2653,22 @@
   "ru": "Все добавившие в избранное (",
   "es": "Todos los usuarios que añadieron a favoritos (",
   "tl": "Lahat ng Nag-favorite ("
+ },
+ "お気に入り登録者へのお知らせ": {
+  "en": "Announcements to users who favorited your shop",
+  "zh": "向收藏用户发送通知",
+  "zh-TW": "給加入收藏者的通知",
+  "ne": "मनपर्नेमा थप्नेहरूलाई सूचना",
+  "vi": "Thông báo tới người đã lưu yêu thích",
+  "id": "Pengumuman untuk Pengguna Favorit",
+  "my": "အနှစ်သက်ဆုံး မှတ်တမ်းတင်ထားသူများထံ အကြောင်းကြားစာ",
+  "th": "การแจ้งเตือนถึงผู้ที่บันทึกเป็นร้านโปรด",
+  "pt": "Avisos para quem salvou nos favoritos",
+  "tr": "Favorilere Ekleyenlere Bildirimler",
+  "ru": "Уведомления для добавивших в избранное",
+  "es": "Notificaciones a quienes te agregaron a favoritos",
+  "tl": "Mga anunsyo para sa mga nag-favorite",
+  "ar": "إشعارات للمستخدمين الذين أضافوك للمفضلة"
  },
  "カード保存": {
   "en": "Save Card",
@@ -3438,6 +3566,22 @@
   "es": "No se puede obtener la ubicación actual en este dispositivo. Seleccione un lugar en \"Registrar evento\" a continuación.",
   "tl": "Hindi makuha ang kasalukuyang lokasyon sa aparatong ito. Mangyaring pumili ng lokasyon sa \"Magparehistro ng iskedyul\" sa ibaba."
  },
+ "この管理画面に入れるIDの追加・削除": {
+  "en": "Add/delete IDs with dashboard access",
+  "zh": "添加/删除此管理后台的账号",
+  "zh-TW": "新增／刪除存取此管理頁面的帳號",
+  "ne": "यस एडमिन प्यानलमा पहुँच गर्ने ID थप्ने र हटाउने",
+  "vi": "Thêm/Xóa ID truy cập trang quản trị này",
+  "id": "Tambah/Hapus ID Akses Admin",
+  "my": "ဤစီမံခန့်ခွဲမှု စာမျက်နှာသို့ ဝင်ရောက်နိုင်သော ID များ ပေါင်းထည့်ခြင်း/ဖျက်ပစ်ခြင်း",
+  "th": "เพิ่ม/ลบ ID สำหรับเข้าใช้หน้าจัดการนี้",
+  "pt": "Adicionar/remover IDs de acesso a este painel",
+  "tr": "Bu Yönetim Paneline Erişecek ID'leri Ekleme/Silme",
+  "ru": "Добавление и удаление ID с доступом к панели",
+  "es": "Agregar o eliminar ID con acceso a este panel de administración",
+  "tl": "Pagdagdag/pag-alis ng mga ID para sa admin panel na ito",
+  "ar": "إضافة/حذف معرفات الحسابات التي يمكنها الوصول للوحة التحكم هذه"
+ },
  "この言語の訳を保存": {
   "en": "Save translation for this language",
   "zh": "保存该语言的翻译",
@@ -3598,6 +3742,22 @@
   "es": "Número de teléfono de la persona a cargo",
   "tl": "Numero ng telepono ng taong namamahala"
  },
+ "ご自分のプロフィールと投稿": {
+  "en": "Your profile and posts",
+  "zh": "个人资料与发布内容",
+  "zh-TW": "您的個人檔案與貼文",
+  "ne": "तपाईंको प्रोफाइल र पोस्टहरू",
+  "vi": "Hồ sơ và bài viết của bạn",
+  "id": "Profil & Postingan Anda",
+  "my": "သင်၏ ပရိုဖိုင်နှင့် ပို့စ်များ",
+  "th": "โปรไฟล์และโพสต์ของคุณ",
+  "pt": "Seu perfil e publicações",
+  "tr": "Profiliniz ve Gönderileriniz",
+  "ru": "Ваш профиль и публикации",
+  "es": "Tu perfil y publicaciones",
+  "tl": "Iyong profile at mga post",
+  "ar": "الملف الشخصي والمنشورات الخاصة بك"
+ },
  "ご自分のログインIDの確認と、パスワードの変更ができます。パスワードは、いつでも変更できます。": {
   "en": "You can check your login ID and change your password. You can change your password at any time.",
   "zh": "您可以查看自己的登录ID并修改密码。密码随时可以修改。",
@@ -3725,6 +3885,22 @@
   "ru": "Не удалось удалить сотрудника: {0}",
   "es": "Error al eliminar el personal: {0}",
   "tl": "Pumalya ang pagbura ng staff: {0}"
+ },
+ "スタッフの登録とログイン用リンク": {
+  "en": "Staff registration and login links",
+  "zh": "员工注册与登录链接",
+  "zh-TW": "工作人員註冊與登入連結",
+  "ne": "कर्मचारी दर्ता र लगइन लिङ्क",
+  "vi": "Đăng ký nhân viên và liên kết đăng nhập",
+  "id": "Pendaftaran Staf & Tautan Login",
+  "my": "ဝန်ထမ်း မှတ်ပုံတင်ခြင်းနှင့် လော့ဂ်အင် လင့်ခ်",
+  "th": "การลงทะเบียนพนักงานและลิงก์สำหรับเข้าสู่ระบบ",
+  "pt": "Cadastro de equipe e links de login",
+  "tr": "Personel Kaydı ve Giriş Bağlantısı",
+  "ru": "Регистрация сотрудников и ссылки для входа",
+  "es": "Registro de personal y enlace de inicio de sesión",
+  "tl": "Pagpaparehistro ng staff at link sa pag-login",
+  "ar": "تسجيل الموظفين ورابط تسجيل الدخول"
  },
  "スタッフの追加に失敗しました: {0}": {
   "en": "Failed to add staff member: {0}",
@@ -4254,6 +4430,22 @@
   "es": "Seguidores",
   "tl": "Mga Follower"
  },
+ "プランの選択とご契約": {
+  "en": "Plan selection and subscription",
+  "zh": "套餐选择与签约",
+  "zh-TW": "方案選擇與合約",
+  "ne": "योजना चयन र सम्झौता",
+  "vi": "Chọn gói dịch vụ và hợp đồng",
+  "id": "Pilih Paket & Langganan",
+  "my": "ပလန် ရွေးချယ်ခြင်းနှင့် စာချုပ်ချုပ်ဆိုခြင်း",
+  "th": "เลือกแพ็กเกจและทำสัญญา",
+  "pt": "Escolha de plano e contrato",
+  "tr": "Plan Seçimi ve Sözleşme",
+  "ru": "Выбор тарифного плана и подписка",
+  "es": "Selección de plan y contratación",
+  "tl": "Pagpili ng plan at kontrata",
+  "ar": "اختيار الخطة والاشتراك"
+ },
  "プランを選び、契約内容に同意すると、その場で契約が完了します。": {
   "en": "Select a plan and agree to the contract terms to complete your contract instantly.",
   "zh": "选择套餐并同意合同内容后，即可当场完成签约。",
@@ -4445,6 +4637,22 @@
   "ru": "Обновить профиль",
   "es": "Actualizar perfil",
   "tl": "I-update ang profile"
+ },
+ "ヘルプ": {
+  "zh-TW": "說明",
+  "zh": "帮助",
+  "en": "Help",
+  "ne": "मद्दत",
+  "vi": "Trợ giúp",
+  "id": "Bantuan",
+  "my": "အကူအညီ",
+  "th": "ช่วยเหลือ",
+  "pt": "Ajuda",
+  "tr": "Yardım",
+  "ru": "Справка",
+  "es": "Ayuda",
+  "tl": "Tulong",
+  "ar": "المساعدة"
  },
  "ほかの写真をこの店舗に表示する": {
   "en": "Display other photos at this shop",
@@ -4766,6 +4974,38 @@
   "es": "No usar imagen principal",
   "tl": "Huwag gamitin ang pangunahing larawan"
  },
+ "メニュー": {
+  "en": "Menu",
+  "zh": "菜单",
+  "zh-TW": "菜單",
+  "ne": "मेनु",
+  "vi": "Thực đơn",
+  "id": "Menu",
+  "my": "မီနူး",
+  "th": "เมนู",
+  "pt": "Menu",
+  "tr": "Menü",
+  "ru": "Меню",
+  "es": "Menú",
+  "tl": "Menu",
+  "ar": "القائمة"
+ },
+ "メニューを閉じる": {
+  "en": "Close menu",
+  "zh": "收起菜单",
+  "zh-TW": "關閉選單",
+  "ne": "मेनु बन्द गर्नुहोस्",
+  "vi": "Đóng menu",
+  "id": "Tutup Menu",
+  "my": "မီနူး ပိတ်ရန်",
+  "th": "ปิดเมนู",
+  "pt": "Fechar menu",
+  "tr": "Menüyü Kapat",
+  "ru": "Закрыть меню",
+  "es": "Cerrar menú",
+  "tl": "Isara ang menu",
+  "ar": "إغلاق القائمة"
+ },
  "もう一度お試しください。": {
   "en": "Please try again.",
   "zh": "请重试。",
@@ -4845,6 +5085,22 @@
   "es": "Reels",
   "ar": "Reels",
   "tl": "Reel"
+ },
+ "リール・イベントの投稿と管理": {
+  "en": "Post and manage reels and events",
+  "zh": "发布与管理短视频/活动",
+  "zh-TW": "連續短片與活動的發布與管理",
+  "ne": "रिल्स र कार्यक्रमहरूको पोस्ट तथा व्यवस्थापन",
+  "vi": "Đăng và quản lý Reels/Sự kiện",
+  "id": "Posting & Kelola Reel/Acara",
+  "my": "Reels နှင့် ပွဲလမ်းသဘင်များ ပို့စ်တင်ခြင်းနှင့် စီမံခန့်ခွဲခြင်း",
+  "th": "โพสต์และจัดการรีลและกิจกรรม",
+  "pt": "Publicação e gestão de Reels e eventos",
+  "tr": "Reels ve Etkinlik Paylaşımı ve Yönetimi",
+  "ru": "Публикация и управление Reels и мероприятиями",
+  "es": "Publicar y gestionar reels y eventos",
+  "tl": "Pag-post at pamamahala ng mga reel at kaganapan",
+  "ar": "نشر وإدارة مقاطع Reels والفعاليات"
  },
  "リール・イベントを投稿": {
   "en": "Post Reels / Events",
@@ -5116,6 +5372,22 @@
   "ru": "ID для входа (введите в поле E-mail)",
   "es": "ID de inicio de sesión (ingresar en el campo de correo electrónico)",
   "tl": "Login ID (Ilagay sa patlang ng email address)"
+ },
+ "ログインIDの確認とパスワードの変更": {
+  "en": "Check login ID and change password",
+  "zh": "确认登录账号与修改密码",
+  "zh-TW": "確認登入帳號與變更密碼",
+  "ne": "लगइन ID जाँच र पासवर्ड परिवर्तन",
+  "vi": "Kiểm tra ID đăng nhập và đổi mật khẩu",
+  "id": "Cek ID Login & Ubah Kata Sandi",
+  "my": "လော့ဂ်အင် ID စစ်ဆေးခြင်းနှင့် စကားဝှက် ပြောင်းလဲခြင်း",
+  "th": "ตรวจสอบ ID เข้าสู่ระบบและเปลี่ยนรหัสผ่าน",
+  "pt": "Verificar ID de login e alterar senha",
+  "tr": "Giriş ID'sini Kontrol Etme ve Şifre Değiştirme",
+  "ru": "Проверка ID для входа и смена пароля",
+  "es": "Consultar ID de inicio de sesión y cambiar contraseña",
+  "tl": "Pagtitingin ng login ID at pagpapalit ng password",
+  "ar": "التحقق من معرف تسجيل الدخول وتغيير كلمة المرور"
  },
  "ログインURL": {
   "en": "Login URL",
@@ -5757,6 +6029,22 @@
   "es": "personas) puede enviar notificaciones push y anuncios. También se pueden adjuntar imágenes como cupones de descuento.",
   "tl": "tao). Maaari kang magpadala ng push notification at anunsyo sa kanila. Maaari ka ring mag-attach ng mga imahe tulad ng mga discount ticket."
  },
+ "人とアカウント": {
+  "en": "People and accounts",
+  "zh": "人员与账号",
+  "zh-TW": "人員與帳號",
+  "ne": "मानिसहरू र खाताहरू",
+  "vi": "Thành viên và tài khoản",
+  "id": "Pengguna & Akun",
+  "my": "လူများနှင့် အကောင့်များ",
+  "th": "บุคคลและบัญชี",
+  "pt": "Pessoas e contas",
+  "tr": "Kişiler ve Hesaplar",
+  "ru": "Пользователи и аккаунты",
+  "es": "Personas y cuentas",
+  "tl": "Mga tao at account",
+  "ar": "الأشخاص والحسابات"
+ },
  "人に達しています。追加するには、使わない管理者を外してください。": {
   "en": "people. To add more, please remove unused administrators.",
   "zh": "人。如需添加，请移除不使用的管理员。",
@@ -5820,6 +6108,22 @@
   "es": "Tienda de hoy",
   "tr": "Bugünkü Stant",
   "tl": "Mga Pwesto / Pop-up Ngayon"
+ },
+ "今日の出店場所と時間": {
+  "en": "Today's location and hours",
+  "zh": "今日出店地点与时间",
+  "zh-TW": "今日出店地點與時間",
+  "ne": "आजको बिक्री स्थान र समय",
+  "vi": "Địa điểm và thời gian bán hàng hôm nay",
+  "id": "Lokasi & Jam Buka Hari Ini",
+  "my": "ယနေ့ ဆိုင်ဖွင့်မည့် နေရာနှင့် အချိန်",
+  "th": "สถานที่และเวลาเปิดร้านของวันนี้",
+  "pt": "Local e horário de funcionamento de hoje",
+  "tr": "Bugünkü Konum ve Saatler",
+  "ru": "Местоположение и время работы на сегодня",
+  "es": "Ubicación y horario de hoy",
+  "tl": "Lokasyon at oras ng pagpapatakbo ngayong araw",
+  "ar": "موقع وساعات العمل اليوم"
  },
  "今日出勤登録済みの": {
   "en": "Registered as working today",
@@ -8141,6 +8445,22 @@
   "es": "Inventario (Vehículos)",
   "tl": "Imbentaryo (Sasakyan)"
  },
+ "在庫の登録・編集": {
+  "en": "Add/edit inventory",
+  "zh": "添加与编辑库存",
+  "zh-TW": "新增／編輯庫存",
+  "ne": "स्टक दर्ता र सम्पादन",
+  "vi": "Đăng ký và chỉnh sửa tồn kho",
+  "id": "Tambah & Edit Stok",
+  "my": "ပစ္စည်းလက်ကျန် မှတ်ပုံတင်ခြင်း/ပြင်ဆင်ခြင်း",
+  "th": "ลงทะเบียนและแก้ไขสต็อกสินค้า",
+  "pt": "Cadastrar e editar estoque",
+  "tr": "Stok Kaydı ve Düzenleme",
+  "ru": "Регистрация и редактирование товаров",
+  "es": "Registrar y editar inventario",
+  "tl": "Pagrehistro/pag-edit ng imbentaryo",
+  "ar": "تسجيل وتعديل المخزون"
+ },
  "地図で出店場所を選んでください": {
   "en": "Please select the store location on the map",
   "zh": "请在地图上选择开店位置",
@@ -8573,6 +8893,22 @@
   "ru": "Только бронирование столика, заказ блюд на месте. Гость отправляет запрос с залогом по карте 500 иен за человека (макс. 5 000 иен). При визите списание составит 0 иен.",
   "tl": "Mag-reserba ng upuan lamang, sa restawran na ang pagkain. Magre-request ang mga customer sa pamamagitan ng paggarantiya sa kard ng deposit na 500 yen bawat tao (hanggang 5,000 yen). Kung pupunta sila, 0 yen ang singil."
  },
+ "席の予約リクエストの確認": {
+  "en": "Check seat reservation requests",
+  "zh": "查看预订座位申请",
+  "zh-TW": "確認座位預約請求",
+  "ne": "सीट बुकिङ अनुरोधहरू जाँच गर्नुहोस्",
+  "vi": "Kiểm tra yêu cầu đặt bàn",
+  "id": "Cek Permintaan Reservasi Meja",
+  "my": "ထိုင်ခုံ ကိုတင်ဘိုကင် တောင်းဆိုချက်များကို စစ်ဆေးရန်",
+  "th": "ตรวจสอบคำขอจองโต๊ะ",
+  "pt": "Verificar solicitações de reserva de mesa",
+  "tr": "Masa Rezervasyonu Taleplerini Kontrol Etme",
+  "ru": "Проверка запросов на бронирование столиков",
+  "es": "Verificar solicitudes de reserva de mesa",
+  "tl": "Tingnan ang mga kahilingan sa pagpapareserba ng upuan",
+  "ar": "التحقق من طلبات حجز الطاولات"
+ },
  "年": {
   "en": "Year",
   "zh": "年",
@@ -8652,6 +8988,22 @@
   "es": "Puede registrar hasta 10 fotos que muestren el ambiente del local. Se mostrarán en la página pública del negocio.",
   "ru": "Можно добавить до 10 фотографий, передающих атмосферу заведения. Они будут отображаться на публичной странице.",
   "tl": "Maaari kang magparehistro ng hanggang 10 larawan na nagpapakita ng kapaligiran ng shop. Lalabas ang mga ito sa pampublikong pahina ng shop."
+ },
+ "店名・営業時間・写真など、掲載ページの基本情報": {
+  "en": "Basic listing information such as shop name, business hours, and photos",
+  "zh": "店名、营业时间、照片等展示页面的基本信息",
+  "zh-TW": "店名、營業時間、照片等刊登頁面的基本資訊",
+  "ne": "पसलको नाम, खुला रहने समय, फोटो आदि जस्ता पृष्ठका आधारभूत जानकारी",
+  "vi": "Thông tin cơ bản trên trang tin như tên cửa hàng, giờ mở cửa, hình ảnh",
+  "id": "Informasi Dasar Toko (Nama, Jam Buka, Foto, dll.)",
+  "my": "ဆိုင်အမည်၊ ဖွင့်ချိန် နှင့် ဓာတ်ပုံ စသည့် အခြေခံအချက်အလက်များ",
+  "th": "ข้อมูลพื้นฐานของหน้าร้าน เช่น ชื่อร้าน เวลาทำการ รูปภาพ",
+  "pt": "Informações básicas da página (nome, horário, fotos, etc.)",
+  "tr": "Mağaza adı, çalışma saatleri, fotoğraflar vb. sayfa temel bilgileri",
+  "ru": "Основная информация страницы: название, часы работы, фото",
+  "es": "Información básica de la página: nombre del negocio, horario, fotos, etc.",
+  "tl": "Pangunahing impormasyon ng page tulad ng pangalan ng tindahan, oras ng pagpapatakbo, at larawan",
+  "ar": "المعلومات الأساسية للصفحة مثل اسم المتجر وساعات العمل والصور"
  },
  "店舗・FACES・スタッフが投稿した動画と写真(全": {
   "en": "Videos and photos posted by store, FACES, and staff (Total",
@@ -9580,6 +9932,22 @@
   "ar": "سيكون الاشتراك في خطة الإدراج متاحًا قريبًا.",
   "tl": "Magiging available na rin sa lalong madaling panahon ang kontrata sa plan ng listing."
  },
+ "掲載ページを見る": {
+  "en": "View listing page",
+  "zh": "查看展示页面",
+  "zh-TW": "查看刊登頁面",
+  "ne": "प्रकाशित पृष्ठ हेर्नुहोस्",
+  "vi": "Xem trang tin",
+  "id": "Lihat Halaman Toko",
+  "my": "ဖော်ပြထားသော စာမျက်နှာကို ကြည့်ရန်",
+  "th": "ดูหน้าร้าน",
+  "pt": "Ver página publicada",
+  "tr": "Sayfayı Görüntüle",
+  "ru": "Посмотреть опубликованную страницу",
+  "es": "Ver página publicada",
+  "tl": "Tingnan ang pampublikong page",
+  "ar": "عرض الصفحة المنشورة"
+ },
  "掲載ページを見る ↗": {
   "en": "View Listing Page ↗",
   "zh": "查看展示页面 ↗",
@@ -9659,6 +10027,22 @@
   "ru": "Действие",
   "es": "Acción",
   "tl": "Aksyon"
+ },
+ "操作方法とサポートへの相談": {
+  "zh-TW": "操作說明與客服諮詢",
+  "zh": "操作指南与客服咨询",
+  "en": "How to Use & Contact Support",
+  "ne": "प्रयोग गर्ने तरिका र सहायता परामर्श",
+  "vi": "Hướng dẫn sử dụng và liên hệ hỗ trợ",
+  "id": "Cara penggunaan dan konsultasi dukungan",
+  "my": "အသုံးပြုနည်းနှင့် ပံ့ပိုးကူညီမှုထံ ဆက်သွယ်မေးမြန်းရန်",
+  "th": "วิธีใช้งานและติดต่อฝ่ายสนับสนุน",
+  "pt": "Instruções de uso e suporte",
+  "tr": "Kullanım rehberi ve destek",
+  "ru": "Инструкция по работе и обращение в поддержку",
+  "es": "Instrucciones de uso y contacto con soporte",
+  "tl": "Paano gamitin at pakikipag-ugnayan sa suporta",
+  "ar": "طريقة الاستخدام والتواصل مع الدعم"
  },
  "文章を入力する言語": {
   "en": "Text input language",
@@ -10139,6 +10523,22 @@
   "ru": "Время (мин)",
   "es": "Tiempo (minutos)",
   "tl": "Oras (minuto)"
+ },
+ "時間限定のお得情報をすぐ掲載": {
+  "en": "Instantly post limited-time deals",
+  "zh": "立即发布限时优惠信息",
+  "zh-TW": "立即發布限時優惠資訊",
+  "ne": "सीमित समयको अफर तुरुन्त पोस्ट गर्नुहोस्",
+  "vi": "Đăng ngay thông tin ưu đãi giới hạn thời gian",
+  "id": "Post Penawaran Terbatas Waktu Segera",
+  "my": "အချိန်ကန့်သတ် အထူးပရိုမိုးရှင်းများကို ချက်ချင်း ဖော်ပြရန်",
+  "th": "โพสต์ข้อเสนอพิเศษจำกัดเวลาทันที",
+  "pt": "Publicar ofertas por tempo limitado imediatamente",
+  "tr": "Süreli Fırsatları Anında Yayınla",
+  "ru": "Быстрая публикация временных акций",
+  "es": "Publicar ofertas por tiempo limitado al instante",
+  "tl": "Agad na mag-post ng mga limitadong oras na promo",
+  "ar": "نشر العروض المحدودة بوقت فورًا"
  },
  "暗証番号の発行に失敗しました: {0}": {
   "en": "Failed to issue PIN: {0}",
@@ -10971,6 +11371,22 @@
   "ru": "Ср",
   "es": "Miércoles",
   "tl": "Miy"
+ },
+ "求人への応募の確認": {
+  "en": "Check job applications",
+  "zh": "查看应聘申请",
+  "zh-TW": "確認徵才應徵",
+  "ne": "रोजगारी आवेदनहरू जाँच गर्नुहोस्",
+  "vi": "Kiểm tra đơn ứng tuyển",
+  "id": "Cek Lamaran Kerja",
+  "my": "အလုပ်လျှောက်လွှာများကို စစ်ဆေးရန်",
+  "th": "ตรวจสอบการสมัครงาน",
+  "pt": "Verificar candidaturas a vagas de emprego",
+  "tr": "İş Başvurularını Kontrol Etme",
+  "ru": "Проверка откликов на вакансии",
+  "es": "Verificar postulaciones a empleos",
+  "tl": "Tingnan ang mga aplikasyon sa trabaho",
+  "ar": "التحقق من طلبات التوظيف"
  },
  "注意": {
   "en": "Caution",
@@ -13596,6 +14012,22 @@
   "es": "Quitar",
   "tl": "Alisin ang pagdaragdag"
  },
+ "追加機能のオン・オフ": {
+  "en": "Turn additional features on/off",
+  "zh": "开启/关闭附加功能",
+  "zh-TW": "開啟／關閉附加功能",
+  "ne": "थप सुविधाहरू अन/अफ",
+  "vi": "Bật/Tắt tính năng bổ sung",
+  "id": "Aktif/Nonaktifkan Fitur Tambahan",
+  "my": "ထပ်ဆောင်း လုပ်ဆောင်ချက်များ ဖွင့်/ပိတ် ပြုလုပ်ရန်",
+  "th": "เปิด/ปิดฟีเจอร์เพิ่มเติม",
+  "pt": "Ativar/desativar recursos adicionais",
+  "tr": "Ek Özellikleri Aç/Kapat",
+  "ru": "Включение и выключение доп. функций",
+  "es": "Activar/desactivar funciones adicionales",
+  "tl": "I-on/i-off ang mga karagdagang feature",
+  "ar": "تفعيل/تعطيل الميزات الإضافية"
+ },
  "退店から30日を過ぎると復帰できなくなります。復帰させるとアカウント・ログイン情報・投稿履歴はそのまま戻ります。": {
   "en": "You will not be able to restore the account after 30 days from closing. Restoring will recover your account, login information, and post history as they were.",
   "zh": "闭店超过30天后将无法恢复。恢复后，账号、登录信息及发布记录将原样还原。",
@@ -13996,6 +14428,22 @@
   "es": "Programar próximo evento",
   "tl": "Magrehistro ng nakaiskedyul na kaganapan"
  },
+ "開催場所": {
+  "en": "Location",
+  "zh": "举办地点",
+  "zh-TW": "舉辦地點",
+  "ne": "आयोजना स्थल",
+  "vi": "Địa điểm tổ chức",
+  "id": "Lokasi Acara",
+  "my": "ကျင်းပသည့်နေရာ",
+  "th": "สถานที่จัดงาน",
+  "pt": "Local do evento",
+  "tr": "Etkinlik Yeri",
+  "ru": "Место проведения",
+  "es": "Ubicación del evento",
+  "tl": "Lugar ng kaganapan",
+  "ar": "موقع الفعالية"
+ },
  "開催場所のお知らせ": {
   "en": "Event Location Announcement",
   "zh": "活动地点通知",
@@ -14091,6 +14539,22 @@
   "ru": "Дата начала",
   "es": "Fecha de inicio",
   "tl": "Petsa ng simula"
+ },
+ "集客と契約": {
+  "en": "Customer acquisition and subscription",
+  "zh": "获客与签约",
+  "zh-TW": "集客與合約",
+  "ne": "ग्राहक आकर्षण र सम्झौता",
+  "vi": "Thu hút khách hàng và hợp đồng",
+  "id": "Pemasaran & Kontrak",
+  "my": "ဝယ်ယူသူ ဆွဲဆောင်ခြင်းနှင့် စာချုပ်များ",
+  "th": "การดึงดูดลูกค้าและสัญญา",
+  "pt": "Atração de clientes e contratos",
+  "tr": "Müşteri Kazanımı ve Sözleşmeler",
+  "ru": "Привлечение клиентов и подписка",
+  "es": "Atracción de clientes y contratos",
+  "tl": "Pag-akit ng customer at kontrata",
+  "ar": "جذب العملاء والعقود"
  },
  "電話で問い合わせ": {
   "en": "Inquire by phone",
