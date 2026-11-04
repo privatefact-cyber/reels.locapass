@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
+import { isBusinessType, VERTICALS } from "@/lib/verticals/registry";
 import { requireAdmin, requireRootAdmin } from "@/lib/admin/require-admin";
 import { isSiteTheme, type SiteTheme } from "@/lib/theme";
 import { parseVideoUrl } from "@/lib/video";
@@ -104,6 +105,25 @@ export async function moveShopToPortal(shopId: string, toPortalId: number, categ
   for (const p of slugs ?? []) if (p.slug) revalidatePath(`/${p.slug}`);
   revalidatePath(`/shops/${shopId}`);
   revalidatePath("/admin");
+}
+
+/**
+ * 店舗の業態を変える(ルート管理者のみ。DBのトリガーでも同じ制限をかけている)。
+ * 属性のデータは消さずに残す(新しい業態で出さない属性は、管理画面にも公開ページにも出なくなるだけ)。
+ */
+export async function updateShopBusinessType(shopId: string, businessType: string) {
+  await requireRootAdmin();
+  if (!isBusinessType(businessType)) throw new Error("不明な業態です");
+  const supabase = await createClient();
+  const { data: updated, error } = await (supabase as any)
+    .from("locapass_shops")
+    .update({ business_type: businessType })
+    .eq("id", shopId)
+    .select("id, portal_id");
+  if (error) throw new Error(`業態の変更に失敗しました: ${error.message}`);
+  if (!updated || updated.length === 0) throw new Error("業態の変更に失敗しました(権限をご確認ください)");
+  revalidatePath(`/dashboard/shop/${shopId}`);
+  revalidatePortal(updated[0].portal_id);
 }
 
 export type CreatePortalState =
@@ -236,17 +256,22 @@ export async function createPortalShop(_prev: CreateShopState, formData: FormDat
 
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { status: "error", message: "店舗名は必須です" };
+  // 発行は業態の選択から始まる。業種(category)は業態から自動で決める(発行後に店舗情報で選び直せる)。
+  const businessType = String(formData.get("business_type") ?? "");
+  if (!isBusinessType(businessType)) return { status: "error", message: "業態を選択してください" };
   const issueLogin = formData.get("issue_login") === "on";
   const adminEmail = String(formData.get("admin_email") ?? "").trim();
 
   const supabase = await createClient();
-  const { data: shopId, error } = await supabase.rpc("locapass_create_shop", {
+  // p_business_type は生成済みの型に無い(00177で追加)ので、rpc の引数だけ型を緩める。
+  const { data: shopId, error } = (await (supabase as any).rpc("locapass_create_shop", {
     p_portal_id: portalId,
     p_name: name,
-    p_category: normalizeCategory(String(formData.get("category") ?? "")) ?? undefined,
+    p_category: VERTICALS[businessType].category,
     p_address: String(formData.get("address") ?? "").trim() || undefined,
     p_tel: String(formData.get("tel") ?? "").trim() || undefined,
-  });
+    p_business_type: businessType,
+  })) as { data: string | null; error: { message: string } | null };
   if (error || !shopId) return { status: "error", message: error?.message ?? "店舗の発行に失敗しました" };
 
   // 店舗自体は作れたので、ログイン発行に失敗しても店舗発行は成功として返し、エラーだけ併記する。

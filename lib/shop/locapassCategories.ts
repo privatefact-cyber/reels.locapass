@@ -19,6 +19,7 @@ export const LOCAPASS_CATEGORIES = [
   "コミュニティ",
   "その他",
 ] as const;
+export type LocapassCategory = (typeof LOCAPASS_CATEGORIES)[number];
 
 export const CATEGORY_OTHER = "その他";
 

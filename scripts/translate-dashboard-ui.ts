@@ -19,7 +19,7 @@ import { UI_TRANSLATION_LANGS } from "../lib/i18n/languages";
 
 config({ path: join(process.cwd(), ".env.local"), quiet: true });
 
-const ROOTS = ["app/dashboard", "components/locapass-dashboard", "lib/locapass-dashboard", "components/reels/ReelCaptionEditor.tsx", "components/support"];
+const ROOTS = ["app/dashboard", "components/locapass-dashboard", "lib/locapass-dashboard", "lib/verticals", "components/reels/ReelCaptionEditor.tsx", "components/support"];
 const CATALOG = join(process.cwd(), "lib/dashboard-i18n/catalog.json");
 const LANGS = UI_TRANSLATION_LANGS;
 const BATCH = 50;

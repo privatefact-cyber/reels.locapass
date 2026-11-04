@@ -25,6 +25,7 @@ import { LANGUAGES } from "@/lib/i18n/languages";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
+import { BusinessTypeControl } from "@/components/locapass-dashboard/BusinessTypeControl";
 import { toJstDateString, getJstNow } from "@/lib/reels/nowWorking";
 import {
   addPriceItem,
@@ -95,6 +96,12 @@ export default async function LocapassShopSettingsPage({
   const { data: spotNoticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled").eq("id", currentShop.id).maybeSingle();
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
+  // 業態(00177で追加。生成済みの型に列が無いため別クエリ)。変更できるのはルート管理者だけ。
+  const [{ data: businessTypeRow }, { data: isSuperAdmin }] = await Promise.all([
+    (supabase as any).from("locapass_shops").select("business_type").eq("id", currentShop.id).maybeSingle(),
+    supabase.rpc("locapass_is_super_admin"),
+  ]);
+  const businessType: string | null = businessTypeRow?.business_type ?? null;
 
   // 自動翻訳の確認・修正欄。原文が入っている項目だけ、原文と別の言語ぶんを出す。
   const storedTranslations = asStoredTranslations(shopRow.translations);
@@ -224,6 +231,9 @@ export default async function LocapassShopSettingsPage({
           <p className="mt-1 text-sm text-slate-600">
             ここで編集した内容は表側ポータルの店舗ページに反映されます。
           </p>
+          <div className="mt-3">
+            <BusinessTypeControl shopId={currentShop.id} current={businessType} canChange={!!isSuperAdmin} />
+          </div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center">
           <p className="text-2xl font-bold text-slate-900">{favoriteCount ?? 0}</p>
