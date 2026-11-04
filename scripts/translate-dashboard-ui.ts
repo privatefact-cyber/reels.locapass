@@ -113,7 +113,7 @@ async function translateBatch(strings: string[], lang: { code: string; english: 
   ].join("\n");
   const res = await geminiGenerateWithFallback(
     apiKey,
-    { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, responseMimeType: "application/json" } },
+    { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, responseMimeType: "application/json", thinkingConfig: { thinkingBudget: 0 } } },
     "dashboard ui translation",
     80_000,
   );

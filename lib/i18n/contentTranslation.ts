@@ -207,7 +207,7 @@ async function callGemini(items: Record<string, string>[], targets: readonly Tra
     apiKey,
     {
       contents: [{ parts: [{ text: `${buildPromptRules(targets, detect, sourceLang)}\n\n${JSON.stringify(items)}` }] }],
-      generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
+      generationConfig: { temperature: 0.2, responseMimeType: "application/json", thinkingConfig: { thinkingBudget: 0 } },
     },
     "content translation",
     50_000, // 複数言語ぶんの長めの文章を訳すので、画像つきの生成より長く待つ

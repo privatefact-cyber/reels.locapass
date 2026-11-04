@@ -44,7 +44,7 @@ async function translateDocs(docs: Doc[], lang: { code: string; english: string 
   ].join("\n");
   const res = await geminiGenerateWithFallback(
     process.env.GEMINI_API_KEY!,
-    { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, responseMimeType: "application/json" } },
+    { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, responseMimeType: "application/json", thinkingConfig: { thinkingBudget: 0 } } },
     "support docs translation",
     90_000,
   );
