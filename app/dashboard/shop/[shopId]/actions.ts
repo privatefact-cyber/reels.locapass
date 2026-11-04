@@ -13,6 +13,8 @@ import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { OFFICIAL_CATEGORY } from "@/lib/shop/genres";
 import { translateEventText, translatePriceItemNames } from "@/lib/shop/shopTranslations";
 import { normalizeInputLang, shopInputLang } from "@/lib/shop/inputLang";
+import { isAttributeKey, sanitizeAttributeDetail } from "@/lib/verticals/attributes";
+import { verticalOf } from "@/lib/verticals/registry";
 
 /**
  * LUXELA本家(app/dashboard/shop/actions.ts)の店舗情報画面をlocapass_shopsにつないだ版。
@@ -622,4 +624,31 @@ export async function setMapPreviewReel(shopId: string, reelId: string | null) {
 
   revalidatePath(`/dashboard/shop/${shopId}/posts`);
   revalidatePath("/map");
+}
+
+/**
+ * 店舗の属性(ペット同伴可・駐車場など)を1つオン・オフする。オンのときは詳細もあわせて保存する(詳細だけの更新もこれ)。
+ * オフ = 行を消す = 「未設定」に戻す(「なし」として残さない。公開ページに「不可」とは出さないため)。
+ * 出せるのは、その店の業態(lib/verticals/registry.ts)に合う属性だけ。詳細は定義にある選択肢だけに整えてから保存する。
+ */
+export async function setShopAttribute(shopId: string, key: string, enabled: boolean, detail: unknown = {}) {
+  const supabase = await requireShopAccess(shopId);
+  if (!isAttributeKey(key)) throw new Error("不明な属性です");
+  // business_type は00177で追加した列で、生成済みの型に無い。
+  const { data: shopRow } = await (supabase as any).from("locapass_shops").select("business_type").eq("id", shopId).maybeSingle();
+  if (!verticalOf(shopRow?.business_type).attributes.includes(key)) throw new Error("この業態では使えない属性です");
+
+  const table = (supabase as any).from("locapass_shop_attributes");
+  if (!enabled) {
+    const { error } = await table.delete().eq("shop_id", shopId).eq("attribute_key", key);
+    if (error) throw new Error(`属性の保存に失敗しました: ${error.message}`);
+  } else {
+    const { data, error } = await table
+      .upsert({ shop_id: shopId, attribute_key: key, detail: sanitizeAttributeDetail(key, detail) }, { onConflict: "shop_id,attribute_key" })
+      .select("attribute_key");
+    if (error) throw new Error(`属性の保存に失敗しました: ${error.message}`);
+    if (!data || data.length === 0) throw new Error("属性の保存に失敗しました(権限をご確認ください)");
+  }
+  revalidateShop(shopId);
+  revalidatePath("/[prefecture]/shops/[shopSlug]", "page");
 }

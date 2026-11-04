@@ -26,6 +26,9 @@ import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopComple
 import { computeProfileCompleteness } from "@/lib/shop/profileCompleteness";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
 import { BusinessTypeControl } from "@/components/locapass-dashboard/BusinessTypeControl";
+import { ShopAttributesEditor } from "@/components/locapass-dashboard/ShopAttributesEditor";
+import { verticalOf } from "@/lib/verticals/registry";
+import { isAttributeKey, sanitizeAttributeDetail, type AttributeDetail, type AttributeKey } from "@/lib/verticals/attributes";
 import { toJstDateString, getJstNow } from "@/lib/reels/nowWorking";
 import {
   addPriceItem,
@@ -97,11 +100,20 @@ export default async function LocapassShopSettingsPage({
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
   // 業態(00177で追加。生成済みの型に列が無いため別クエリ)。変更できるのはルート管理者だけ。
-  const [{ data: businessTypeRow }, { data: isSuperAdmin }] = await Promise.all([
+  const [{ data: businessTypeRow }, { data: isSuperAdmin }, { data: attributeRows }] = await Promise.all([
     (supabase as any).from("locapass_shops").select("business_type").eq("id", currentShop.id).maybeSingle(),
     supabase.rpc("locapass_is_super_admin"),
+    // 属性(00178。生成済みの型に無い)。業態に合わない属性の行も消さずに残っているが、ここでは出さない。
+    (supabase as any).from("locapass_shop_attributes").select("attribute_key, detail").eq("shop_id", currentShop.id),
   ]);
   const businessType: string | null = businessTypeRow?.business_type ?? null;
+  const attributeKeys = verticalOf(businessType).attributes;
+  const shopAttributes: Partial<Record<AttributeKey, AttributeDetail>> = {};
+  for (const r of (attributeRows ?? []) as { attribute_key: string; detail: unknown }[]) {
+    if (isAttributeKey(r.attribute_key) && attributeKeys.includes(r.attribute_key)) {
+      shopAttributes[r.attribute_key] = sanitizeAttributeDetail(r.attribute_key, r.detail);
+    }
+  }
 
   // 自動翻訳の確認・修正欄。原文が入っている項目だけ、原文と別の言語ぶんを出す。
   const storedTranslations = asStoredTranslations(shopRow.translations);
@@ -187,6 +199,7 @@ export default async function LocapassShopSettingsPage({
     priceItemCount: priceItems.length,
     castCount: castRows?.length ?? 0,
     reelCount: reelCount ?? 0,
+    attributeCount: Object.keys(shopAttributes).length,
   });
   const completenessItems = completeness.items.map((item) =>
     item.href.startsWith("/dashboard/") ? { ...item, href: item.href.replace("/dashboard", basePath) } : item,
@@ -568,6 +581,14 @@ export default async function LocapassShopSettingsPage({
           </div>
           <input type="hidden" name="price_info" value={shop.price_info ?? ""} />
         </SaveForm>
+      </section>
+
+      <section id="shop-attributes" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6">
+        <h2 className="mb-1 text-sm font-semibold text-slate-900">属性</h2>
+        <p className="-mt-1 mb-4 text-xs text-slate-500">
+          当てはまるものを押してオンにしてください。オンにした項目は、店舗ページにアイコンで表示されます。
+        </p>
+        <ShopAttributesEditor shopId={currentShop.id} keys={attributeKeys} initial={shopAttributes} />
       </section>
 
       {translationFields.length > 0 && translationLanguages.length > 0 && (

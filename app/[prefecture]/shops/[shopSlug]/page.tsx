@@ -60,6 +60,8 @@ import { eventShopDict } from "@/lib/shop/eventWording";
 import { PageDots } from "@/components/shop/PageDots";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
+import { getPublicShopAttributes } from "@/lib/verticals/shopAttributes";
+import { ShopAttributeBadges } from "@/components/shop/ShopAttributeBadges";
 import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
@@ -401,6 +403,8 @@ export default async function ShopDetailPage({
   // 場所は、出店予定(上の出店場所カード・カレンダー・地図)だけで伝える。
   const { data: portalFeatureRow } = await (supabase as any).from("locapass_portals").select("features").eq("id", site.id).maybeSingle();
   const isMobilePortal = ((portalFeatureRow?.features ?? []) as string[]).includes("mobile");
+  // 属性(ペット同伴可・駐車場など)。オンの属性だけを出す(未設定を「不可」とは出さない)。
+  const shopAttributes = await getPublicShopAttributes(supabase, shopId, locale);
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")
@@ -738,6 +742,8 @@ export default async function ShopDetailPage({
               <InfoRow icon={<DollarSign size={16} />} label={t.shop.priceInfo} value={store.priceInfo} />
             )}
           </div>
+
+          <ShopAttributeBadges attributes={shopAttributes} />
 
           {/* 住所と連動した地図 */}
           {store.address && !isMobilePortal && (

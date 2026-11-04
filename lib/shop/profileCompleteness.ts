@@ -28,6 +28,8 @@ export type CompletenessInput = {
   priceItemCount: number;
   castCount: number;
   reelCount: number;
+  /** オンにした属性(ペット同伴可・駐車場など)の数。lib/verticals/attributes.ts */
+  attributeCount: number;
 };
 
 export function computeProfileCompleteness(input: CompletenessInput): {
@@ -101,6 +103,14 @@ export function computeProfileCompleteness(input: CompletenessInput): {
       weight: 5,
       done: !!input.phone?.trim() || !!input.lineUrl?.trim(),
       href: "#shop-basic",
+    },
+    {
+      key: "attributes",
+      label: "属性(ペット同伴可・駐車場など)",
+      hint: "当てはまるものを押すだけです。お店選びの決め手になります。",
+      weight: 5,
+      done: input.attributeCount > 0,
+      href: "#shop-attributes",
     },
     ...(hasCast
       ? [
