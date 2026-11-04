@@ -124,8 +124,26 @@ export function PhotoFeed({
   const openRef = useRef<HTMLDivElement | null>(null);
 
   // 開いた投稿の位置までスクロールして、そこから縦に見ていけるようにする。
+  // 上にある写真は、読み込まれるまで高さが無く、読み込まれるたびに下へ押し出されて、別の写真に着いてしまう。
+  // 指で触れるまで(または数秒間)は、写真が読み込まれるたびに、開いた投稿の位置へ合わせ直す。
   useEffect(() => {
-    if (viewer) openRef.current?.scrollIntoView({ block: "start" });
+    if (!viewer) return;
+    openRef.current?.scrollIntoView({ block: "start" });
+    let settling = true;
+    const onLoad = (e: Event) => {
+      if (settling && e.target instanceof HTMLImageElement) openRef.current?.scrollIntoView({ block: "start" });
+    };
+    const stop = () => {
+      settling = false;
+    };
+    const timer = window.setTimeout(stop, 5000);
+    document.addEventListener("load", onLoad, true);
+    for (const ev of ["touchstart", "wheel", "keydown", "mousedown"]) window.addEventListener(ev, stop, { passive: true, once: true });
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("load", onLoad, true);
+      for (const ev of ["touchstart", "wheel", "keydown", "mousedown"]) window.removeEventListener(ev, stop);
+    };
   }, [viewer]);
 
   const chip = (active: boolean) =>
