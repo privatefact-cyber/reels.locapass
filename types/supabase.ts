@@ -2583,6 +2583,11 @@ export type Database = {
           tel: string | null
           translations: Json
           updated_at: string
+          last_confirmed_at: string | null
+          last_confirmed_source: string | null
+          url_checked_at: string | null
+          url_fail_count: number
+          url_status: string
           url: string | null
           usage_notes: string | null
           venue_id: string | null
@@ -2637,6 +2642,11 @@ export type Database = {
           tel?: string | null
           translations?: Json
           updated_at?: string
+          last_confirmed_at?: string | null
+          last_confirmed_source?: string | null
+          url_checked_at?: string | null
+          url_fail_count?: number
+          url_status?: string
           url?: string | null
           usage_notes?: string | null
           venue_id?: string | null
@@ -2691,6 +2701,11 @@ export type Database = {
           tel?: string | null
           translations?: Json
           updated_at?: string
+          last_confirmed_at?: string | null
+          last_confirmed_source?: string | null
+          url_checked_at?: string | null
+          url_fail_count?: number
+          url_status?: string
           url?: string | null
           usage_notes?: string | null
           venue_id?: string | null

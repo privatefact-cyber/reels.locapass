@@ -6,6 +6,7 @@ import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { gridThumb } from "@/lib/images/thumb";
 import { mergeLiveSpots } from "@/lib/map/liveSpots";
+import { isStaleShop } from "@/lib/shop/freshness";
 import { hasRealPhoto } from "@/lib/shop/sinkWithoutPhoto";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
@@ -254,7 +255,7 @@ export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): 
  * locapass_shops にはスポンサー枠・英語対応・認証バッジの概念が無いため、その3つは常に false で返す。
  */
 const CARD_COLUMNS =
-  "id, name, slug, area, category, lat, lng, address_en, icon_url, cover_url, cover_image_attribution, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id, portal_id, portal:locapass_portals ( slug )";
+  "id, name, slug, area, category, lat, lng, address_en, icon_url, cover_url, cover_image_attribution, hero_media_url, hero_media_type, map_video_enabled, map_preview_reel_id, portal_id, url_status, last_confirmed_at, portal:locapass_portals ( slug )";
 
 export async function getVenueCards(
   bounds: VenueBounds,
@@ -418,8 +419,11 @@ export async function getVenueCards(
   });
 
   // 実際に投稿したリールの多い順。同じ本数のときは、写真のある店を先にする(写真が無くて黒い/イメージ写真のカードは後ろへ)。
+  // 情報が古い店(公式URL不達・1年以上未確認)は、リール本数にかかわらず最後へ回す(非表示にはしない)。
+  const staleIds = new Set(shops.filter((s) => isStaleShop(s)).map((s) => s.id));
   venues.sort(
     (a, b) =>
+      Number(staleIds.has(a.id)) - Number(staleIds.has(b.id)) ||
       (realReelCountByShopId.get(b.id) ?? 0) - (realReelCountByShopId.get(a.id) ?? 0) ||
       Number(hasRealPhoto(b.imageUrl)) - Number(hasRealPhoto(a.imageUrl)),
   );

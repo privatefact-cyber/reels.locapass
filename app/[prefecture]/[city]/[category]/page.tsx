@@ -9,6 +9,7 @@ import { PlacePhotoCredit, isPlacePhotoUrl } from "@/components/shop/PlacePhotoC
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { shopPath } from "@/lib/locapass/publicUrls";
 import { latestReelStillsByShop } from "@/lib/map/getVenues";
+import { sinkStale } from "@/lib/shop/freshness";
 import { hasRealPhoto, sinkWithoutPhoto } from "@/lib/shop/sinkWithoutPhoto";
 
 // この動的ルートは generateStaticParams を持たない(=ビルド時の事前レンダリング対象に
@@ -59,7 +60,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
   const supabase = await createClient();
   const { data: shopRows } = await supabase
     .from("locapass_shops")
-    .select("id, slug, name, tagline, cover_image_url:cover_url, cover_image_attribution, portal:locapass_portals ( slug )")
+    .select("id, slug, name, tagline, cover_image_url:cover_url, cover_image_attribution, url_status, last_confirmed_at, portal:locapass_portals ( slug )")
     .eq("status", "active")
     .eq("area", area)
     .eq("category", genre)
@@ -72,7 +73,8 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
     cover_image_url: s.cover_image_url ?? reelStills.get(s.id) ?? null,
     portal: Array.isArray(s.portal) ? s.portal[0] : s.portal,
   }));
-  const shops = sinkWithoutPhoto(shopsRaw, (s) => hasRealPhoto(s.cover_image_url));
+  // 写真なしの店を後ろへ回したうえで、情報が古い店(公式URL不達・1年以上未確認)をさらに後ろへ回す。
+  const shops = sinkStale(sinkWithoutPhoto(shopsRaw, (s) => hasRealPhoto(s.cover_image_url)));
   if (shops.length === 0) notFound();
 
   const shopIds = shops.map((s) => s.id);
