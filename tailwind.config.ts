@@ -4,6 +4,11 @@ const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      screens: {
+        // スマホの横向き。iPhoneの横向きは幅が768pxを超えて md(PC向け)扱いになるため、
+        // 全画面スワイプでPCの縦長カード表示になってしまうのを、これで上書きする(md より後に出力される)。
+        phoneland: { raw: "(orientation: landscape) and (max-height: 500px) and (pointer: coarse)" },
+      },
       fontFamily: {
         display: ["'Cormorant Garamond'", "serif"],
         // トップのFEATURED枠(黒×ゴールドの誌面風演出)専用の和文明朝体。他画面のゴシック体とは分けて使う。

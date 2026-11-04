@@ -949,7 +949,7 @@ export function ReelFeed({
               type="button"
               onClick={() => setImmersive(false)}
               aria-label="全画面を閉じる"
-              className="fixed left-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-[56] flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
+              className="fixed left-[calc(0.75rem+env(safe-area-inset-left))] top-[calc(0.75rem+env(safe-area-inset-top))] z-[56] flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
             >
               <X size={18} />
             </button>

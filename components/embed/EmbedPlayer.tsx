@@ -30,6 +30,8 @@ export function EmbedPlayer({
   autoStart = false,
   soundOn: soundOnProp,
   className = "absolute inset-0",
+  coverPortrait = false,
+  barClassName = "",
 }: {
   provider: VideoProvider;
   refId: string;
@@ -45,6 +47,13 @@ export function EmbedPlayer({
   soundOn?: boolean;
   /** 配置(親の中で絶対配置する)。 */
   className?: string;
+  /**
+   * 縦向きの画面で、縦長(9:16)の枠を画面いっぱいに覆う大きさで出す(左右を少し切って、上下の黒帯を無くす)。
+   * 全画面スワイプ用。YouTubeは枠の中で動画を縮めて収めるため、枠そのものを9:16で画面より大きくする。
+   */
+  coverPortrait?: boolean;
+  /** 上の帯(「〇〇で見る」・閉じる)に足すクラス。全画面では、ノッチと左上の閉じるボタンを避けるのに使う。 */
+  barClassName?: string;
 }) {
   const [playing, setPlaying] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -143,7 +152,7 @@ export function EmbedPlayer({
   }, [active, preload, provider]);
 
   return (
-    <div className={`${className} overflow-hidden bg-black`}>
+    <div className={`${className} overflow-hidden bg-black ${coverPortrait ? "[container-type:size]" : ""}`}>
       {/* 同じiframeを出し入れしないよう、読み込み中も再生中も同じ要素のまま、見た目だけ切り替える(切り替えで読み込み直しにならない)。 */}
       {mounted && (
         <iframe
@@ -158,7 +167,10 @@ export function EmbedPlayer({
           className={
             playing
               ? autoPlay
-                ? "absolute inset-0 h-full w-full border-0 bg-black"
+                ? coverPortrait
+                  ? // 枠(親)の大きさを cq 単位で測り、縦向きのときだけ「9:16で親を覆う」大きさにして中央に置く。
+                    "absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 border-0 bg-black portrait:h-[max(100cqh,calc(100cqw*16/9))] portrait:w-[max(100cqw,calc(100cqh*9/16))]"
+                  : "absolute inset-0 h-full w-full border-0 bg-black"
                 : "absolute inset-x-0 bottom-0 top-8 h-[calc(100%-2rem)] w-full border-0 bg-black"
               : "pointer-events-none absolute inset-0 h-full w-full border-0 opacity-0"
           }
@@ -176,7 +188,7 @@ export function EmbedPlayer({
             </div>
           )}
           {/* 上の細い帯に「閉じる」と元の投稿へのリンクを置く(埋め込み側のボタンと重ならないように)。 */}
-          <div className={autoPlay ? "absolute inset-x-0 top-0 z-20 flex items-center gap-2 p-2" : "absolute inset-x-0 top-0 z-20 flex h-8 items-center justify-between bg-black px-2"}>
+          <div className={`${autoPlay ? "absolute inset-x-0 top-0 z-20 flex items-center gap-2 p-2" : "absolute inset-x-0 top-0 z-20 flex h-8 items-center justify-between bg-black px-2"} ${barClassName}`}>
             <a
               href={videoUrlFor(provider, refId)}
               target="_blank"

@@ -254,6 +254,16 @@ export function ReelCard({
   }
 
   const wideInFullBleed = fullBleed && (embed?.provider === "youtube" || landscapeVideo);
+  // 全画面スワイプ中にスマホを横向きにしたとき(phoneland)は、動画を画面いっぱいに出し、
+  // 右のアイコン列・下の文章・グラデーション・タップでの遷移を消して「見るだけ」の表示にする。
+  // (iPhoneの横向きは幅がmd以上になり、何もしないとPC用の縦長カード+外側のアイコン列になってしまう)
+  const land = (cls: string) => (fullBleed ? cls : "");
+  // 埋め込み(YouTube/TikTok)の全画面は枠ごとの全画面(Fullscreen API)。iPhoneは対応していないので、ボタン自体を出さない。
+  const [frameFullscreenOk, setFrameFullscreenOk] = useState(true);
+  useEffect(() => {
+    setFrameFullscreenOk(!!document.fullscreenEnabled);
+  }, []);
+  const canFullscreen = !!videoUrl || (!!embed && embed.provider !== "instagram" && frameFullscreenOk);
 
   return (
     <div data-surface="media"
@@ -262,7 +272,7 @@ export function ReelCard({
         fullBleed
           ? wideInFullBleed
             ? "h-full"
-            : "h-full md:aspect-[9/16] md:w-auto"
+            : "h-full md:aspect-[9/16] md:w-auto phoneland:aspect-auto phoneland:w-full"
           : "aspect-[9/16] md:h-full md:w-auto"
       }`}
     >
@@ -295,14 +305,16 @@ export function ReelCard({
             preload={embedPreload}
             autoStart
             soundOn={embedSound}
-            className={
+            // フィードの自動再生(無音)のYouTubeは controls=0・fs=0 で、YouTube自身の操作バーも全画面ボタンも出ない。
+            // そのため下を空けておく必要はなく、カード(全画面では画面)いっぱいに出す。
+            // 全画面スワイプの縦向きでは、縦長(ショート)が上下の黒帯なしで画面を覆う大きさにする。
+            coverPortrait={fullBleed && embed.provider === "youtube"}
+            barClassName={fullBleed ? "pl-[calc(3.5rem+env(safe-area-inset-left))] pr-[calc(0.5rem+env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))]" : ""}
+            className={`${
                 embed.provider === "instagram"
                   ? "absolute bottom-[84px] left-0 right-14 top-0 md:right-0"
-                  : embed.provider === "youtube"
-                    ? // スマホでは、YouTube自身の操作バー(全画面ボタン)が下の文章に隠れないよう、文章より上に置く。横幅はカードいっぱいのまま。
-                      "absolute inset-x-0 top-0 bottom-[170px] md:inset-0"
-                    : "absolute inset-0"
-              }
+                  : "absolute inset-0"
+              } ${land("phoneland:inset-0")}`}
           />
         </>
       ) : videoUrl && isActive ? (
@@ -386,7 +398,7 @@ export function ReelCard({
         </div>
       )}
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent ${land("phoneland:hidden")}`} />
 
       {/* 再生中は画像中央部タップで指定リンク先へ(投稿の任意URL、無ければ既定のリンク先)。
           この後に続くボタン類はDOM順で上に来るため、それぞれのタップは奪わない。 */}
@@ -394,7 +406,7 @@ export function ReelCard({
         <Link
           href={ctaUrl}
           aria-label={resolvedCtaText}
-          className="absolute inset-0"
+          className={`absolute inset-0 ${land("phoneland:hidden")}`}
           onPointerDown={handlePointerDown}
           onClick={guardTapClick}
         />
@@ -410,10 +422,42 @@ export function ReelCard({
             setMuted(!muted);
           }}
           aria-label={muted ? t.common.unmute : t.common.mute}
-          className={`pointer-events-auto absolute right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm ${fullBleed ? "top-[calc(0.75rem+env(safe-area-inset-top))]" : "top-3"}`}
+          className={`pointer-events-auto absolute right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm ${fullBleed ? "top-[calc(0.75rem+env(safe-area-inset-top))] phoneland:right-[calc(0.75rem+env(safe-area-inset-right))]" : "top-3"}`}
         >
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
+      )}
+
+      {/* 横向きの全画面スワイプでは右の列を消すので、音と全画面だけを右上に小さく残す。
+          自前の動画の「全画面」はiPhoneでも標準プレイヤーになり、Safariのバーも消える。 */}
+      {fullBleed && isActive && (embedHasSound || canFullscreen) && (
+        <div
+          className={`pointer-events-auto absolute top-[calc(0.75rem+env(safe-area-inset-top))] hidden items-center gap-2 phoneland:flex ${
+            // 自前の動画は右上の音ボタンの左、外部動画は埋め込みの「閉じる(×)」の左に並べる。
+            videoUrl ? "right-[calc(3.25rem+env(safe-area-inset-right))]" : "right-[calc(2.75rem+env(safe-area-inset-right))]"
+          }`}
+        >
+          {embedHasSound && (
+            <button
+              type="button"
+              onClick={() => setEmbedSound(!embedSound)}
+              aria-label={embedSound ? "音を消す" : "音を出す"}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
+            >
+              {embedSound ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
+          )}
+          {canFullscreen && (
+            <button
+              type="button"
+              onClick={handleFullscreen}
+              aria-label={t.common.fullscreen}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-main backdrop-blur-sm"
+            >
+              <Maximize size={16} />
+            </button>
+          )}
+        </div>
       )}
 
       {isAd && (
@@ -428,7 +472,7 @@ export function ReelCard({
 
       {/* 右下: アイコン(プロフィールへ)・いいね・コメント・シェア (TikTok同様の並び)。
           PC(md以上)では動画の外側(右)に配置し、映像に被らないようにする。 */}
-      <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main ${wideInFullBleed ? "" : "md:right-[-64px]"} ${embed?.provider === "youtube" ? "bottom-[236px] md:bottom-28" : fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
+      <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main ${wideInFullBleed ? "" : "md:right-[-64px]"} ${land("phoneland:hidden")} ${fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
         {embedHasSound && isActive && (
           <button
             type="button"
@@ -500,7 +544,7 @@ export function ReelCard({
             <span className="text-[11px] drop-shadow">{t.common.fullscreen}</span>
           </button>
         ) : (
-          (videoUrl || (embed && embed.provider !== "instagram")) && isActive && (
+          canFullscreen && isActive && (
             <button
               type="button"
               onClick={handleFullscreen}
@@ -528,7 +572,7 @@ export function ReelCard({
       </div>
 
       {/* 左下: CTA + アカウント情報 */}
-      <div className={`pointer-events-auto absolute left-3 right-16 space-y-2 ${fullBleed ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]" : "bottom-4"}`}>
+      <div className={`pointer-events-auto absolute left-3 right-16 space-y-2 ${fullBleed ? "bottom-[calc(1rem+env(safe-area-inset-bottom))] phoneland:hidden" : "bottom-4"}`}>
         {captionText && !isAd && (
           <button
             type="button"
