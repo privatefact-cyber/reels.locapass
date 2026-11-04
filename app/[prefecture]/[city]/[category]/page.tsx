@@ -145,7 +145,7 @@ export default async function AreaCategoryPage({ params }: { params: Promise<Pag
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-hl-200">掲載店舗一覧</h2>
           <Link
-            href={`/${PREFECTURE_SLUG}/${resolvedParams.city}/map`}
+            href="/map"
             className="inline-flex items-center gap-1.5 rounded-full border border-hl-400/40 bg-hl-400/10 px-3 py-1.5 text-xs font-semibold text-hl-300 transition hover:bg-hl-400/20"
           >
             🗺️ マップで見る

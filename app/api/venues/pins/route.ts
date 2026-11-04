@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getVenuePins } from "@/lib/map/getVenues";
 import { parseVenueQuery } from "@/lib/map/parseVenueQuery";
 import { VENUE_CACHE_HEADERS } from "@/lib/map/cacheHeaders";
+import { parseVenueFilters } from "@/lib/map/venueFilters";
 
 /**
  * 地図のピン用の軽量データ(id/座標/ジャンル/スポンサー有無のみ)。
@@ -14,7 +15,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const all = await getVenuePins(parsed.bounds);
+  // pet=1(🐾: ペット同伴可・ペット専用の店)/ now=1(今: 営業中・出店中・ブースト中の店)で絞る。
+  const all = await getVenuePins(parsed.bounds, undefined, parseVenueFilters(request.nextUrl.searchParams));
   // spots=1: 移動販売(出店予定のある店)のピンだけ返す。走る広告トラックが、映している範囲に関係なく店を知るために使う。
   const pins = request.nextUrl.searchParams.get("spots") === "1" ? all.filter((p) => p.spot) : all;
   return NextResponse.json({ pins }, { headers: VENUE_CACHE_HEADERS });

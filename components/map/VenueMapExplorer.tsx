@@ -138,12 +138,18 @@ const MAX_BBOX_SPAN_DEG = 5;
 
 export function VenueMapExplorer({
   initialCenter,
+  initialZoom,
   initialBounds,
+  initialLayers,
   autoLocate = false,
   genres = [],
 }: {
   /** 指定エリアのマップとして開くときの初期中心。 */
   initialCenter?: { lat: number; lng: number };
+  /** ポータルの初期設定(?preset=)で開くときの縮尺。省略時は15。 */
+  initialZoom?: number;
+  /** ポータルの初期設定で、スイッチ(🐾・今)を最初からオンにするか。 */
+  initialLayers?: { pet: boolean; now: boolean };
   /**
    * 指定エリアの店舗が全部収まる範囲。中心固定だと、店舗が数kmに散らばるエリア
    * (横浜など)で初期表示に1件も入らないことがあるため、範囲が来たらそちらを優先する。
@@ -176,6 +182,10 @@ export function VenueMapExplorer({
   // アフタータグ選択中か。アフター(深夜飲食店)は通常のマップに出さず、タグを押したときだけ
   // サーバーから別に取り直す(after=1)。取得系のコールバックから参照するのでrefで持つ。
   const afterMode = useRef(false);
+  // スイッチ(🐾: ペットと行ける店 / 今: 営業中・出店中・ブースト中)。絞り込みはサーバー側(lib/map/venueFilters.ts)で行う。
+  // 取得系のコールバックから参照するのでrefにも持つ。
+  const [layers, setLayers] = useState<{ pet: boolean; now: boolean }>(initialLayers ?? { pet: false, now: false });
+  const layersRef = useRef(layers);
   // 地図のクリックハンドラは初期化時に1回だけ登録するので、そこから最新のfocusVenueを呼べるようrefで持つ。
   // (直接呼ぶと初回レンダー時のfocusVenue=カード0件の状態を掴んだままになり、どのピンを押しても
   //  「カード未取得のピン」扱いで地図がズーム移動して取り直しになっていた)
@@ -285,7 +295,8 @@ export function VenueMapExplorer({
    * 広域ズーム時に重いカードデータを引かないようにしている。
    */
   const fetchForQuery = useCallback(async (baseQuery: string) => {
-    const queryString = afterMode.current ? `${baseQuery}&after=1` : baseQuery;
+    const filterQuery = `${layersRef.current.pet ? "&pet=1" : ""}${layersRef.current.now ? "&now=1" : ""}`;
+    const queryString = `${afterMode.current ? `${baseQuery}&after=1` : baseQuery}${filterQuery}`;
     if (lastQuery.current === queryString) return;
     lastQuery.current = queryString;
     fetchAbort.current?.abort();
@@ -358,7 +369,7 @@ export function VenueMapExplorer({
       //  "Map data not yet available"になるため、どちらも不採用)。
       style: MAP_STYLE_URL,
       center,
-      zoom: 15,
+      zoom: initialZoom ?? 15,
       attributionControl: false,
     });
 
@@ -566,6 +577,10 @@ export function VenueMapExplorer({
           initialBounds.maxLat,
         ].join(",");
         void fetchForQuery(`bbox=${bbox}&limit=${MAX_CARDS}`);
+      } else if (initialCenter) {
+        // ポータルの初期設定(中心・縮尺)で開いたときは、その表示範囲で取る
+        // (地図のサイズが決まる前なら、resize後のmoveendで取り直される)。
+        fetchForCurrentView();
       }
       return;
     }
@@ -605,6 +620,17 @@ export function VenueMapExplorer({
     };
   }, []);
 
+
+  /** スイッチ(🐾・今)を切り替えて、今の表示範囲で取り直す(問い合わせ文が変わるので、同じ範囲でも取り直される)。 */
+  const toggleLayer = useCallback(
+    (key: "pet" | "now") => {
+      const next = { ...layersRef.current, [key]: !layersRef.current[key] };
+      layersRef.current = next;
+      setLayers(next);
+      fetchForCurrentView();
+    },
+    [fetchForCurrentView],
+  );
 
   const goToMyLocation = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -1114,6 +1140,32 @@ export function VenueMapExplorer({
             </p>
           )}
           <div className="pointer-events-auto flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* スイッチ(オン・オフ)。業種のピル(1つ選択)とは別で、組み合わせて使える。 */}
+            <button
+              type="button"
+              aria-pressed={layers.pet}
+              aria-label={t.map.petToggle}
+              title={t.map.petToggle}
+              onClick={() => toggleLayer("pet")}
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                layers.pet ? "border-hl-400 bg-hl-400 text-on-accent" : "border-main/15 bg-black/70 text-tone-200 backdrop-blur"
+              }`}
+            >
+              🐾
+            </button>
+            <button
+              type="button"
+              aria-pressed={layers.now}
+              title={t.map.nowToggleHint}
+              onClick={() => toggleLayer("now")}
+              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide transition ${
+                layers.now ? "border-hl-400 bg-hl-400 text-on-accent" : "border-main/15 bg-black/70 text-tone-200 backdrop-blur"
+              }`}
+            >
+              <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle ${layers.now ? "bg-on-accent" : "bg-emerald-400"}`} aria-hidden />
+              {t.map.nowToggle}
+            </button>
+            <span className="my-1 w-px shrink-0 bg-main/15" aria-hidden />
             {genrePills.map((pill) => (
               <button
                 key={pill.value}

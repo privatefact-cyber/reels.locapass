@@ -9,6 +9,7 @@ import { mergeLiveSpots } from "@/lib/map/liveSpots";
 import { isStaleShop } from "@/lib/shop/freshness";
 import { hasRealPhoto } from "@/lib/shop/sinkWithoutPhoto";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { getVenueFilterIds, type VenueFilters } from "@/lib/map/venueFilters";
 
 /**
  * 地図の取得範囲。全国一括取得はメモリ・転送量が破綻するため、
@@ -165,27 +166,46 @@ async function latestReelDatesByShop(shopIds: string[]): Promise<Map<string, str
 }
 
 /**
+ * 地図のスイッチ(🐾・今)の絞り込みをDBの問い合わせにも掛ける。対象が少ないときは id で絞ってから引き
+ * (範囲内の店が多くても、上限で対象の店が欠けないように)、多いときは問い合わせ文が長くなりすぎるので、引いた後に絞る。
+ * 移動販売の出店場所(mergeLiveSpots で後から足す店)も、呼び出し側で引いた後に同じ集合で絞る。
+ */
+const FILTER_IN_QUERY_LIMIT = 300;
+function narrowByIds<Q extends { in: (column: string, values: string[]) => Q }>(query: Q, ids: Set<string> | null): Q {
+  return ids && ids.size <= FILTER_IN_QUERY_LIMIT ? query.in("id", [...ids]) : query;
+}
+
+/**
  * 地図に打つピンだけの軽量データ。動画URLは含めない。
  * 広域ズームでクラスタを描くのはこちらだけを使う。
  */
 const PIN_COLUMNS = "id, lat, lng, category, cover_url, icon_url, updated_at, portal_id";
 
-export async function getVenuePins(bounds: VenueBounds, limit = MAX_PIN_LIMIT): Promise<VenuePin[]> {
+export async function getVenuePins(
+  bounds: VenueBounds,
+  limit = MAX_PIN_LIMIT,
+  filters: VenueFilters = { pet: false, now: false },
+): Promise<VenuePin[]> {
   const supabase = mapClient();
-  const { data } = await supabase
-    .from("locapass_shops")
-    .select(PIN_COLUMNS)
-    .eq("status", "active")
-    .not("lat", "is", null)
-    .not("lng", "is", null)
-    .gte("lat", bounds.minLat)
-    .lte("lat", bounds.maxLat)
-    .gte("lng", bounds.minLng)
-    .lte("lng", bounds.maxLng)
-    .limit(Math.min(limit, MAX_PIN_LIMIT));
+  const filterIds = await getVenueFilterIds(bounds, filters);
+  if (filterIds && filterIds.size === 0) return [];
+  const { data } = await narrowByIds(
+    supabase
+      .from("locapass_shops")
+      .select(PIN_COLUMNS)
+      .eq("status", "active")
+      .not("lat", "is", null)
+      .not("lng", "is", null)
+      .gte("lat", bounds.minLat)
+      .lte("lat", bounds.maxLat)
+      .gte("lng", bounds.minLng)
+      .lte("lng", bounds.maxLng),
+    filterIds,
+  ).limit(Math.min(limit, MAX_PIN_LIMIT));
 
   // 移動販売の店は固定位置を外し、いま出店中の場所だけを足す(lib/map/liveSpots.ts)。
-  const rows = (await mergeLiveSpots(data ?? [], bounds, PIN_COLUMNS, `${PIN_COLUMNS}, name, slug, portal:locapass_portals ( slug )`)) as NonNullable<typeof data>;
+  const merged = (await mergeLiveSpots(data ?? [], bounds, PIN_COLUMNS, `${PIN_COLUMNS}, name, slug, portal:locapass_portals ( slug )`)) as NonNullable<typeof data>;
+  const rows = filterIds ? merged.filter((s) => filterIds.has(s.id)) : merged;
 
   // 同じ場所(約10m四方)の店は、1つのピンにまとめる。雑居ビルの3階・4階のように座標が同じ店が多いため。
   // 代表は「一番情報が新しい店」(店舗情報の更新日と、最新リールの投稿日の新しい方)。
@@ -261,24 +281,31 @@ export async function getVenueCards(
   bounds: VenueBounds,
   center: { lat: number; lng: number },
   limit = MAX_CARD_LIMIT,
+  filters: VenueFilters = { pet: false, now: false },
 ): Promise<VenueCardData[]> {
   const supabase = mapClient();
   const cardLimit = Math.min(limit, MAX_CARD_LIMIT);
+  const filterIds = await getVenueFilterIds(bounds, filters);
+  if (filterIds && filterIds.size === 0) return [];
 
-  const { data: rawShopRows } = await supabase
-    .from("locapass_shops")
-    .select(CARD_COLUMNS)
-    .eq("status", "active")
-    .not("lat", "is", null)
-    .not("lng", "is", null)
-    .gte("lat", bounds.minLat)
-    .lte("lat", bounds.maxLat)
-    .gte("lng", bounds.minLng)
-    .lte("lng", bounds.maxLng)
+  const { data: rawShopRows } = await narrowByIds(
+    supabase
+      .from("locapass_shops")
+      .select(CARD_COLUMNS)
+      .eq("status", "active")
+      .not("lat", "is", null)
+      .not("lng", "is", null)
+      .gte("lat", bounds.minLat)
+      .lte("lat", bounds.maxLat)
+      .gte("lng", bounds.minLng)
+      .lte("lng", bounds.maxLng),
+    filterIds,
+  )
     // 矩形内が多すぎる場合に備えて、DB側でも上限をかけてから中心に近い順に詰める。
     .limit(MAX_PIN_LIMIT);
   // 移動販売の店は、いま出店中の場所だけを出す。
-  const shopRows = (await mergeLiveSpots(rawShopRows ?? [], bounds, CARD_COLUMNS)) as NonNullable<typeof rawShopRows>;
+  const mergedRows = (await mergeLiveSpots(rawShopRows ?? [], bounds, CARD_COLUMNS)) as NonNullable<typeof rawShopRows>;
+  const shopRows = filterIds ? mergedRows.filter((s) => filterIds.has(s.id)) : mergedRows;
 
   const shops = (shopRows ?? [])
     .map((s) => ({
