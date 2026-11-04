@@ -24,6 +24,7 @@ export const LANGUAGES: LanguageInfo[] = [
   { code: "tr", native: "Türkçe", english: "Turkish" },
   { code: "ru", native: "Русский", english: "Russian" },
   { code: "es", native: "Español", english: "Spanish (neutral, Latin America and Spain)" },
+  { code: "tl", native: "Filipino (Tagalog)", english: "Filipino (Tagalog)" },
   { code: "ar", native: "العربية", english: "Modern Standard Arabic", rtl: true },
 ];
 

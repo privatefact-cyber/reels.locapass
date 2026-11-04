@@ -245,6 +245,10 @@
     "es": {
       "title": "Visión general del panel de administración de la tienda",
       "body": "El administrador de la tienda accederá al panel de administración tras iniciar sesión (también puede ir rápidamente a la pantalla de publicación desde el botón 「Publicar」 en la parte superior de Mi página).\nMenú superior: Información de la tienda / Gestión de FACES / Gestión del personal / ID de administrador / Publicación de Reels / ⚡Boost / Reserva prioritaria / Mensajes a clientes / Gestión de candidatos / Contacto.\nLos administradores del sistema y los administradores de área pueden seleccionar una tienda y publicar en su nombre desde 「Publicar en la tienda como administración」 en Mi página."
+    },
+    "tl": {
+      "title": "Pangkalahatang-tanaw sa Screen ng Pamamahala ng Tindahan",
+      "body": "Ang tagapamahala ng tindahan ay papasok sa screen ng pamamahala ng tindahan pagkatapos mag-log in (maaari ka ring direktang pumunta sa screen ng pag-post mula sa pindutang 「Post」 sa itaas ng Aking Pahina).\nMenu sa itaas: Impormasyon ng Tindahan / Pamamahala ng FACES / Pamamahala ng Staff / ID ng Tagapamahala / Pag-post ng Reel / ⚡ Boost / Prioridad na Pagpapareserba / Mensahe sa mga Customer / Pamamahala ng Aplikante / Pakikipag-ugnayan.\nAng tagapamahala ng sistema at tagapamahala ng lugar ay makakapag-post sa ngalan ng tindahan sa pamamagitan ng pagpili ng tindahan sa 「Mag-post sa tindahan bilang pamamahala」 sa Aking Pahina."
     }
   },
   "shop-faces": {
@@ -301,6 +305,10 @@
     "es": {
       "title": "Registro de FACES y publicación de Reels desde FACES (Lo primero que debe hacer)",
       "body": "FACES es la persona que se convierte en la cara del negocio y transmite los atractivos de la tienda. En LOCAPASS, las publicaciones de FACES son el centro para dar a conocer su tienda. Primero registre un FACES y luego publique Reels.\nPasos:\n1. Abra 「Gestión de FACES」 en el menú superior del panel de administración de la tienda.\n2. En 「Registrar nuevo FACES」, ingrese el nombre (nombre artístico), la edad y el texto de presentación (PR), y regístrelo.\n3. Abra el FACES registrado y configure la foto de perfil (la propia persona también puede configurarla desde Mi página). Esta foto aparecerá en varias pantallas, como el icono circular de FACES en la página de la tienda.\n4. Presione 「Emitir inicio de sesión」 en 「Inicio de sesión para publicar Reels」 en la misma pantalla.\n5. Transmita el enlace de publicación generado (o código QR) y el PIN de 6 dígitos a la persona de FACES (envíe el enlace y el PIN por métodos distintos. No se puede acceder solo con la URL).\n6. Cuando la persona de FACES abra el enlace e ingrese el PIN, podrá acceder a su propia Mi página y publicar Reels.\nSi la persona no puede publicar, la tienda también puede hacerlo en su lugar. Publique desde 「Reels de FACES」 en la pantalla de gestión de FACES.\nPara desvincular a un FACES, elimínelo de la lista de FACES (si es dentro de los 30 días posteriores a su salida, se puede restaurar). Si olvida la contraseña o el PIN, emita uno nuevo desde 「Emitir inicio de sesión」 (reemisión)."
+    },
+    "tl": {
+      "title": "Pagtatala ng FACES at Pag-post ng Reel mula sa FACES (Ang Unang Dapat Gawin)",
+      "body": "Ang FACES (Faces) ay ang taong magiging mukha ng tindahan at magbabahagi ng alindog ng tindahan. Sa LOCAPASS, ang mga post ng FACES ang magiging sentro upang makita ang iyong tindahan. Mangyaring irehistro muna ang FACES bago mag-post ng reel.\nMga Hakbang:\n1. Buksan ang 「Pamamahala ng FACES」 sa menu sa itaas ng screen ng pamamahala ng tindahan.\n2. Ipasok ang pangalan (pangalan sa gawain), edad, at PR text sa 「Bagong Pagpaparehistro ng FACES」 at irehistro.\n3. Buksan ang nirehistrong FACES at i-set ang larawan ng profile (maaari ring i-set mismo ng tao mula sa Aking Pahina). Ang larawang ito ay lalabas sa bawat screen gaya ng bilog na icon ng FACES sa pahina ng tindahan.\n4. Pindutin ang 「Mag-issue ng Login」 sa 「Login para sa Pag-post ng Reel」 sa parehong screen.\n5. Ibigay ang lumabas na link sa pag-post (o QR) at ang 6-digit na PIN sa mismong FACES (mangyaring ipadala ang link at PIN sa magkaibang paraan. Hindi makakapasok gamit ang URL lamang).\n6. Kapag binuksan ng mismong FACES ang link at ipinasok ang PIN, makakapasok sila sa kanilang Aking Pahina at makakapag-post ng reel.\nKapag hindi makakapag-post ang mismong tao, maaari ring mag-post ang panig ng tindahan sa ngalan nila. Mangyaring mag-post mula sa 「FACES Reel」 sa screen ng pamamahala ng FACES.\nKapag aalisin ang FACES, ide-delete ito mula sa listahan ng FACES (maaaring ibalik kung nasa loob ng 30 araw mula nang umalis sa tindahan). Kapag nakalimutan ang password o PIN, mag-issue ng bago mula sa 「Mag-issue ng Login」 (Muling pag-issue)."
     }
   },
   "shop-admin-ids": {
@@ -357,6 +365,10 @@
     "es": {
       "title": "Agregar ID de administrador (Solo propietarios, máximo 5 personas)",
       "body": "En 「ID de administrador」 del panel de administración de la tienda, puede aumentar la cantidad de ID que pueden acceder al panel de administración de esta tienda (máximo 5 personas por tienda). Solo los ID de propietario pueden agregar o eliminar, y los ID de administrador agregados no tienen esos permisos.\nAl agregar, ingrese la dirección de correo electrónico (si se deja en blanco, se creará automáticamente) y la contraseña (si se deja en blanco, se creará automáticamente), y presione 「Emitir ID de administrador」. El ID y la contraseña que se muestran inmediatamente después de la emisión solo aparecerán en esa pantalla, así que asegúrese de anotarlos y comunicárselos a la persona.\nLos ID de administrador y propietario también pueden usar la misma Mi página que el personal (editar foto de perfil y nombre, publicar Reels, etc.) desde 「Mi página」 en el menú. La primera vez que la abra, se creará el perfil de la persona.\nLos administradores que ya no se utilicen se pueden eliminar con 「Quitar」. El ID del propietario no se puede quitar desde esta pantalla (si necesita realizar cambios, póngase en contacto con la administración)."
+    },
+    "tl": {
+      "title": "Magdagdag ng Admin ID (Owner lamang・Maximum na 5 tao)",
+      "body": "Sa 「Admin ID」 sa screen ng pamamahala ng store, maaari mong dagdagan ang mga ID na pwedeng pumasok sa screen ng pamamahala ng store na ito (maximum na 5 tao bawat store). Ang ID lamang ng 「Owner」 ang pwedeng magdagdag at magbura, at ang idinagdag na ID ng 「Admin」 ay walang ganoong awtoridad.\nKapag magdadagdag, i-enter ang email address (awtomatikong lilikhain kung bakante) at password (awtomatikong lilikhain kung bakante) at i-press ang 「Mag-issue ng Admin ID」. Ang ID at password na ipapakita agad pagkatapos i-issue ay lalabas lamang sa screen na iyon, kaya siguraduhing i-take note ito at ipaalam sa mismong tao.\nAng mga ID din ng Admin at Owner ay makakagamit ng parehong My Page tulad ng staff (pag-edit ng profile picture/pangalan, pag-post ng reels, atbp.) mula sa 「My Page」 sa menu. Kapag binuksan ito sa unang pagkakataon, lilikhain ang profile ng tao.\nAng Admin na hindi na ginagamit ay pwedeng i-delete gamit ang 「Alisin」. Ang ID ng Owner ay hindi maaaring alisin mula sa screen na ito (kung kailangang baguhin, mangyaring makipag-ugnayan sa management)."
     }
   },
   "shop-youtube": {
@@ -413,6 +425,10 @@
     "es": {
       "title": "Añadir un video de YouTube a la página de la tienda",
       "body": "Al ingresar la URL de un video en formato watch?v=…, youtu.be/… o shorts/… en 「YouTube動画(任意)」 (Videos de YouTube [Opcional]) dentro de 「店舗情報」 (Información de la tienda) en la pantalla de administración de la tienda y guardar, aparecerá 「動画紹介」 (Presentación de video) en la página de la tienda. El video se reproducirá directamente en la página y, al finalizar, volverá a la miniatura. Esto ayuda a evitar que los clientes salgan de la página y permite reproducir videos con música tal como están.\nSi guarda el campo en blanco, 「動画紹介」 (Presentación de video) desaparecerá de la página de la tienda. Solo se puede publicar 1 video.\nPor favor, publique únicamente videos de su propia cuenta o sobre los cuales posea derechos. No se pueden reproducir videos que el autor haya configurado como privados o que no permitan la inserción (compruebe en la configuración del video en YouTube que esté activada la opción 「許可」 [Permitir inserción])."
+    },
+    "tl": {
+      "title": "Maglagay ng YouTube Video sa Pahina ng Store",
+      "body": "Kapag inilagay mo ang alinman sa mga video URL na watch?v=…, youtu.be/…, shorts/… sa 「YouTube Video (Optional)」 sa 「Impormasyon ng Store」 ng screen ng pamamahala ng store at in-save ito, lalabas ang 「Video Intro」 sa pahina ng store. Mag-o-play ito nang direkta sa loob ng pahina, at kapag natapos na, babalik ito sa thumbnail. Hindi madaling lumipat ang mga customer sa labas, at ang mga video na may musika ay maaari ring i-play nang direkta.\nKapag in-save nang bakante, mawawala ang 「Video Intro」 sa pahina ng store. 1 video lamang ang maaaring ilagay.\nMangyaring maglagay lamang ng mga video mula sa sarili mong account o mga video na may karapatan ka. Ang mga video na ginawang pribado ng nag-post o mga YouTube video na hindi pinapayagan ang pag-embed ay hindi mai-play (sa YouTube, pakisuri ang 「Payagan ang Pag-embed」 sa mga setting ng video)."
     }
   },
   "shop-post": {
@@ -469,6 +485,10 @@
     "es": {
       "title": "Cómo publicar Reels (publicación normal)",
       "body": "Publique fotos o videos desde 「リール投稿」 (Publicación de Reel) en la pantalla de administración de la tienda. Las publicaciones aparecerán en el feed principal o de la zona. También puede acceder directamente a esta pantalla desde el botón 「通常投稿」 (Publicación normal) en la parte superior de Mi página."
+    },
+    "tl": {
+      "title": "Paano Mag-post ng Reel (Karaniwang Post)",
+      "body": "Mag-post ng mga larawan o video mula sa 「Post ng Reel」 sa screen ng pamamahala ng store. Lalabas ang post sa feed ng top o area. Mula rin sa button na 「Karaniwang Post」 sa itaas ng My Page, maaari kang pumunta agad sa screen na ito."
     }
   },
   "shop-boost": {
@@ -525,6 +545,10 @@
     "es": {
       "title": "Cómo publicar un Boost de emergencia",
       "body": "Es una función para publicar inmediatamente ofertas especiales limitadas de 1 a 3 horas en caso de cancelaciones de última hora o exceso de producción de productos. Se accede desde 「ブースト投稿」 (Publicación de Boost) en la parte superior de Mi página o desde 「⚡ブースト」 (⚡Boost) en la pantalla de administración de la tienda.\nIngreso: Título (obligatorio, 80 caracteres), Mensaje detallado (obligatorio, 600 caracteres), Etiqueta de descuento/beneficio (opcional. Botón o entrada libre, 20 caracteres), Foto (opcional. Si no se establece, se usará la foto de portada de la tienda), Tiempo de publicación (seleccionar entre 1, 2 o 3 horas, por defecto es 1 hora).\nAl presionar 「⚡️ 緊急ブーストを発射する」 (⚡️ Lanzar Boost de emergencia), se publicará de inmediato en /boost. El tiempo de publicación será el elegido al momento del lanzamiento y no se podrá modificar posteriormente. Se pueden publicar hasta 3 elementos al mismo tiempo por tienda.\nLos Boosts en publicación se pueden terminar antes con 「今すぐ終了」 (Finalizar ahora) (por ejemplo, cuando ya esté lleno). Como no se puede editar el contenido, si comete un error, finalícelo y vuelva a publicarlo.\nLos clientes visitarán la tienda sin realizó ningún pago previo y dirán 「locapassを見た」 (\"vi locapass\"). Los botones 「LINE予約」 (Reserva por LINE), 「電話予約」 (Reserva por teléfono) e 「お店へ行く」 (Ir a la tienda) de la tarjeta aparecen según el número de teléfono, LINE y la ubicación registrados en la información de la tienda. Si no están registrados, no aparecerán (regístrelos en la información de la tienda)."
+    },
+    "tl": {
+      "title": "Paano Mag-post ng Emergency Boost",
+      "body": "Ito ay isang tampok upang agad na ma-post ang limitadong 1 hanggang 3 oras na magagandang deal kapag may huling minutong pagka-cancel o labis na paggawa ng produkto. Pumunta mula sa 「Boost Post」 sa itaas ng My Page, o mula sa 「⚡Boost」 sa management screen ng shop.\nInput: Pamagat (kailangan, 80 character), Detalyadong mensahe (kailangan, 600 character), Tag ng diskwento/perk (opsyonal. Pindutan o malayang i-type, 20 character), Larawan (opsyonal. Kapag hindi nakatakda, ang cover photo ng shop), Oras ng pag-post (pumili mula sa 1, 2, o 3 oras, ang default ay 1 oras).\nKapag pinindot ang 「⚡️ I-launch ang Emergency Boost」, agad itong mai-post sa /boost. Ang oras ng pag-post ay ang oras na napili sa pag-launch, at hindi na ito mababago pagkatapos. Hanggang 3 item lamang bawat shop ang pwedeng i-post nang sabay.\nAng pino-post na boost ay puwedeng tapusin nang maaga sa pamamagitan ng 「I-end Na Ngayon」 (halimbawa, kapag napuno na ang mga upuan). Hindi pwedeng baguhin ang nilalaman, kaya kung nagkamali ka, pakitapos muna ito at i-post ulit.\nAng mga customer ay bibisita nang walang paunang pagbabayad at sasabihing \"nakita ko ang locapass\". Ang 「LINE Booking」, 「Pagtawag sa Telepono」, at 「Pumunta sa Shop」 sa card ay lalabas batay sa numero ng telepono, LINE, at lokasyon na nakarehistro sa impormasyon ng shop. Hindi ito lalabas kapag walang rehistro (paki-rehistro sa impormasyon ng shop)."
     }
   },
   "shop-reserve": {
@@ -581,6 +605,86 @@
     "es": {
       "title": "Cómo recibir y usar las reservas prioritarias",
       "body": "La reserva prioritaria es una función que los establecimientos con un plan de publicación de pago pueden utilizar después de que la administración configure la publicación. Se opera desde la pantalla «Reserva prioritaria».\n・En espera de respuesta: Recibirá las solicitudes de reserva de los clientes. Con «Aceptar (confirmar)» se confirma con un solo toque, y con «Rechazar» se libera el cupo del cliente (cargo de 0 yenes). También se puede adjuntar un breve mensaje. Si no hay respuesta en 12 horas, se rechazará automáticamente. Si necesita ajustar la hora, llame directamente al número de teléfono que aparece en pantalla.\n・Política de cancelación: Cada establecimiento puede configurar el «Plazo límite para cancelación gratuita del cliente» (hasta 1, 3, 6, 12, 24 o 48 horas antes de la visita, o hasta la hora de la visita). Las cancelaciones de los clientes posteriores a este plazo llegarán a «Decisión sobre cancelación de último momento».\n・Decisión con un solo toque: Puede elegir entre «Sin cobro (atención de cortesía)» o «Cobrar cargo por cancelación». Si el cliente se comunica con anticipación por teléfono u otro medio, puede tomar la misma decisión desde «En caso de contacto por parte del cliente» en la reserva confirmada.\n・Si ya pasó la hora de la reserva: Presione «Asistió» (cargo de 0 yenes) o «Cancelación sin aviso» (se cobra el depósito). Si no realiza ninguna operación en 24 horas, se liberará automáticamente tratándose como si hubiese asistido (no se cobrará automáticamente).\n・Depósito: 500 yenes por persona (límite de 5 000 yenes). Al depósito cobrado se le descuenta la comisión de pago (aprox. 3.6%), el monto resultante se abonará al saldo en pantalla y se descontará del cobro de la tarifa de uso mensual a partir del mes siguiente (no se realizan transferencias bancarias).\n・Los clientes cuyo cobro falle no podrán volver a reservar en el futuro."
+    },
+    "tl": {
+      "title": "Paano Tumanggap at Gumamit ng Priority Reservation",
+      "body": "Ang Priority Reservation ay isang tampok na magagamit ng mga shop na may bayad na plano sa pagpapakita pagkatapos i-set ng pamamahala ang paglalathala. Ginagamit ito sa screen ng 「Priority Reservation」.\n・Naghihintay ng sagot: Darating ang kahilingan sa pagpapareserba ng customer. Sa 「Tanggapin (Kumpirmado)」, makukumpirma ito sa isang tap, at sa 「Tanggihan」, malilibre ang slot ng customer (0 yen ang singil). Maaari ka ring magdagdag ng maikling mensahe. Kung walang sagot sa loob ng 12 oras, awtomatiko itong tatanggihan. Kapag kailangang ayusin ang oras, direktang tumawag sa numero ng telepono sa screen.\n・Patakaran sa Pag-cancel: Maaaring irehistro ng bawat shop ang \"deadline kung kailan puwedeng mag-cancel ang customer nang libre\" (hanggang 1, 3, 6, 12, 24, o 48 oras bago ang pagbisita, o hanggang sa oras ng pagbisita). Ang mga pag-cancel ng customer pagkalipas ng deadline ay mapupunta sa 「Paghuhusga sa Huling-minutong Pagka-cancel」.\n・Isang-tap na paghusga: Maaaring pumili ng 「Walang singil (Mabait na pagtrato)」 o 「Maningil ng bayad sa pag-cancel」. Kung tumawag o nakipag-ugnayan nang maaga ang customer sa telepono, maaari rin gawin ang parehong paghusga mula sa 「Kapag may ugnayan mula sa customer」 sa nakumpirma nang reserbasyon.\n・Kapag lumipas na ang oras ng reserbasyon: Pindutin ang 「Bumisita」 (0 yen ang singil) o 「No-show na Pag-cancel」 (maniningil ng deposito). Kung walang gagawing aksyon sa loob ng 24 oras, awtomatiko itong ituturing na bumisita at malilibre (hindi awtomatikong maniningil).\n・Deposito: 1 tao 500 yen, may limit na 5,000 yen. Ang siningil na deposito, bawas ang bayad sa pagproseso ng pagbabayad (halos 3.6%), ay maiipon sa balanse sa screen, at ibabawas mula sa singil sa buwanang bayad mula sa susunod na buwan (walang bank transfer).\n・Ang mga customer na nabigong singilin ay hindi na makakapagpareserba pagkatapos niyon."
+    }
+  },
+  "faces-vs-staff": {
+    "source_hash": "a31663a88d7d3e9b632277ce1953c75d",
+    "source_lang": "ja",
+    "en": {
+      "title": "Difference between FACES and Staff",
+      "body": "FACES is the advertising ambassador (face) of the shop. Their main job is to post reels and photos for customers to convey the appeal of the shop. Their page is public, allowing customers to follow and comment.\nStaff are behind-the-scenes members who generally do not appear in front of customers. They support the operation of the shop, and posting content for customers is not their main job."
+    },
+    "zh": {
+      "title": "FACES与员工的区别",
+      "body": "FACES(フェイセス)是店铺的门面（形象代表）。主要工作是面向顾客发布Reels和照片，宣传店铺的魅力。页面公开后，顾客可以进行关注和评论。\n员工原则上是不出现在顾客面前的幕后人员。是支持店铺运营的人，面向顾客发布信息并不是其主要工作。"
+    },
+    "ar": {
+      "title": "الفرق بين FACES والموظفين",
+      "body": "تُعتبر FACES (فيسيز) الوجه الإعلاني (وجه) للمتجر. عملها الرئيسي هو نشر مقاطع الريلز والصور موجهة للعملاء لإبراز جاذبية المتجر، وتُنشر الصفحة بحيث يمكن للعملاء المتابعة والتعليق.\nأما الموظفون، فهم يعملون خلف الكواليس ولا يظهرون عادةً أمام العملاء. هم الأشخاص الذين يدعمون إدارة المتجر، وليس عملهم الرئيسي النشر الموجه للعملاء."
+    }
+  },
+  "shop-faces-vs-staff": {
+    "source_hash": "9b49661a6c4282826403b37241593785",
+    "source_lang": "ja",
+    "en": {
+      "title": "Difference between FACES and Staff (Which one to register as)",
+      "body": "・FACES: The advertising ambassador (face) of the shop. Their main job is posting (reels/photos) to convey the shop's appeal to customers. Register them under 'FACES Management'.\n・Staff: Behind-the-scenes members who generally do not appear in front of customers. People who support the shop's operation. Register them under 'Staff Management'.\nIf you are unsure, register 'people who show their face and send out information to customers' as FACES, and 'people who support operations behind the scenes' as Staff."
+    },
+    "zh-TW": {
+      "title": "FACES與員工的差異（該註冊哪一個）",
+      "body": "・FACES：店面的看板人物（門面）。主要工作是發布貼文（短影片・照片），向顧客傳達店面的魅力。請在「FACES管理」進行註冊。\n・員工：原則上不會出現在顧客面前，屬於幕後人員。是支援店家營運的人。請在「員工管理」進行註冊。\n如果不確定時，請將「面向顧客、露臉進行宣傳的人」註冊為 FACES，「在幕後支援營運的人」註冊為員工。"
+    },
+    "zh": {
+      "title": "FACES与员工的区别（注册哪一个）",
+      "body": "・FACES：店铺的门面（形象代表）。主要工作是投稿（Reels・照片），面向顾客宣传店铺的魅力。在「FACES管理」中注册。\n・员工：原则上不出现在顾客面前的幕后人员。是支持店铺运营的人。在「员工管理」中注册。\n犹豫时，请将「面向顾客露脸发布信息的人」注册为FACES，「在幕后支持运营的人」注册为员工。"
+    },
+    "ne": {
+      "title": "FACES र स्टाफ बीचको फरक (कुनमा दर्ता गर्ने)",
+      "body": "・FACES: पसलको मुख्य अनुहार (प्रचारक)। पोस्ट (रिल्स・तस्बिर) गर्नु उनीहरूको मुख्य काम हो, र उनीहरूले ग्राहकहरूका लागि पसलको आकर्षण फैलाउँछन्। यसलाई 「FACES व्यवस्थापन」 मा दर्ता गरिन्छ。\n・स्टाफ: सामान्यतया ग्राहकहरूको अगाडि नआउने, पर्दा पछाडि काम गर्ने व्यक्ति। उनीहरूले पसलको सञ्चालनलाई सहयोग गर्छन्। यसलाई 「स्टाफ व्यवस्थापन」 मा दर्ता गरिन्छ。\nयदि तपाईं अन्योलमा हुनुहुन्छ भने, 「ग्राहकहरूका लागि आफ्नो अनुहार देखाएर जानकारी सेयर गर्ने व्यक्ति」लाई FACES मा, र 「पर्दा पछाडि सञ्चालनमा सहयोग गर्ने व्यक्ति」लाई स्टाफमा दर्ता गर्नुहोस्।"
+    },
+    "vi": {
+      "title": "Sự khác biệt giữa FACES và Nhân viên (Nên đăng ký vào mục nào)",
+      "body": "・FACES: Gương mặt đại diện (bộ mặt) của cửa hàng. Công việc chính là đăng bài (reels, hình ảnh) và truyền tải sức hút của cửa hàng đến khách hàng. Đăng ký tại 「Quản lý FACES」.\n・Nhân viên: Người ở hậu trường, về cơ bản không xuất hiện trước mặt khách hàng. Là người hỗ trợ vận hành cửa hàng. Đăng ký tại 「Quản lý nhân viên」.\nKhi phân vân, hãy đăng ký 「Người lộ diện truyền tải thông tin đến khách hàng」 là FACES, còn 「Người hỗ trợ vận hành phía sau」 là Nhân viên."
+    },
+    "id": {
+      "title": "Perbedaan antara FACES dan Staf (Mana yang Harus Didaftarkan)",
+      "body": "・FACES: Ikon (wajah) promosi toko. Pekerjaan utamanya adalah membuat postingan (reel/foto) dan menyampaikan daya tarik toko kepada pelanggan. Daftarkan di 「Manajemen FACES」.\n・Staf: Orang di balik layar yang pada dasarnya tidak tampil di depan pelanggan. Orang yang mendukung operasional toko. Daftarkan di 「Manajemen Staf」.\nJika Anda bingung, silakan daftarkan 「orang yang tampil memperlihatkan wajah untuk menyampaikan informasi kepada pelanggan」 sebagai FACES, dan 「orang yang mendukung operasional di balik layar」 sebagai Staf."
+    },
+    "my": {
+      "title": "FACES နှင့် ဝန်ထမ်းများ၏ ခြားနားချက် (မည်သည့်နေရာတွင် စာရင်းသွင်းရမည်နည်း)",
+      "body": "・FACES: ဆိုင်၏ ကြော်ငြာမိုဒယ်လ် (မျက်နှာစာ) ဖြစ်သည်။ ပို့စ်တင်ခြင်း (Reels၊ ဓာတ်ပုံ) သည် အဓိကအလုပ်ဖြစ်ပြီး၊ အဝယ်တော်များထံသို့ ဆိုင်၏ ဆွဲဆောင်မှုများကို သတင်းအချက်အလက် ပေးပို့ပေးပါသည်။ 「FACES စီမံခန့်ခွဲမှု」 တွင် စာရင်းသွင်းပါ။\n・ဝန်ထမ်း: အခြေခံအားဖြင့် အဝယ်တော်များ၏ ရှေ့သို့ မထွက်သော အနောက်ကွယ်မှလူ ဖြစ်သည်။ ဆိုင်၏ လည်ပတ်မှုကို ကူညီပံ့ပိုးပေးသူ ဖြစ်သည်။ 「ဝန်ထမ်း စီမံခန့်ခွဲမှု」 တွင် စာရင်းသွင်းပါ။\nဝေခွဲမရ ဖြစ်ပါက၊ 「အဝယ်တော်များထံသို့ မျက်နှာပြပြီး သတင်းအချက်အလက် မျှဝေပေးမည့်သူ」 ကို FACES တွင်လည်းကောင်း၊ 「အနောက်ကွယ်မှ လည်ပတ်မှုကို ကူညီပံ့ပိုးပေးမည့်သူ」 ကို ဝန်ထမ်း တွင်လည်းကောင်း စာရင်းသွင်းပါ။"
+    },
+    "th": {
+      "title": "ความแตกต่างระหว่าง FACES กับทีมงาน (ควรลงทะเบียนเป็นประเภทไหน)",
+      "body": "・FACES: หน้าตา (ตัวแทน) ของร้าน งานหลักคือการโพสต์ (รีล·รูปภาพ) เพื่อนำเสนอเสน่ห์ของร้านให้แก่ลูกค้า ลงทะเบียนที่ 「การจัดการ FACES」\n・ทีมงาน: เบื้องหลังซึ่งโดยปกติแล้วจะไม่ปรากฏตัวต่อหน้าลูกค้า เป็นผู้สนับสนุนการดำเนินงานของร้าน ลงทะเบียนที่ 「การจัดการทีมงาน」\nหากไม่แน่ใจ สำหรับ 「ผู้ที่เปิดเผยหน้าตาเพื่อสื่อสารกับลูกค้า」 ให้ลงทะเบียนเป็น FACES ส่วน 「ผู้ที่สนับสนุนการดำเนินงานอยู่เบื้องหลัง」 ให้ลงทะเบียนเป็นทีมงาน"
+    },
+    "pt": {
+      "title": "Diferença entre FACES e Equipe (onde cadastrar)",
+      "body": "・FACES: O rosto (embaixador) da loja. O trabalho principal é fazer postagens (Reels, fotos) para divulgar os atrativos da loja aos clientes. Cadastre em 「Gerenciamento de FACES」.\n・Equipe: Pessoal dos bastidores que geralmente não aparece para os clientes. São as pessoas que apoiam a operação da loja. Cadastre em 「Gerenciamento de equipe」.\nEm caso de dúvida, cadastre como FACES 「a pessoa que vai mostrar o rosto e divulgar conteúdo aos clientes」 e como Equipe 「a pessoa que apoia a operação nos bastidores」."
+    },
+    "tr": {
+      "title": "FACES ve Personel Arasındaki Fark (Hangisine Kaydedilmeli)",
+      "body": "・FACES: Mağazanın reklam yüzü (yüzü). Ana görevi gönderi (Reels, fotoğraf) paylaşmak olup, müşterilere mağazanın cazibesini tanıtır. 「FACES Yönetimi」 bölümünden kaydedilir.\n・Personel: Temelde müşterilerin karşısına çıkmayan, perde arkasındaki kişidir. Mağazanın işletilmesini destekler. 「Personel Yönetimi」 bölümünden kaydedilir.\nKararsız kaldığınızda, 「müşterilere yönelik, yüzünü göstererek paylaşım yapacak kişileri」 FACES, 「arka planda işletmeyi destekleyen kişileri」 ise personel olarak kaydedin."
+    },
+    "ru": {
+      "title": "Разница между FACES и сотрудниками (куда регистрировать)",
+      "body": "・FACES: Лицо заведения. Основная работа — публикации (Reels, фото), продвижение привлекательности заведения для клиентов. Регистрируйте в разделе 「Управление FACES」.\n・Сотрудники: Как правило, не появляются перед клиентами, работают за кулисами. Это люди, поддерживающие работу заведения. Регистрируйте в разделе 「Управление сотрудниками」.\nЕсли вы сомневаетесь, регистрируйте 「тех, кто открыто делает публикации для клиентов」 как FACES, а 「тех, кто поддерживает работу за кулисами」 — как сотрудников."
+    },
+    "es": {
+      "title": "Diferencia entre FACES y el personal (dónde registrar a cada uno)",
+      "body": "・FACES: La imagen (rostro) de la tienda. Su trabajo principal son las publicaciones (reels y fotos) y transmitir el atractivo del negocio a los clientes. Se registran en 「Gestión de FACES」.\n・Personal: Trabajo en segundo plano; por lo general, no aparecen ante los clientes. Son quienes apoyan la gestión del negocio. Se registran en 「Gestión de personal」.\nSi tiene dudas, registre como FACES a 「la persona que muestra su rostro para comunicar contenido a los clientes」 y como personal a 「la persona que apoya la gestión en segundo plano」."
+    },
+    "tl": {
+      "title": "Ang Pagkakaiba ng FACES at Staff (Kung Alin ang Pagrerehistruhan)",
+      "body": "・FACES: Ang endorser (mukha) ng tindahan. Ang pag-post (mga reel/larawan) ang pangunahing trabaho, at ibinabahagi ang alindog ng tindahan sa mga customer. Irehistro ito sa 「Pamamahala ng FACES」.\n・Staff: Sa pangkalahatan ay hindi lumalabas sa harap ng mga customer, mga taong nasa likod ng entablado. Ang mga taong sumusuporta sa pamamahala ng tindahan. Irehistro ito sa 「Pamamahala ng Staff」.\nKapag nag-aalinlangan, irehistro sa FACES ang 「taong nagpapakita ng mukha upang magbahagi sa mga customer」, at irehistro sa Staff ang 「taong sumusuporta sa pamamahala sa likod」."
+    },
+    "ar": {
+      "title": "الفرق بين FACES والموظفين (أيهما تختار للتسجيل)",
+      "body": "・FACES: الوجه الإعلاني (وجه) للمتجر. عملها الرئيسي هو النشر (مقاطع الريلز والصور)، لنشر جاذبية المتجر للعملاء. يتم التسجيل من 「إدارة FACES」.\n・الموظفون: يعملون خلف الكواليس ولا يظهرون عادةً أمام العملاء. هم الأشخاص الذين يدعمون إدارة المتجر. يتم التسجيل من 「إدارة الموظفين」.\nعند التردد، يرجى تسجيل 「الشخص الذي يظهر بوجهه وينشر للعملاء」 في FACES، و「الشخص الذي يدعم الإدارة من خلف الكواليس」 في الموظفين."
     }
   }
 }
