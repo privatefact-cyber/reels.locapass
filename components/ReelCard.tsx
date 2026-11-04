@@ -428,7 +428,7 @@ export function ReelCard({
 
       {/* 右下: アイコン(プロフィールへ)・いいね・コメント・シェア (TikTok同様の並び)。
           PC(md以上)では動画の外側(右)に配置し、映像に被らないようにする。 */}
-      <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main ${wideInFullBleed ? "" : "md:right-[-64px]"} ${embed?.provider === "youtube" ? "bottom-[190px] md:bottom-28" : fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
+      <div className={`pointer-events-auto absolute right-3 flex flex-col items-center gap-5 text-main ${wideInFullBleed ? "" : "md:right-[-64px]"} ${embed?.provider === "youtube" ? "bottom-[236px] md:bottom-28" : fullBleed ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-28" : "bottom-24 md:bottom-28"}`}>
         {embedHasSound && isActive && (
           <button
             type="button"
