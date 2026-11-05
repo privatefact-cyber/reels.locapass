@@ -74,6 +74,10 @@ export function YoutubeStockCard({
           <div className="flex shrink-0 flex-col items-end gap-1"><span className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><span className={isTikTok ? "rounded bg-black px-1.5 py-0.5 text-[10px] text-white" : "rounded bg-red-600 px-1.5 py-0.5 text-[10px] text-white"}>{isTikTok ? "TikTok" : "YouTube"}</span>{status}</span>{row.matched_shop_id && row.match_status === "ready_to_create" && <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-semibold text-orange-800">自動仮登録・要手動確認</span>}</div>
         </div>
         {row.description && <p className="line-clamp-4 text-sm leading-6 text-slate-600">{row.description}</p>}
+        <div className={`rounded-lg border px-3 py-2 text-sm ${row.match_reason ? "border-amber-200 bg-amber-50 text-amber-900" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+          <p className="font-semibold">判定理由</p>
+          <p className="mt-1 whitespace-pre-wrap leading-5">{row.match_reason ?? "理由未記録。店名・住所・公式サイトを確認してください。"}</p>
+        </div>
 
         <form action={findOfficialSite}><button className="text-sm font-semibold text-blue-700 hover:underline">公式サイト候補を検索</button></form>
         <form action={review} className="grid gap-3 border-t border-slate-100 pt-4">
@@ -82,7 +86,7 @@ export function YoutubeStockCard({
           <label className="text-xs font-semibold text-slate-600">確認済みの公式サイト<input name="official_url" type="url" defaultValue={row.official_url ?? ""} placeholder="https://" className={input} /></label>
           <label className="text-xs font-semibold text-slate-600">既存店舗ID<input name="shop_id" defaultValue={row.matched_shop_id ?? ""} placeholder="手動で紐づける場合" className={input} /></label>
           <label className="text-xs font-semibold text-slate-600">ステータス<select name="decision" defaultValue={row.match_status} className={input}><option value="pending">保留</option><option value="matched_existing">既存店舗へ紐づけ</option><option value="ready_to_create">新規店舗を作成</option><option value="rejected">除外</option></select></label>
-          <label className="text-xs font-semibold text-slate-600">メモ<textarea name="match_reason" defaultValue={row.match_reason ?? ""} rows={2} className={input} /></label>
+          <label className="text-xs font-semibold text-slate-600">不確定の理由・修正メモ<textarea name="match_reason" defaultValue={row.match_reason ?? ""} placeholder="例：店名は一致するが支店住所が不明。公式HPで確認が必要。" rows={3} className={input} /></label>
           <button className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">ステータスを保存</button>
         </form>
         {shopLabel && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">対象店舗: {shopLabel}</p>}
