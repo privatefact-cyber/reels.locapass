@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
 import { useRouter } from "next/navigation";
-import { Bell, Calendar, CalendarCheck, Film, Heart, MessageSquare, Megaphone, Trash2, UserPlus } from "lucide-react";
+import { Bell, Calendar, CalendarCheck, Dog, Eye, Film, Heart, MessageSquare, Megaphone, Syringe, Trash2, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -33,6 +33,11 @@ const ICONS: Record<string, typeof Bell> = {
   reservation_confirmed: CalendarCheck,
   reservation_declined: CalendarCheck,
   reservation_cancelled: CalendarCheck,
+  pet_reminder: Syringe,
+  pet_lost_alert: Dog,
+  pet_follow_request: Dog,
+  pet_follow_approved: Dog,
+  pet_sighting: Eye,
 };
 
 const TABLE = "locapass_notifications";

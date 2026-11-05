@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { finishPetLineLink } from "@/lib/pet/lineLink";
 
-type LineOAuthCookie = { state: string; nonce: string; redirect: string };
+// mode: "pet_link" は、ログイン中の人がワンコ手帳の通知をLINEで受け取るための連携(ログインはしない)。
+type LineOAuthCookie = { state: string; nonce: string; redirect: string; mode?: "pet_link" };
 
 type LineTokenResponse = {
   access_token: string;
@@ -86,6 +88,10 @@ export async function GET(request: Request) {
     return loginErrorRedirect(origin, redirectTo, "id_token_verify_failed", await verifyRes.text());
   }
   const profile = (await verifyRes.json()) as LineVerifyResponse;
+
+  if (saved.mode === "pet_link") {
+    return finishPetLineLink(origin, profile.sub, searchParams.get("friendship_status_changed") === "true");
+  }
 
   const admin = createAdminClient();
 

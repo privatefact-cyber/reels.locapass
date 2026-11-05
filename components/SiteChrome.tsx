@@ -25,7 +25,8 @@ type Props = {
 
 // 地図は /map の1系統(旧 /{ポータル}/{エリア}/map は /map?preset= へ転送する)。
 const FULL_BLEED_PATTERN = /^\/map$/;
-const EXCLUDED_PREFIXES = ["/gate", "/admin", "/dashboard", "/cast/login", "/staff/login"];
+// /pet(ワンコ手帳)は専用のかわいい画面(上部・下部のバーも自前)なので、サイト共通のヘッダーを出さない。
+const EXCLUDED_PREFIXES = ["/gate", "/admin", "/dashboard", "/cast/login", "/staff/login", "/pet"];
 const CHROME_INCLUDED_PREFIXES = ["/dashboard/staff", "/dashboard/cast"];
 
 function isExcludedPath(pathname: string): boolean {
