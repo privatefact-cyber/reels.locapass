@@ -18,7 +18,7 @@ function refresh() {
 }
 
 export async function collectShibuyaShorts(formData: FormData) {
-  await requireRootAdmin();
+  const user = await requireRootAdmin();
   const query = String(formData.get("query") ?? "渋谷 グルメ カフェ").trim().slice(0, 100);
   const limit = Math.min(Math.max(Number(formData.get("limit") ?? 50), 1), 50);
   const portalId = Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID);
@@ -28,7 +28,7 @@ export async function collectShibuyaShorts(formData: FormData) {
   const candidates = await collectYoutubeCandidates(query, limit);
   await saveYoutubeCandidates(portalId, candidates);
   // 自動照合は1回の収集で最大5件に限定し、YouTube検索自体がタイムアウトしないようにする。
-  await autoMatchYoutubeCandidates(portalId, candidates.slice(0, 5));
+  await autoMatchYoutubeCandidates(portalId, candidates.slice(0, 5), user.id);
   refresh();
 }
 

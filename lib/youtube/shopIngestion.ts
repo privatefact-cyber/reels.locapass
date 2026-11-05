@@ -141,7 +141,7 @@ export async function saveYoutubeCandidates(portalId: number, candidates: Youtub
 }
 
 /** 店名・住所が説明文から明確に取れ、既存店が一意に一致する候補だけを自動紐づけする。 */
-export async function autoMatchYoutubeCandidates(portalId: number, candidates: YoutubeCandidate[]) {
+export async function autoMatchYoutubeCandidates(portalId: number, candidates: YoutubeCandidate[], userId?: string) {
   const admin = createAdminClient();
   let matched = 0;
   for (const video of candidates) {
@@ -150,6 +150,7 @@ export async function autoMatchYoutubeCandidates(portalId: number, candidates: Y
     const shops = await findExistingShop(portalId, hint.name, hint.address);
     if (shops.length !== 1) continue;
     const shop = shops[0];
+    const { data: ingestion } = await (admin as any).from("locapass_youtube_ingestions").select("id").eq("portal_id", portalId).eq("youtube_id", video.youtubeId).maybeSingle();
     const { error } = await (admin as any).from("locapass_youtube_ingestions").update({
       candidate_name: hint.name,
       candidate_address: hint.address,
@@ -160,7 +161,18 @@ export async function autoMatchYoutubeCandidates(portalId: number, candidates: Y
       match_reason: "説明文の店名・住所と既存店舗が一意に一致したため自動紐づけ",
       error_message: null,
     }).eq("portal_id", portalId).eq("youtube_id", video.youtubeId);
-    if (!error) matched += 1;
+    if (!error) {
+      matched += 1;
+      if (userId && shop.url && ingestion?.id) {
+        try {
+          await publishYoutubeIngestion(ingestion.id, userId);
+        } catch (publishError) {
+          await (admin as any).from("locapass_youtube_ingestions").update({
+            error_message: publishError instanceof Error ? publishError.message.slice(0, 500) : "自動リール投稿に失敗しました",
+          }).eq("id", ingestion.id);
+        }
+      }
+    }
   }
   return matched;
 }
