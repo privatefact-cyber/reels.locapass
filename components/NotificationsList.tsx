@@ -38,6 +38,8 @@ const ICONS: Record<string, typeof Bell> = {
   pet_follow_request: Dog,
   pet_follow_approved: Dog,
   pet_sighting: Eye,
+  pet_found: Dog,
+  pet_found_claim: Dog,
 };
 
 const TABLE = "locapass_notifications";

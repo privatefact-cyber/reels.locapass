@@ -10,7 +10,7 @@ const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: type
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 const DEFAULT_CENTER = { lat: 35.658, lng: 139.7016 }; // 渋谷
 
-export type PetMapMarker = { id: string; lat: number; lng: number; kind: "lost" | "sighting" | "last_seen"; label?: string; imageUrl?: string | null; href?: string };
+export type PetMapMarker = { id: string; lat: number; lng: number; kind: "lost" | "sighting" | "last_seen" | "found" | "shop"; label?: string; imageUrl?: string | null; href?: string };
 
 /**
  * ワンコ手帳の地図。
@@ -67,10 +67,10 @@ export function PetMap({
     for (const m of markers) {
       const el = document.createElement(m.href ? "a" : "div");
       if (m.href) (el as HTMLAnchorElement).href = m.href;
-      const color = m.kind === "lost" ? "#D04848" : m.kind === "sighting" ? "#F2B705" : "#FF8E5E";
+      const color = { lost: "#D04848", sighting: "#F2B705", last_seen: "#FF8E5E", found: "#2E9C7C", shop: "#6AADEB" }[m.kind];
       el.style.cssText = `display:block;width:${m.imageUrl ? 46 : 30}px;height:${m.imageUrl ? 46 : 30}px;border-radius:9999px;border:3px solid ${color};background:#fff center/cover no-repeat;box-shadow:0 4px 10px rgba(0,0,0,.2);font-size:16px;line-height:24px;text-align:center;`;
       if (m.imageUrl) el.style.backgroundImage = `url("${m.imageUrl}")`;
-      else el.textContent = m.kind === "sighting" ? "👀" : "🐶";
+      else el.textContent = m.kind === "sighting" ? "👀" : m.kind === "found" ? "🙋" : m.kind === "shop" ? "🐾" : "🐶";
       if (m.label) el.title = m.label;
       placed.push(new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([m.lng, m.lat]).addTo(map));
     }

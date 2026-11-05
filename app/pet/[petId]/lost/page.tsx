@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { requirePetViewer, petAdmin, signPetImages } from "@/lib/pet/db";
 import { getMyPets } from "@/lib/pet/queries";
 import type { PetLostReportRow } from "@/lib/pet/types";
+import { getFoundReports } from "@/lib/pet/found";
+import { FoundReportCard } from "@/components/pet/FoundReportCard";
 import { LostReportForm } from "@/components/pet/LostReportForm";
 import { ResolveLostButtons } from "@/components/pet/ResolveLostButtons";
 import { PetMap, type PetMapMarker } from "@/components/pet/PetMap";
@@ -48,11 +50,17 @@ export default async function PetLostOwnerPage({ params }: { params: Promise<{ p
     .order("seen_at", { ascending: false });
   const sightings = (sightingRows ?? []) as { id: string; lat: number; lng: number; address: string | null; comment: string | null; seen_at: string; photo_path: string | null }[];
   const signed = await signPetImages([report.photo_path, ...sightings.map((s) => s.photo_path)]);
+  const sinceLost = Date.parse(report.created_at) - 86_400_000;
+  const nearbyFound =
+    report.last_seen_lat != null && report.last_seen_lng != null
+      ? (await getFoundReports({ near: { lat: report.last_seen_lat, lng: report.last_seen_lng, km: 5 }, days: 14 })).filter((f) => Date.parse(f.createdAt) >= sinceLost)
+      : [];
   const markers: PetMapMarker[] = [
     ...(report.last_seen_lat != null && report.last_seen_lng != null
       ? [{ id: "last", lat: report.last_seen_lat, lng: report.last_seen_lng, kind: "last_seen" as const, label: "最後に見た場所", imageUrl: (report.photo_path ? signed.get(report.photo_path) : null) ?? pet.avatarUrl }]
       : []),
     ...sightings.map((s) => ({ id: s.id, lat: s.lat, lng: s.lng, kind: "sighting" as const, label: `${timeLabel(s.seen_at)} ${s.address ?? ""}`, imageUrl: s.photo_path ? signed.get(s.photo_path) : null })),
+    ...nearbyFound.map((f) => ({ id: f.id, lat: f.lat, lng: f.lng, kind: "found" as const, label: "見つけました", imageUrl: f.photoUrl, href: `/pet/found/${f.id}` })),
   ];
 
   return (
@@ -91,6 +99,18 @@ export default async function PetLostOwnerPage({ params }: { params: Promise<{ p
             </PetCard>
           ))}
         </div>
+      )}
+
+      {nearbyFound.length > 0 && (
+        <>
+          <PetSectionTitle emoji="🙋">近くの「見つけました」通報({nearbyFound.length})</PetSectionTitle>
+          <p className="mb-2 px-1 text-xs text-[#9C8273]">最後に見た場所から5km以内の通報です。うちの子なら、開いて「うちの子かも!」を押してください。</p>
+          <div className="space-y-2">
+            {nearbyFound.map((f) => (
+              <FoundReportCard key={f.id} report={f} />
+            ))}
+          </div>
+        </>
       )}
 
       <PetSectionTitle emoji="✏️">お知らせの内容を直す</PetSectionTitle>

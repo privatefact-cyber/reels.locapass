@@ -49,15 +49,18 @@ function refresh() {
 // ---------------------------------------------------------------------------
 // 画像のアップロード先(非公開の置き場への期限付きアップロードURL)
 // ---------------------------------------------------------------------------
-export type UploadKind = "avatar" | "cover" | "document" | "medical" | "diary" | "lost" | "sighting";
+export type UploadKind = "avatar" | "cover" | "document" | "medical" | "diary" | "lost" | "sighting" | "found";
 
 export async function requestPetUpload(kind: UploadKind, targetId: string): Promise<Result<{ path: string; token: string }>> {
   const viewer = await viewerOrError();
   if ("error" in viewer) return { ok: false, error: viewer.error };
-  if (!UUID.test(targetId)) return { ok: false, error: "対象が見つかりません" };
+  if (kind !== "found" && !UUID.test(targetId)) return { ok: false, error: "対象が見つかりません" };
 
   let path: string;
-  if (kind === "sighting") {
+  if (kind === "found") {
+    // 「見つけました」通報の写真: ログイン中の人なら誰でも(投稿前なので対象IDはない)
+    path = `${viewer.userId}/found/${crypto.randomUUID()}.jpg`;
+  } else if (kind === "sighting") {
     // 目撃情報の写真: 迷子のお知らせが出ている間だけ、ログイン中の人なら誰でも
     const { data: report } = await petAdmin().from("locapass_pet_lost_reports").select("id, status").eq("id", targetId).maybeSingle();
     if (!report || report.status !== "active") return { ok: false, error: "この迷子のお知らせは終了しています" };
@@ -665,4 +668,157 @@ export async function unlinkPetLine(): Promise<Result> {
   if (!data?.length) return { ok: false, error: "解除できませんでした" };
   refresh();
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// 「迷子のペットを見つけました!」の通報(保護している/見かけた)
+// ---------------------------------------------------------------------------
+const FOUND_NOTIFY_LOST_KM = 5; // この距離以内で迷子のお知らせを出している飼い主に知らせる
+const SPECIES_LABEL = { dog: "ワンコ", cat: "ネコ", other: "ペット" } as const;
+
+export type FoundReportInput = {
+  kind: "protected" | "sighted";
+  species: "dog" | "cat" | "other";
+  lat: number;
+  lng: number;
+  address?: string;
+  foundAt?: string;
+  features?: string;
+  handedTo?: string;
+  contactNote?: string;
+  photoPath?: string | null;
+};
+
+export async function postFoundReport(input: FoundReportInput): Promise<Result<{ id: string; notified: number }>> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const lat = num(input.lat, -90, 90);
+  const lng = num(input.lng, -180, 180);
+  if (lat === null || lng === null) return { ok: false, error: "見つけた場所を地図で選んでください" };
+  const kind = input.kind === "protected" ? "protected" : "sighted";
+  const species = input.species === "cat" || input.species === "other" ? input.species : "dog";
+  const photoPath = input.photoPath ? ownPath(viewer.userId, input.photoPath) : null;
+  if (photoPath && !photoPath.startsWith(`${viewer.userId}/found/`)) return { ok: false, error: "写真が正しくありません" };
+  if (!photoPath && !text(input.features)) return { ok: false, error: "写真か、見た目の特徴を入れてください" };
+
+  const admin = petAdmin();
+  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const { count } = await admin.from("locapass_pet_found_reports").select("id", { count: "exact", head: true }).eq("reporter_id", viewer.userId).gte("created_at", since);
+  if ((count ?? 0) >= 10) return { ok: false, error: "1日に送れる通報の上限に達しました" };
+
+  const foundAt = typeof input.foundAt === "string" && !Number.isNaN(Date.parse(input.foundAt)) ? new Date(input.foundAt).toISOString() : new Date().toISOString();
+  const row = {
+    reporter_id: viewer.userId,
+    kind,
+    species,
+    photo_path: photoPath,
+    lat,
+    lng,
+    address: text(input.address, 120),
+    found_at: foundAt,
+    features: text(input.features, 500),
+    handed_to: text(input.handedTo, 120),
+    contact_note: text(input.contactNote, 200),
+  };
+  const { data, error } = await viewer.supabase.from("locapass_pet_found_reports").insert(row).select("id").single();
+  if (error || !data) return { ok: false, error: "通報できませんでした" };
+  const id = data.id as string;
+
+  // 知らせる相手: ①近く(5km)で迷子のお知らせを出している飼い主 ②散歩エリアが半径3km以内で受け取りオンの人
+  const recipients = new Map<string, "lost_owner" | "nearby">();
+  const box = (km: number) => ({ dLat: km / 111, dLng: km / (111 * Math.cos((lat * Math.PI) / 180)) });
+  {
+    const { dLat, dLng } = box(FOUND_NOTIFY_LOST_KM);
+    const { data: lost } = await admin
+      .from("locapass_pet_lost_reports")
+      .select("owner_id, last_seen_lat, last_seen_lng")
+      .eq("status", "active")
+      .gte("last_seen_lat", lat - dLat)
+      .lte("last_seen_lat", lat + dLat)
+      .gte("last_seen_lng", lng - dLng)
+      .lte("last_seen_lng", lng + dLng)
+      .limit(500);
+    for (const l of lost ?? []) {
+      if (l.last_seen_lat != null && l.last_seen_lng != null && distanceKm({ lat, lng }, { lat: l.last_seen_lat, lng: l.last_seen_lng }) <= FOUND_NOTIFY_LOST_KM)
+        recipients.set(l.owner_id as string, "lost_owner");
+    }
+  }
+  {
+    const { dLat, dLng } = box(LOST_ALERT_RADIUS_KM);
+    const { data: near } = await admin
+      .from("locapass_pet_owner_settings")
+      .select("user_id, walk_lat, walk_lng")
+      .eq("lost_alert_opt_in", true)
+      .gte("walk_lat", lat - dLat)
+      .lte("walk_lat", lat + dLat)
+      .gte("walk_lng", lng - dLng)
+      .lte("walk_lng", lng + dLng)
+      .limit(2000);
+    for (const s of near ?? []) {
+      if (!recipients.has(s.user_id as string) && s.walk_lat != null && s.walk_lng != null && distanceKm({ lat, lng }, { lat: s.walk_lat, lng: s.walk_lng }) <= LOST_ALERT_RADIUS_KM)
+        recipients.set(s.user_id as string, "nearby");
+    }
+  }
+  recipients.delete(viewer.userId);
+  const list = [...recipients].slice(0, 1000);
+  const what = `${SPECIES_LABEL[species]}を${kind === "protected" ? "保護しています" : "見かけました"}`;
+  after(async () => {
+    for (const [userId, why] of list) {
+      await notifyPetUser({
+        userId,
+        type: "pet_found",
+        title: why === "lost_owner" ? `近くで迷子の${what}。うちの子かもしれません` : `近くで迷子の${what}`,
+        body: [row.address, row.features].filter(Boolean).join("\n") || null,
+        url: `/pet/found/${id}`,
+      }).catch((e) => console.error("[pet] found notify failed", e));
+    }
+  });
+  refresh();
+  return { ok: true, id, notified: list.length };
+}
+
+export async function resolveFoundReport(id: string): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const { data } = await viewer.supabase
+    .from("locapass_pet_found_reports")
+    .update({ status: "resolved", resolved_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("status", "open")
+    .select("id");
+  if (!data?.length) return { ok: false, error: "更新できませんでした" };
+  refresh();
+  return { ok: true };
+}
+
+/** 「うちの子かも!」: 通報した人に知らせる(連絡先は、飼い主の迷子のお知らせに出ているものを見てもらう) */
+export async function claimFoundReport(id: string): Promise<Result<{ hasLostReport: boolean }>> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  if (!UUID.test(id)) return { ok: false, error: "見つかりません" };
+  const admin = petAdmin();
+  const { data: report } = await admin.from("locapass_pet_found_reports").select("id, reporter_id, status").eq("id", id).maybeSingle();
+  if (!report || report.status !== "open") return { ok: false, error: "この通報は終了しています" };
+  if (report.reporter_id === viewer.userId) return { ok: false, error: "自分の通報です" };
+
+  const { data: lost } = await admin.from("locapass_pet_lost_reports").select("id, pet_id").eq("owner_id", viewer.userId).eq("status", "active").order("created_at", { ascending: false }).limit(1);
+  const myLost = lost?.[0] ?? null;
+
+  const { error } = await admin.from("locapass_pet_found_claims").insert({ found_report_id: id, claimant_id: viewer.userId });
+  if (error && error.code !== "23505") return { ok: false, error: "送れませんでした" };
+  if (!error) {
+    let url = `/pet/found/${id}`;
+    if (myLost) url = `/pet/lost?report=${myLost.id}`;
+    const { data: me } = await admin.from("locapass_members").select("nickname").eq("id", viewer.userId).maybeSingle();
+    after(() =>
+      notifyPetUser({
+        userId: report.reporter_id as string,
+        type: "pet_found_claim",
+        title: `${me?.nickname || "ゲスト"}さんが「うちの子かも」と言っています`,
+        body: myLost ? "迷子のお知らせに飼い主さんの連絡先が出ています" : "通報のページを確認してください",
+        url,
+      }).catch((e) => console.error("[pet] claim notify failed", e)),
+    );
+  }
+  return { ok: true, hasLostReport: Boolean(myLost) };
 }

@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSiteTheme, themeInitScript } from "@/lib/theme";
 import { ThemeSync } from "@/components/ThemeSync";
 import { SiteHitBeacon } from "@/components/analytics/SiteHitBeacon";
+import { PetReturnButton } from "@/components/pet/PetReturnButton";
 import { fetchMyRoles, isPartnerOnly, homePathForRoles } from "@/lib/auth/roles";
 import "./globals.css";
 
@@ -169,6 +170,8 @@ export default async function RootLayout({
 
           {/* メインコンテンツ(PC幅ではワイドに広がる、リール一覧はデスクトップでグリッド表示に切り替わる) */}
           <AppShell>{children}</AppShell>
+          {/* ワンコ手帳の「おでかけ」から店舗ページへ来たときだけ出る「ワンコ手帳にもどる」 */}
+          <PetReturnButton />
         </LocaleProvider>
       </body>
     </html>

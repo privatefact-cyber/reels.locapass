@@ -7,7 +7,7 @@ import { Bell, ChevronLeft } from "lucide-react";
 /** 上のバー。トップでは「ワンコ手帳」のロゴ、下の階層では戻るボタン。お知らせはLOCAPASSのお知らせ一覧へ。 */
 export function PetTopBar() {
   const pathname = usePathname() ?? "/pet";
-  const isRoot = ["/pet", "/pet/lost", "/pet/follows", "/pet/settings"].includes(pathname);
+  const isRoot = ["/pet", "/pet/spots", "/pet/lost", "/pet/follows", "/pet/settings"].includes(pathname);
   const isCard = pathname.startsWith("/pet/t/");
   return (
     <header className="sticky top-0 z-30 bg-[#FFF7EC]/90 pt-[env(safe-area-inset-top)] backdrop-blur">

@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { getPetViewer } from "@/lib/pet/db";
 import { getActiveLostReports } from "@/lib/pet/lost";
+import { getFoundReports } from "@/lib/pet/found";
+import { getMyPets } from "@/lib/pet/queries";
+import { FoundReportCard } from "@/components/pet/FoundReportCard";
 import { LostInfoCard } from "@/components/pet/LostInfoCard";
 import { SightingForm } from "@/components/pet/SightingForm";
 import { PetMap, type PetMapMarker } from "@/components/pet/PetMap";
-import { PetCard, PetSectionTitle } from "@/components/pet/ui";
+import { PetAvatar, PetCard, PetSectionTitle } from "@/components/pet/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +20,14 @@ export default async function PetLostMapPage({ searchParams }: { searchParams: P
   const reports = await getActiveLostReports({ viewerId: viewer?.userId });
   const selected = selectedId && UUID.test(selectedId) ? (reports.find((r) => r.id === selectedId) ?? null) : null;
 
-  const markers: PetMapMarker[] = reports
-    .filter((r) => r.lat != null && r.lng != null)
-    .map((r) => ({ id: r.id, lat: r.lat!, lng: r.lng!, kind: "lost", label: r.petName, imageUrl: r.photoUrl, href: `/pet/lost?report=${r.id}` }));
+  const found = selected || selectedId ? [] : await getFoundReports({ viewerId: viewer?.userId });
+  const myPets = viewer && !selectedId ? await getMyPets(viewer.supabase) : [];
+  const markers: PetMapMarker[] = [
+    ...reports
+      .filter((r) => r.lat != null && r.lng != null)
+      .map((r) => ({ id: r.id, lat: r.lat!, lng: r.lng!, kind: "lost" as const, label: r.petName, imageUrl: r.photoUrl, href: `/pet/lost?report=${r.id}` })),
+    ...found.map((f) => ({ id: f.id, lat: f.lat, lng: f.lng, kind: "found" as const, label: "見つけました", imageUrl: f.photoUrl, href: `/pet/found/${f.id}` })),
+  ];
 
   if (selectedId && !selected) {
     return (
@@ -59,9 +67,32 @@ export default async function PetLostMapPage({ searchParams }: { searchParams: P
     <div>
       <div className="mb-3 mt-2 px-1">
         <h1 className="text-2xl font-extrabold">迷子さがし</h1>
-        <p className="mt-1 text-sm text-[#9C8273]">見かけたら「ここで見た!」で飼い主さんに知らせてください。</p>
+        <p className="mt-1 text-sm text-[#9C8273]">探している子・見つかった子の情報をみんなで共有します。</p>
       </div>
-      {markers.length > 0 && <PetMap markers={markers} height={300} />}
+
+      <div className="grid grid-cols-2 gap-2">
+        <Link href="/pet/found/new" className="rounded-[28px] bg-[#2E9C7C] p-4 text-white shadow-[0_5px_0_#22806A] active:translate-y-[2px]">
+          <p className="text-3xl">🙋</p>
+          <p className="mt-1 text-[15px] font-extrabold leading-tight">迷子のペットを
+            <br />
+            見つけました!</p>
+          <p className="mt-1 text-[11px] opacity-90">写真と場所で通報</p>
+        </Link>
+        <Link href="#mine" className="rounded-[28px] bg-[#D04848] p-4 text-white shadow-[0_5px_0_#A83333] active:translate-y-[2px]">
+          <p className="text-3xl">🚨</p>
+          <p className="mt-1 text-[15px] font-extrabold leading-tight">うちの子が
+            <br />
+            迷子です</p>
+          <p className="mt-1 text-[11px] opacity-90">近くの人に知らせる</p>
+        </Link>
+      </div>
+
+      {markers.length > 0 && (
+        <div className="mt-4">
+          <PetMap markers={markers} height={300} />
+          <p className="mt-1 px-1 text-[11px] text-[#B39C8C]">🔴 探しています 🟢 見つけました(タップで詳細)</p>
+        </div>
+      )}
 
       <PetSectionTitle emoji="🚨">探しているワンコ({reports.length})</PetSectionTitle>
       {reports.length === 0 ? (
@@ -80,6 +111,49 @@ export default async function PetLostMapPage({ searchParams }: { searchParams: P
           ))}
         </div>
       )}
+
+      <PetSectionTitle emoji="🙋">見つかった・保護された子({found.length})</PetSectionTitle>
+      {found.length === 0 ? (
+        <PetCard className="text-center text-sm text-[#9C8273]">ここ2週間の通報はありません</PetCard>
+      ) : (
+        <div className="space-y-2">
+          {found.map((f) => (
+            <FoundReportCard key={f.id} report={f} />
+          ))}
+        </div>
+      )}
+
+      <div id="mine" className="scroll-mt-20">
+        <PetSectionTitle emoji="🐶">うちの子が迷子になったら</PetSectionTitle>
+        {!viewer ? (
+          <PetCard className="text-center text-sm">
+            <Link href={`/mypage/login?redirect=${encodeURIComponent("/pet/lost#mine")}`} className="font-extrabold text-[#EE6A36] underline">
+              ログイン
+            </Link>
+            して、うちの子を登録すると、迷子のお知らせを出せます。
+          </PetCard>
+        ) : myPets.length === 0 ? (
+          <PetCard className="text-center text-sm">
+            まず
+            <Link href="/pet/new" className="mx-1 font-extrabold text-[#EE6A36] underline">
+              うちの子を登録
+            </Link>
+            してください。
+          </PetCard>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {myPets.map((p) => (
+              <Link key={p.id} href={`/pet/${p.id}/lost`} className="block">
+                <PetCard className={`flex flex-col items-center p-3 text-center ${p.is_lost ? "border-[#F5B5B5] bg-[#FFF5F5]" : ""}`}>
+                  <PetAvatar url={p.avatarUrl} name={p.name} size={52} ring={false} />
+                  <p className="mt-1 w-full truncate text-sm font-extrabold">{p.name}</p>
+                  <p className={`text-[10px] font-bold ${p.is_lost ? "text-[#D04848]" : "text-[#B39C8C]"}`}>{p.is_lost ? "お知らせ中" : "お知らせを出す"}</p>
+                </PetCard>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
