@@ -3,6 +3,7 @@
   "crons": [
     { "path": "/api/cron/translations", "schedule": "0 18 * * *" },
     { "path": "/api/cron/gbp-sync", "schedule": "30 18 * * *" },
-    { "path": "/api/cron/shop-freshness", "schedule": "0 19 * * 0" }
+    { "path": "/api/cron/shop-freshness", "schedule": "0 19 * * 0" },
+    { "path": "/api/cron/youtube-beauty", "schedule": "15 17 * * *" }
   ]
 }

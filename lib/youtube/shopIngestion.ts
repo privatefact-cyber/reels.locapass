@@ -105,7 +105,7 @@ async function youtubeJson<T>(path: string, params: Record<string, string>) {
 }
 
 /** 検索と動画詳細を分離し、候補の長さ・埋め込み可否で絞る。 */
-export async function collectYoutubeCandidates(query: string, maxResults = 50): Promise<YoutubeCandidate[]> {
+export async function collectYoutubeCandidates(query: string, maxResults = 50, publishedAfter?: string): Promise<YoutubeCandidate[]> {
   const search = await youtubeJson<YoutubeSearchResponse>("search", {
     part: "id",
     q: query,
@@ -115,6 +115,7 @@ export async function collectYoutubeCandidates(query: string, maxResults = 50): 
     maxResults: String(Math.min(Math.max(maxResults, 1), 50)),
     order: "date",
     videoEmbeddable: "true",
+    ...(publishedAfter ? { publishedAfter } : {}),
   });
   const ids = [...new Set((search.items ?? []).map((item) => item.id?.videoId).filter((id): id is string => Boolean(id)))];
   if (ids.length === 0) return [];
@@ -135,6 +136,38 @@ export async function collectYoutubeCandidates(query: string, maxResults = 50): 
       sourceQuery: query,
     }))
     .filter((video) => video.title && video.embeddable && video.durationSeconds !== null && video.durationSeconds <= 180);
+}
+
+const TOKYO_BEAUTY_QUERIES = [
+  "東京 美容室",
+  "東京 ヘアサロン",
+  "東京 ネイルサロン",
+  "東京 エステ",
+  "東京 アイラッシュ",
+  "東京 バーバー",
+  "東京 ヘッドスパ",
+  "東京 メンズ美容",
+] as const;
+
+/** 東京のビューティー系を新着順で収集し、Health & Beautyポータルへストックする。 */
+export async function collectTokyoBeautyStock(options?: {
+  portalId?: number;
+  perQuery?: number;
+  publishedAfter?: string;
+}) {
+  const portalId = options?.portalId ?? 408;
+  const perQuery = Math.min(Math.max(options?.perQuery ?? 10, 1), 25);
+  const publishedAfter = options?.publishedAfter ?? new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString();
+  let fetched = 0;
+  let saved = 0;
+  let matched = 0;
+  for (const query of TOKYO_BEAUTY_QUERIES) {
+    const candidates = await collectYoutubeCandidates(query, perQuery, publishedAfter);
+    fetched += candidates.length;
+    saved += await saveYoutubeCandidates(portalId, candidates);
+    matched += await autoMatchYoutubeCandidates(portalId, candidates.slice(0, 5));
+  }
+  return { portalId, queries: TOKYO_BEAUTY_QUERIES.length, fetched, saved, matched, publishedAfter };
 }
 
 /** 管理画面から同一動画を何度集めても候補を増やさない。 */
