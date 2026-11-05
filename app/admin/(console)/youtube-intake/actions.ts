@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import crypto from "node:crypto";
 
-const SHIBUYA_PORTAL_ID = 407;
+const DEFAULT_INTAKE_PORTAL_ID = 55;
 
 function refresh() {
   revalidatePath("/admin/youtube-intake");
@@ -21,9 +21,12 @@ export async function collectShibuyaShorts(formData: FormData) {
   await requireRootAdmin();
   const query = String(formData.get("query") ?? "渋谷 グルメ カフェ").trim().slice(0, 100);
   const limit = Math.min(Math.max(Number(formData.get("limit") ?? 50), 1), 50);
+  const portalId = Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID);
   if (!query) throw new Error("検索キーワードを入力してください");
+  const { data: portal } = await createAdminClient().from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
+  if (!portal) throw new Error("有効なポータルを選択してください");
   const candidates = await collectYoutubeCandidates(query, limit);
-  await saveYoutubeCandidates(SHIBUYA_PORTAL_ID, candidates);
+  await saveYoutubeCandidates(portalId, candidates);
   refresh();
 }
 
@@ -50,7 +53,7 @@ export async function addTikTokUrl(formData: FormData) {
     }
   } catch { /* URLはストックし、メタデータ取得は後で再試行できる */ }
   const { error } = await (createAdminClient() as any).from("locapass_youtube_ingestions").upsert({
-    portal_id: SHIBUYA_PORTAL_ID,
+    portal_id: DEFAULT_INTAKE_PORTAL_ID,
     youtube_id: null,
     source_provider: "tiktok",
     source_id: sourceId,
@@ -68,13 +71,13 @@ export async function addTikTokUrl(formData: FormData) {
 
 export async function searchExistingShibuyaShop(name: string, address?: string) {
   await requireRootAdmin();
-  return findExistingShop(SHIBUYA_PORTAL_ID, name, address);
+  return findExistingShop(DEFAULT_INTAKE_PORTAL_ID, name, address);
 }
 
 export async function findOfficialSiteForIngestion(ingestionId: string) {
   await requireRootAdmin();
   const admin = createAdminClient();
-  const { data, error } = await (admin as any).from("locapass_youtube_ingestions").select("title, candidate_name, candidate_address, match_reason").eq("id", ingestionId).eq("portal_id", SHIBUYA_PORTAL_ID).maybeSingle();
+  const { data, error } = await (admin as any).from("locapass_youtube_ingestions").select("title, candidate_name, candidate_address, match_reason").eq("id", ingestionId).maybeSingle();
   if (error || !data) throw new Error(error?.message ?? "候補が見つかりません");
   const result = await findOfficialWebsite(data.title, data.candidate_name, data.candidate_address);
   const { error: updateError } = await (admin as any).from("locapass_youtube_ingestions").update({
@@ -90,20 +93,30 @@ export async function findOfficialSiteForIngestion(ingestionId: string) {
 
 export async function reviewYoutubeIngestion(ingestionId: string, formData: FormData) {
   const user = await requireRootAdmin();
+  const admin = createAdminClient();
+  const { data: currentIngestion, error: currentIngestionError } = await (admin as any)
+    .from("locapass_youtube_ingestions")
+    .select("portal_id")
+    .eq("id", ingestionId)
+    .maybeSingle();
+  if (currentIngestionError || !currentIngestion) throw new Error(currentIngestionError?.message ?? "候補が見つかりません");
   const candidateName = String(formData.get("candidate_name") ?? "").trim().slice(0, 120) || null;
   const candidateAddress = String(formData.get("candidate_address") ?? "").trim().slice(0, 300) || null;
   const officialUrl = String(formData.get("official_url") ?? "").trim() || null;
   const shopId = String(formData.get("shop_id") ?? "").trim() || null;
   const decision = String(formData.get("decision") ?? "pending");
   const reason = String(formData.get("match_reason") ?? "").trim().slice(0, 500) || null;
+  const portalId = Number(formData.get("portal_id") ?? currentIngestion.portal_id ?? DEFAULT_INTAKE_PORTAL_ID);
   if (officialUrl && !/^https:\/\/[^\s]+$/i.test(officialUrl)) throw new Error("公式サイトは https:// から始まるURLを入力してください");
   if (!["pending", "matched_existing", "ready_to_create", "rejected"].includes(decision)) throw new Error("不正な判定です");
   if (decision === "matched_existing" && (!shopId || !officialUrl)) throw new Error("既存店舗への紐づけには店舗IDと公式サイトが必要です");
+  const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
+  if (!portal) throw new Error("有効なポータルを選択してください");
   if (shopId) {
-    const { data: shop } = await createAdminClient().from("locapass_shops").select("id").eq("id", shopId).eq("portal_id", SHIBUYA_PORTAL_ID).maybeSingle();
-    if (!shop) throw new Error("渋谷ポータルの店舗を選んでください");
+    const { data: shop } = await admin.from("locapass_shops").select("id").eq("id", shopId).eq("portal_id", portalId).maybeSingle();
+    if (!shop) throw new Error("選択したポータルの店舗IDを入力してください");
   }
-  const { error } = await (createAdminClient() as any).from("locapass_youtube_ingestions").update({
+  const { error } = await (admin as any).from("locapass_youtube_ingestions").update({
     candidate_name: candidateName,
     candidate_address: candidateAddress,
     official_url: officialUrl,
@@ -113,8 +126,9 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
     match_reason: reason,
     reviewed_at: new Date().toISOString(),
     reviewed_by: user.id,
+    portal_id: portalId,
     error_message: null,
-  }).eq("id", ingestionId).eq("portal_id", SHIBUYA_PORTAL_ID);
+  }).eq("id", ingestionId);
   if (error) throw new Error(`判定の保存に失敗しました: ${error.message}`);
   refresh();
 }
@@ -122,22 +136,31 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
 /** 公式HPと住所が確認できた候補だけを、既存の店舗発行RPCでdraft作成する。 */
 export async function createDraftShopFromIngestion(ingestionId: string, formData: FormData) {
   await requireRootAdmin();
+  const admin = createAdminClient();
+  const { data: currentIngestion, error: currentIngestionError } = await (admin as any)
+    .from("locapass_youtube_ingestions")
+    .select("portal_id")
+    .eq("id", ingestionId)
+    .maybeSingle();
+  if (currentIngestionError || !currentIngestion) throw new Error(currentIngestionError?.message ?? "候補が見つかりません");
   const name = String(formData.get("name") ?? "").trim().slice(0, 120);
   const address = String(formData.get("address") ?? "").trim().slice(0, 300);
   const officialUrl = String(formData.get("official_url") ?? "").trim();
   const category = String(formData.get("category") ?? "カフェ・スイーツ");
   if (!name || !address || !/^https:\/\/[^\s]+$/i.test(officialUrl)) throw new Error("店名、住所、httpsの公式サイトを確認してください");
 
+  const portalId = Number(formData.get("portal_id") ?? currentIngestion.portal_id ?? DEFAULT_INTAKE_PORTAL_ID);
+  const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
+  if (!portal) throw new Error("有効なポータルを選択してください");
   const client = await createClient();
   const { data: shopId, error } = await (client as any).rpc("locapass_create_shop", {
-    p_portal_id: SHIBUYA_PORTAL_ID,
+    p_portal_id: portalId,
     p_name: name,
     p_category: category,
     p_address: address,
     p_business_type: "food",
   });
   if (error || !shopId) throw new Error(error?.message ?? "店舗の仮登録に失敗しました");
-  const admin = createAdminClient();
   const { error: updateError } = await admin.from("locapass_shops").update({ url: officialUrl }).eq("id", shopId);
   if (updateError) throw new Error(`公式サイトの保存に失敗しました: ${updateError.message}`);
   const { error: ingestionError } = await (admin as any).from("locapass_youtube_ingestions").update({
@@ -147,7 +170,7 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
     official_url_verified: true,
     matched_shop_id: shopId,
     match_status: "ready_to_create",
-  }).eq("id", ingestionId).eq("portal_id", SHIBUYA_PORTAL_ID);
+  }).eq("id", ingestionId);
   if (ingestionError) throw new Error(`候補の更新に失敗しました: ${ingestionError.message}`);
   refresh();
 }

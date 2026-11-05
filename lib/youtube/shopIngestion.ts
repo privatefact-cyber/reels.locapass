@@ -42,7 +42,6 @@ type IngestionRow = {
 };
 
 const YOUTUBE_API = "https://www.googleapis.com/youtube/v3";
-const SHIBUYA_PORTAL_ID = 407;
 
 function apiKey() {
   const key = process.env.YOUTUBE_DATA_API_KEY;
@@ -184,7 +183,6 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   const { data, error } = await (admin as any).from("locapass_youtube_ingestions").select("*").eq("id", ingestionId).maybeSingle();
   const row = data as IngestionRow | null;
   if (error || !row) throw new Error(error?.message ?? "候補が見つかりません");
-  if (row.portal_id !== SHIBUYA_PORTAL_ID) throw new Error("この初回運用は渋谷ポータルだけに限定しています");
   if (row.reel_id) return row.reel_id;
   if (!row.matched_shop_id || !row.official_url_verified) throw new Error("店舗と公式サイトを確認してから投稿してください");
 
