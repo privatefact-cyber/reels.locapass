@@ -334,11 +334,17 @@ export async function findOfficialWebsite(title: string, name: string | null, ad
   return identifyShopFromVideo({ title, description, name, address });
 }
 
-/** 取り込み時の掲載先ポータル。横浜市は横浜、それ以外(東京など)は渋谷ポータルにまとめる。 */
-export function intakePortalForAddress(address: string, fallbackPortalId: number) {
-  if (/横浜市/.test(address)) return 399;
-  if (/^東京都/.test(address.replace(/^〒\s*\d{3}-?\d{4}\s*/, ""))) return 407;
-  return fallbackPortalId;
+/**
+ * 取り込み時の掲載先ポータル(2026-11-05 運営判断)。
+ * 渋谷区の店は渋谷、横浜市の店は横浜、それ以外(池袋・神楽坂・吉祥寺など)はロカパス(公式)ポータルに入れる。
+ * 地図は全ポータル共通なので、どこに入れても地図には出る。
+ */
+export const LOCAPASS_HUB_PORTAL_ID = 55;
+export function intakePortalForAddress(address: string) {
+  const a = normalizeAddress(address).replace(/^〒\s*\d{3}-?\d{4}\s*/, "");
+  if (/^東京都渋谷区/.test(a)) return 407;
+  if (/^神奈川県横浜市|^横浜市/.test(a)) return 399;
+  return LOCAPASS_HUB_PORTAL_ID;
 }
 
 /** 住所から座標を求めて店舗に保存する(既に座標がある店舗は触らない)。地図に出すための最後の一手。 */
@@ -430,7 +436,7 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   form.set("video_url", row.video_url);
   form.set("text", `YouTubeで紹介された ${row.title}`.slice(0, 500));
   await createEmbedPostForShop(admin as any, row.matched_shop_id, form);
-  const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", row.portal_id).eq("embed_provider", "youtube").eq("embed_ref", row.youtube_id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", row.portal_id).eq("embed_provider", "youtube").eq("embed_ref", row.youtube_id).order("published_at", { ascending: false }).limit(1).maybeSingle();
   if (reelError || !reel?.id) throw new Error(reelError?.message ?? "リールIDを取得できませんでした");
   const { error: updateError } = await (admin as any).from("locapass_youtube_ingestions").update({ reel_id: reel.id, match_status: "matched_existing", reviewed_at: new Date().toISOString(), reviewed_by: userId, error_message: null }).eq("id", row.id);
   if (updateError) throw new Error(`投稿結果の保存に失敗しました: ${updateError.message}`);

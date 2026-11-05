@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { autoMatchYoutubeCandidates, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, geocodeShopIfMissing, importOfficialProfileIfMissing, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { autoMatchYoutubeCandidates, collectYoutubeCandidates, extractShopHint, findExistingShop, geocodeShopIfMissing, identifyShopFromVideo, importOfficialProfileIfMissing, intakePortalForAddress, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import crypto from "node:crypto";
 
 const DEFAULT_INTAKE_PORTAL_ID = 55;
@@ -86,46 +87,57 @@ export async function addYoutubeUrl(formData: FormData) {
   refresh();
 }
 
+/**
+ * 保留候補を少量ずつAIで判定し、店名と住所(番地まで)が分かったものは掲載する。
+ * 既存店に一致すればその店にリールを追加、無ければ店舗を公開で新規登録→座標登録→リール投稿まで行う。
+ * 公式サイトは見つかった場合だけ店舗に保存する(掲載の条件にはしない)。
+ */
 export async function autoProcessPendingYoutube(formData: FormData) {
   const user = await requireRootAdmin();
   const rawPortalId = String(formData.get("portal_id") ?? "").trim();
   const portalId = rawPortalId ? Number(rawPortalId) : null;
   if (portalId !== null && (!Number.isInteger(portalId) || portalId <= 0)) throw new Error("ポータルを確認してください");
   const admin = createAdminClient();
+  // AI判定済み(match_reasonあり)の保留は除外し、同じ候補ばかり再処理しないようにする。
   let query = (admin as any).from("locapass_youtube_ingestions")
-    .select("id, portal_id, title, candidate_name, candidate_address")
+    .select("id, portal_id, title, description, candidate_name, candidate_address")
     .eq("source_provider", "youtube")
     .eq("match_status", "pending")
+    .is("match_reason", null)
     .order("created_at", { ascending: true })
     .limit(5);
   if (portalId) query = query.eq("portal_id", portalId);
   const { data: rows, error } = await query;
   if (error) throw new Error(`保留候補の取得に失敗しました: ${error.message}`);
-  for (const row of (rows ?? []) as { id: string; portal_id: number; title: string; candidate_name: string | null; candidate_address: string | null }[]) {
+  for (const row of (rows ?? []) as { id: string; portal_id: number; title: string; description: string | null; candidate_name: string | null; candidate_address: string | null }[]) {
     try {
-      const result = await findOfficialWebsite(row.title, row.candidate_name, row.candidate_address);
-      if (!result.name || !result.address || !result.officialUrl) {
-        await (admin as any).from("locapass_youtube_ingestions").update({ candidate_name: result.name, candidate_address: result.address, match_reason: result.reason, error_message: "公式サイト・住所を確認できないため保留" }).eq("id", row.id);
+      const hint = extractShopHint(row.title, row.description ?? "");
+      const result = await identifyShopFromVideo({ title: row.title, description: row.description, name: hint.name ?? row.candidate_name, address: hint.address ?? row.candidate_address });
+      if (!result.name || !result.address) {
+        await (admin as any).from("locapass_youtube_ingestions").update({ candidate_name: result.name, candidate_address: result.address, match_reason: result.reason || "店名・住所を特定できず", error_message: "店名・住所を特定できないため保留" }).eq("id", row.id);
         continue;
       }
-      const existing = await findExistingShop(row.portal_id, result.name, result.address);
+      const targetPortalId = intakePortalForAddress(result.address);
+      const existing = await findExistingShop(targetPortalId, result.name, result.address);
       if (existing.length === 1) {
-        await (admin as any).from("locapass_youtube_ingestions").update({
-          candidate_name: result.name, candidate_address: result.address, official_url: result.officialUrl,
-          official_url_verified: true, matched_shop_id: existing[0].id, match_status: "matched_existing",
-          match_reason: "Geminiで公式サイト・住所を確認し、既存店舗に一意一致", reviewed_at: new Date().toISOString(), reviewed_by: user.id, error_message: null,
+        const { error: matchError } = await (admin as any).from("locapass_youtube_ingestions").update({
+          portal_id: targetPortalId, candidate_name: result.name, candidate_address: result.address, official_url: result.officialUrl ?? existing[0].url,
+          official_url_verified: Boolean(result.officialUrl ?? existing[0].url), matched_shop_id: existing[0].id, match_status: "matched_existing",
+          match_reason: `店名・住所が既存店舗に一意一致: ${result.reason}`.slice(0, 500), reviewed_at: new Date().toISOString(), reviewed_by: user.id, error_message: null,
         }).eq("id", row.id);
+        if (matchError) throw new Error(`候補の更新に失敗しました: ${matchError.message}`);
         await publishYoutubeIngestion(row.id, user.id);
         continue;
       }
       const draft = new FormData();
-      draft.set("portal_id", String(DEFAULT_INTAKE_PORTAL_ID));
+      draft.set("portal_id", String(targetPortalId));
       draft.set("name", result.name);
       draft.set("address", result.address);
-      draft.set("official_url", result.officialUrl);
-      draft.set("category", "カフェ・スイーツ");
+      draft.set("official_url", result.officialUrl ?? "");
+      draft.set("category", result.category);
+      draft.set("publish", "1");
+      draft.set("match_reason", result.reason);
       await createDraftShopFromIngestion(row.id, draft);
-      await (admin as any).from("locapass_youtube_ingestions").update({ portal_id: DEFAULT_INTAKE_PORTAL_ID }).eq("id", row.id);
       await publishYoutubeIngestion(row.id, user.id);
     } catch (processError) {
       await (admin as any).from("locapass_youtube_ingestions").update({ error_message: processError instanceof Error ? processError.message.slice(0, 500) : "自動処理に失敗しました" }).eq("id", row.id);
@@ -181,9 +193,9 @@ export async function searchExistingShibuyaShop(name: string, address?: string) 
 export async function findOfficialSiteForIngestion(ingestionId: string) {
   await requireRootAdmin();
   const admin = createAdminClient();
-  const { data, error } = await (admin as any).from("locapass_youtube_ingestions").select("title, candidate_name, candidate_address, match_reason").eq("id", ingestionId).maybeSingle();
+  const { data, error } = await (admin as any).from("locapass_youtube_ingestions").select("title, description, candidate_name, candidate_address, match_reason").eq("id", ingestionId).maybeSingle();
   if (error || !data) throw new Error(error?.message ?? "候補が見つかりません");
-  const result = await findOfficialWebsite(data.title, data.candidate_name, data.candidate_address);
+  const result = await identifyShopFromVideo({ title: data.title, description: data.description, name: data.candidate_name, address: data.candidate_address });
   const { error: updateError } = await (admin as any).from("locapass_youtube_ingestions").update({
     candidate_name: result.name,
     candidate_address: result.address,
@@ -237,7 +249,11 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
   refresh();
 }
 
-/** 公式HPと住所が確認できた候補だけを、既存の店舗発行RPCでdraft作成する。 */
+/**
+ * 店名と住所が分かった候補から、既存の店舗発行RPCで店舗を作る。
+ * 公式サイトは任意(あれば保存し、空欄の店舗詳細を公式サイトから補完する)。
+ * 住所から座標を求めて地図に出せる状態にし、publish=1 のときは公開(active)にする。
+ */
 export async function createDraftShopFromIngestion(ingestionId: string, formData: FormData) {
   await requireRootAdmin();
   const admin = createAdminClient();
@@ -249,11 +265,14 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
   if (currentIngestionError || !currentIngestion) throw new Error(currentIngestionError?.message ?? "候補が見つかりません");
   const name = String(formData.get("name") ?? "").trim().slice(0, 120);
   const address = String(formData.get("address") ?? "").trim().slice(0, 300);
-  const officialUrl = String(formData.get("official_url") ?? "").trim();
-  const category = String(formData.get("category") ?? "カフェ・スイーツ");
-  if (!name || !address || !/^https:\/\/[^\s]+$/i.test(officialUrl)) throw new Error("店名、住所、httpsの公式サイトを確認してください");
+  const officialUrl = String(formData.get("official_url") ?? "").trim() || null;
+  const category = normalizeCategory(String(formData.get("category") ?? "カフェ・スイーツ")) ?? "カフェ・スイーツ";
+  const publish = String(formData.get("publish") ?? "") === "1";
+  const reason = String(formData.get("match_reason") ?? "").trim().slice(0, 500) || null;
+  if (!name || !address) throw new Error("店名と住所を入力してください");
+  if (officialUrl && !/^https:\/\/[^\s]+$/i.test(officialUrl)) throw new Error("公式サイトは https:// から始まるURLを入力してください");
 
-  const portalId = Number(formData.get("portal_id") ?? currentIngestion.portal_id ?? DEFAULT_INTAKE_PORTAL_ID);
+  const portalId = Number(formData.get("portal_id") || intakePortalForAddress(address));
   const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
   if (!portal) throw new Error("有効なポータルを選択してください");
   const client = await createClient();
@@ -264,21 +283,31 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
     p_address: address,
     p_business_type: "food",
   });
-  if (error || !shopId) throw new Error(error?.message ?? "店舗の仮登録に失敗しました");
-  const { error: updateError } = await admin.from("locapass_shops").update({ url: officialUrl }).eq("id", shopId);
-  if (updateError) throw new Error(`公式サイトの保存に失敗しました: ${updateError.message}`);
-  // 新規発行直後に、空欄の店舗詳細を公式サイトから補完する。取込失敗は店舗発行を止めず、管理者が後で確認できるよう候補側に記録する。
-  await geocodeShopIfMissing(shopId);
-  const imported = await importOfficialProfileIfMissing(shopId, officialUrl);
+  if (error || !shopId) throw new Error(error?.message ?? "店舗の登録に失敗しました");
+  const patch: { url?: string; status?: string } = {};
+  if (officialUrl) patch.url = officialUrl;
+  if (publish) patch.status = "active";
+  if (Object.keys(patch).length > 0) {
+    const { data: updated, error: updateError } = await admin.from("locapass_shops").update(patch).eq("id", shopId).select("id");
+    if (updateError || !updated?.length) throw new Error(`店舗の更新に失敗しました: ${updateError?.message ?? "0件"}`);
+  }
+  // 座標が取れないと地図に出ないので、失敗は候補側に記録して管理者が住所を直せるようにする。
+  const coords = await geocodeShopIfMissing(shopId).catch(() => null);
+  const imported = officialUrl ? await importOfficialProfileIfMissing(shopId, officialUrl) : { applied: [], error: null };
+  const notes = [
+    coords ? null : "住所から座標を求められませんでした(地図に出ません)",
+    imported.error ? `公式情報の自動取込: ${imported.error}` : null,
+  ].filter(Boolean).join(" / ");
   const { error: ingestionError } = await (admin as any).from("locapass_youtube_ingestions").update({
     candidate_name: name,
     candidate_address: address,
     official_url: officialUrl,
-    official_url_verified: true,
+    official_url_verified: Boolean(officialUrl),
     matched_shop_id: shopId,
     portal_id: portalId,
     match_status: "ready_to_create",
-    error_message: imported.error ? `公式情報の自動取込: ${imported.error}` : null,
+    ...(reason ? { match_reason: reason } : {}),
+    error_message: notes || null,
   }).eq("id", ingestionId);
   if (ingestionError) throw new Error(`候補の更新に失敗しました: ${ingestionError.message}`);
   refresh();
