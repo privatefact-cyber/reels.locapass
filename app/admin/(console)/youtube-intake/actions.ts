@@ -299,7 +299,7 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
   // 座標が取れないと地図に出ないので、失敗は候補側に記録して管理者が住所を直せるようにする。
   const coords = await geocodeShopIfMissing(shopId).catch(() => null);
   const imported = officialUrl ? await importOfficialProfileIfMissing(shopId, officialUrl) : { applied: [], error: null };
-  // カバー写真(Googleの写真を中継)・住所の英語表記・紹介文の翻訳を、登録と同時に埋める。
+  // 住所の英語表記・紹介文の翻訳を、登録と同時に埋める(Googleの写真は費用のため使わない)。
   const enriched = await enrichNewShop(admin as any, shopId).catch((e) => ({ note: e instanceof Error ? e.message : "補完に失敗" }));
   const notes = [
     coords ? null : "住所から座標を求められませんでした(地図に出ません)",
@@ -322,8 +322,8 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
 }
 
 /**
- * 動画ストックから登録した公開店舗のうち、カバー写真・住所の英語表記が無い店舗を少しずつ補完する。
- * Google Places / Gemini の呼び出しを伴うので、1回あたり最大15店舗。
+ * 動画ストックから登録した公開店舗のうち、住所の英語表記が無い店舗を少しずつ補完する。
+ * Gemini の呼び出しを伴うので、1回あたり最大15店舗。Googleの写真は費用のため使わない。
  */
 export async function enrichIntakeShops() {
   await requireRootAdmin();
@@ -332,12 +332,8 @@ export async function enrichIntakeShops() {
   if (error) throw new Error(`取り込み店舗の取得に失敗しました: ${error.message}`);
   const ids = [...new Set(((links ?? []) as { matched_shop_id: string }[]).map((r) => r.matched_shop_id))];
   if (ids.length === 0) return;
-  const { data: shops } = await admin.from("locapass_shops").select("id, cover_url, google_place_id, address_en").in("id", ids).eq("status", "active");
-  // 写真検索で一致しなかった店舗(google_place_id なし・cover なし)は毎回再検索になるので、英語住所が無い店を先に回す。
-  const targets = (shops ?? [])
-    .filter((s) => !s.address_en || (!s.cover_url && !s.google_place_id))
-    .sort((a, b) => Number(Boolean(a.address_en)) - Number(Boolean(b.address_en)))
-    .slice(0, 15);
+  const { data: shops } = await admin.from("locapass_shops").select("id, address_en").in("id", ids).eq("status", "active");
+  const targets = (shops ?? []).filter((s) => !s.address_en).slice(0, 15);
   for (const shop of targets) {
     const result = await enrichNewShop(admin as any, shop.id).catch((e) => ({ note: e instanceof Error ? e.message : "補完に失敗" }));
     if (result.note) console.error(`店舗の補完で一部失敗しました(${shop.id}): ${result.note}`);
