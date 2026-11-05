@@ -17,9 +17,17 @@ export type ImgOptions = {
   format?: "webp" | "jpeg";
 };
 
-/** SupabaseのStorageの公開URLなら、縮小APIのURLを返す。それ以外はnull。 */
-export function resizedUrl(url: string, opt: ImgOptions): string | null {
-  if (!url.includes(STORAGE_MARKER)) return null;
+/** YouTubeの公式サムネイル(縮小APIが取りに行ってよいホスト。lib/images/resizeSource.ts と揃える)。 */
+export function isYouTubeThumbUrl(url: string): boolean {
+  return /^https:\/\/(?:i\.ytimg\.com|img\.youtube\.com)\//.test(url);
+}
+
+/**
+ * SupabaseのStorageの公開URLなら、縮小APIのURLを返す。それ以外はnull。
+ * allowYouTube を付けたときだけ、YouTubeのサムネイルも縮小APIに通す(一覧の正方形タイルで、ショートの左右のぼかしを切り落とすため)。
+ */
+export function resizedUrl(url: string, opt: ImgOptions, { allowYouTube = false }: { allowYouTube?: boolean } = {}): string | null {
+  if (!url.includes(STORAGE_MARKER) && !(allowYouTube && isYouTubeThumbUrl(url))) return null;
   const p = new URLSearchParams();
   p.set("u", url.replace(/\?.*$/, ""));
   p.set("w", String(Math.round(opt.width)));
