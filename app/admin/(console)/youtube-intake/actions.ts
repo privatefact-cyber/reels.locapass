@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { autoMatchYoutubeCandidates, collectYoutubeCandidates, extractShopHint, findExistingShop, geocodeShopIfMissing, identifyShopFromVideo, importOfficialProfileIfMissing, intakePortalForAddress, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
+import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import crypto from "node:crypto";
 
 const DEFAULT_INTAKE_PORTAL_ID = 55;
@@ -298,9 +299,12 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
   // 座標が取れないと地図に出ないので、失敗は候補側に記録して管理者が住所を直せるようにする。
   const coords = await geocodeShopIfMissing(shopId).catch(() => null);
   const imported = officialUrl ? await importOfficialProfileIfMissing(shopId, officialUrl) : { applied: [], error: null };
+  // カバー写真(Googleの写真を中継)・住所の英語表記・紹介文の翻訳を、登録と同時に埋める。
+  const enriched = await enrichNewShop(admin as any, shopId).catch((e) => ({ note: e instanceof Error ? e.message : "補完に失敗" }));
   const notes = [
     coords ? null : "住所から座標を求められませんでした(地図に出ません)",
     imported.error ? `公式情報の自動取込: ${imported.error}` : null,
+    enriched.note ? `不足項目の補完: ${enriched.note}` : null,
   ].filter(Boolean).join(" / ");
   const { error: ingestionError } = await (admin as any).from("locapass_youtube_ingestions").update({
     candidate_name: name,
@@ -314,6 +318,30 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
     error_message: notes || null,
   }).eq("id", ingestionId);
   if (ingestionError) throw new Error(`候補の更新に失敗しました: ${ingestionError.message}`);
+  refresh();
+}
+
+/**
+ * 動画ストックから登録した公開店舗のうち、カバー写真・住所の英語表記が無い店舗を少しずつ補完する。
+ * Google Places / Gemini の呼び出しを伴うので、1回あたり最大15店舗。
+ */
+export async function enrichIntakeShops() {
+  await requireRootAdmin();
+  const admin = createAdminClient();
+  const { data: links, error } = await (admin as any).from("locapass_youtube_ingestions").select("matched_shop_id").not("matched_shop_id", "is", null);
+  if (error) throw new Error(`取り込み店舗の取得に失敗しました: ${error.message}`);
+  const ids = [...new Set(((links ?? []) as { matched_shop_id: string }[]).map((r) => r.matched_shop_id))];
+  if (ids.length === 0) return;
+  const { data: shops } = await admin.from("locapass_shops").select("id, cover_url, google_place_id, address_en").in("id", ids).eq("status", "active");
+  // 写真検索で一致しなかった店舗(google_place_id なし・cover なし)は毎回再検索になるので、英語住所が無い店を先に回す。
+  const targets = (shops ?? [])
+    .filter((s) => !s.address_en || (!s.cover_url && !s.google_place_id))
+    .sort((a, b) => Number(Boolean(a.address_en)) - Number(Boolean(b.address_en)))
+    .slice(0, 15);
+  for (const shop of targets) {
+    const result = await enrichNewShop(admin as any, shop.id).catch((e) => ({ note: e instanceof Error ? e.message : "補完に失敗" }));
+    if (result.note) console.error(`店舗の補完で一部失敗しました(${shop.id}): ${result.note}`);
+  }
   refresh();
 }
 
