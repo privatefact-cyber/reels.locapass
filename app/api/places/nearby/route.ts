@@ -2,13 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { photoText } from "@/lib/photo/serverText";
-import { searchNearbyPlaces } from "@/lib/places/googlePlaces";
 
 /**
- * エリアフォト投稿時の「場所タグ候補」。写真の位置の近くにある
- *   ① locapass掲載店(locapass_venues) ② Googleの場所(穴場候補)
- * を1つのリストで返す。②は料金がかかるので、ログイン中の会員のみ・
- * 候補を開いたときだけ呼ぶ前提(Supabaseアクセストークン必須)。
+ * エリアフォト投稿時の「場所タグ候補」。写真の位置の近くにある locapass掲載店(locapass_venues)を返す。
+ * Googleの場所(Places Nearby Search)は有料のため使わない(2026-11-06、Google系の有料APIは全面的に使わない方針)。
+ * ログイン中の会員のみ(Supabaseアクセストークン必須)。
  * エリアフォトはWP(*.locapass.net)から呼ばれるためCORSを許可する。
  */
 const ALLOWED_ORIGIN =
@@ -51,7 +49,6 @@ function distanceM(lat1: number, lng1: number, lat2: number, lng2: number) {
 export async function GET(request: NextRequest) {
   const headers = corsHeaders(request.headers.get("origin"));
   const { t, locale } = await photoText();
-  const googleLang = { ja: "ja", en: "en", zh: "zh-CN", ar: "ar" }[locale];
   // WP(別オリジン)からはBearerトークン、locapass.net自身のページからはCookieのセッションで本人確認する。
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const supabase = createStaticClient();
@@ -95,24 +92,5 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => a.distance_m - b.distance_m)
     .slice(0, 5);
 
-  // ② Googleの場所(掲載店と同名のものは重複なので除く)
-  let spots: Candidate[] = [];
-  try {
-    const places = await searchNearbyPlaces(lat, lng, 200, googleLang);
-    const listedNames = new Set(listed.map((c) => c.name.replace(/\s/g, "")));
-    spots = places
-      .filter((p) => p.displayName?.text && !listedNames.has(p.displayName.text.replace(/\s/g, "")))
-      .map((p) => ({
-        kind: "spot" as const,
-        name: p.displayName!.text,
-        address: p.formattedAddress ?? null,
-        place_id: p.id,
-        distance_m: p.location ? distanceM(lat, lng, p.location.latitude, p.location.longitude) : 0,
-      }))
-      .slice(0, 8);
-  } catch {
-    // Google側の失敗は掲載店候補だけ返して続行(投稿自体は止めない)
-  }
-
-  return NextResponse.json({ candidates: [...listed, ...spots] }, { headers });
+  return NextResponse.json({ candidates: listed }, { headers });
 }
