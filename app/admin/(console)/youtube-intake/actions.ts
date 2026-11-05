@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { autoMatchYoutubeCandidates, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import crypto from "node:crypto";
 
 const DEFAULT_INTAKE_PORTAL_ID = 55;
@@ -27,6 +27,8 @@ export async function collectShibuyaShorts(formData: FormData) {
   if (!portal) throw new Error("有効なポータルを選択してください");
   const candidates = await collectYoutubeCandidates(query, limit);
   await saveYoutubeCandidates(portalId, candidates);
+  // 自動照合は1回の収集で最大5件に限定し、YouTube検索自体がタイムアウトしないようにする。
+  await autoMatchYoutubeCandidates(portalId, candidates.slice(0, 5));
   refresh();
 }
 

@@ -63,9 +63,13 @@ function cleanText(text: string) {
 /** 動画のタイトルと説明欄から、確認画面で使う店舗名の候補だけを控えめに拾う。 */
 export function extractShopHint(title: string, description: string): { name: string | null; address: string | null } {
   const source = `${title}\n${description}`;
-  const name = source.match(/(?:店名|店舗名|店:\s*|店は)[：:\s]*([^\n#]{2,60})/i)?.[1];
-  const address = source.match(/(?:住所|アクセス|所在地)[：:\s]*([^\n]{6,120})/i)?.[1];
-  return { name: name ? cleanText(name).replace(/[。！!].*$/, "").trim() : null, address: address ? cleanText(address).trim() : null };
+  const name = source.match(/(?:店名|店舗名)[：:\s]*[「『“]?([^\n\r📍#]{2,80})/i)?.[1]
+    ?? source.match(/(?:📍\s*店名|店名)[：:\s]*[「『“]?([^\n\r📍#]{2,80})/i)?.[1];
+  const address = source.match(/(?:住所|所在地)[：:\s]*([^\n\r#]{8,140})/i)?.[1];
+  const trimField = (value: string | undefined, max: number) => value
+    ? cleanText(value).replace(/[」』”].*$/, "").replace(/(?:🔹|📍|営業時間|定休日|支払い|#).*/, "").replace(/[。！!].*$/, "").trim().slice(0, max) || null
+    : null;
+  return { name: trimField(name, 120), address: trimField(address, 300) };
 }
 
 async function youtubeJson<T>(path: string, params: Record<string, string>) {
@@ -134,6 +138,31 @@ export async function saveYoutubeCandidates(portalId: number, candidates: Youtub
   const { error } = await (admin as any).from("locapass_youtube_ingestions").upsert(rows, { onConflict: "portal_id,youtube_id", ignoreDuplicates: true });
   if (error) throw new Error(`候補の保存に失敗しました: ${error.message}`);
   return rows.length;
+}
+
+/** 店名・住所が説明文から明確に取れ、既存店が一意に一致する候補だけを自動紐づけする。 */
+export async function autoMatchYoutubeCandidates(portalId: number, candidates: YoutubeCandidate[]) {
+  const admin = createAdminClient();
+  let matched = 0;
+  for (const video of candidates) {
+    const hint = extractShopHint(video.title, video.description);
+    if (!hint.name) continue;
+    const shops = await findExistingShop(portalId, hint.name, hint.address);
+    if (shops.length !== 1) continue;
+    const shop = shops[0];
+    const { error } = await (admin as any).from("locapass_youtube_ingestions").update({
+      candidate_name: hint.name,
+      candidate_address: hint.address,
+      matched_shop_id: shop.id,
+      official_url: shop.url,
+      official_url_verified: Boolean(shop.url),
+      match_status: "matched_existing",
+      match_reason: "説明文の店名・住所と既存店舗が一意に一致したため自動紐づけ",
+      error_message: null,
+    }).eq("portal_id", portalId).eq("youtube_id", video.youtubeId);
+    if (!error) matched += 1;
+  }
+  return matched;
 }
 
 /** 店名・住所・公式URLに基づく既存店舗の候補。完全一致以外は確認画面で承認する。 */
