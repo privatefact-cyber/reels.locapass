@@ -1,6 +1,7 @@
 import { requirePetViewer } from "@/lib/pet/db";
 import { lineConfigured } from "@/lib/pet/notify";
 import { PetSettingsForm } from "@/components/pet/PetSettingsForm";
+import { PetPushCard } from "@/components/pet/PetPushCard";
 import { PetCard } from "@/components/pet/ui";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,9 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
       {notice && (
         <PetCard className={`mb-4 text-sm font-bold ${notice.tone === "ok" ? "bg-[#E5F8EC] text-[#06A34A]" : "bg-[#FFF8E1] text-[#8A6A00]"}`}>{notice.text}</PetCard>
       )}
+      <div className="mb-4">
+        <PetPushCard />
+      </div>
       <PetSettingsForm
         walkAreas={(areas ?? []) as { id: string; lat: number; lng: number; label: string | null }[]}
         lostAlertOptIn={s?.lost_alert_opt_in ?? true}

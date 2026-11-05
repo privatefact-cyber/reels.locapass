@@ -15,11 +15,14 @@ import { petButton } from "./ui";
 export function FoundActions({
   id,
   isReporter,
+  manageToken = null,
   loggedIn,
   resolved,
 }: {
   id: string;
   isReporter: boolean;
+  /** ログインなしで通報した人の管理用トークン */
+  manageToken?: string | null;
   loggedIn: boolean;
   resolved: boolean;
 }) {
@@ -40,7 +43,7 @@ export function FoundActions({
         )
           return;
         setBusy(true);
-        const res = await deleteFoundReport(id);
+        const res = await deleteFoundReport(id, manageToken);
         setBusy(false);
         if (!res.ok) return alert(res.error);
         router.push("/pet/lost");
@@ -65,7 +68,7 @@ export function FoundActions({
             )
               return;
             setBusy(true);
-            const res = await resolveFoundReport(id);
+            const res = await resolveFoundReport(id, manageToken);
             setBusy(false);
             if (!res.ok) return alert(res.error);
             router.refresh();
@@ -99,6 +102,10 @@ export function FoundActions({
           const res = await claimFoundReport(id);
           setBusy(false);
           if (!res.ok) return setMsg(res.error);
+          if (res.guestReporter) {
+            setMsg("この通報はログインなしで送られたため、通知では届けられません。上の「通報した人の連絡方法を表示」から連絡してください。");
+            return;
+          }
           setNeedLost(!res.hasLostReport);
           setMsg(
             res.hasLostReport

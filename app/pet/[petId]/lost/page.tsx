@@ -95,7 +95,7 @@ export default async function PetLostOwnerPage({ params }: { params: Promise<{ p
 
       <PetSectionTitle emoji="📣">みんなに広める</PetSectionTitle>
       <ShareButtons
-        url={`https://locapass.net/pet/lost?report=${report.id}`}
+        url={`https://locapass.net/pet/lost/${report.id}`}
         text={`【迷子のワンコを探しています】${pet.name}${pet.breed ? `(${pet.breed})` : ""}${report.last_seen_address ? ` ${report.last_seen_address}付近` : ""} 見かけた方はご連絡ください。拡散お願いします #迷子犬 #ワンコ手帳`}
       />
       <p className="mt-1 px-1 text-[11px] text-[#B39C8C]">旅行先などワンコ手帳の利用者が少ない場所では、LINEやXで広めるのがいちばん効果的です。</p>

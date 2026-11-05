@@ -1,4 +1,5 @@
 import { petAdmin, signPetImages } from "./db";
+import { maskContacts } from "./privacy";
 
 /** 「見つけました」通報のうち、誰にでも見せてよい部分 */
 export type PublicFoundReport = {
@@ -12,7 +13,8 @@ export type PublicFoundReport = {
   foundAt: string;
   features: string | null;
   handedTo: string | null;
-  contactNote: string | null;
+  /** 連絡方法そのものは返さない(検索に出すページのHTMLに載せないため)。表示は revealFoundContact で */
+  hasContact: boolean;
   status: "open" | "resolved";
   createdAt: string;
   isReporter: boolean;
@@ -48,11 +50,11 @@ export async function getFoundReports(opts: { id?: string; viewerId?: string | n
     photoUrl: r.photo_path ? (signed.get(r.photo_path) ?? null) : null,
     lat: r.lat,
     lng: r.lng,
-    address: r.address,
+    address: maskContacts(r.address).text,
     foundAt: r.found_at,
-    features: r.features,
-    handedTo: r.handed_to,
-    contactNote: r.contact_note,
+    features: maskContacts(r.features).text,
+    handedTo: maskContacts(r.handed_to).text,
+    hasContact: Boolean(r.contact_note),
     status: r.status,
     createdAt: r.created_at,
     isReporter: Boolean(opts.viewerId && opts.viewerId === r.reporter_id),

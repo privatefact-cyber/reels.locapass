@@ -8,6 +8,7 @@ import { listPublishedJournalPosts } from "@/lib/journal/queries";
 import { isLowProfilePortal } from "@/lib/seo/portalMeta";
 import { LOCALES } from "@/lib/i18n/locale";
 import { localeLanguageAlternates, localeUrl } from "@/lib/i18n/localePath";
+import { petAdmin } from "@/lib/pet/db";
 
 const BASE_URL = "https://locapass.net";
 
@@ -97,5 +98,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  return withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]);
+  // ワンコ手帳の迷子のお知らせ(お知らせ中)と「見つけました」通報(受付中・14日以内)。日本語のみ(言語別URLなし)。
+  // 連絡先はページのHTMLに載せていない(ボタンを押したときだけ表示)。IDと日時だけを引く。
+  const petEntries: MetadataRoute.Sitemap = [];
+  try {
+    const admin = petAdmin();
+    const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+    const [{ data: lost }, { data: found }] = await Promise.all([
+      admin.from("locapass_pet_lost_reports").select("id, created_at").eq("status", "active").is("hidden_at", null).limit(5000),
+      admin.from("locapass_pet_found_reports").select("id, created_at").eq("status", "open").is("hidden_at", null).gte("created_at", since).limit(5000),
+    ]);
+    for (const r of lost ?? []) petEntries.push({ url: `${BASE_URL}/pet/lost/${r.id}`, lastModified: new Date(r.created_at), changeFrequency: "hourly", priority: 0.6 });
+    for (const r of found ?? []) petEntries.push({ url: `${BASE_URL}/pet/found/${r.id}`, lastModified: new Date(r.created_at), changeFrequency: "hourly", priority: 0.6 });
+  } catch (e) {
+    console.error("[sitemap] pet entries failed", e);
+  }
+
+  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]), ...petEntries];
 }

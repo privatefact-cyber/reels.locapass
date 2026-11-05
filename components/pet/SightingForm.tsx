@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, Send } from "lucide-react";
 import exifr from "exifr";
@@ -10,6 +9,7 @@ import { reverseGeocode } from "@/lib/map/geocode";
 import { uploadPetImage } from "./petUpload";
 import { PetMap } from "./PetMap";
 import { PetCard, PetField, petButton, petInput } from "./ui";
+import { TurnstileWidget, turnstileRequired } from "./TurnstileWidget";
 
 /** 「ここで見た!」の投稿。写真に位置情報があれば、その場所を自動で選ぶ(みんなのフォトと同じ仕組み)。 */
 export function SightingForm({ reportId, petName, loggedIn, center }: { reportId: string; petName: string; loggedIn: boolean; center: { lat: number; lng: number } | null }) {
@@ -22,18 +22,8 @@ export function SightingForm({ reportId, petName, loggedIn, center }: { reportId
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-
-  if (!loggedIn) {
-    return (
-      <PetCard className="text-center">
-        <p className="text-sm font-bold">目撃情報を送るにはログインが必要です</p>
-        <p className="mt-1 text-xs text-[#9C8273]">いたずら防止のため、LOCAPASSの会員(無料)の方だけが送れます</p>
-        <Link href={`/mypage/login?redirect=${encodeURIComponent(`/pet/lost?report=${reportId}`)}`} className={`${petButton.primary} mt-3 w-full`}>
-          ログイン / 無料で会員登録
-        </Link>
-      </PetCard>
-    );
-  }
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
 
   if (done) {
     return (
@@ -64,11 +54,12 @@ export function SightingForm({ reportId, petName, loggedIn, center }: { reportId
 
   async function submit() {
     if (!point) return setError("見かけた場所を地図で選んでください");
+    if (!loggedIn && turnstileRequired && !captcha) return setError("「人間です」の確認をしてください");
     setBusy(true);
     setError(null);
     try {
       const photoPath = file ? await uploadPetImage("sighting", reportId, file) : null;
-      const res = await postSighting({ lostReportId: reportId, lat: point.lat, lng: point.lng, address, comment, photoPath });
+      const res = await postSighting({ lostReportId: reportId, lat: point.lat, lng: point.lng, address, comment, photoPath, turnstileToken: captcha, honeypot });
       if (!res.ok) throw new Error(res.error);
       setDone(true);
       router.refresh();
@@ -94,6 +85,13 @@ export function SightingForm({ reportId, petName, loggedIn, center }: { reportId
         {file ? "写真を選びました" : "写真を付ける(あれば)"}
       </button>
       <input ref={fileInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pickFile(e.target.files?.[0])} />
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} className="hidden" aria-hidden />
+      {!loggedIn && (
+        <div className="space-y-2 text-center">
+          <p className="text-xs text-[#9C8273]">ログインしなくても送れます</p>
+          <TurnstileWidget onToken={setCaptcha} />
+        </div>
+      )}
       {error && <p className="text-sm font-bold text-[#D04848]">{error}</p>}
       <button type="button" onClick={submit} disabled={busy} className={`${petButton.primary} w-full`}>
         {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}

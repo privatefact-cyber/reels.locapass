@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getPetViewer } from "@/lib/pet/db";
 import { getActiveLostReports, getLostFoundHeatPoints } from "@/lib/pet/lost";
 import { getFoundReports } from "@/lib/pet/found";
 import { getMyPets } from "@/lib/pet/queries";
 import { FoundReportCard } from "@/components/pet/FoundReportCard";
 import { LostInfoCard } from "@/components/pet/LostInfoCard";
-import { SightingForm } from "@/components/pet/SightingForm";
-import { ShareButtons } from "@/components/pet/ShareButtons";
-import { FlagButton } from "@/components/pet/FlagButton";
 import { NearbyControls } from "@/components/pet/NearbyControls";
 import { PetMap, type PetMapMarker } from "@/components/pet/PetMap";
 import { PetAvatar, PetCard, PetSectionTitle } from "@/components/pet/ui";
@@ -21,72 +19,15 @@ const RADII = [10, 30, 0] as const; // 0 = 全国
 
 type Search = { report?: string; lat?: string; lng?: string; r?: string; limit?: string };
 
-function lostShareText(r: { petName: string; breed: string | null; address: string | null }) {
-  return `【迷子のワンコを探しています】${r.petName}${r.breed ? `(${r.breed})` : ""}${r.address ? ` ${r.address}付近` : ""} 見かけた方はご連絡ください。拡散お願いします #迷子犬 #ワンコ手帳`;
-}
-
-export async function generateMetadata({ searchParams }: { searchParams: Promise<Search> }): Promise<Metadata> {
-  const { report } = await searchParams;
-  if (!report || !UUID.test(report)) return { title: "迷子さがし" };
-  const [r] = await getActiveLostReports({ reportId: report });
-  if (!r) return { title: "迷子さがし" };
-  const title = `迷子のワンコを探しています:${r.petName}`;
-  const description = lostShareText(r);
-  return {
-    title,
-    description,
-    robots: { index: false, follow: false },
-    openGraph: { title, description, images: r.photoUrl ? [{ url: r.photoUrl }] : undefined },
-    twitter: { card: r.photoUrl ? "summary_large_image" : "summary", title, description },
-  };
-}
+export const metadata: Metadata = { title: "迷子さがし" };
 
 /** 迷子さがし: 近く(既定10km)の迷子のお知らせ・見つけました通報。全国はヒートマップで。選んだ子には「ここで見た!」を送れる。 */
 export default async function PetLostMapPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const viewer = await getPetViewer();
 
-  // ---- 1件を開いたとき(共有URLの行き先) ----
-  if (sp.report) {
-    const [selected] = UUID.test(sp.report) ? await getActiveLostReports({ reportId: sp.report, viewerId: viewer?.userId }) : [];
-    if (!selected) {
-      return (
-        <div className="pt-12 text-center">
-          <p className="text-5xl">🎉</p>
-          <p className="mt-3 font-extrabold">この迷子のお知らせは終了しました</p>
-          <p className="mt-1 text-sm text-[#9C8273]">無事に見つかったか、飼い主さんがお知らせを終えました。ご協力ありがとうございました。</p>
-          <Link href="/pet/lost" className="mt-5 inline-block text-sm font-bold text-[#EE6A36] underline">
-            ほかの迷子を見る
-          </Link>
-        </div>
-      );
-    }
-    return (
-      <div className="pt-2">
-        <LostInfoCard report={selected} showSightingLink={false} />
-        {selected.isOwner ? (
-          <PetCard className="mt-4 text-center text-sm">
-            あなたの子のお知らせです。
-            <Link href={`/pet/${selected.petId}/lost`} className="ml-1 font-extrabold text-[#EE6A36] underline">
-              目撃情報を見る
-            </Link>
-          </PetCard>
-        ) : (
-          <div id="sighting" className="mt-4 scroll-mt-20">
-            <SightingForm reportId={selected.id} petName={selected.petName} loggedIn={Boolean(viewer)} center={selected.lat != null && selected.lng != null ? { lat: selected.lat, lng: selected.lng } : null} />
-          </div>
-        )}
-        <PetSectionTitle emoji="📣">みんなに広める</PetSectionTitle>
-        <ShareButtons url={`https://locapass.net/pet/lost?report=${selected.id}`} text={lostShareText(selected)} />
-        <p className="mt-3 px-2 text-center text-xs text-[#B39C8C]">目撃情報は {selected.sightingCount}件 届いています</p>
-        {!selected.isOwner && (
-          <div className="mt-4">
-            <FlagButton targetType="lost" targetId={selected.id} loggedIn={Boolean(viewer)} />
-          </div>
-        )}
-      </div>
-    );
-  }
+  // 以前の共有URL(/pet/lost?report=ID)は、検索に出す個別ページへ転送する
+  if (sp.report && UUID.test(sp.report)) redirect(`/pet/lost/${sp.report}`);
 
   // ---- 一覧(近くだけ) ----
   // 探す中心: URLの現在地 → 散歩エリア(1か所目) → なし(全国)
@@ -118,7 +59,7 @@ export default async function PetLostMapPage({ searchParams }: { searchParams: P
   const markers: PetMapMarker[] = [
     ...lostList
       .filter((r) => r.lat != null && r.lng != null)
-      .map((r) => ({ id: r.id, lat: r.lat!, lng: r.lng!, kind: "lost" as const, label: r.petName, imageUrl: r.photoUrl, href: `/pet/lost?report=${r.id}` })),
+      .map((r) => ({ id: r.id, lat: r.lat!, lng: r.lng!, kind: "lost" as const, label: r.petName, imageUrl: r.photoUrl, href: `/pet/lost/${r.id}` })),
     ...foundList.map((f) => ({ id: f.id, lat: f.lat, lng: f.lng, kind: "found" as const, label: "見つけました", imageUrl: f.photoUrl, href: `/pet/found/${f.id}` })),
   ];
   const moreHref = (n: number) => {

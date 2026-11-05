@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { M_PLUS_Rounded_1c } from "next/font/google";
 import { PetTabBar } from "@/components/pet/PetTabBar";
 import { PetTopBar } from "@/components/pet/PetTopBar";
@@ -12,7 +12,12 @@ const rounded = M_PLUS_Rounded_1c({ weight: ["400", "700", "800"], subsets: ["la
 export const metadata: Metadata = {
   title: "ワンコ手帳",
   robots: { index: false, follow: false },
+  // ホーム画面に追加(PWA)。iPhoneはホーム画面に追加したときだけWebでも端末通知が届く
+  manifest: "/pet.webmanifest",
+  appleWebApp: { capable: true, title: "ワンコ手帳", statusBarStyle: "default" },
 };
+
+export const viewport: Viewport = { themeColor: "#FFF7EC" };
 
 export default async function PetLayout({ children }: { children: React.ReactNode }) {
   // 「いまいる場所でも受け取る」がオンの人だけ、開いたときに現在地を送る

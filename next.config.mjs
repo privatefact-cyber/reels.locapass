@@ -11,6 +11,13 @@ const nextConfig = {
     const topRoutes = "admin|api|auth|boost|c|cast|dashboard|embed|events|gate|inquiries|journal|legal|login|lp|map|mypage|notifications|photo|privacy|reel|reserve|s|shop-recover|shops|staff|support|terms";
     const portalRoutes = "boost|cast|events|shops|staff";
     return [
+      // ワンコ手帳: 以前の迷子のお知らせの共有URL(/pet/lost?report=ID)を、検索に出す個別ページへ恒久転送する
+      {
+        source: "/pet/lost",
+        has: [{ type: "query", key: "report", value: "(?<report>[0-9a-fA-F-]{36})" }],
+        destination: "/pet/lost/:report",
+        permanent: true,
+      },
       {
         source: `/:lang(${localePrefixes})/:portal((?!(?:${topRoutes})/)[^/]+)/:city((?!(?:${portalRoutes})/)[^/]+)/map`,
         destination: "/:lang/map?preset=:portal",

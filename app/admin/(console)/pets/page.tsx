@@ -59,7 +59,7 @@ export default async function AdminPetsPage() {
       hidden: Boolean(l.hidden_at),
       flags: flagMap.get(`lost:${l.id}`)?.length ?? 0,
       reasons: flagMap.get(`lost:${l.id}`) ?? [],
-      href: `/pet/lost?report=${l.id}`,
+      href: `/pet/lost/${l.id}`,
     })),
     ...(found ?? []).map((f) => ({
       type: "found" as const,

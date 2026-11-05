@@ -1,0 +1,15 @@
+{
+  "name": "ワンコ手帳 by LOCAPASS",
+  "short_name": "ワンコ手帳",
+  "description": "ワクチン手帳・通院の記録・成長日誌・迷子さがし",
+  "start_url": "/pet",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF7EC",
+  "theme_color": "#FF8E5E",
+  "lang": "ja",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

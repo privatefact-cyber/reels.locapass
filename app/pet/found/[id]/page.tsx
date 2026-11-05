@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPetViewer } from "@/lib/pet/db";
+import { getPetViewer, petAdmin } from "@/lib/pet/db";
+import { hashManageToken } from "@/lib/pet/guest";
 import { FOUND_KIND_LABEL, SPECIES_EMOJI, SPECIES_LABEL, getFoundReports } from "@/lib/pet/found";
 import { foundTimeLabel } from "@/components/pet/FoundReportCard";
 import { FoundActions } from "@/components/pet/FoundActions";
 import { ShareButtons } from "@/components/pet/ShareButtons";
 import { FlagButton } from "@/components/pet/FlagButton";
+import { ContactReveal } from "@/components/pet/ContactReveal";
+import { ManageLinkBox } from "@/components/pet/ManageLinkBox";
 import { PetMap } from "@/components/pet/PetMap";
 import { PetCard, PetSectionTitle } from "@/components/pet/ui";
 
@@ -27,29 +30,39 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description: shareText(r),
-    robots: { index: false, follow: false },
+    // 受付中だけ検索に出す(連絡先はHTMLに載せていない)。解決したら出さない
+    robots: r.status === "open" ? { index: true, follow: true } : { index: false, follow: false },
+    alternates: { canonical: `https://locapass.net/pet/found/${r.id}` },
     openGraph: { title, description: shareText(r), images: r.photoUrl ? [{ url: r.photoUrl }] : undefined },
     twitter: { card: r.photoUrl ? "summary_large_image" : "summary", title, description: shareText(r) },
   };
 }
 
 /** 「見つけました」通報の公開ページ(ログインなしで見られる・共有用) */
-export default async function FoundDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ posted?: string }> }) {
+export default async function FoundDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ posted?: string; k?: string }> }) {
   const { id } = await params;
-  const { posted } = await searchParams;
+  const { posted, k } = await searchParams;
   if (!UUID.test(id)) notFound();
   const viewer = await getPetViewer();
   const [r] = await getFoundReports({ id, viewerId: viewer?.userId });
   if (!r) notFound();
   const url = `https://locapass.net/pet/found/${r.id}`;
+  // ログインなしで通報した人は、管理用リンク(k=)で開いたときだけ「通報した人」として扱う
+  let manageToken: string | null = null;
+  if (!r.isReporter && k) {
+    const { data } = await petAdmin().from("locapass_pet_found_reports").select("manage_token_hash").eq("id", r.id).maybeSingle();
+    if (data?.manage_token_hash && hashManageToken(k) === data.manage_token_hash) manageToken = k;
+  }
+  const isReporter = r.isReporter || Boolean(manageToken);
 
   return (
     <div className="pt-2">
-      {posted !== undefined && r.isReporter && (
+      {posted !== undefined && isReporter && (
         <PetCard className="mb-4 bg-[#E5F7F0] text-sm font-bold text-[#22806A]">
           🙏 通報しました。{Number(posted) > 0 ? `近くの${posted}人に通知しました。` : ""}下のボタンでLINEやXにも広めてください。
         </PetCard>
       )}
+      {manageToken && <ManageLinkBox url={`${url}?k=${manageToken}`} />}
 
       <div className="overflow-hidden rounded-[32px] border-2 border-[#BFE8DA] bg-white shadow-[0_6px_20px_-12px_rgba(40,120,90,0.4)]">
         {r.photoUrl ? (
@@ -67,12 +80,16 @@ export default async function FoundDetailPage({ params, searchParams }: { params
           {r.address && <p className="text-sm text-[#7A6050]">📍 {r.address}</p>}
           {r.features && <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-[#F6FBF9] px-3 py-2 text-sm text-[#5C4535]">{r.features}</p>}
           {r.handedTo && <p className="mt-2 text-sm font-bold text-[#22806A]">🏠 {r.handedTo}</p>}
-          {r.contactNote && <p className="mt-1 text-sm text-[#5C4535]">💬 {r.contactNote}</p>}
         </div>
+        {r.hasContact && r.status === "open" && (
+          <div className="border-t border-[#DDF2EA] bg-[#F6FBF9] p-3">
+            <ContactReveal type="found" id={r.id} label="通報した人の連絡方法を表示" tone="green" />
+          </div>
+        )}
       </div>
 
       <div className="mt-4">
-        <FoundActions id={r.id} isReporter={r.isReporter} loggedIn={Boolean(viewer)} resolved={r.status === "resolved"} />
+        <FoundActions id={r.id} isReporter={isReporter} manageToken={manageToken} loggedIn={Boolean(viewer)} resolved={r.status === "resolved"} />
       </div>
 
       {r.status === "open" && (
@@ -85,7 +102,7 @@ export default async function FoundDetailPage({ params, searchParams }: { params
       <PetSectionTitle emoji="🗺️">見つけた場所</PetSectionTitle>
       <PetMap markers={[{ id: r.id, lat: r.lat, lng: r.lng, kind: "found", imageUrl: r.photoUrl }]} height={220} />
 
-      {!r.isReporter && (
+      {!isReporter && (
         <div className="mt-4">
           <FlagButton targetType="found" targetId={r.id} loggedIn={Boolean(viewer)} />
         </div>

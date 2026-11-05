@@ -9,13 +9,14 @@ import { reverseGeocode } from "@/lib/map/geocode";
 import { uploadPetImage } from "./petUpload";
 import { PetMap } from "./PetMap";
 import { PetCard, PetField, petButton, petInput } from "./ui";
+import { TurnstileWidget, turnstileRequired } from "./TurnstileWidget";
 
 function nowLocal() {
   return new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 16);
 }
 
 /** 「迷子のペットを見つけました!」の通報フォーム */
-export function FoundReportForm() {
+export function FoundReportForm({ loggedIn }: { loggedIn: boolean }) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<"protected" | "sighted">("sighted");
@@ -30,6 +31,8 @@ export function FoundReportForm() {
   const [contactNote, setContactNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
 
   async function pickPoint(v: { lat: number; lng: number }) {
     setPoint(v);
@@ -51,6 +54,7 @@ export function FoundReportForm() {
 
   async function submit() {
     if (!point) return setError("見つけた場所を地図で選んでください");
+    if (!loggedIn && turnstileRequired && !captcha) return setError("「人間です」の確認をしてください");
     setBusy(true);
     setError(null);
     try {
@@ -66,9 +70,12 @@ export function FoundReportForm() {
         handedTo,
         contactNote,
         photoPath,
+        turnstileToken: captcha,
+        honeypot,
       });
       if (!res.ok) throw new Error(res.error);
-      router.push(`/pet/found/${res.id}?posted=${res.notified}`);
+      // ログインなしの人には、あとで解決・削除するための管理用リンク(k=)を付けて開く
+      router.push(`/pet/found/${res.id}?posted=${res.notified}${res.manageToken ? `&k=${res.manageToken}` : ""}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "通報できませんでした");
       setBusy(false);
@@ -147,6 +154,14 @@ export function FoundReportForm() {
         </PetField>
       </PetCard>
 
+      {/* おとり欄(人には見えない。機械が埋めたら弾く) */}
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} className="hidden" aria-hidden />
+      {!loggedIn && (
+        <PetCard className="space-y-2 text-center">
+          <p className="text-xs text-[#9C8273]">ログインしなくても送れます。ログインすると、飼い主さんからの「うちの子かも!」が通知で届きます。</p>
+          <TurnstileWidget onToken={setCaptcha} />
+        </PetCard>
+      )}
       {error && <p className="rounded-2xl bg-[#FFE4E4] px-4 py-3 text-sm font-bold text-[#D04848]">{error}</p>}
       <button type="button" onClick={submit} disabled={busy} className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[#2E9C7C] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-[0_4px_0_#22806A] active:translate-y-[2px] disabled:opacity-50">
         {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}

@@ -14,8 +14,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "LOCAPASS";
   const options = {
     body: payload.body,
-    icon: payload.icon || "/icon-192.png",
-    badge: payload.badge || "/icon-192.png",
+    icon: payload.icon || "/icon.png",
+    badge: payload.badge || "/icon.png",
     data: { url: payload.url || "/" },
   };
 

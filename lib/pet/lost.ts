@@ -1,4 +1,5 @@
 import { petAdmin, signPetImages } from "./db";
+import { maskContacts } from "./privacy";
 
 /** 迷子マップ・名刺ページで、誰にでも見せてよい迷子情報(連絡先は飼い主が公開を選んだもの) */
 export type PublicLostReport = {
@@ -13,9 +14,10 @@ export type PublicLostReport = {
   address: string | null;
   features: string | null;
   photoUrl: string | null;
-  contactPhone: string | null;
-  contactLine: string | null;
-  contactNote: string | null;
+  /** 連絡先そのものは返さない(検索に出すページのHTMLに載せないため)。あるかどうかだけ。表示は revealLostContact で */
+  hasContact: boolean;
+  /** 特徴の文中に連絡先が書かれていたら伏せ字にしたかどうか */
+  featuresMasked: boolean;
   createdAt: string;
   sightingCount: number;
   isOwner: boolean;
@@ -57,6 +59,7 @@ export async function getActiveLostReports(
     .map((r) => {
       const pet = petById.get(r.pet_id)!;
       const photo = (r.photo_path && signed.get(r.photo_path)) || (pet.avatar_path && signed.get(pet.avatar_path)) || null;
+      const features = maskContacts(r.features);
       return {
         id: r.id,
         petId: r.pet_id,
@@ -66,12 +69,11 @@ export async function getActiveLostReports(
         lastSeenAt: r.last_seen_at,
         lat: r.last_seen_lat,
         lng: r.last_seen_lng,
-        address: r.last_seen_address,
-        features: r.features,
+        address: maskContacts(r.last_seen_address).text,
+        features: features.text,
         photoUrl: photo,
-        contactPhone: r.contact_phone,
-        contactLine: r.contact_line,
-        contactNote: r.contact_note,
+        hasContact: Boolean(r.contact_phone || r.contact_line || r.contact_note),
+        featuresMasked: features.masked,
         createdAt: r.created_at,
         sightingCount: counts.get(r.id) ?? 0,
         isOwner: Boolean(opts.viewerId && opts.viewerId === r.owner_id),
