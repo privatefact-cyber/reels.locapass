@@ -21,6 +21,15 @@ export function isAllowedSource(url: string): boolean {
   }
 }
 
+function isYouTubeThumbnail(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === "i.ytimg.com" || host === "img.youtube.com";
+  } catch {
+    return false;
+  }
+}
+
 const MAX_SOURCE_BYTES = 30 * 1024 * 1024;
 
 export type ResizeParams = {
@@ -42,9 +51,15 @@ export async function resizeFromUrl(url: string, p: ResizeParams): Promise<{ dat
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.byteLength > MAX_SOURCE_BYTES) return null;
 
+    const aggressiveSquareCrop = isYouTubeThumbnail(url) && p.fit === "cover" && p.height === p.width;
+    const outputSize = aggressiveSquareCrop ? Math.round(p.width * 1.25) : p.width;
     let img = sharp(buf, { failOn: "none", limitInputPixels: 120_000_000 })
       .rotate() // スマホ写真の向き情報を反映
-      .resize({ width: p.width, height: p.height, fit: p.fit === "contain" ? "inside" : "cover", withoutEnlargement: true, position: "centre" });
+      .resize({ width: outputSize, height: aggressiveSquareCrop ? outputSize : p.height, fit: p.fit === "contain" ? "inside" : "cover", withoutEnlargement: true, position: "centre" });
+    if (aggressiveSquareCrop) {
+      const inset = Math.round((outputSize - p.width) / 2);
+      img = img.extract({ left: inset, top: inset, width: p.width, height: p.width });
+    }
     img = p.format === "jpeg" ? img.jpeg({ quality: p.quality, mozjpeg: true }) : img.webp({ quality: p.quality });
     const data = await img.toBuffer();
     return { data, contentType: p.format === "jpeg" ? "image/jpeg" : "image/webp" };
