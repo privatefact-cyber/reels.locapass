@@ -117,7 +117,11 @@ export async function autoProcessPendingYoutube(formData: FormData) {
         await (admin as any).from("locapass_youtube_ingestions").update({ candidate_name: result.name, candidate_address: result.address, match_reason: result.reason || "店名・住所を特定できず", error_message: "店名・住所を特定できないため保留" }).eq("id", row.id);
         continue;
       }
-      const targetPortalId = intakePortalForAddress(result.address);
+      // 収集時に選択されたポータルを優先する。
+      // 美容系(Health & Beauty)は美容ポータルのまま、一般・不明候補は
+      // 管理画面で指定したLOCAPASS等のポータルに登録する。住所だけで
+      // 渋谷/横浜へ自動移送すると、カテゴリ別ポータルの意図が崩れる。
+      const targetPortalId = row.portal_id || intakePortalForAddress(result.address);
       const existing = await findExistingShop(targetPortalId, result.name, result.address);
       if (existing.length === 1) {
         const { error: matchError } = await (admin as any).from("locapass_youtube_ingestions").update({
