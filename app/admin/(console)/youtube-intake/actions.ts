@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { autoMatchYoutubeCandidates, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { autoMatchYoutubeCandidates, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, geocodeShopIfMissing, importOfficialProfileIfMissing, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import crypto from "node:crypto";
 
 const DEFAULT_INTAKE_PORTAL_ID = 55;
@@ -267,6 +267,9 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
   if (error || !shopId) throw new Error(error?.message ?? "店舗の仮登録に失敗しました");
   const { error: updateError } = await admin.from("locapass_shops").update({ url: officialUrl }).eq("id", shopId);
   if (updateError) throw new Error(`公式サイトの保存に失敗しました: ${updateError.message}`);
+  // 新規発行直後に、空欄の店舗詳細を公式サイトから補完する。取込失敗は店舗発行を止めず、管理者が後で確認できるよう候補側に記録する。
+  await geocodeShopIfMissing(shopId);
+  const imported = await importOfficialProfileIfMissing(shopId, officialUrl);
   const { error: ingestionError } = await (admin as any).from("locapass_youtube_ingestions").update({
     candidate_name: name,
     candidate_address: address,
@@ -275,6 +278,7 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
     matched_shop_id: shopId,
     portal_id: portalId,
     match_status: "ready_to_create",
+    error_message: imported.error ? `公式情報の自動取込: ${imported.error}` : null,
   }).eq("id", ingestionId);
   if (ingestionError) throw new Error(`候補の更新に失敗しました: ${ingestionError.message}`);
   refresh();
