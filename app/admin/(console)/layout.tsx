@@ -68,6 +68,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               YouTube収集
             </Link>
             <Link
+              href="/admin/youtube-stock"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+            >
+              動画ストック
+            </Link>
+            <Link
               href="/admin/options"
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >

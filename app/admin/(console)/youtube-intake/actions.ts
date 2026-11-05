@@ -10,6 +10,7 @@ const SHIBUYA_PORTAL_ID = 407;
 
 function refresh() {
   revalidatePath("/admin/youtube-intake");
+  revalidatePath("/admin/youtube-stock");
   revalidatePath("/admin/embeds");
   revalidatePath("/");
   revalidatePath("/map");
