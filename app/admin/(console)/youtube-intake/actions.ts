@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { autoMatchYoutubeCandidates, autoProcessPendingYoutubeIngestions, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { autoMatchYoutubeCandidates, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import crypto from "node:crypto";
 
 const DEFAULT_INTAKE_PORTAL_ID = 55;
@@ -91,7 +91,46 @@ export async function autoProcessPendingYoutube(formData: FormData) {
   const rawPortalId = String(formData.get("portal_id") ?? "").trim();
   const portalId = rawPortalId ? Number(rawPortalId) : null;
   if (portalId !== null && (!Number.isInteger(portalId) || portalId <= 0)) throw new Error("ポータルを確認してください");
-  await autoProcessPendingYoutubeIngestions(portalId, 5, user.id);
+  const admin = createAdminClient();
+  let query = (admin as any).from("locapass_youtube_ingestions")
+    .select("id, portal_id, title, candidate_name, candidate_address")
+    .eq("source_provider", "youtube")
+    .eq("match_status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(5);
+  if (portalId) query = query.eq("portal_id", portalId);
+  const { data: rows, error } = await query;
+  if (error) throw new Error(`保留候補の取得に失敗しました: ${error.message}`);
+  for (const row of (rows ?? []) as { id: string; portal_id: number; title: string; candidate_name: string | null; candidate_address: string | null }[]) {
+    try {
+      const result = await findOfficialWebsite(row.title, row.candidate_name, row.candidate_address);
+      if (!result.name || !result.address || !result.officialUrl) {
+        await (admin as any).from("locapass_youtube_ingestions").update({ candidate_name: result.name, candidate_address: result.address, match_reason: result.reason, error_message: "公式サイト・住所を確認できないため保留" }).eq("id", row.id);
+        continue;
+      }
+      const existing = await findExistingShop(row.portal_id, result.name, result.address);
+      if (existing.length === 1) {
+        await (admin as any).from("locapass_youtube_ingestions").update({
+          candidate_name: result.name, candidate_address: result.address, official_url: result.officialUrl,
+          official_url_verified: true, matched_shop_id: existing[0].id, match_status: "matched_existing",
+          match_reason: "Geminiで公式サイト・住所を確認し、既存店舗に一意一致", reviewed_at: new Date().toISOString(), reviewed_by: user.id, error_message: null,
+        }).eq("id", row.id);
+        await publishYoutubeIngestion(row.id, user.id);
+        continue;
+      }
+      const draft = new FormData();
+      draft.set("portal_id", String(DEFAULT_INTAKE_PORTAL_ID));
+      draft.set("name", result.name);
+      draft.set("address", result.address);
+      draft.set("official_url", result.officialUrl);
+      draft.set("category", "カフェ・スイーツ");
+      await createDraftShopFromIngestion(row.id, draft);
+      await (admin as any).from("locapass_youtube_ingestions").update({ portal_id: DEFAULT_INTAKE_PORTAL_ID }).eq("id", row.id);
+      await publishYoutubeIngestion(row.id, user.id);
+    } catch (processError) {
+      await (admin as any).from("locapass_youtube_ingestions").update({ error_message: processError instanceof Error ? processError.message.slice(0, 500) : "自動処理に失敗しました" }).eq("id", row.id);
+    }
+  }
   refresh();
 }
 
@@ -234,6 +273,7 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
     official_url: officialUrl,
     official_url_verified: true,
     matched_shop_id: shopId,
+    portal_id: portalId,
     match_status: "ready_to_create",
   }).eq("id", ingestionId);
   if (ingestionError) throw new Error(`候補の更新に失敗しました: ${ingestionError.message}`);
