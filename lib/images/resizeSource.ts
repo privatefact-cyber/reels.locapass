@@ -53,9 +53,13 @@ export async function resizeFromUrl(url: string, p: ResizeParams): Promise<{ dat
 
     const aggressiveSquareCrop = isYouTubeThumbnail(url) && p.fit === "cover" && p.height === p.width;
     const outputSize = aggressiveSquareCrop ? Math.round(p.width * 1.25) : p.width;
-    let img = sharp(buf, { failOn: "none", limitInputPixels: 120_000_000 })
-      .rotate() // スマホ写真の向き情報を反映
-      .resize({ width: outputSize, height: aggressiveSquareCrop ? outputSize : p.height, fit: p.fit === "contain" ? "inside" : "cover", withoutEnlargement: true, position: "centre" });
+    let img = sharp(buf, { failOn: "none", limitInputPixels: 120_000_000 }).rotate();
+    // Shortsのサムネイルには、中央の縦動画を囲む黒帯が元画像に
+    // 焼き込まれている場合がある。YouTube画像だけ外周の黒を先に除去する。
+    if (isYouTubeThumbnail(url)) {
+      img = img.trim({ background: { r: 0, g: 0, b: 0, alpha: 1 }, threshold: 18 });
+    }
+    img = img.resize({ width: outputSize, height: aggressiveSquareCrop ? outputSize : p.height, fit: p.fit === "contain" ? "inside" : "cover", withoutEnlargement: true, position: "centre" });
     if (aggressiveSquareCrop) {
       const inset = Math.round((outputSize - p.width) / 2);
       img = img.extract({ left: inset, top: inset, width: p.width, height: p.width });

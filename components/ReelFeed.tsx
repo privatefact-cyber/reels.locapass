@@ -209,6 +209,7 @@ const GridTile = memo(function GridTile({
       onMouseEnter={tile.kind === "shop" ? (e) => onShopPeekEnter(tile.shop, e) : undefined}
       onMouseLeave={tile.kind === "shop" ? onShopPeekLeave : undefined}
       className="group relative block aspect-square w-full overflow-hidden rounded-none bg-panel-900 text-left"
+      style={{ aspectRatio: "1 / 1" }}
     >
       {thumbUrl && !thumbBroken ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -218,10 +219,12 @@ const GridTile = memo(function GridTile({
           alt=""
           loading="lazy"
           decoding="async"
-          style={focus ? { objectPosition: `${focus.x}% ${focus.y}%` } : undefined}
-          // YouTube Shorts の縦長サムネイルには、画像自体に左右の黒帯が
-          // 含まれている場合があるため、正方形タイル内で少し拡大して
-          // 黒帯を目立たせない。タイルの外側は aspect-square のまま。
+          style={{
+            aspectRatio: "1 / 1",
+            objectFit: "cover",
+            objectPosition: focus ? `${focus.x}% ${focus.y}%` : "center center",
+          }}
+          // 縦長サムネイルも正方形枠へ中央基準で強制cropする。
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />
       ) : fallbackVideoUrl ? (
@@ -232,6 +235,7 @@ const GridTile = memo(function GridTile({
           muted
           playsInline
           preload="metadata"
+          style={{ aspectRatio: "1 / 1", objectFit: "cover", objectPosition: "center center" }}
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />
       ) : tile.kind === "shop" ? (
