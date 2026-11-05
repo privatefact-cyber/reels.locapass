@@ -22,7 +22,9 @@ export function gridThumb(url: string | null | undefined, size = 360): string | 
   // Supabase画像とYouTube公式サムネイルはサーバー側で正方形cropする。
   // YouTube画像に含まれる左右の黒帯もここで切り落とせる。
   const resized = resizedUrl(url, { width: size, height: size, fit: "cover", quality: 70 });
-  if (resized) return resized;
+  // /api/img は長期 immutable cache のため、crop仕様を変更した際は
+  // バージョンをURLに含めて古い画像を再利用しないようにする。
+  if (resized) return `${resized}&v=square-crop-3`;
   if (STREAM_THUMB.test(url)) {
     const base = url.replace(/\?.*$/, "");
     return `${base}?width=${size}&height=${size}&fit=crop`;
