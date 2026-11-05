@@ -6,7 +6,10 @@ const input = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm 
 
 type Row = {
   id: string;
-  youtube_id: string;
+  source_provider: "youtube" | "tiktok";
+  source_id: string | null;
+  thumbnail_url: string | null;
+  youtube_id: string | null;
   video_url: string;
   title: string;
   description: string | null;
@@ -47,15 +50,17 @@ export function YoutubeStockCard({
 }) {
   const [preview, setPreview] = useState(false);
   const status = labels[row.match_status] ?? row.match_status;
+  const isTikTok = row.source_provider === "tiktok";
+  const thumbnail = row.thumbnail_url ?? (row.youtube_id ? `https://i.ytimg.com/vi/${row.youtube_id}/hqdefault.jpg` : null);
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <button type="button" onClick={() => setPreview((value) => !value)} className="group relative block aspect-video w-full bg-slate-900 text-left" aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
         {preview ? (
-          <iframe className="h-full w-full" src={`https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
+          <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
         ) : (
           <>
-            <img src={`https://i.ytimg.com/vi/${row.youtube_id}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+            {thumbnail ? <img src={thumbnail} alt="" className="h-full w-full object-cover transition group-hover:scale-[1.02]" /> : <div className="flex h-full items-center justify-center text-sm text-white">サムネイル未取得</div>}
             <span className="absolute inset-0 flex items-center justify-center bg-black/20"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-xl text-slate-900 shadow">▶</span></span>
           </>
         )}
@@ -64,9 +69,9 @@ export function YoutubeStockCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <a href={row.video_url} target="_blank" rel="noreferrer" className="line-clamp-2 font-semibold text-slate-900 hover:text-blue-700 hover:underline">{row.title}</a>
-            <p className="mt-1 text-xs text-slate-500">{row.channel_title ?? "チャンネル不明"} ・ {row.youtube_id}</p>
+            <p className="mt-1 text-xs text-slate-500">{row.channel_title ?? "チャンネル不明"} ・ {row.source_id ?? row.youtube_id}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{status}</span>
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><span className={isTikTok ? "rounded bg-black px-1.5 py-0.5 text-[10px] text-white" : "rounded bg-red-600 px-1.5 py-0.5 text-[10px] text-white"}>{isTikTok ? "TikTok" : "YouTube"}</span>{status}</span>
         </div>
         {row.description && <p className="line-clamp-4 text-sm leading-6 text-slate-600">{row.description}</p>}
 

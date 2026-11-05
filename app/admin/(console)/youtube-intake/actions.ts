@@ -5,6 +5,7 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import crypto from "node:crypto";
 
 const SHIBUYA_PORTAL_ID = 407;
 
@@ -23,6 +24,45 @@ export async function collectShibuyaShorts(formData: FormData) {
   if (!query) throw new Error("検索キーワードを入力してください");
   const candidates = await collectYoutubeCandidates(query, limit);
   await saveYoutubeCandidates(SHIBUYA_PORTAL_ID, candidates);
+  refresh();
+}
+
+export async function addTikTokUrl(formData: FormData) {
+  await requireRootAdmin();
+  const rawUrl = String(formData.get("tiktok_url") ?? "").trim();
+  let parsed: URL;
+  try { parsed = new URL(rawUrl); } catch { throw new Error("TikTok URLを入力してください"); }
+  if (!/(^|\.)tiktok\.com$/i.test(parsed.hostname)) throw new Error("TikTokのURLを入力してください");
+  const canonicalUrl = rawUrl.split("?")[0];
+  const sourceId = canonicalUrl.match(/video\/(\d+)/)?.[1] ?? crypto.createHash("sha256").update(canonicalUrl).digest("hex").slice(0, 32);
+  let title = "TikTok動画";
+  let description: string | null = null;
+  let channelTitle: string | null = null;
+  let thumbnailUrl: string | null = null;
+  try {
+    const response = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(canonicalUrl)}`, { next: { revalidate: 3600 } });
+    if (response.ok) {
+      const data = await response.json() as { title?: string; author_name?: string; thumbnail_url?: string };
+      title = data.title?.trim() || title;
+      channelTitle = data.author_name?.trim() || null;
+      thumbnailUrl = data.thumbnail_url?.trim() || null;
+      description = title;
+    }
+  } catch { /* URLはストックし、メタデータ取得は後で再試行できる */ }
+  const { error } = await (createAdminClient() as any).from("locapass_youtube_ingestions").upsert({
+    portal_id: SHIBUYA_PORTAL_ID,
+    youtube_id: null,
+    source_provider: "tiktok",
+    source_id: sourceId,
+    video_url: canonicalUrl,
+    title,
+    description,
+    channel_title: channelTitle,
+    thumbnail_url: thumbnailUrl,
+    source_query: "manual:tiktok",
+    match_status: "pending",
+  }, { onConflict: "portal_id,source_provider,source_id", ignoreDuplicates: true });
+  if (error) throw new Error(`TikTok動画の保存に失敗しました: ${error.message}`);
   refresh();
 }
 
