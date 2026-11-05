@@ -59,7 +59,7 @@ export function YoutubeStockCard({
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <button type="button" onClick={() => setPreview((value) => !value)} className="group relative block h-44 w-full bg-slate-900 text-left" aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
+      <button type="button" onClick={() => setPreview((value) => !value)} className="group relative block aspect-square w-full overflow-hidden bg-slate-900 text-left" aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
         {preview ? (
           <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
         ) : (
