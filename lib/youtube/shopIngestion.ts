@@ -47,8 +47,8 @@ type IngestionRow = {
 const YOUTUBE_API = "https://www.googleapis.com/youtube/v3";
 
 function apiKey() {
-  const key = process.env.YOUTUBE_DATA_API_KEY;
-  if (!key) throw new Error("YOUTUBE_DATA_API_KEY が未設定です");
+  const key = process.env.YOUTUBE_DATA_API_KEY ?? process.env.YOUTUBE_API_KEY;
+  if (!key) throw new Error("YOUTUBE_DATA_API_KEY または YOUTUBE_API_KEY が未設定です");
   return key;
 }
 

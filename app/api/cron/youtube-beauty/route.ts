@@ -13,8 +13,8 @@ export async function GET(req: Request) {
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!process.env.YOUTUBE_DATA_API_KEY) {
-    return NextResponse.json({ skipped: "YOUTUBE_DATA_API_KEY not set" });
+  if (!process.env.YOUTUBE_DATA_API_KEY && !process.env.YOUTUBE_API_KEY) {
+    return NextResponse.json({ skipped: "YOUTUBE_DATA_API_KEY or YOUTUBE_API_KEY not set" });
   }
   try {
     return NextResponse.json(await collectTokyoBeautyStock());
