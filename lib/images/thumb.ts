@@ -19,6 +19,8 @@ export function gridThumb(url: string | null | undefined, size = 360): string | 
   if (!url) return undefined;
   const ph = placeholderThumb(url);
   if (ph) return ph;
+  // Supabase画像とYouTube公式サムネイルはサーバー側で正方形cropする。
+  // YouTube画像に含まれる左右の黒帯もここで切り落とせる。
   const resized = resizedUrl(url, { width: size, height: size, fit: "cover", quality: 70 });
   if (resized) return resized;
   if (STREAM_THUMB.test(url)) {

@@ -1,6 +1,10 @@
 import sharp from "sharp";
 
-/** 縮小してよい元画像: このプロジェクトのSupabase Storageの公開URLだけ(他のURLを中継する踏み台にしない)。 */
+/**
+ * 縮小してよい元画像。Supabase Storageに加えて、YouTubeの公式サムネイル
+ * ホストだけを許可する。任意URLを中継するとSSRF用の踏み台になるため、
+ * ホスト名は固定のallowlistにする。
+ */
 function allowedPrefix(): string | null {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   return base ? `${base.replace(/\/$/, "")}/storage/v1/object/public/` : null;
@@ -8,7 +12,13 @@ function allowedPrefix(): string | null {
 
 export function isAllowedSource(url: string): boolean {
   const prefix = allowedPrefix();
-  return !!prefix && url.startsWith(prefix);
+  if (prefix && url.startsWith(prefix)) return true;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === "i.ytimg.com" || host === "img.youtube.com";
+  } catch {
+    return false;
+  }
 }
 
 const MAX_SOURCE_BYTES = 30 * 1024 * 1024;
