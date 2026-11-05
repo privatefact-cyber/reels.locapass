@@ -71,7 +71,7 @@ export function YoutubeStockCard({
             <a href={row.video_url} target="_blank" rel="noreferrer" className="line-clamp-2 font-semibold text-slate-900 hover:text-blue-700 hover:underline">{row.title}</a>
             <p className="mt-1 text-xs text-slate-500">{row.channel_title ?? "チャンネル不明"} ・ {row.source_id ?? row.youtube_id}</p>
           </div>
-          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><span className={isTikTok ? "rounded bg-black px-1.5 py-0.5 text-[10px] text-white" : "rounded bg-red-600 px-1.5 py-0.5 text-[10px] text-white"}>{isTikTok ? "TikTok" : "YouTube"}</span>{status}</span>
+          <div className="flex shrink-0 flex-col items-end gap-1"><span className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><span className={isTikTok ? "rounded bg-black px-1.5 py-0.5 text-[10px] text-white" : "rounded bg-red-600 px-1.5 py-0.5 text-[10px] text-white"}>{isTikTok ? "TikTok" : "YouTube"}</span>{status}</span>{row.matched_shop_id && row.match_status === "ready_to_create" && <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-semibold text-orange-800">自動仮登録・要手動確認</span>}</div>
         </div>
         {row.description && <p className="line-clamp-4 text-sm leading-6 text-slate-600">{row.description}</p>}
 
