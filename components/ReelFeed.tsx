@@ -222,7 +222,7 @@ const GridTile = memo(function GridTile({
           // YouTube Shorts の縦長サムネイルには、画像自体に左右の黒帯が
           // 含まれている場合があるため、正方形タイル内で少し拡大して
           // 黒帯を目立たせない。タイルの外側は aspect-square のまま。
-          className="h-full w-full scale-[1.18] transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-[1.24] group-hover:brightness-110"
+          className="h-full w-full scale-[1.45] transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-[1.52] group-hover:brightness-110"
         />
       ) : fallbackVideoUrl ? (
         // モバイルSafari等の省データ仕様では#t=0.001を付けないと先頭フレームへ
@@ -232,7 +232,7 @@ const GridTile = memo(function GridTile({
           muted
           playsInline
           preload="metadata"
-          className="h-full w-full scale-[1.18] transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-[1.24] group-hover:brightness-110"
+          className="h-full w-full scale-[1.45] transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-[1.52] group-hover:brightness-110"
         />
       ) : tile.kind === "shop" ? (
         // 店舗タイルで写真が無い/壊れているとき: イメージ写真(無ければ店名入りのグラデーション)。
