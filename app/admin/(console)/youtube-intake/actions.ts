@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { autoMatchYoutubeCandidates, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { autoMatchYoutubeCandidates, autoProcessPendingYoutubeIngestions, collectYoutubeCandidates, findExistingShop, findOfficialWebsite, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import crypto from "node:crypto";
 
 const DEFAULT_INTAKE_PORTAL_ID = 55;
@@ -83,6 +83,15 @@ export async function addYoutubeUrl(formData: FormData) {
     match_status: "pending",
   }, { onConflict: "portal_id,youtube_id", ignoreDuplicates: true });
   if (error) throw new Error(`YouTube動画の保存に失敗しました: ${error.message}`);
+  refresh();
+}
+
+export async function autoProcessPendingYoutube(formData: FormData) {
+  const user = await requireRootAdmin();
+  const rawPortalId = String(formData.get("portal_id") ?? "").trim();
+  const portalId = rawPortalId ? Number(rawPortalId) : null;
+  if (portalId !== null && (!Number.isInteger(portalId) || portalId <= 0)) throw new Error("ポータルを確認してください");
+  await autoProcessPendingYoutubeIngestions(portalId, 5, user.id);
   refresh();
 }
 

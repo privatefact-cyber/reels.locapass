@@ -177,6 +177,52 @@ export async function autoMatchYoutubeCandidates(portalId: number, candidates: Y
   return matched;
 }
 
+/** 既存の保留候補を少量ずつ再処理する。タイムアウトと誤判定を避けるため上限は5件。 */
+export async function autoProcessPendingYoutubeIngestions(portalId: number | null, limit: number, userId: string) {
+  const admin = createAdminClient();
+  let query = (admin as any).from("locapass_youtube_ingestions")
+    .select("id, portal_id, youtube_id, title, description")
+    .eq("source_provider", "youtube")
+    .eq("match_status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(Math.min(Math.max(limit, 1), 5));
+  if (portalId) query = query.eq("portal_id", portalId);
+  const { data: rows, error } = await query;
+  if (error) throw new Error(`保留候補の取得に失敗しました: ${error.message}`);
+  let matched = 0;
+  let published = 0;
+  for (const row of (rows ?? []) as { id: string; portal_id: number; youtube_id: string; title: string; description: string | null }[]) {
+    const hint = extractShopHint(row.title, row.description ?? "");
+    if (!hint.name) continue;
+    const shops = await findExistingShop(row.portal_id, hint.name, hint.address);
+    if (shops.length !== 1) continue;
+    const shop = shops[0];
+    const { error: updateError } = await (admin as any).from("locapass_youtube_ingestions").update({
+      candidate_name: hint.name,
+      candidate_address: hint.address,
+      matched_shop_id: shop.id,
+      official_url: shop.url,
+      official_url_verified: Boolean(shop.url),
+      match_status: "matched_existing",
+      match_reason: "保留候補の再処理で説明文と既存店舗が一意に一致",
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: userId,
+      error_message: null,
+    }).eq("id", row.id);
+    if (updateError) continue;
+    matched += 1;
+    if (shop.url) {
+      try {
+        await publishYoutubeIngestion(row.id, userId);
+        published += 1;
+      } catch (publishError) {
+        await (admin as any).from("locapass_youtube_ingestions").update({ error_message: publishError instanceof Error ? publishError.message.slice(0, 500) : "自動リール投稿に失敗しました" }).eq("id", row.id);
+      }
+    }
+  }
+  return { scanned: (rows ?? []).length, matched, published };
+}
+
 /** 店名・住所・公式URLに基づく既存店舗の候補。完全一致以外は確認画面で承認する。 */
 export async function findExistingShop(portalId: number, name: string, address?: string | null) {
   const admin = createAdminClient();
