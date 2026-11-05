@@ -9,8 +9,8 @@ export default async function PetSpotsPage() {
   const [viewer, spots] = await Promise.all([getPetViewer(), getPetSpots()]);
   let origin: { lat: number; lng: number; label: string } | null = null;
   if (viewer) {
-    const { data: s } = await viewer.supabase.from("locapass_pet_owner_settings").select("walk_lat, walk_lng").eq("user_id", viewer.userId).maybeSingle();
-    if (s?.walk_lat != null && s?.walk_lng != null) origin = { lat: s.walk_lat, lng: s.walk_lng, label: "散歩エリア" };
+    const { data: a } = await viewer.supabase.from("locapass_pet_walk_areas").select("lat, lng").order("created_at").limit(1).maybeSingle();
+    if (a) origin = { lat: a.lat, lng: a.lng, label: "散歩エリア" };
   }
   return (
     <div>

@@ -28,6 +28,7 @@ export async function getFoundReports(opts: { id?: string; viewerId?: string | n
   let q = admin
     .from("locapass_pet_found_reports")
     .select("id, reporter_id, kind, species, photo_path, lat, lng, address, found_at, features, handed_to, contact_note, status, created_at")
+    .is("hidden_at", null) // 運営が非表示にしたものは出さない
     .order("created_at", { ascending: false })
     .limit(opts.limit ?? 200);
   if (opts.id) q = q.eq("id", opts.id);

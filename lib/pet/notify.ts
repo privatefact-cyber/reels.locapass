@@ -1,7 +1,7 @@
 import { sendPushToUser } from "@/lib/push/send";
 import { petAdmin } from "./db";
 
-export type PetNotificationType = "pet_reminder" | "pet_lost_alert" | "pet_follow_request" | "pet_follow_approved" | "pet_sighting" | "pet_found" | "pet_found_claim";
+export type PetNotificationType = "pet_reminder" | "pet_lost_alert" | "pet_follow_request" | "pet_follow_approved" | "pet_sighting" | "pet_found" | "pet_found_claim" | "pet_lost_check";
 
 /**
  * LINE公式アカウント(Messaging API)から、連携済みの人へテキストを送る。

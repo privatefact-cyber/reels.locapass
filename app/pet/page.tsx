@@ -33,9 +33,9 @@ export default async function PetHomePage() {
   // 「ワンコとおでかけ」: 散歩エリアから近い順(未設定なら写真のある店から)8件
   const [spots, { data: settings }] = await Promise.all([
     getPetSpots(),
-    viewer.supabase.from("locapass_pet_owner_settings").select("walk_lat, walk_lng").eq("user_id", viewer.userId).maybeSingle(),
+    viewer.supabase.from("locapass_pet_walk_areas").select("lat, lng").order("created_at").limit(1).maybeSingle(),
   ]);
-  const origin = settings?.walk_lat != null && settings?.walk_lng != null ? { lat: settings.walk_lat as number, lng: settings.walk_lng as number } : null;
+  const origin = settings ? { lat: settings.lat as number, lng: settings.lng as number } : null;
   const nearbySpots = [...spots]
     .sort((a, b) => {
       if (origin) {

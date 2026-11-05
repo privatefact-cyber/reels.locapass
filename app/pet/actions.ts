@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getPetViewer, petAdmin, PET_BUCKET } from "@/lib/pet/db";
 import { notifyPetUser } from "@/lib/pet/notify";
+import { findNearbyRecipients, isBannedUser } from "@/lib/pet/recipients";
 import type { PetDocType, PetSex, PetVisibility } from "@/lib/pet/types";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
@@ -498,6 +499,7 @@ export async function startLostReport(input: LostReportInput): Promise<Result<{ 
   if ("error" in viewer) return { ok: false, error: viewer.error };
   const pet = await ownsPet(viewer, input.petId);
   if (!pet) return { ok: false, error: "この子の飼い主だけが出せます" };
+  if (await isBannedUser(petAdmin(), viewer.userId)) return { ok: false, error: "このアカウントでは投稿できません" };
   const row = lostRow(viewer.userId, input);
   if (!row.contact_phone && !row.contact_line && !row.contact_note) return { ok: false, error: "見つけた人が連絡できる方法を1つ以上入れてください" };
 
@@ -512,26 +514,12 @@ export async function startLostReport(input: LostReportInput): Promise<Result<{ 
   if (error || !data) return { ok: false, error: "お知らせを出せませんでした" };
   await viewer.supabase.from("locapass_pets").update({ is_lost: true }).eq("id", pet.id);
 
-  // 近く(散歩エリアが半径3km以内)で受け取りオンの人と、この子のフォロワーへ通知
+  // 近く(散歩エリア3か所のどれか・または48時間以内にいた場所が半径3km以内)の人と、この子のフォロワーへ通知
   const admin = petAdmin();
-  const recipients = new Set<string>();
-  if (row.last_seen_lat !== null && row.last_seen_lng !== null) {
-    const center = { lat: row.last_seen_lat, lng: row.last_seen_lng };
-    const dLat = LOST_ALERT_RADIUS_KM / 111;
-    const dLng = LOST_ALERT_RADIUS_KM / (111 * Math.cos((center.lat * Math.PI) / 180));
-    const { data: near } = await admin
-      .from("locapass_pet_owner_settings")
-      .select("user_id, walk_lat, walk_lng")
-      .eq("lost_alert_opt_in", true)
-      .gte("walk_lat", center.lat - dLat)
-      .lte("walk_lat", center.lat + dLat)
-      .gte("walk_lng", center.lng - dLng)
-      .lte("walk_lng", center.lng + dLng)
-      .limit(2000);
-    for (const s of near ?? []) {
-      if (s.walk_lat != null && s.walk_lng != null && distanceKm(center, { lat: s.walk_lat, lng: s.walk_lng }) <= LOST_ALERT_RADIUS_KM) recipients.add(s.user_id as string);
-    }
-  }
+  const recipients =
+    row.last_seen_lat !== null && row.last_seen_lng !== null
+      ? await findNearbyRecipients(admin, { lat: row.last_seen_lat, lng: row.last_seen_lng }, LOST_ALERT_RADIUS_KM)
+      : new Set<string>();
   const { data: followers } = await admin.from("locapass_pet_follows").select("follower_id").eq("pet_id", pet.id).eq("status", "approved");
   for (const f of followers ?? []) recipients.add(f.follower_id as string);
   recipients.delete(viewer.userId);
@@ -570,12 +558,28 @@ export async function resolveLostReport(reportId: string, outcome: "found" | "cl
   if ("error" in viewer) return { ok: false, error: viewer.error };
   const { data } = await viewer.supabase
     .from("locapass_pet_lost_reports")
-    .update({ status: outcome, resolved_at: new Date().toISOString() })
+    // 終わったら、公開していた連絡先はDBからも消す(個人情報を残さない)
+    .update({ status: outcome, resolved_at: new Date().toISOString(), contact_phone: null, contact_line: null, contact_note: null })
     .eq("id", reportId)
     .eq("status", "active")
     .select("pet_id");
   if (!data?.length) return { ok: false, error: "更新できませんでした" };
   await viewer.supabase.from("locapass_pets").update({ is_lost: false }).eq("id", data[0].pet_id);
+  refresh();
+  return { ok: true };
+}
+
+/** 30日たったときの「まだ探していますか?」に「探しています」と答える(期限を延ばす) */
+export async function confirmLostReport(reportId: string): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const { data } = await viewer.supabase
+    .from("locapass_pet_lost_reports")
+    .update({ last_confirmed_at: new Date().toISOString(), check_sent_at: null })
+    .eq("id", reportId)
+    .eq("status", "active")
+    .select("id");
+  if (!data?.length) return { ok: false, error: "更新できませんでした" };
   refresh();
   return { ok: true };
 }
@@ -594,8 +598,9 @@ export async function postSighting(input: SightingInput): Promise<Result> {
   if (!UUID.test(input.lostReportId)) return { ok: false, error: "見つかりません" };
 
   const admin = petAdmin();
-  const { data: report } = await admin.from("locapass_pet_lost_reports").select("id, owner_id, pet_id, status").eq("id", input.lostReportId).maybeSingle();
-  if (!report || report.status !== "active") return { ok: false, error: "この迷子のお知らせは終了しています" };
+  if (await isBannedUser(admin, viewer.userId)) return { ok: false, error: "このアカウントでは投稿できません" };
+  const { data: report } = await admin.from("locapass_pet_lost_reports").select("id, owner_id, pet_id, status, hidden_at").eq("id", input.lostReportId).maybeSingle();
+  if (!report || report.status !== "active" || report.hidden_at) return { ok: false, error: "この迷子のお知らせは終了しています" };
 
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
   const { count } = await admin.from("locapass_pet_sightings").select("id", { count: "exact", head: true }).eq("reporter_id", viewer.userId).gte("created_at", since);
@@ -634,26 +639,66 @@ export async function postSighting(input: SightingInput): Promise<Result> {
 // ---------------------------------------------------------------------------
 // 設定(散歩エリア・迷子アラート・LINE)
 // ---------------------------------------------------------------------------
-export type PetSettingsInput = { walkLat?: number | null; walkLng?: number | null; walkAreaLabel?: string; lostAlertOptIn?: boolean; lineNotify?: boolean };
+export type PetSettingsInput = { lostAlertOptIn?: boolean; lineNotify?: boolean; hereAlertOptIn?: boolean };
 
 export async function savePetSettings(input: PetSettingsInput): Promise<Result> {
   const viewer = await viewerOrError();
   if ("error" in viewer) return { ok: false, error: viewer.error };
-  const lat = num(input.walkLat, -90, 90);
-  const lng = num(input.walkLng, -180, 180);
-  // 位置は約100m単位に丸めて持つ(自宅をピンポイントで持たない)
-  const round = (v: number | null) => (v === null ? null : Math.round(v * 1000) / 1000);
   const row: Record<string, unknown> = { user_id: viewer.userId, updated_at: new Date().toISOString() };
-  if (input.walkLat !== undefined) {
-    row.walk_lat = lat !== null && lng !== null ? round(lat) : null;
-    row.walk_lng = lat !== null && lng !== null ? round(lng) : null;
-    row.walk_area_label = text(input.walkAreaLabel, 60);
-  }
   if (typeof input.lostAlertOptIn === "boolean") row.lost_alert_opt_in = input.lostAlertOptIn;
   if (typeof input.lineNotify === "boolean") row.line_notify = input.lineNotify;
+  if (typeof input.hereAlertOptIn === "boolean") {
+    row.here_alert_opt_in = input.hereAlertOptIn;
+    // オフにしたら、覚えていた場所もすぐ消す
+    if (!input.hereAlertOptIn) Object.assign(row, { here_lat: null, here_lng: null, here_at: null });
+  }
   const { error } = await viewer.supabase.from("locapass_pet_owner_settings").upsert(row, { onConflict: "user_id" });
   if (error) return { ok: false, error: "保存できませんでした" };
   refresh();
+  return { ok: true };
+}
+
+// 位置は約100m単位に丸めて持つ(自宅や居場所をピンポイントで持たない)
+const round3 = (v: number) => Math.round(v * 1000) / 1000;
+const MAX_WALK_AREAS = 3;
+
+export async function addWalkArea(input: { lat: number; lng: number; label?: string }): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const lat = num(input.lat, -90, 90);
+  const lng = num(input.lng, -180, 180);
+  if (lat === null || lng === null) return { ok: false, error: "地図で場所を選んでください" };
+  const { count } = await viewer.supabase.from("locapass_pet_walk_areas").select("id", { count: "exact", head: true });
+  if ((count ?? 0) >= MAX_WALK_AREAS) return { ok: false, error: `散歩エリアは${MAX_WALK_AREAS}か所までです。どれかを消してから追加してください` };
+  const { error } = await viewer.supabase.from("locapass_pet_walk_areas").insert({ user_id: viewer.userId, lat: round3(lat), lng: round3(lng), label: text(input.label, 60) });
+  if (error) return { ok: false, error: "保存できませんでした" };
+  refresh();
+  return { ok: true };
+}
+
+export async function removeWalkArea(id: string): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const { data } = await viewer.supabase.from("locapass_pet_walk_areas").delete().eq("id", id).select("id");
+  if (!data?.length) return { ok: false, error: "削除できませんでした" };
+  refresh();
+  return { ok: true };
+}
+
+/** 「いまいる場所でも受け取る」がオンの人の現在地を覚える(48時間で消える。オフの人は何もしない) */
+export async function updateHereLocation(input: { lat: number; lng: number }): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const lat = num(input.lat, -90, 90);
+  const lng = num(input.lng, -180, 180);
+  if (lat === null || lng === null) return { ok: false, error: "位置が正しくありません" };
+  const { data } = await viewer.supabase
+    .from("locapass_pet_owner_settings")
+    .update({ here_lat: round3(lat), here_lng: round3(lng), here_at: new Date().toISOString() })
+    .eq("user_id", viewer.userId)
+    .eq("here_alert_opt_in", true)
+    .select("user_id");
+  if (!data?.length) return { ok: false, error: "受け取りがオフです" };
   return { ok: true };
 }
 
@@ -702,6 +747,7 @@ export async function postFoundReport(input: FoundReportInput): Promise<Result<{
   if (!photoPath && !text(input.features)) return { ok: false, error: "写真か、見た目の特徴を入れてください" };
 
   const admin = petAdmin();
+  if (await isBannedUser(admin, viewer.userId)) return { ok: false, error: "このアカウントでは投稿できません" };
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
   const { count } = await admin.from("locapass_pet_found_reports").select("id", { count: "exact", head: true }).eq("reporter_id", viewer.userId).gte("created_at", since);
   if ((count ?? 0) >= 10) return { ok: false, error: "1日に送れる通報の上限に達しました" };
@@ -733,6 +779,7 @@ export async function postFoundReport(input: FoundReportInput): Promise<Result<{
       .from("locapass_pet_lost_reports")
       .select("owner_id, last_seen_lat, last_seen_lng")
       .eq("status", "active")
+      .is("hidden_at", null)
       .gte("last_seen_lat", lat - dLat)
       .lte("last_seen_lat", lat + dLat)
       .gte("last_seen_lng", lng - dLng)
@@ -743,21 +790,8 @@ export async function postFoundReport(input: FoundReportInput): Promise<Result<{
         recipients.set(l.owner_id as string, "lost_owner");
     }
   }
-  {
-    const { dLat, dLng } = box(LOST_ALERT_RADIUS_KM);
-    const { data: near } = await admin
-      .from("locapass_pet_owner_settings")
-      .select("user_id, walk_lat, walk_lng")
-      .eq("lost_alert_opt_in", true)
-      .gte("walk_lat", lat - dLat)
-      .lte("walk_lat", lat + dLat)
-      .gte("walk_lng", lng - dLng)
-      .lte("walk_lng", lng + dLng)
-      .limit(2000);
-    for (const s of near ?? []) {
-      if (!recipients.has(s.user_id as string) && s.walk_lat != null && s.walk_lng != null && distanceKm({ lat, lng }, { lat: s.walk_lat, lng: s.walk_lng }) <= LOST_ALERT_RADIUS_KM)
-        recipients.set(s.user_id as string, "nearby");
-    }
+  for (const userId of await findNearbyRecipients(admin, { lat, lng }, LOST_ALERT_RADIUS_KM)) {
+    if (!recipients.has(userId)) recipients.set(userId, "nearby");
   }
   recipients.delete(viewer.userId);
   const list = [...recipients].slice(0, 1000);
@@ -797,8 +831,8 @@ export async function claimFoundReport(id: string): Promise<Result<{ hasLostRepo
   if ("error" in viewer) return { ok: false, error: viewer.error };
   if (!UUID.test(id)) return { ok: false, error: "見つかりません" };
   const admin = petAdmin();
-  const { data: report } = await admin.from("locapass_pet_found_reports").select("id, reporter_id, status").eq("id", id).maybeSingle();
-  if (!report || report.status !== "open") return { ok: false, error: "この通報は終了しています" };
+  const { data: report } = await admin.from("locapass_pet_found_reports").select("id, reporter_id, status, hidden_at").eq("id", id).maybeSingle();
+  if (!report || report.status !== "open" || report.hidden_at) return { ok: false, error: "この通報は終了しています" };
   if (report.reporter_id === viewer.userId) return { ok: false, error: "自分の通報です" };
 
   const { data: lost } = await admin.from("locapass_pet_lost_reports").select("id, pet_id").eq("owner_id", viewer.userId).eq("status", "active").order("created_at", { ascending: false }).limit(1);
@@ -821,4 +855,26 @@ export async function claimFoundReport(id: string): Promise<Result<{ hasLostRepo
     );
   }
   return { ok: true, hasLostReport: Boolean(myLost) };
+}
+
+/** 通報した人が、自分の通報を写真ごと削除する(間違えて送ったときなど) */
+export async function deleteFoundReport(id: string): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const { data } = await viewer.supabase.from("locapass_pet_found_reports").delete().eq("id", id).select("id, photo_path");
+  if (!data?.length) return { ok: false, error: "削除できませんでした" };
+  const photo = data[0].photo_path as string | null;
+  if (photo) after(() => petAdmin().storage.from(PET_BUCKET).remove([photo]).then(() => undefined));
+  refresh();
+  return { ok: true };
+}
+
+/** 不適切の報告(迷子のお知らせ・見つけました通報)。運営が管理画面で確認する */
+export async function flagPetReport(targetType: "lost" | "found", targetId: string, reason: string): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  if (!UUID.test(targetId) || (targetType !== "lost" && targetType !== "found")) return { ok: false, error: "見つかりません" };
+  const { error } = await petAdmin().from("locapass_pet_flags").insert({ target_type: targetType, target_id: targetId, reporter_id: viewer.userId, reason: text(reason, 300) });
+  if (error && error.code !== "23505") return { ok: false, error: "送れませんでした" };
+  return { ok: true };
 }

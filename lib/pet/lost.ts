@@ -21,16 +21,24 @@ export type PublicLostReport = {
   isOwner: boolean;
 };
 
-export async function getActiveLostReports(opts: { viewerId?: string | null; reportId?: string; petId?: string; limit?: number } = {}): Promise<PublicLostReport[]> {
+export async function getActiveLostReports(
+  opts: { viewerId?: string | null; reportId?: string; petId?: string; limit?: number; near?: { lat: number; lng: number; km: number } } = {},
+): Promise<PublicLostReport[]> {
   const admin = petAdmin();
   let q = admin
     .from("locapass_pet_lost_reports")
     .select("id, pet_id, owner_id, last_seen_at, last_seen_lat, last_seen_lng, last_seen_address, features, photo_path, contact_phone, contact_line, contact_note, created_at")
     .eq("status", "active")
+    .is("hidden_at", null) // 運営が非表示にしたものは出さない
     .order("created_at", { ascending: false })
     .limit(opts.limit ?? 200);
   if (opts.reportId) q = q.eq("id", opts.reportId);
   if (opts.petId) q = q.eq("pet_id", opts.petId);
+  if (opts.near) {
+    const dLat = opts.near.km / 111;
+    const dLng = opts.near.km / (111 * Math.cos((opts.near.lat * Math.PI) / 180));
+    q = q.gte("last_seen_lat", opts.near.lat - dLat).lte("last_seen_lat", opts.near.lat + dLat).gte("last_seen_lng", opts.near.lng - dLng).lte("last_seen_lng", opts.near.lng + dLng);
+  }
   const { data: reports } = await q;
   if (!reports?.length) return [];
 
@@ -69,4 +77,21 @@ export async function getActiveLostReports(opts: { viewerId?: string | null; rep
         isOwner: Boolean(opts.viewerId && opts.viewerId === r.owner_id),
       };
     });
+}
+
+/**
+ * ヒートマップ用の点(位置だけ。写真・名前・連絡先は含めない)。全国表示のときに使う。
+ * 迷子のお知らせ(受付中)と、14日以内の「見つけました」通報。
+ */
+export async function getLostFoundHeatPoints(): Promise<{ lat: number; lng: number; kind: "lost" | "found" }[]> {
+  const admin = petAdmin();
+  const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+  const [{ data: lost }, { data: found }] = await Promise.all([
+    admin.from("locapass_pet_lost_reports").select("last_seen_lat, last_seen_lng").eq("status", "active").is("hidden_at", null).not("last_seen_lat", "is", null).limit(3000),
+    admin.from("locapass_pet_found_reports").select("lat, lng").eq("status", "open").is("hidden_at", null).gte("created_at", since).limit(3000),
+  ]);
+  return [
+    ...(lost ?? []).map((r) => ({ lat: r.last_seen_lat as number, lng: r.last_seen_lng as number, kind: "lost" as const })),
+    ...(found ?? []).map((r) => ({ lat: r.lat as number, lng: r.lng as number, kind: "found" as const })),
+  ];
 }

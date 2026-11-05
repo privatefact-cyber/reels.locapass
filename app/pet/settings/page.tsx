@@ -16,7 +16,10 @@ const LINE_MESSAGES: Record<string, { tone: "ok" | "warn"; text: string }> = {
 export default async function PetSettingsPage({ searchParams }: { searchParams: Promise<{ line?: string }> }) {
   const { line } = await searchParams;
   const { supabase, userId } = await requirePetViewer("/pet/settings");
-  const { data: s } = await supabase.from("locapass_pet_owner_settings").select("*").eq("user_id", userId).maybeSingle();
+  const [{ data: s }, { data: areas }] = await Promise.all([
+    supabase.from("locapass_pet_owner_settings").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("locapass_pet_walk_areas").select("id, lat, lng, label").order("created_at"),
+  ]);
   const notice = line ? LINE_MESSAGES[line] : null;
 
   return (
@@ -28,9 +31,9 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
         <PetCard className={`mb-4 text-sm font-bold ${notice.tone === "ok" ? "bg-[#E5F8EC] text-[#06A34A]" : "bg-[#FFF8E1] text-[#8A6A00]"}`}>{notice.text}</PetCard>
       )}
       <PetSettingsForm
-        walk={s?.walk_lat != null && s?.walk_lng != null ? { lat: s.walk_lat, lng: s.walk_lng } : null}
-        walkLabel={s?.walk_area_label ?? null}
+        walkAreas={(areas ?? []) as { id: string; lat: number; lng: number; label: string | null }[]}
         lostAlertOptIn={s?.lost_alert_opt_in ?? true}
+        hereAlertOptIn={s?.here_alert_opt_in ?? false}
         lineLinked={Boolean(s?.line_user_id)}
         lineNotify={s?.line_notify ?? true}
         lineReady={lineConfigured()}

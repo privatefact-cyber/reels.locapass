@@ -8,6 +8,9 @@ import { LostReportForm } from "@/components/pet/LostReportForm";
 import { ResolveLostButtons } from "@/components/pet/ResolveLostButtons";
 import { PetMap, type PetMapMarker } from "@/components/pet/PetMap";
 import { PetCard, PetSectionTitle } from "@/components/pet/ui";
+import { ShareButtons } from "@/components/pet/ShareButtons";
+import { ConfirmLostButton } from "@/components/pet/ConfirmLostButton";
+import { LOST_AUTO_CLOSE_DAYS } from "@/lib/pet/housekeeping";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +25,7 @@ export default async function PetLostOwnerPage({ params }: { params: Promise<{ p
   if (!pet) notFound();
 
   const { data: reportRow } = await supabase.from("locapass_pet_lost_reports").select("*").eq("pet_id", pet.id).eq("status", "active").maybeSingle();
-  const report = reportRow as PetLostReportRow | null;
+  const report = reportRow as (PetLostReportRow & { last_confirmed_at: string; check_sent_at: string | null }) | null;
   const defaultFeatures = [pet.breed, pet.coat_color, pet.features].filter(Boolean).join("、");
 
   if (!report) {
@@ -73,6 +76,29 @@ export default async function PetLostOwnerPage({ params }: { params: Promise<{ p
         </p>
       </div>
       <ResolveLostButtons reportId={report.id} petName={pet.name} />
+
+      {(() => {
+        const closeAt = Date.parse(report.last_confirmed_at) + LOST_AUTO_CLOSE_DAYS * 86_400_000;
+        const daysLeft = Math.max(0, Math.ceil((closeAt - Date.now()) / 86_400_000));
+        return report.check_sent_at ? (
+          <PetCard className="mt-3 space-y-2 border-[#FFD38A] bg-[#FFF8E1]">
+            <p className="text-sm font-extrabold text-[#8A6A00]">まだ探していますか?</p>
+            <p className="text-xs text-[#8A6A00]">あと{daysLeft}日で、お知らせは自動で終了し、公開している連絡先も消えます。</p>
+            <ConfirmLostButton reportId={report.id} />
+          </PetCard>
+        ) : (
+          <p className="mt-2 px-1 text-center text-[11px] text-[#B39C8C]">
+            このお知らせは{LOST_AUTO_CLOSE_DAYS}日間確認がないと自動で終了します(30日目に確認の通知が届きます)
+          </p>
+        );
+      })()}
+
+      <PetSectionTitle emoji="📣">みんなに広める</PetSectionTitle>
+      <ShareButtons
+        url={`https://locapass.net/pet/lost?report=${report.id}`}
+        text={`【迷子のワンコを探しています】${pet.name}${pet.breed ? `(${pet.breed})` : ""}${report.last_seen_address ? ` ${report.last_seen_address}付近` : ""} 見かけた方はご連絡ください。拡散お願いします #迷子犬 #ワンコ手帳`}
+      />
+      <p className="mt-1 px-1 text-[11px] text-[#B39C8C]">旅行先などワンコ手帳の利用者が少ない場所では、LINEやXで広めるのがいちばん効果的です。</p>
 
       <PetSectionTitle emoji="👀">目撃情報({sightings.length}件)</PetSectionTitle>
       <PetMap markers={markers} height={280} />

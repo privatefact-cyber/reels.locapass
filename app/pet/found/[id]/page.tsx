@@ -6,6 +6,7 @@ import { FOUND_KIND_LABEL, SPECIES_EMOJI, SPECIES_LABEL, getFoundReports } from 
 import { foundTimeLabel } from "@/components/pet/FoundReportCard";
 import { FoundActions } from "@/components/pet/FoundActions";
 import { ShareButtons } from "@/components/pet/ShareButtons";
+import { FlagButton } from "@/components/pet/FlagButton";
 import { PetMap } from "@/components/pet/PetMap";
 import { PetCard, PetSectionTitle } from "@/components/pet/ui";
 
@@ -83,6 +84,14 @@ export default async function FoundDetailPage({ params, searchParams }: { params
 
       <PetSectionTitle emoji="🗺️">見つけた場所</PetSectionTitle>
       <PetMap markers={[{ id: r.id, lat: r.lat, lng: r.lng, kind: "found", imageUrl: r.photoUrl }]} height={220} />
+
+      {!r.isReporter && (
+        <div className="mt-4">
+          <FlagButton targetType="found" targetId={r.id} loggedIn={Boolean(viewer)} />
+        </div>
+      )}
+
+      <p className="mt-2 px-2 text-center text-[11px] text-[#B39C8C]">通報は投稿から90日で写真ごと自動で削除されます。</p>
 
       <p className="mt-6 text-center text-xs text-[#B39C8C]">
         うちの子が迷子のときは

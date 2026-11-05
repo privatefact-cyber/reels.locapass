@@ -3,6 +3,7 @@ import { petAdmin } from "@/lib/pet/db";
 import { notifyPetUser } from "@/lib/pet/notify";
 import { daysBetween, formatJpDate, latestByType, todayJst } from "@/lib/pet/calc";
 import { DOC_TYPE_SHORT, type PetDocType } from "@/lib/pet/types";
+import { runPetHousekeeping } from "@/lib/pet/housekeeping";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -12,6 +13,7 @@ export const maxDuration = 300;
  * - 期限の30日前・7日前・当日(〜3日過ぎまで)の3回。同じ書類・同じ期限・同じ段階では1回だけ(locapass_pet_reminder_log)。
  * - 同じ子・同じ種類で新しい書類が登録されていたら、古い書類のお知らせは出さない。
  * - アプリ内のお知らせ+(連携済みなら)LINE+(購読端末があれば)プッシュ。
+ * あわせて迷子さがしの後片付け(lib/pet/housekeeping.ts)も行う。
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -20,6 +22,10 @@ export async function GET(req: Request) {
   }
 
   const admin = petAdmin();
+  const housekeeping = await runPetHousekeeping(admin).catch((e) => {
+    console.error("[pet-reminders] housekeeping failed", e);
+    return null;
+  });
   const today = todayJst();
   const from = new Date(Date.parse(today) - 3 * 86_400_000).toISOString().slice(0, 10);
   const to = new Date(Date.parse(today) + 30 * 86_400_000).toISOString().slice(0, 10);
@@ -32,7 +38,7 @@ export async function GET(req: Request) {
     .lte("expires_on", to)
     .limit(5000);
   const petIds = [...new Set((due ?? []).map((d) => d.pet_id as string))];
-  if (petIds.length === 0) return NextResponse.json({ checked: 0, sent: 0 });
+  if (petIds.length === 0) return NextResponse.json({ checked: 0, sent: 0, housekeeping });
 
   const [{ data: docs }, { data: pets }] = await Promise.all([
     admin.from("locapass_pet_documents").select("id, pet_id, doc_type, expires_on, administered_on, created_at").in("pet_id", petIds),
@@ -76,5 +82,5 @@ export async function GET(req: Request) {
       sent++;
     }
   }
-  return NextResponse.json({ checked: petIds.length, sent });
+  return NextResponse.json({ checked: petIds.length, sent, housekeeping });
 }
