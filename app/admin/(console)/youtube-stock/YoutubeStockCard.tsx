@@ -64,7 +64,7 @@ export function YoutubeStockCard({
           <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
         ) : (
           <>
-            {thumbnail ? <img src={thumbnail} alt="" className="h-full w-full object-cover transition group-hover:scale-[1.02]" /> : <div className="flex h-full items-center justify-center text-sm text-white">サムネイル未取得</div>}
+            {thumbnail ? <img src={thumbnail} alt="" className="h-full w-full scale-[1.35] object-cover transition group-hover:scale-[1.42]" /> : <div className="flex h-full items-center justify-center text-sm text-white">サムネイル未取得</div>}
             <span className="absolute inset-0 flex items-center justify-center bg-black/20"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-xl text-slate-900 shadow">▶</span></span>
           </>
         )}
