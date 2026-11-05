@@ -30,6 +30,60 @@ export async function collectShibuyaShorts(formData: FormData) {
   refresh();
 }
 
+function extractYoutubeId(rawUrl: string) {
+  let parsed: URL;
+  try { parsed = new URL(rawUrl); } catch { throw new Error("YouTubeの共有URLを入力してください"); }
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  let id = "";
+  if (host === "youtu.be") id = parsed.pathname.split("/").filter(Boolean)[0] ?? "";
+  if (host === "youtube.com" || host.endsWith(".youtube.com")) {
+    id = parsed.searchParams.get("v") ?? parsed.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/)?.[1] ?? "";
+  }
+  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) throw new Error("YouTube動画の共有URLを確認してください");
+  return id;
+}
+
+export async function addYoutubeUrl(formData: FormData) {
+  await requireRootAdmin();
+  const rawUrl = String(formData.get("youtube_url") ?? "").trim();
+  const youtubeId = extractYoutubeId(rawUrl);
+  const portalId = Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID);
+  const admin = createAdminClient();
+  const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
+  if (!portal) throw new Error("有効なポータルを選択してください");
+
+  const canonicalUrl = `https://www.youtube.com/shorts/${youtubeId}`;
+  let title = "YouTube動画";
+  let channelTitle: string | null = null;
+  let thumbnailUrl: string | null = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+  try {
+    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`, { next: { revalidate: 3600 } });
+    if (response.ok) {
+      const data = await response.json() as { title?: string; author_name?: string; thumbnail_url?: string };
+      title = data.title?.trim() || title;
+      channelTitle = data.author_name?.trim() || null;
+      thumbnailUrl = data.thumbnail_url?.trim() || thumbnailUrl;
+    }
+  } catch { /* メタデータ取得に失敗してもURLはストックする */ }
+
+  const { error } = await (admin as any).from("locapass_youtube_ingestions").upsert({
+    portal_id: portalId,
+    youtube_id: youtubeId,
+    source_provider: "youtube",
+    source_id: youtubeId,
+    video_url: canonicalUrl,
+    title,
+    description: null,
+    channel_title: channelTitle,
+    thumbnail_url: thumbnailUrl,
+    source_query: "manual:youtube-url",
+    embeddable: true,
+    match_status: "pending",
+  }, { onConflict: "portal_id,youtube_id", ignoreDuplicates: true });
+  if (error) throw new Error(`YouTube動画の保存に失敗しました: ${error.message}`);
+  refresh();
+}
+
 export async function addTikTokUrl(formData: FormData) {
   await requireRootAdmin();
   const rawUrl = String(formData.get("tiktok_url") ?? "").trim();
