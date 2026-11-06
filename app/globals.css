@@ -159,6 +159,42 @@
  * 白地テーマなので beauty と同じ作り: tone/panel/hl は「小さい数字ほど濃い(文字色)」向きに並べ替えてある。
  * tone-950 / panel-950 はページ背景(bg-base)と同じ白にそろえる(ヒーロー下のグラデーションが背景と溶け合うため)。
  */
+/*
+ * ワンコ手帳(/pet)のコンシェルジュAI用の配色。クリーム地・ココア色の文字・ピーチのアクセント(components/pet/ui.tsx と同じ色)。
+ * サイト全体には使わず、AiInquiryWidget theme="pet" のときだけ効く。
+ */
+[data-theme="pet"] {
+  --cta-300: 255 173 128; --cta-400: 255 142 94; --cta-500: 238 106 54; --cta-600: 194 86 42;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 238 106 54; --cta-gold-light: 255 142 94; --cta-gold-dark: 194 86 42;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 255 201 77;
+  --color-glow-2-scale: 0.5;
+  --color-on-accent: 255 255 255;
+  --color-header: 255 142 94;
+  --color-header-glow-1: 238 106 54;
+  --color-header-glow-2: 255 255 255;
+  --color-header-glow-3: 255 201 77;
+  --color-bg-base: 255 247 236;
+  --color-bg-surface: 255 255 255;
+  --color-text-main: 74 52 38;
+  --color-text-muted: 156 130 115;
+  --color-accent: 238 106 54;
+  --color-accent-light: 255 142 94;
+  --color-accent-dark: 194 86 42;
+  --color-border: 241 225 207;
+  --color-border-scale: 1.5;
+  --color-glow: 255 142 94;
+  --color-glow-scale: 1;
+
+  --tone-50: 40 28 20; --tone-100: 74 52 38; --tone-200: 92 69 53; --tone-300: 122 96 80;
+  --tone-500: 156 130 115; --tone-600: 185 162 146; --tone-700: 224 210 196; --tone-800: 241 225 207; --tone-950: 255 251 245;
+  --panel-400: 122 96 80; --panel-500: 156 130 115; --panel-600: 185 162 146; --panel-700: 224 210 196;
+  --panel-800: 241 225 207; --panel-900: 255 255 255; --panel-950: 255 247 236;
+  --hl-50: 90 30 10; --hl-100: 140 50 20; --hl-200: 194 86 42; --hl-300: 238 106 54; --hl-400: 245 120 70;
+  --hl-500: 255 142 94; --hl-600: 255 173 128; --hl-700: 255 200 165; --hl-800: 255 222 200; --hl-900: 255 238 225; --hl-950: 255 247 240;
+}
+
 [data-theme="cafe"] {
   --cta-300: 232 140 108; --cta-400: 214 98 62; --cta-500: 190 72 48; --cta-600: 156 52 34;
   --color-on-cta: 255 255 255;

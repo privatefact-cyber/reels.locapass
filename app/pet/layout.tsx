@@ -4,6 +4,7 @@ import { PetTabBar } from "@/components/pet/PetTabBar";
 import { PetTopBar } from "@/components/pet/PetTopBar";
 import { PAW_PATTERN } from "@/components/pet/ui";
 import { HereLocationPing } from "@/components/pet/HereLocationPing";
+import { PetConcierge } from "@/components/pet/PetConcierge";
 import { getPetViewer } from "@/lib/pet/db";
 
 const rounded = M_PLUS_Rounded_1c({ weight: ["400", "700", "800"], subsets: ["latin"], display: "swap", preload: false });
@@ -36,6 +37,7 @@ export default async function PetLayout({ children }: { children: React.ReactNod
       <PetTopBar />
       <div className="mx-auto w-full max-w-md px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-2">{children}</div>
       <PetTabBar />
+      <PetConcierge />
     </div>
   );
 }

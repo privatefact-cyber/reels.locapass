@@ -84,3 +84,64 @@ export async function getPetSpots(): Promise<PetSpot[]> {
   }
   return spots;
 }
+
+export type SpotBounds = { minLat: number; maxLat: number; minLng: number; maxLng: number };
+
+/** 1回に返すお店の上限(施設が1000件を超えても、見えている範囲だけを返す) */
+export const SPOTS_IN_VIEW_LIMIT = 300;
+
+/**
+ * 地図で見えている範囲のペット施設・一緒に行ける店(おでかけの全画面地図用)。
+ * 範囲内の公開中の店を引き、ペット施設ポータルの店か🐾属性のある店だけを残す。範囲の中心から近い順に最大300件。
+ */
+export async function getPetSpotsInBounds(b: SpotBounds): Promise<{ spots: PetSpot[]; truncated: boolean }> {
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+  const [{ data: portal }, { data: rows }] = await Promise.all([
+    db.from("locapass_portals").select("id").eq("slug", PET_FACILITY_PORTAL).maybeSingle(),
+    db
+      .from("locapass_shops")
+      .select(`${COLUMNS}, portal_id`)
+      .eq("status", "active")
+      .gte("lat", b.minLat)
+      .lte("lat", b.maxLat)
+      .gte("lng", b.minLng)
+      .lte("lng", b.maxLng)
+      .limit(3000),
+  ]);
+  const list = (rows ?? []) as unknown as (Row & { portal_id: string })[];
+  if (list.length === 0) return { spots: [], truncated: false };
+
+  // 範囲内の店のうち、🐾属性(ペット同伴可・ペット専用)がある店
+  const ids = list.map((r) => r.id);
+  const withPet = new Set<string>();
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data: attrs } = await db.from("locapass_shop_attributes").select("shop_id").in("attribute_key", [...PET_ATTRIBUTE_KEYS]).in("shop_id", ids.slice(i, i + 200));
+    for (const a of attrs ?? []) withPet.add(a.shop_id as string);
+  }
+
+  const cLat = (b.minLat + b.maxLat) / 2;
+  const cLng = (b.minLng + b.maxLng) / 2;
+  const kept = list
+    .map((r) => {
+      const kinds: ("facility" | "with_pet")[] = [];
+      if (portal?.id && r.portal_id === portal.id) kinds.push("facility");
+      if (withPet.has(r.id)) kinds.push("with_pet");
+      return { r, kinds };
+    })
+    .filter((x) => x.kinds.length > 0)
+    .sort((a, z) => (a.r.lat! - cLat) ** 2 + (a.r.lng! - cLng) ** 2 - ((z.r.lat! - cLat) ** 2 + (z.r.lng! - cLng) ** 2));
+  const truncated = kept.length > SPOTS_IN_VIEW_LIMIT;
+
+  const spots: PetSpot[] = [];
+  for (const { r, kinds } of kept.slice(0, SPOTS_IN_VIEW_LIMIT)) {
+    const p = Array.isArray(r.portal) ? r.portal[0] : r.portal;
+    if (!p?.slug || !r.slug) continue;
+    spots.push({ id: r.id, name: r.name, href: shopPath(p.slug, r.slug), area: r.area, category: r.category, address: r.address, lat: r.lat, lng: r.lng, imageUrl: image(r.cover_url ?? r.icon_url), kinds });
+  }
+  const noPhoto = spots.filter((s) => !s.imageUrl).map((s) => s.id);
+  if (noPhoto.length) {
+    const stills = await latestReelStillsByShop(noPhoto);
+    for (const s of spots) if (!s.imageUrl) s.imageUrl = image(stills.get(s.id) ?? null);
+  }
+  return { spots, truncated };
+}

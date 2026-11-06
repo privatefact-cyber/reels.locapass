@@ -26,6 +26,7 @@ const RESERVED_TOP_SEGMENTS = new Set([
   "map",
   "mypage",
   "notifications",
+  "pet",
   "photo",
   "reserve",
   "s",
@@ -165,15 +166,18 @@ function resetSessionId(mode: Mode): string {
  *                ズーム/現在地ボタンの下に置き、チャットは下に開く(高さもカードに被らない範囲に抑える)。
  */
 /** 配色テーマ(値は app/globals.css の [data-theme])。通常はサイト全体のテーマに従う。 */
-export type AiWidgetTheme = "default" | "christmas" | "beauty" | "nature";
+export type AiWidgetTheme = "default" | "christmas" | "beauty" | "nature" | "pet";
 
 export function AiInquiryWidget({
   placement = "floating",
   theme,
+  positionClassName,
 }: {
   placement?: "floating" | "map";
   /** このウィジェットだけ配色を変えたいときに指定。未指定ならサイト全体のテーマ(12/1〜12/25はクリスマス)に従う。 */
   theme?: AiWidgetTheme;
+  /** 置き場所だけ変えたいとき(ワンコ手帳は下のタブが高いので、その上に出す)。未指定なら placement の既定位置 */
+  positionClassName?: string;
 }) {
   const isMap = placement === "map";
   const { t, locale } = useLocale();
@@ -462,9 +466,8 @@ export function AiInquiryWidget({
       data-chrome
       data-theme={theme}
       className={
-        isMap
-          ? "fixed right-3 top-[258px] z-[60] flex flex-col-reverse items-end"
-          : "fixed bottom-20 right-4 z-[60] md:bottom-6"
+        positionClassName ??
+        (isMap ? "fixed right-3 top-[258px] z-[60] flex flex-col-reverse items-end" : "fixed bottom-20 right-4 z-[60] md:bottom-6")
       }
     >
       {open && (
