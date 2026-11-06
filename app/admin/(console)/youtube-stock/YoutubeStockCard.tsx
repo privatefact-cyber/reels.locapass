@@ -106,7 +106,7 @@ export function YoutubeStockCard({
           <button type="button" disabled={thumbBusy} onClick={() => fileInput.current?.click()} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60">{thumbBusy ? "サムネイルを保存中…" : thumbnail ? "サムネイルを差し替え(正方形に切り取り)" : "サムネイルを設定(正方形に切り取り)"}</button>
           {thumbError && <span className="text-xs font-semibold text-red-600">{thumbError}</span>}
         </div>
-        {cropFile && <AvatarCropModal file={cropFile} shape="square" title="サムネイルを切り取り" outputSize={720} applyLabel="この範囲で保存" onCancel={() => setCropFile(null)} onCropped={saveThumbnail} />}
+        {cropFile && <AvatarCropModal file={cropFile} plain shape="square" title="サムネイルを切り取り" outputSize={720} applyLabel="この範囲で保存" onCancel={() => setCropFile(null)} onCropped={saveThumbnail} />}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <a href={row.video_url} target="_blank" rel="noreferrer" className="line-clamp-2 font-semibold text-slate-900 hover:text-blue-700 hover:underline">{row.title}</a>

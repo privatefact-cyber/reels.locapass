@@ -19,6 +19,7 @@ export function AvatarCropModal({
   title = "アイコン画像を調整",
   outputSize = CANVAS_SIZE,
   applyLabel = "この画像で保存",
+  plain = false,
 }: {
   file: File;
   onCancel: () => void;
@@ -29,6 +30,8 @@ export function AvatarCropModal({
   /** 書き出す画像の一辺(px)。画面上の枠は固定で、元画像から改めて描き直すので、大きくしても荒くならない。 */
   outputSize?: number;
   applyLabel?: string;
+  /** 管理画面向けの控えめな見た目(白地・グレー)にする。省略時はサイトのテーマ色。 */
+  plain?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -150,14 +153,14 @@ export function AvatarCropModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center"
+      className={`fixed inset-0 z-[60] flex items-end justify-center sm:items-center ${plain ? "bg-black/40" : "bg-black/70"}`}
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-t-2xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl"
+        className={`w-full max-w-sm rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl ${plain ? "bg-white shadow-xl" : "bg-surface"}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-center text-sm font-semibold text-main">{title}</h2>
+        <h2 className={`text-center text-sm font-semibold ${plain ? "text-slate-900" : "text-main"}`}>{title}</h2>
 
         <div className="relative mx-auto mt-4 h-[320px] w-[320px]">
           <canvas
@@ -178,7 +181,7 @@ export function AvatarCropModal({
               style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)" }}
             />
           ) : (
-            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-lg border-2 border-main/90" />
+            <div aria-hidden className={`pointer-events-none absolute inset-0 rounded-lg border-2 ${plain ? "border-slate-400/70" : "border-main/90"}`} />
           )}
         </div>
 
@@ -190,7 +193,7 @@ export function AvatarCropModal({
           value={zoom}
           onChange={handleZoomChange}
           disabled={!ready}
-          className="mt-4 w-full accent-brand"
+          className={`mt-4 w-full ${plain ? "accent-slate-700" : "accent-brand"}`}
           aria-label="拡大率"
         />
 
@@ -198,7 +201,7 @@ export function AvatarCropModal({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 rounded border border-main/20 py-2 text-sm text-tone-300"
+            className={`flex-1 rounded border py-2 text-sm ${plain ? "border-slate-300 text-slate-700 hover:bg-slate-50" : "border-main/20 text-tone-300"}`}
           >
             キャンセル
           </button>
@@ -206,7 +209,7 @@ export function AvatarCropModal({
             type="button"
             onClick={handleApply}
             disabled={!ready}
-            className="flex-1 rounded bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
+            className={`flex-1 rounded py-2 text-sm font-semibold disabled:opacity-50 ${plain ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-brand text-main hover:bg-brand-dark"}`}
           >
             {applyLabel}
           </button>
