@@ -100,12 +100,13 @@ export async function autoProcessPendingYoutube(formData: FormData) {
   if (portalId !== null && (!Number.isInteger(portalId) || portalId <= 0)) throw new Error("ポータルを確認してください");
   const admin = createAdminClient();
   // AI判定済み(match_reasonあり)の保留は除外し、同じ候補ばかり再処理しないようにする。
+  // 管理画面も新しい順なので、収集した直後の候補から処理して結果をすぐ確認できるようにする。
   let query = (admin as any).from("locapass_youtube_ingestions")
     .select("id, portal_id, title, description, candidate_name, candidate_address")
     .eq("source_provider", "youtube")
     .eq("match_status", "pending")
     .is("match_reason", null)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(5);
   if (portalId) query = query.eq("portal_id", portalId);
   const { data: rows, error } = await query;
@@ -145,7 +146,9 @@ export async function autoProcessPendingYoutube(formData: FormData) {
       await createDraftShopFromIngestion(row.id, draft);
       await publishYoutubeIngestion(row.id, user.id);
     } catch (processError) {
-      await (admin as any).from("locapass_youtube_ingestions").update({ error_message: processError instanceof Error ? processError.message.slice(0, 500) : "自動処理に失敗しました" }).eq("id", row.id);
+      const message = processError instanceof Error ? processError.message.slice(0, 500) : "自動処理に失敗しました";
+      console.error(`YouTube候補の自動処理に失敗しました(${row.id}): ${message}`);
+      await (admin as any).from("locapass_youtube_ingestions").update({ error_message: message }).eq("id", row.id);
     }
   }
   refresh();

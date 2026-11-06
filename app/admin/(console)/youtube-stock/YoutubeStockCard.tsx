@@ -21,6 +21,7 @@ type Row = {
   official_url_verified: boolean;
   match_status: string;
   match_reason: string | null;
+  error_message: string | null;
   matched_shop_id: string | null;
   reel_id: string | null;
 };
@@ -58,7 +59,7 @@ export function YoutubeStockCard({
   const thumbnail = row.thumbnail_url ?? (row.youtube_id ? `https://i.ytimg.com/vi/${row.youtube_id}/hqdefault.jpg` : null);
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
       <button type="button" onClick={() => setPreview((value) => !value)} className="group relative block aspect-square w-full overflow-hidden bg-slate-900 text-left" aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
         {preview ? (
           <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
@@ -76,13 +77,14 @@ export function YoutubeStockCard({
             <p className="mt-1 text-xs text-slate-500">{row.channel_title ?? "チャンネル不明"} ・ {row.source_id ?? row.youtube_id}</p>
             <p className="mt-1 text-[11px] font-semibold text-indigo-700">登録先: {portalLabel}</p>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1"><span className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><span className={isTikTok ? "rounded bg-black px-1.5 py-0.5 text-[10px] text-white" : "rounded bg-red-600 px-1.5 py-0.5 text-[10px] text-white"}>{isTikTok ? "TikTok" : "YouTube"}</span>{status}</span>{row.matched_shop_id && row.match_status === "ready_to_create" && <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-semibold text-orange-800">自動仮登録・要手動確認</span>}</div>
+          <div className="flex shrink-0 flex-col items-end gap-1">{row.reel_id && <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">公開済み</span>}<span className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><span className={isTikTok ? "rounded bg-black px-1.5 py-0.5 text-[10px] text-white" : "rounded bg-red-600 px-1.5 py-0.5 text-[10px] text-white"}>{isTikTok ? "TikTok" : "YouTube"}</span>{status}</span>{row.matched_shop_id && row.match_status === "ready_to_create" && <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-semibold text-orange-800">自動仮登録・要手動確認</span>}</div>
         </div>
         {row.description && <p className="line-clamp-2 text-xs leading-5 text-slate-600">{row.description}</p>}
         <div className={`rounded-lg border px-3 py-2 text-xs ${row.match_reason ? "border-amber-200 bg-amber-50 text-amber-900" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
           <p className="font-semibold">判定理由</p>
           <p className="mt-1 line-clamp-2 whitespace-pre-wrap leading-5">{row.match_reason ?? "理由未記録。店名・住所・公式サイトを確認してください。"}</p>
         </div>
+        {row.error_message && <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800"><p className="font-semibold">自動処理で確認が必要</p><p className="mt-1 whitespace-pre-wrap leading-5">{row.error_message}</p></div>}
 
         <form action={findOfficialSite}><button className="text-sm font-semibold text-blue-700 hover:underline">AIで店名・住所を特定</button></form>
         <details className="rounded-lg border border-slate-200 bg-slate-50">
@@ -101,7 +103,7 @@ export function YoutubeStockCard({
         {shopLabel && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">対象店舗: {shopLabel}</p>}
         {row.match_status === "ready_to_create" && !row.matched_shop_id && <form action={createDraft} className="grid gap-3 rounded-lg bg-amber-50 p-4"><p className="text-sm font-semibold text-amber-900">店名と住所が分かれば店舗を登録(公式HPは任意)</p><input type="hidden" name="portal_id" value={row.portal_id} /><input name="name" defaultValue={row.candidate_name ?? ""} placeholder="店名" required className={input}/><input name="address" defaultValue={row.candidate_address ?? ""} placeholder="住所" required className={input}/><input name="official_url" type="url" defaultValue={row.official_url ?? ""} placeholder="https:// 公式サイト(任意)" className={input}/><select name="category" defaultValue="カフェ・スイーツ" className={input}><option>カフェ・スイーツ</option><option>レストラン・食事</option><option>居酒屋・バー</option><option>ショッピング</option><option>観光・体験</option><option>その他</option></select><label className="flex items-center gap-2 text-sm text-amber-900"><input type="checkbox" name="publish" value="1" defaultChecked />すぐ公開する(地図・リールに表示)</label><button className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white">店舗を登録</button></form>}
         {row.matched_shop_id && !row.reel_id && <form action={publish}><button className="w-full rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">この店舗IDでリールを投稿</button></form>}
-        {row.reel_id && <p className="text-sm font-semibold text-emerald-700">リール投稿済み</p>}
+        {row.reel_id && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800">公開済み（リール投稿済み）</p>}
       </div>
     </article>
   );
