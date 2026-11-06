@@ -44,60 +44,6 @@ export async function collectShibuyaShorts(formData: FormData) {
   redirect(`/admin/youtube-stock?collection=done&query=${encodeURIComponent(query)}&fetched=${candidates.length}&saved=${saved}`);
 }
 
-function extractYoutubeId(rawUrl: string) {
-  let parsed: URL;
-  try { parsed = new URL(rawUrl); } catch { throw new Error("YouTubeの共有URLを入力してください"); }
-  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
-  let id = "";
-  if (host === "youtu.be") id = parsed.pathname.split("/").filter(Boolean)[0] ?? "";
-  if (host === "youtube.com" || host.endsWith(".youtube.com")) {
-    id = parsed.searchParams.get("v") ?? parsed.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/)?.[1] ?? "";
-  }
-  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) throw new Error("YouTube動画の共有URLを確認してください");
-  return id;
-}
-
-export async function addYoutubeUrl(formData: FormData) {
-  await requireRootAdmin();
-  const rawUrl = String(formData.get("youtube_url") ?? "").trim();
-  const youtubeId = extractYoutubeId(rawUrl);
-  const portalId = Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID);
-  const admin = createAdminClient();
-  const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
-  if (!portal) throw new Error("有効なポータルを選択してください");
-
-  const canonicalUrl = `https://www.youtube.com/shorts/${youtubeId}`;
-  let title = "YouTube動画";
-  let channelTitle: string | null = null;
-  let thumbnailUrl: string | null = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
-  try {
-    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`, { next: { revalidate: 3600 } });
-    if (response.ok) {
-      const data = await response.json() as { title?: string; author_name?: string; thumbnail_url?: string };
-      title = data.title?.trim() || title;
-      channelTitle = data.author_name?.trim() || null;
-      thumbnailUrl = data.thumbnail_url?.trim() || thumbnailUrl;
-    }
-  } catch { /* メタデータ取得に失敗してもURLはストックする */ }
-
-  const { error } = await (admin as any).from("locapass_youtube_ingestions").upsert({
-    portal_id: portalId,
-    youtube_id: youtubeId,
-    source_provider: "youtube",
-    source_id: youtubeId,
-    video_url: canonicalUrl,
-    title,
-    description: null,
-    channel_title: channelTitle,
-    thumbnail_url: thumbnailUrl,
-    source_query: "manual:youtube-url",
-    embeddable: true,
-    match_status: "pending",
-  }, { onConflict: "portal_id,youtube_id", ignoreDuplicates: true });
-  if (error) throw new Error(`YouTube動画の保存に失敗しました: ${error.message}`);
-  refresh();
-}
-
 /**
  * 保留候補を少量ずつAIで判定し、店名と住所(番地まで)が分かったものは掲載する。
  * 既存店に一致すればその店にリールを追加、無ければ店舗を公開で新規登録→座標登録→リール投稿まで行う。
@@ -119,12 +65,99 @@ function failToStock(message: string): never {
   redirect(`/admin/youtube-stock?collection=error&message=${encodeURIComponent(message.slice(0, 180))}`);
 }
 
-const MAX_TIKTOK_URLS_PER_ADD = 30;
+const MAX_URLS_PER_ADD = 30;
 
-type TikTokAddResult = { status: "added" | "exists" | "failed"; title?: string; reason?: string; url: string };
+type AddResult = { status: "added" | "exists" | "failed"; title?: string; reason?: string; url: string };
+
+/** 複数まとめて追加した結果を、件数と失敗の内訳に分けて画面に渡す(youtube-stock/page.tsx で見やすく出す)。 */
+function redirectWithAddResults(label: "YouTube" | "TikTok", results: AddResult[]): never {
+  const failed = results.filter((r) => r.status === "failed");
+  // 1本だけのときは、短い表示。
+  if (results.length === 1) {
+    const only = results[0];
+    if (only.status === "failed") return failToStock(only.reason ?? `${label}動画の追加に失敗しました`);
+    redirect("/admin/youtube-stock?collection=added&message=" + encodeURIComponent(only.status === "exists" ? `この${label}動画はすでにストックにあります` : `${label}動画をストックに追加しました(${(only.title ?? "").slice(0, 40)})`));
+  }
+  const fails = failed.slice(0, 5).map((r) => ({ u: r.url.replace(/^https?:\/\//, "").slice(0, 60), r: r.reason ?? "" }));
+  const params = new URLSearchParams({
+    collection: "bulk",
+    label,
+    total: String(results.length),
+    added: String(results.filter((r) => r.status === "added").length),
+    exists: String(results.filter((r) => r.status === "exists").length),
+    failed: String(failed.length),
+    fails: JSON.stringify(fails),
+  });
+  redirect(`/admin/youtube-stock?${params.toString()}`);
+}
+
+/** 貼り付けた文章からURLを取り出して、4本ずつ並行して処理する(短縮URLの展開やoEmbedで1本あたり数秒かかるため)。 */
+async function addUrlsInBatches(label: "YouTube" | "TikTok", pasted: string, portalId: number, addOne: (admin: ReturnType<typeof createAdminClient>, url: string, portalId: number) => Promise<AddResult>): Promise<never> {
+  const urls = Array.from(new Set(pasted.trim().match(/https?:\/\/[^\s<>"'、。)）]+/g) ?? []));
+  if (urls.length === 0) return failToStock(`${label}のURLを入力してください`);
+  if (urls.length > MAX_URLS_PER_ADD) return failToStock(`一度に追加できるのは${MAX_URLS_PER_ADD}本までです(${urls.length}本ありました)`);
+  const admin = createAdminClient();
+  const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
+  if (!portal) return failToStock("有効なポータルを選択してください");
+  const results: AddResult[] = [];
+  for (let i = 0; i < urls.length; i += 4) {
+    results.push(...await Promise.all(urls.slice(i, i + 4).map((url) => addOne(admin, url, portalId))));
+  }
+  refresh();
+  return redirectWithAddResults(label, results);
+}
+
+/** YouTubeのURL(共有リンク可)1本を、ストックに追加する。失敗しても例外にせず、結果として返す(まとめて追加で他の分を止めないため)。 */
+async function addOneYoutube(admin: ReturnType<typeof createAdminClient>, rawUrl: string, portalId: number): Promise<AddResult> {
+  const video = parseVideoUrl(rawUrl);
+  if (!video || video.provider !== "youtube") return { status: "failed", url: rawUrl, reason: "YouTube動画のURLではありません(共有URLを確認してください)" };
+  const youtubeId = video.ref;
+  const table = (admin as any).from("locapass_youtube_ingestions");
+  const { data: existing, error: existingError } = await table.select("id").eq("portal_id", portalId).eq("youtube_id", youtubeId).maybeSingle();
+  if (existingError) return { status: "failed", url: rawUrl, reason: `確認に失敗しました: ${existingError.message}` };
+  if (existing) return { status: "exists", url: rawUrl };
+
+  const canonicalUrl = `https://www.youtube.com/shorts/${youtubeId}`;
+  let title = "YouTube動画";
+  let channelTitle: string | null = null;
+  let thumbnailUrl: string | null = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+  try {
+    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`, { signal: AbortSignal.timeout(8000) });
+    if (response.ok) {
+      const data = await response.json() as { title?: string; author_name?: string; thumbnail_url?: string };
+      title = data.title?.trim() || title;
+      channelTitle = data.author_name?.trim() || null;
+      thumbnailUrl = data.thumbnail_url?.trim() || thumbnailUrl;
+    }
+  } catch { /* メタデータ取得に失敗してもURLはストックする */ }
+
+  const { error } = await (admin as any).from("locapass_youtube_ingestions").insert({
+    portal_id: portalId,
+    youtube_id: youtubeId,
+    source_provider: "youtube",
+    source_id: youtubeId,
+    video_url: canonicalUrl,
+    title,
+    description: null,
+    channel_title: channelTitle,
+    thumbnail_url: thumbnailUrl,
+    source_query: "manual:youtube-url",
+    embeddable: true,
+    match_status: "pending",
+  });
+  if (error?.code === "23505") return { status: "exists", url: rawUrl };
+  if (error) return { status: "failed", url: rawUrl, reason: `保存に失敗しました: ${error.message}` };
+  return { status: "added", url: rawUrl, title };
+}
+
+/** YouTubeの動画をストックに追加する。1本でも、複数まとめて(改行・空白区切り)でもよい。 */
+export async function addYoutubeUrl(formData: FormData) {
+  await requireRootAdmin();
+  return addUrlsInBatches("YouTube", String(formData.get("youtube_url") ?? ""), Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID), addOneYoutube);
+}
 
 /** TikTokのURL(共有リンク可)1本を、ストックに追加する。失敗しても例外にせず、結果として返す(まとめて追加で他の分を止めないため)。 */
-async function addOneTikTok(admin: ReturnType<typeof createAdminClient>, rawUrl: string, portalId: number): Promise<TikTokAddResult> {
+async function addOneTikTok(admin: ReturnType<typeof createAdminClient>, rawUrl: string, portalId: number): Promise<AddResult> {
   let parsed: URL;
   try { parsed = new URL(rawUrl); } catch { return { status: "failed", url: rawUrl, reason: "URLの形式が正しくありません" }; }
   if (!/(^|\.)tiktok\.com$/i.test(parsed.hostname)) return { status: "failed", url: rawUrl, reason: "TikTokのURLではありません" };
@@ -185,42 +218,7 @@ async function addOneTikTok(admin: ReturnType<typeof createAdminClient>, rawUrl:
  */
 export async function addTikTokUrl(formData: FormData) {
   await requireRootAdmin();
-  const pasted = String(formData.get("tiktok_url") ?? "").trim();
-  const urls = Array.from(new Set(pasted.match(/https?:\/\/[^\s<>"'、。)）]+/g) ?? []));
-  const portalId = Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID);
-  if (urls.length === 0) return failToStock("TikTokのURLを入力してください");
-  if (urls.length > MAX_TIKTOK_URLS_PER_ADD) return failToStock(`一度に追加できるのは${MAX_TIKTOK_URLS_PER_ADD}本までです(${urls.length}本ありました)`);
-  const admin = createAdminClient();
-  const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
-  if (!portal) return failToStock("有効なポータルを選択してください");
-
-  // 4本ずつ並行して処理する(短縮URLの展開とoEmbedで1本あたり数秒かかるため)。
-  const results: TikTokAddResult[] = [];
-  for (let i = 0; i < urls.length; i += 4) {
-    results.push(...await Promise.all(urls.slice(i, i + 4).map((url) => addOneTikTok(admin, url, portalId))));
-  }
-  const added = results.filter((r) => r.status === "added");
-  const exists = results.filter((r) => r.status === "exists");
-  const failed = results.filter((r) => r.status === "failed");
-  refresh();
-
-  // 1本だけのときは、従来どおりの短い表示。
-  if (results.length === 1) {
-    const only = results[0];
-    if (only.status === "failed") return failToStock(only.reason ?? "TikTok動画の追加に失敗しました");
-    redirect("/admin/youtube-stock?collection=added&message=" + encodeURIComponent(only.status === "exists" ? "このTikTok動画はすでにストックにあります" : `TikTok動画をストックに追加しました(${(only.title ?? "").slice(0, 40)})`));
-  }
-  // 結果は、件数と失敗の内訳を分けて渡し、画面側で見やすく出す(youtube-stock/page.tsx)。
-  const fails = failed.slice(0, 5).map((r) => ({ u: r.url.replace(/^https?:\/\//, "").slice(0, 60), r: r.reason ?? "" }));
-  const params = new URLSearchParams({
-    collection: "tiktok",
-    total: String(results.length),
-    added: String(added.length),
-    exists: String(exists.length),
-    failed: String(failed.length),
-    fails: JSON.stringify(fails),
-  });
-  redirect(`/admin/youtube-stock?${params.toString()}`);
+  return addUrlsInBatches("TikTok", String(formData.get("tiktok_url") ?? ""), Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID), addOneTikTok);
 }
 
 /**
