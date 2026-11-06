@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 
 const input = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900";
@@ -61,6 +61,24 @@ export function YoutubeStockCard({
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [thumbBusy, setThumbBusy] = useState(false);
   const [thumbError, setThumbError] = useState<string | null>(null);
+  // カードにマウスを乗せている間は、コピーした画像をそのまま貼り付け(Cmd/Ctrl+V)・ドロップでき、ページや画面を移動せずに切り取りへ進める。
+  const [hovered, setHovered] = useState(false);
+  const pickImage = (file: File | null | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return false;
+    setThumbError(null);
+    setCropFile(file);
+    return true;
+  };
+  useEffect(() => {
+    if (!hovered || cropFile) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.kind === "file" && i.type.startsWith("image/"));
+      if (pickImage(item?.getAsFile())) e.preventDefault();
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hovered, cropFile]);
   const saveThumbnail = async (blob: Blob) => {
     setCropFile(null);
     setThumbBusy(true);
@@ -89,7 +107,7 @@ export function YoutubeStockCard({
   const thumbnail = row.thumbnail_url ?? (row.youtube_id ? `https://i.ytimg.com/vi/${row.youtube_id}/hqdefault.jpg` : null);
 
   return (
-    <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
+    <article onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) e.preventDefault(); }} onDrop={(e) => { if (pickImage(e.dataTransfer.files[0])) e.preventDefault(); }} className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
       <button type="button" onClick={() => setPreview((value) => !value)} className="group relative block aspect-square w-full overflow-hidden bg-slate-900 text-left" aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
         {preview ? (
           <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
@@ -104,6 +122,7 @@ export function YoutubeStockCard({
         <div className="flex flex-wrap items-center gap-2">
           <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setThumbError(null); setCropFile(f); } }} />
           <button type="button" disabled={thumbBusy} onClick={() => fileInput.current?.click()} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60">{thumbBusy ? "サムネイルを保存中…" : thumbnail ? "サムネイルを差し替え(正方形に切り取り)" : "サムネイルを設定(正方形に切り取り)"}</button>
+          <span className="text-[11px] text-slate-500">コピーした画像は、カードにマウスを乗せて貼り付け(Cmd/Ctrl+V)、またはドロップでも設定できます</span>
           {thumbError && <span className="text-xs font-semibold text-red-600">{thumbError}</span>}
         </div>
         {cropFile && <AvatarCropModal file={cropFile} plain shape="square" title="サムネイルを切り取り" outputSize={720} applyLabel="この範囲で保存" onCancel={() => setCropFile(null)} onCropped={saveThumbnail} />}
