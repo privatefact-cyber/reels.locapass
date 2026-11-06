@@ -157,7 +157,7 @@ export function AvatarCropModal({
       onClick={onCancel}
     >
       <div
-        className={`w-full max-w-sm rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl ${plain ? "bg-white shadow-xl" : "bg-surface"}`}
+        className={`w-full max-w-sm rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl ${plain ? "bg-white" : "bg-surface"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className={`text-center text-sm font-semibold ${plain ? "text-slate-900" : "text-main"}`}>{title}</h2>
@@ -181,7 +181,7 @@ export function AvatarCropModal({
               style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)" }}
             />
           ) : (
-            <div aria-hidden className={`pointer-events-none absolute inset-0 rounded-lg border-2 ${plain ? "border-slate-400/70" : "border-main/90"}`} />
+            <div aria-hidden className={`pointer-events-none absolute inset-0 rounded-lg border-2 ${plain ? "border-slate-300" : "border-main/90"}`} />
           )}
         </div>
 
@@ -209,7 +209,7 @@ export function AvatarCropModal({
             type="button"
             onClick={handleApply}
             disabled={!ready}
-            className={`flex-1 rounded py-2 text-sm font-semibold disabled:opacity-50 ${plain ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-brand text-main hover:bg-brand-dark"}`}
+            className={`flex-1 rounded py-2 text-sm font-semibold disabled:opacity-50 ${plain ? "border border-slate-400 bg-white text-slate-900 hover:bg-slate-100" : "bg-brand text-main hover:bg-brand-dark"}`}
           >
             {applyLabel}
           </button>
