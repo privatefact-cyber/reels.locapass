@@ -191,9 +191,18 @@ export async function saveYoutubeCandidates(portalId: number, candidates: Youtub
     };
   });
   if (rows.length === 0) return 0;
+  const youtubeIds = rows.map((row) => row.youtube_id);
+  const { data: existing, error: existingError } = await (admin as any)
+    .from("locapass_youtube_ingestions")
+    .select("youtube_id")
+    .eq("portal_id", portalId)
+    .in("youtube_id", youtubeIds);
+  if (existingError) throw new Error(`既存候補の確認に失敗しました: ${existingError.message}`);
+  const existingIds = new Set((existing ?? []).map((row: { youtube_id: string }) => row.youtube_id));
+  const saved = rows.filter((row) => !existingIds.has(row.youtube_id)).length;
   const { error } = await (admin as any).from("locapass_youtube_ingestions").upsert(rows, { onConflict: "portal_id,youtube_id", ignoreDuplicates: true });
   if (error) throw new Error(`候補の保存に失敗しました: ${error.message}`);
-  return rows.length;
+  return saved;
 }
 
 /** 店名・住所が説明文から明確に取れ、既存店が一意に一致する候補だけを自動紐づけする。 */

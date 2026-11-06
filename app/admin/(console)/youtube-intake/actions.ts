@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { autoMatchYoutubeCandidates, collectYoutubeCandidates, extractShopHint, findExistingShop, geocodeShopIfMissing, identifyShopFromVideo, importOfficialProfileIfMissing, intakePortalForAddress, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { collectYoutubeCandidates, extractShopHint, findExistingShop, geocodeShopIfMissing, identifyShopFromVideo, importOfficialProfileIfMissing, intakePortalForAddress, publishYoutubeIngestion, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import crypto from "node:crypto";
@@ -20,18 +21,25 @@ function refresh() {
 }
 
 export async function collectShibuyaShorts(formData: FormData) {
-  const user = await requireRootAdmin();
+  await requireRootAdmin();
   const query = String(formData.get("query") ?? "渋谷 グルメ カフェ").trim().slice(0, 100);
   const limit = Math.min(Math.max(Number(formData.get("limit") ?? 50), 1), 50);
   const portalId = Number(formData.get("portal_id") ?? DEFAULT_INTAKE_PORTAL_ID);
   if (!query) throw new Error("検索キーワードを入力してください");
   const { data: portal } = await createAdminClient().from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
   if (!portal) throw new Error("有効なポータルを選択してください");
-  const candidates = await collectYoutubeCandidates(query, limit);
-  await saveYoutubeCandidates(portalId, candidates);
-  // 自動照合は1回の収集で最大5件に限定し、YouTube検索自体がタイムアウトしないようにする。
-  await autoMatchYoutubeCandidates(portalId, candidates.slice(0, 5), user.id);
+  let candidates;
+  let saved;
+  try {
+    candidates = await collectYoutubeCandidates(query, limit);
+    saved = await saveYoutubeCandidates(portalId, candidates);
+  } catch (error) {
+    const message = error instanceof Error ? error.message.slice(0, 180) : "YouTube収集に失敗しました";
+    redirect(`/admin/youtube-stock?collection=error&message=${encodeURIComponent(message)}`);
+  }
+  // 収集時は候補の保存だけを行う。店舗判定・公開は右側の「新しい保留を5件処理」で明示的に実行する。
   refresh();
+  redirect(`/admin/youtube-stock?collection=done&query=${encodeURIComponent(query)}&fetched=${candidates.length}&saved=${saved}`);
 }
 
 function extractYoutubeId(rawUrl: string) {
