@@ -210,11 +210,17 @@ export async function addTikTokUrl(formData: FormData) {
     if (only.status === "failed") return failToStock(only.reason ?? "TikTok動画の追加に失敗しました");
     redirect("/admin/youtube-stock?collection=added&message=" + encodeURIComponent(only.status === "exists" ? "このTikTok動画はすでにストックにあります" : `TikTok動画をストックに追加しました(${(only.title ?? "").slice(0, 40)})`));
   }
-  const summary = `TikTok ${results.length}本を処理: 追加${added.length}本・すでにあり${exists.length}本・失敗${failed.length}本`;
-  const detail = failed.slice(0, 2).map((r) => `${r.url.replace(/^https?:\/\//, "").slice(0, 40)} → ${r.reason}`).join(" / ");
-  const message = detail ? `${summary}(${detail}${failed.length > 2 ? " ほか" : ""})` : summary;
-  if (added.length === 0 && failed.length > 0) return failToStock(message);
-  redirect("/admin/youtube-stock?collection=added&message=" + encodeURIComponent(message.slice(0, 300)));
+  // 結果は、件数と失敗の内訳を分けて渡し、画面側で見やすく出す(youtube-stock/page.tsx)。
+  const fails = failed.slice(0, 5).map((r) => ({ u: r.url.replace(/^https?:\/\//, "").slice(0, 60), r: r.reason ?? "" }));
+  const params = new URLSearchParams({
+    collection: "tiktok",
+    total: String(results.length),
+    added: String(added.length),
+    exists: String(exists.length),
+    failed: String(failed.length),
+    fails: JSON.stringify(fails),
+  });
+  redirect(`/admin/youtube-stock?${params.toString()}`);
 }
 
 /**
