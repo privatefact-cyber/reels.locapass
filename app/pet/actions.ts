@@ -70,8 +70,6 @@ export async function requestPetUpload(kind: UploadKind, targetId: string): Prom
     return guestUpload(kind, targetId);
   }
   if (kind !== "found" && !UUID.test(targetId)) return { ok: false, error: "対象が見つかりません" };
-  // 書類(保険証・狂犬病・鑑札など)と通院明細の画像は、個人情報保護のためサーバーに保存しない(端末内のみ)
-  if (kind === "document" || kind === "medical") return { ok: false, error: "書類・明細の画像は端末内にだけ保存します" };
 
   let path: string;
   if (kind === "found") {
@@ -280,7 +278,8 @@ export async function savePetDocument(input: PetDocumentInput): Promise<Result<{
     vaccine_name: text(input.vaccineName, 60),
     registration_no: text(input.registrationNo, 40),
     note: text(input.note, 500),
-    image_path: localRef(input.imagePath), // 端末内の画像の参照だけ(画像はサーバーに来ない)
+    // 非公開の置き場の自分の画像(または以前の端末内保存の参照)
+    image_path: input.imagePath ? (ownPath(viewer.userId, input.imagePath) ?? localRef(input.imagePath)) : null,
     ...(input.aiResult !== undefined && !input.id ? { ai_result: input.aiResult } : {}),
   };
   const query = input.id
@@ -348,7 +347,7 @@ export async function savePetMedical(input: PetMedicalInput): Promise<Result> {
     medicines: text(input.medicines, 300),
     cost: num(input.cost, 0, 10_000_000),
     note: text(input.note, 1000),
-    image_paths: localRefs(input.imagePaths), // 端末内の画像の参照だけ(画像はサーバーに来ない)
+    image_paths: [...ownPaths(viewer.userId, input.imagePaths), ...localRefs(input.imagePaths)].slice(0, 6),
   };
   const { data } = input.id
     ? await viewer.supabase.from("locapass_pet_medical_records").update(row).eq("id", input.id).select("id")
@@ -999,4 +998,46 @@ export async function revealFoundContact(id: string): Promise<Result<{ contact: 
     .maybeSingle();
   if (!data || data.status !== "open" || data.hidden_at) return { ok: false, error: "この通報は終了しています" };
   return { ok: true, contact: { phone: null, line: null, note: data.contact_note, features: data.features, handedTo: data.handed_to } };
+}
+
+/**
+ * 以前「端末内だけ」に保存した書類・明細の画像を、非公開の置き場へ移したあとで、記録の参照を差し替える。
+ * (2026-11-07 方針変更: 機種変更・別端末でも見られるよう、非公開の置き場に保存する)
+ */
+export async function migrateLocalImageRef(input: { kind: "document" | "medical"; recordId: string; oldRef: string; newPath: string }): Promise<Result> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  const oldRef = localRef(input.oldRef);
+  const newPath = ownPath(viewer.userId, input.newPath);
+  if (!oldRef || !newPath || !UUID.test(input.recordId)) return { ok: false, error: "対象が正しくありません" };
+  if (input.kind === "document") {
+    const { data } = await viewer.supabase.from("locapass_pet_documents").update({ image_path: newPath }).eq("id", input.recordId).eq("image_path", oldRef).select("id");
+    if (!data?.length) return { ok: false, error: "更新できませんでした" };
+  } else {
+    const { data: row } = await viewer.supabase.from("locapass_pet_medical_records").select("image_paths").eq("id", input.recordId).maybeSingle();
+    const paths = ((row?.image_paths as string[] | undefined) ?? []).map((p) => (p === oldRef ? newPath : p));
+    const { data } = await viewer.supabase.from("locapass_pet_medical_records").update({ image_paths: paths }).eq("id", input.recordId).select("id");
+    if (!data?.length) return { ok: false, error: "更新できませんでした" };
+  }
+  refresh();
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// ログイン・登録画面: このメールアドレスがLOCAPASSに登録済みかの確認(ワンコ手帳はLOCAPASSと同じアカウント)
+// ---------------------------------------------------------------------------
+const EMAIL_CHECKS_PER_HOUR = 10;
+
+export async function checkEmailRegistered(email: string): Promise<Result<{ registered: boolean }>> {
+  const e = typeof email === "string" ? email.trim().toLowerCase() : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || e.length > 200) return { ok: false, error: "メールアドレスを正しく入れてください" };
+  const admin = petAdmin();
+  // 他人のメールアドレスを総当たりで調べられないよう、送信元ごとに1時間の上限をかける
+  const ip = await guestIpHash();
+  const since = new Date(Date.now() - 3600_000).toISOString();
+  const { count } = await admin.from("locapass_pet_email_checks").select("id", { count: "exact", head: true }).eq("ip_hash", ip).gte("created_at", since);
+  if ((count ?? 0) >= EMAIL_CHECKS_PER_HOUR) return { ok: false, error: "しばらく時間をおいてからお試しください" };
+  await admin.from("locapass_pet_email_checks").insert({ ip_hash: ip });
+  const { data: userId } = await admin.rpc("locapass_get_user_id_by_email", { p_email: e });
+  return { ok: true, registered: Boolean(userId) };
 }

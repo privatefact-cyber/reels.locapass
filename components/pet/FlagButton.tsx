@@ -20,7 +20,7 @@ export function FlagButton({ targetType, targetId, loggedIn }: { targetType: "lo
       {!open ? (
         <button
           type="button"
-          onClick={() => (loggedIn ? setOpen(true) : (location.href = `/mypage/login?redirect=${encodeURIComponent(location.pathname + location.search)}`))}
+          onClick={() => (loggedIn ? setOpen(true) : (location.href = `/pet/login?redirect=${encodeURIComponent(location.pathname + location.search)}`))}
           className="inline-flex items-center gap-1 text-xs font-bold text-[#C9B3A3]"
         >
           <Flag size={12} />

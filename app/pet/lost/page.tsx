@@ -157,7 +157,7 @@ export default async function PetLostMapPage({ searchParams }: { searchParams: P
         <PetSectionTitle emoji="🐶">うちの子が迷子になったら</PetSectionTitle>
         {!viewer ? (
           <PetCard className="text-center text-sm">
-            <Link href={`/mypage/login?redirect=${encodeURIComponent("/pet/lost#mine")}`} className="font-extrabold text-[#EE6A36] underline">
+            <Link href={`/pet/login?redirect=${encodeURIComponent("/pet/lost#mine")}`} className="font-extrabold text-[#EE6A36] underline">
               ログイン
             </Link>
             して、うちの子を登録すると、迷子のお知らせを出せます。

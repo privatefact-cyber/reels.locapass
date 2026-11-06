@@ -7,8 +7,7 @@ import { savePetDocument } from "@/app/pet/actions";
 import { expiryFor } from "@/lib/pet/calc";
 import type { PetScanResult } from "@/lib/pet/scan";
 import { DOC_TYPE_EMOJI, DOC_TYPE_LABEL, type PetDocType } from "@/lib/pet/types";
-import { downscaleImage, imageToBase64 } from "./petUpload";
-import { saveLocalImage } from "./localImages";
+import { imageToBase64, uploadPetImage } from "./petUpload";
 import { LocalImageNotice } from "./LocalImage";
 import { PetCard, PetField, petButton, petInput } from "./ui";
 
@@ -93,8 +92,8 @@ export function DocumentScanner({ petId }: { petId: string }) {
     setPhase("saving");
     setError(null);
     try {
-      // 画像はサーバーに送らず、この端末(IndexedDB)にだけ保存する。サーバーには参照("local:…")と読み取った文字だけを送る
-      const imagePath = file ? await saveLocalImage(await downscaleImage(file, 2000, 0.88), { petId, kind: "document" }) : null;
+      // 非公開の置き場に保存(本人だけが、10分で切れるリンクで見られる)。保存前に縮小し直すので、写真の位置情報などは消える
+      const imagePath = file ? await uploadPetImage("document", petId, file) : null;
       const res = await savePetDocument({ petId, ...draft, imagePath, aiResult: scan ?? undefined });
       if (!res.ok) throw new Error(res.error);
       reset();

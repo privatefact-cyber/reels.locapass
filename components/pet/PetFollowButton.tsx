@@ -58,7 +58,7 @@ export function PetFollowButton({ petId, petName, initial, loggedIn, back }: { p
               <br />
               登録すると、あなたの子の手帳や迷子タグも使えます。
             </p>
-            <Link href={`/mypage/login?redirect=${encodeURIComponent(back)}`} className={`${petButton.primary} mt-4 w-full`}>
+            <Link href={`/pet/login?redirect=${encodeURIComponent(back)}`} className={`${petButton.primary} mt-4 w-full`}>
               無料で会員登録 / ログイン
             </Link>
             <p className="mt-3 text-xs text-[#B39C8C]">スマホアプリ版も準備中です</p>

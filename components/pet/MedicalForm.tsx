@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Camera, Loader2, Plus, X } from "lucide-react";
 import { savePetMedical } from "@/app/pet/actions";
 import { todayJst } from "@/lib/pet/calc";
-import { downscaleImage } from "./petUpload";
-import { saveLocalImage } from "./localImages";
+import { uploadPetImage } from "./petUpload";
 import { LocalImageNotice } from "./LocalImage";
 import { PetCard, PetField, petButton, petInput } from "./ui";
 
@@ -26,8 +25,8 @@ export function MedicalForm({ petId, defaultHospital }: { petId: string; default
     setError(null);
     try {
       const imagePaths: string[] = [];
-      // 明細・お薬の写真はサーバーに送らず、この端末(IndexedDB)にだけ保存する
-      for (const file of files) imagePaths.push(await saveLocalImage(await downscaleImage(file, 2000, 0.88), { petId, kind: "medical" }));
+      // 非公開の置き場に保存(本人だけが、10分で切れるリンクで見られる)
+      for (const file of files) imagePaths.push(await uploadPetImage("medical", petId, file));
       const res = await savePetMedical({ petId, ...f, imagePaths });
       if (!res.ok) throw new Error(res.error);
       setOpen(false);

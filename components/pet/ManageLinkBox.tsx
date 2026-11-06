@@ -26,7 +26,7 @@ export function ManageLinkBox({ url }: { url: string }) {
         {copied ? "コピーしました" : "管理用URLをコピー"}
       </button>
       <p className="text-xs">
-        <Link href={`/mypage/login?redirect=${encodeURIComponent("/pet")}`} className="font-extrabold underline">
+        <Link href={`/pet/login?redirect=${encodeURIComponent("/pet")}`} className="font-extrabold underline">
           LINEなどで無料登録
         </Link>
         すると、次からは飼い主さんからの「うちの子かも!」が通知で届きます。

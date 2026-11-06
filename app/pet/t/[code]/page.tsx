@@ -149,7 +149,7 @@ export default async function PetCardPage({ params }: { params: Promise<{ code: 
           </p>
           <p className="mt-1 font-extrabold">あなたのワンコも登録しませんか?</p>
           <p className="mt-1 text-xs text-[#9C8273]">ワクチン手帳・成長日誌・迷子タグが無料で使えます</p>
-          <Link href={`/mypage/login?redirect=${encodeURIComponent("/pet")}`} className={`${petButton.primary} mt-3 w-full`}>
+          <Link href={`/pet/login?redirect=${encodeURIComponent("/pet")}`} className={`${petButton.primary} mt-3 w-full`}>
             無料で会員登録 / ログイン
           </Link>
         </PetCard>

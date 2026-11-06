@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.redirect(new URL(`/mypage/login?redirect=${encodeURIComponent("/pet/settings")}`, origin));
+  if (!user) return NextResponse.redirect(new URL(`/pet/login?redirect=${encodeURIComponent("/pet/settings")}`, origin));
 
   const channelId = process.env.LINE_LOGIN_CHANNEL_ID;
   if (!channelId) return NextResponse.redirect(new URL("/pet/settings?line=error", origin));

@@ -85,7 +85,7 @@ export function FoundActions({
   if (!loggedIn)
     return (
       <Link
-        href={`/mypage/login?redirect=${encodeURIComponent(`/pet/found/${id}`)}`}
+        href={`/pet/login?redirect=${encodeURIComponent(`/pet/found/${id}`)}`}
         className={`${petButton.primary} w-full`}
       >
         うちの子かも!(ログインして知らせる)

@@ -235,7 +235,7 @@ function Welcome() {
           </PetCard>
         ))}
       </div>
-      <Link href={`/mypage/login?redirect=${encodeURIComponent("/pet")}`} className={`${petButton.primary} mt-6 w-full`}>
+      <Link href={`/pet/login?redirect=${encodeURIComponent("/pet")}`} className={`${petButton.primary} mt-6 w-full`}>
         ログイン / 無料で会員登録
       </Link>
       <p className="mt-3 text-xs text-[#B39C8C]">LOCAPASSのアカウントでそのまま使えます</p>

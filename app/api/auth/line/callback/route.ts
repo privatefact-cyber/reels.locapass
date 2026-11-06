@@ -19,7 +19,8 @@ type LineVerifyResponse = {
 
 function loginErrorRedirect(origin: string, redirect: string, reason: string, detail?: unknown) {
   console.error(`[line-login] ${reason}`, detail ?? "");
-  const url = new URL("/mypage/login", origin);
+  // ワンコ手帳から来た人は、ワンコ手帳のログイン画面へ戻す
+  const url = new URL(redirect.startsWith("/pet") ? "/pet/login" : "/mypage/login", origin);
   url.searchParams.set("redirect", redirect);
   url.searchParams.set("line_error", "1");
   const res = NextResponse.redirect(url);

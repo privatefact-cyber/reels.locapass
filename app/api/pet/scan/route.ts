@@ -8,7 +8,7 @@ import { expiryFor } from "@/lib/pet/calc";
  * ワクチン・狂犬病・鑑札の書類写真をAIで読み、種類・日付・病院名などを返す(保存はしない。保存は確認後に別で行う)。
  * ログイン必須。1人1日30回まで(費用の暴走防止)。車検証の読取(app/api/vehicle-cert/scan)と同じ作り。
  * 画像はAIに渡すだけで、サーバーのストレージ・DB・ログには一切保存しない(このリクエストの処理が終われば破棄される)。
- * 書類の画像そのものは利用者の端末内(IndexedDB)にだけ保存される(components/pet/localImages.ts)。
+ * 書類の画像は、本人が保存したときだけ非公開の置き場(pet-private)に入り、10分で切れるリンクでだけ見られる。
  */
 export const runtime = "nodejs";
 export const maxDuration = 60;

@@ -47,7 +47,7 @@ export async function getPetViewer(): Promise<{ userId: string; supabase: Supaba
 /** ログイン必須のページ用。未ログインならログイン画面へ(戻り先つき)。 */
 export async function requirePetViewer(back = "/pet"): Promise<{ userId: string; supabase: SupabaseClient }> {
   const viewer = await getPetViewer();
-  if (!viewer) redirect(`/mypage/login?redirect=${encodeURIComponent(back)}`);
+  if (!viewer) redirect(`/pet/login?redirect=${encodeURIComponent(back)}`);
   // 初回ログインの人は会員行を作る(マイページと同じ)
   const { data: member } = await viewer.supabase.from("locapass_members").select("id").eq("id", viewer.userId).maybeSingle();
   if (!member) await viewer.supabase.from("locapass_members").insert({ id: viewer.userId, nickname: "ゲスト" });

@@ -1,14 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Smartphone } from "lucide-react";
-import { getLocalImage, isLocalRef } from "./localImages";
+import { useRouter } from "next/navigation";
+import { Download, Lock, Smartphone } from "lucide-react";
+import { migrateLocalImageRef } from "@/app/pet/actions";
+import { deleteLocalImages, getLocalImage, isLocalRef } from "./localImages";
+import { uploadPetImage } from "./petUpload";
 
 /**
- * 端末内(IndexedDB)に保存した画像を表示する。この端末に無い(別の端末で撮った・データが消えた)ときは、その旨を出す。
- * タップで大きく開き、「端末に保存」で写真アプリやファイルに書き出せる(自分でバックアップできるように)。
+ * 以前「端末内だけ」(IndexedDB)に保存した画像を表示する。
+ * 2026-11-07に「非公開の置き場に保存」へ方針を戻したので、この端末に画像があれば自動で置き場へ移し、記録を差し替えて端末から消す
+ * (migrate を渡したとき)。この端末に無い(別の端末で撮った・データが消えた)ときは、その旨を出す。
  */
-export function LocalImage({ refId, className = "", fileName = "pet-document.jpg", size = "thumb" }: { refId: string; className?: string; fileName?: string; size?: "thumb" | "small" }) {
+export function LocalImage({
+  refId,
+  className = "",
+  fileName = "pet-document.jpg",
+  size = "thumb",
+  migrate,
+}: {
+  refId: string;
+  className?: string;
+  fileName?: string;
+  size?: "thumb" | "small";
+  migrate?: { kind: "document" | "medical"; petId: string; recordId: string };
+}) {
+  const router = useRouter();
   const [url, setUrl] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const [open, setOpen] = useState(false);
@@ -16,14 +33,26 @@ export function LocalImage({ refId, className = "", fileName = "pet-document.jpg
   useEffect(() => {
     if (!isLocalRef(refId)) return setMissing(true);
     let created: string | null = null;
-    getLocalImage(refId).then((blob) => {
+    getLocalImage(refId).then(async (blob) => {
       if (!blob) return setMissing(true);
       created = URL.createObjectURL(blob);
       setUrl(created);
+      if (!migrate) return;
+      try {
+        const newPath = await uploadPetImage(migrate.kind, migrate.petId, new File([blob], "image.jpg", { type: blob.type || "image/jpeg" }));
+        const res = await migrateLocalImageRef({ kind: migrate.kind, recordId: migrate.recordId, oldRef: refId, newPath });
+        if (res.ok) {
+          await deleteLocalImages([refId]);
+          router.refresh();
+        }
+      } catch {
+        // 移せなかったら、次に開いたときにまた試す
+      }
     });
     return () => {
       if (created) URL.revokeObjectURL(created);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refId]);
 
   if (missing) {
@@ -66,8 +95,8 @@ export function LocalImage({ refId, className = "", fileName = "pet-document.jpg
 export function LocalImageNotice() {
   return (
     <p className="flex items-start gap-1 px-1 text-[11px] leading-relaxed text-[#B39C8C]">
-      <Smartphone size={12} className="mt-0.5 shrink-0" />
-      画像はお使いの端末の中だけに保存され、サーバーには送りません(ブラウザのデータ消去や機種変更で消える場合があります)。読み取った日付などの文字だけを保存します。
+      <Lock size={12} className="mt-0.5 shrink-0" />
+      画像は非公開の場所に保存され、あなただけが見られます(表示用のリンクは10分で無効になります)。機種変更しても、同じアカウントでログインすれば見られます。
     </p>
   );
 }

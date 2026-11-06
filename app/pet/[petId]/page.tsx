@@ -128,7 +128,8 @@ async function NotebookTab({ petId, petName, supabase }: { petId: string; petNam
     .order("created_at", { ascending: false });
   const docs = (data ?? []) as PetDocumentRow[];
   const latest = latestByType(docs);
-  const signed = await signPetImages(docs.map((d) => d.image_path));
+  // 書類の画像は、10分で切れるリンクでだけ見せる
+  const signed = await signPetImages(docs.map((d) => d.image_path), 600);
   const today = todayJst();
   const summary: PetDocType[] = ["rabies", "mixed_vaccine", "license", "insurance"];
 
@@ -182,11 +183,11 @@ async function NotebookTab({ petId, petName, supabase }: { petId: string; petNam
             return (
               <PetCard key={d.id} className={`flex gap-3 ${isLatest ? "" : "opacity-70"}`}>
                 {d.image_path?.startsWith("local:") ? (
-                  <LocalImage refId={d.image_path} className="h-16 w-16 rounded-2xl" fileName={`${DOC_TYPE_SHORT[d.doc_type]}.jpg`} />
+                  <LocalImage refId={d.image_path} className="h-16 w-16 rounded-2xl" fileName={`${DOC_TYPE_SHORT[d.doc_type]}.jpg`} migrate={{ kind: "document", petId, recordId: d.id }} />
                 ) : img ? (
                   <a href={img} target="_blank" rel="noreferrer" className="shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt={DOC_TYPE_LABEL[d.doc_type]} className="h-16 w-16 rounded-2xl object-cover" />
+                    <img src={img} alt={DOC_TYPE_LABEL[d.doc_type]} referrerPolicy="no-referrer" className="h-16 w-16 rounded-2xl object-cover" />
                   </a>
                 ) : (
                   <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#FFF3E6] text-2xl" aria-hidden>
@@ -234,7 +235,7 @@ async function MedicalTab({ petId, vetName, supabase }: { petId: string; vetName
     .order("visited_on", { ascending: false })
     .order("created_at", { ascending: false });
   const rows = (data ?? []) as PetMedicalRow[];
-  const signed = await signPetImages(rows.flatMap((r) => r.image_paths));
+  const signed = await signPetImages(rows.flatMap((r) => r.image_paths), 600);
   const yearTotal = rows.filter((r) => r.visited_on.startsWith(todayJst().slice(0, 4))).reduce((s, r) => s + (r.cost ?? 0), 0);
 
   return (
@@ -272,7 +273,7 @@ async function MedicalTab({ petId, vetName, supabase }: { petId: string; vetName
                   <div className="mt-2 flex gap-2 overflow-x-auto">
                     {r.image_paths.map((p) =>
                       p.startsWith("local:") ? (
-                        <LocalImage key={p} refId={p} className="h-16 w-16 rounded-xl" fileName="通院明細.jpg" size="small" />
+                        <LocalImage key={p} refId={p} className="h-16 w-16 rounded-xl" fileName="通院明細.jpg" size="small" migrate={{ kind: "medical", petId, recordId: r.id }} />
                       ) : signed.get(p) ? (
                         <a key={p} href={signed.get(p)} target="_blank" rel="noreferrer">
                           {/* eslint-disable-next-line @next/next/no-img-element */}

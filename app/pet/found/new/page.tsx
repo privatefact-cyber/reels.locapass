@@ -17,7 +17,7 @@ export default async function FoundNewPage() {
       {!viewer && (
         <p className="mb-3 px-1 text-xs text-[#9C8273]">
           LOCAPASSの会員の方は
-          <Link href={`/mypage/login?redirect=${encodeURIComponent("/pet/found/new")}`} className="mx-1 font-bold text-[#EE6A36] underline">
+          <Link href={`/pet/login?redirect=${encodeURIComponent("/pet/found/new")}`} className="mx-1 font-bold text-[#EE6A36] underline">
             ログイン
           </Link>
           してから送ると、返事が通知で届きます。
