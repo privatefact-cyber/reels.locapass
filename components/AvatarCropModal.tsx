@@ -15,10 +15,20 @@ export function AvatarCropModal({
   file,
   onCancel,
   onCropped,
+  shape = "circle",
+  title = "アイコン画像を調整",
+  outputSize = CANVAS_SIZE,
+  applyLabel = "この画像で保存",
 }: {
   file: File;
   onCancel: () => void;
   onCropped: (blob: Blob) => void;
+  /** 切り取りの枠。"square" は正方形のサムネイル用(円形の暗幕を出さず、枠全体が使われる)。 */
+  shape?: "circle" | "square";
+  title?: string;
+  /** 書き出す画像の一辺(px)。画面上の枠は固定で、元画像から改めて描き直すので、大きくしても荒くならない。 */
+  outputSize?: number;
+  applyLabel?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -114,7 +124,22 @@ export function AvatarCropModal({
   }
 
   function handleApply() {
-    canvasRef.current?.toBlob(
+    const img = imageRef.current;
+    if (!img) return;
+    clampOffset();
+    // 画面の枠(CANVAS_SIZE)と同じ範囲を、元画像から outputSize で描き直して書き出す。
+    const k = outputSize / CANVAS_SIZE;
+    const out = document.createElement("canvas");
+    out.width = outputSize;
+    out.height = outputSize;
+    const ctx = out.getContext("2d");
+    if (!ctx) return;
+    const w = img.naturalWidth * baseScaleRef.current * zoomRef.current * k;
+    const h = img.naturalHeight * baseScaleRef.current * zoomRef.current * k;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, outputSize, outputSize);
+    ctx.drawImage(img, offsetRef.current.x * k, offsetRef.current.y * k, w, h);
+    out.toBlob(
       (blob) => {
         if (blob) onCropped(blob);
       },
@@ -132,7 +157,7 @@ export function AvatarCropModal({
         className="w-full max-w-sm rounded-t-2xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-center text-sm font-semibold text-main">アイコン画像を調整</h2>
+        <h2 className="text-center text-sm font-semibold text-main">{title}</h2>
 
         <div className="relative mx-auto mt-4 h-[320px] w-[320px]">
           <canvas
@@ -145,12 +170,16 @@ export function AvatarCropModal({
             onPointerUp={endDrag}
             onPointerCancel={endDrag}
           />
-          {/* 円形ガイド: 外側を暗くして「ここが実際に使われる範囲」を示す */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-full border-2 border-main/90"
-            style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)" }}
-          />
+          {/* 円形ガイド: 外側を暗くして「ここが実際に使われる範囲」を示す(正方形のときは枠全体が使われる範囲) */}
+          {shape === "circle" ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-full border-2 border-main/90"
+              style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)" }}
+            />
+          ) : (
+            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-lg border-2 border-main/90" />
+          )}
         </div>
 
         <input
@@ -179,7 +208,7 @@ export function AvatarCropModal({
             disabled={!ready}
             className="flex-1 rounded bg-brand py-2 text-sm font-semibold text-main hover:bg-brand-dark disabled:opacity-50"
           >
-            この画像で保存
+            {applyLabel}
           </button>
         </div>
       </div>

@@ -36,6 +36,7 @@ type IngestionRow = {
   youtube_id: string | null;
   source_provider: string;
   source_id: string | null;
+  thumbnail_url: string | null;
   video_url: string;
   title: string;
   description: string | null;
@@ -632,6 +633,11 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   await createEmbedPostForShop(admin as any, row.matched_shop_id, form);
   const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", row.portal_id).eq("embed_provider", provider).eq("embed_ref", ref).order("published_at", { ascending: false }).limit(1).maybeSingle();
   if (reelError || !reel?.id) throw new Error(reelError?.message ?? "リールIDを取得できませんでした");
+  // 管理者が切り取って設定したサムネイル(自前のストレージ)があれば、リールのサムネイルにする。
+  // TikTokの旧oEmbedの画像URLは期限切れになるため、自前のストレージのものだけを使う。
+  if (row.thumbnail_url?.includes("/embed-thumbs/")) {
+    await (admin as any).from("locapass_reels").update({ poster_url: row.thumbnail_url }).eq("id", reel.id);
+  }
   const { error: updateError } = await (admin as any).from("locapass_youtube_ingestions").update({ reel_id: reel.id, match_status: "matched_existing", reviewed_at: new Date().toISOString(), reviewed_by: userId, error_message: null }).eq("id", row.id);
   if (updateError) throw new Error(`投稿結果の保存に失敗しました: ${updateError.message}`);
   return reel.id as string;

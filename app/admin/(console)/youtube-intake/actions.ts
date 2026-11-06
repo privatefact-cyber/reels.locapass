@@ -10,6 +10,7 @@ import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import { parseVideoUrl } from "@/lib/video";
 import { expandShortVideoUrl } from "@/lib/video-resolve";
+import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 
 const DEFAULT_INTAKE_PORTAL_ID = 55;
 
@@ -184,6 +185,33 @@ export async function addTikTokUrl(formData: FormData) {
   if (error && error.code !== "23505") return failToStock(`TikTok動画の保存に失敗しました: ${error.message}`);
   refresh();
   redirect("/admin/youtube-stock?collection=added&message=" + encodeURIComponent(`TikTok動画をストックに追加しました(${title.slice(0, 40)})`));
+}
+
+/**
+ * 動画ストックのカードに、管理者が切り取った正方形のサムネイルを設定する。
+ * TikTokは公式にサムネイルを取れない(oEmbedが画像を返さない)ので、ここで画像を入れる。
+ * すでにリールとして公開済みなら、そのリールのサムネイルも同じ画像にする。
+ */
+export async function setYoutubeStockThumbnail(ingestionId: string, formData: FormData) {
+  await requireRootAdmin();
+  const file = formData.get("thumb");
+  if (!(file instanceof File) || file.size === 0) throw new Error("画像を選んでください");
+  if (!file.type.startsWith("image/")) throw new Error("サムネイルは画像ファイルを選んでください");
+  if (file.size > MAX_THUMB_BYTES) throw new Error("サムネイル画像が大きすぎます(上限3MB)");
+  const admin = createAdminClient();
+  const { data: row, error: readError } = await (admin as any).from("locapass_youtube_ingestions").select("id, reel_id").eq("id", ingestionId).maybeSingle();
+  if (readError || !row) throw new Error(readError?.message ?? "候補が見つかりません");
+  const url = await uploadThumb(admin, await file.arrayBuffer(), file.type);
+  if (!url) throw new Error("サムネイルのアップロードに失敗しました");
+  // 0件でもエラーにならないので.select()で確認する。
+  const { data: updated, error } = await (admin as any).from("locapass_youtube_ingestions").update({ thumbnail_url: url }).eq("id", ingestionId).select("id");
+  if (error) throw new Error(`保存に失敗しました: ${error.message}`);
+  if (!updated?.length) throw new Error("保存できませんでした(対象が見つかりません)");
+  if (row.reel_id) {
+    const { error: reelError } = await (admin as any).from("locapass_reels").update({ poster_url: url }).eq("id", row.reel_id).not("embed_provider", "is", null);
+    if (reelError) throw new Error(`リールのサムネイル更新に失敗しました: ${reelError.message}`);
+  }
+  refresh();
 }
 
 export async function searchExistingShibuyaShop(name: string, address?: string) {
