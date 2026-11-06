@@ -9,7 +9,16 @@
   "theme_color": "#FF8E5E",
   "lang": "ja",
   "icons": [
-    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/apple-icon.png", "sizes": "180x180", "type": "image/png" }
+    {
+      "src": "/pet/icon",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pet/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
   ]
 }
