@@ -12,6 +12,7 @@ type RowActions = {
   review: Action;
   createDraft: Action;
   publish: Action;
+  setThumbnail: Action;
 };
 
 export function YoutubeStockGrid({ rows, shopName, portalOptions, actions }: {

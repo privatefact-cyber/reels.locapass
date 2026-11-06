@@ -1,6 +1,6 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addTikTokUrl, addYoutubeUrl, autoProcessPendingYoutube, collectShibuyaShorts, createDraftShopFromIngestion, enrichIntakeShops, findOfficialSiteForIngestion, publishReviewedYoutubeIngestion, reviewYoutubeIngestion } from "../youtube-intake/actions";
+import { addTikTokUrl, addYoutubeUrl, autoProcessPendingYoutube, collectShibuyaShorts, createDraftShopFromIngestion, enrichIntakeShops, findOfficialSiteForIngestion, publishReviewedYoutubeIngestion, reviewYoutubeIngestion, setYoutubeStockThumbnail } from "../youtube-intake/actions";
 import { YoutubeStockGrid } from "./YoutubeStockGrid";
 
 type Row = {
@@ -32,6 +32,7 @@ export default async function YoutubeStockPage({ searchParams }: { searchParams:
     review: reviewYoutubeIngestion.bind(null, row.id),
     createDraft: createDraftShopFromIngestion.bind(null, row.id),
     publish: publishReviewedYoutubeIngestion.bind(null, row.id),
+    setThumbnail: setYoutubeStockThumbnail.bind(null, row.id),
   }]));
 
   const fetchedCount = Math.max(0, Number(collectionResult.fetched) || 0);

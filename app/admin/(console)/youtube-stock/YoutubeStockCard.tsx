@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AvatarCropModal } from "@/components/AvatarCropModal";
 
 const input = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900";
 
@@ -43,6 +44,7 @@ export function YoutubeStockCard({
   review,
   createDraft,
   publish,
+  setThumbnail,
 }: {
   row: Row;
   shopLabel?: string;
@@ -51,8 +53,46 @@ export function YoutubeStockCard({
   review: Action;
   createDraft: Action;
   publish: Action;
+  setThumbnail: Action;
 }) {
   const [preview, setPreview] = useState(false);
+  // サムネイルの設定: 画像を選ぶ → 正方形に切り取る → そのまま保存。
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [thumbBusy, setThumbBusy] = useState(false);
+  const [thumbError, setThumbError] = useState<string | null>(null);
+  // カードにマウスを乗せている間は、コピーした画像をそのまま貼り付け(Cmd/Ctrl+V)・ドロップでき、ページや画面を移動せずに切り取りへ進める。
+  const [hovered, setHovered] = useState(false);
+  const pickImage = (file: File | null | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return false;
+    setThumbError(null);
+    setCropFile(file);
+    return true;
+  };
+  useEffect(() => {
+    if (!hovered || cropFile) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.kind === "file" && i.type.startsWith("image/"));
+      if (pickImage(item?.getAsFile())) e.preventDefault();
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hovered, cropFile]);
+  const saveThumbnail = async (blob: Blob) => {
+    setCropFile(null);
+    setThumbBusy(true);
+    setThumbError(null);
+    try {
+      const formData = new FormData();
+      formData.set("thumb", new File([blob], "thumbnail.jpg", { type: "image/jpeg" }));
+      await setThumbnail(formData);
+    } catch (e) {
+      setThumbError(e instanceof Error ? e.message : "サムネイルの保存に失敗しました");
+    } finally {
+      setThumbBusy(false);
+    }
+  };
   // 公式サイトの読み取り・店舗登録は数十秒かかるので、保存中だと分かるようにする。
   const [saving, setSaving] = useState(false);
   const saveReview = async (formData: FormData) => {
@@ -62,21 +102,30 @@ export function YoutubeStockCard({
   const status = labels[row.match_status] ?? row.match_status;
   const isTikTok = row.source_provider === "tiktok";
   const portalLabel = portalOptions.find((portal) => portal.id === row.portal_id)?.label ?? ("ポータルID " + row.portal_id);
+  // 管理者が切り取って設定した正方形の画像は、そのまま(拡大せず)出す。YouTube公式の画像は、上下の黒帯を隠すために拡大する。
+  const customThumb = Boolean(row.thumbnail_url?.includes("/embed-thumbs/")) || isTikTok;
   const thumbnail = row.thumbnail_url ?? (row.youtube_id ? `https://i.ytimg.com/vi/${row.youtube_id}/hqdefault.jpg` : null);
 
   return (
-    <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
+    <article onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) e.preventDefault(); }} onDrop={(e) => { if (pickImage(e.dataTransfer.files[0])) e.preventDefault(); }} className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
       <button type="button" onClick={() => setPreview((value) => !value)} className="group relative block aspect-square w-full overflow-hidden bg-slate-900 text-left" aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
         {preview ? (
           <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
         ) : (
           <>
-            {thumbnail ? <img src={thumbnail} alt="" className="h-full w-full scale-[1.35] object-cover transition group-hover:scale-[1.42]" /> : <div className="flex h-full items-center justify-center text-sm text-white">サムネイル未取得</div>}
+            {thumbnail ? <img src={thumbnail} alt="" className={`h-full w-full object-cover transition ${customThumb ? "" : "scale-[1.35] group-hover:scale-[1.42]"}`} /> : <div className="flex h-full items-center justify-center text-sm text-white">サムネイル未取得</div>}
             <span className="absolute inset-0 flex items-center justify-center bg-black/20"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-xl text-slate-900 shadow">▶</span></span>
           </>
         )}
       </button>
       <div className="space-y-4 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setThumbError(null); setCropFile(f); } }} />
+          <button type="button" disabled={thumbBusy} onClick={() => fileInput.current?.click()} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60">{thumbBusy ? "サムネイルを保存中…" : thumbnail ? "サムネイルを差し替え(正方形に切り取り)" : "サムネイルを設定(正方形に切り取り)"}</button>
+          <span className="text-[11px] text-slate-500">コピーした画像は、カードにマウスを乗せて貼り付け(Cmd/Ctrl+V)、またはドロップでも設定できます</span>
+          {thumbError && <span className="text-xs font-semibold text-red-600">{thumbError}</span>}
+        </div>
+        {cropFile && <AvatarCropModal file={cropFile} plain shape="square" title="サムネイルを切り取り" outputSize={720} applyLabel="この範囲で保存" onCancel={() => setCropFile(null)} onCropped={saveThumbnail} />}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <a href={row.video_url} target="_blank" rel="noreferrer" className="line-clamp-2 font-semibold text-slate-900 hover:text-blue-700 hover:underline">{row.title}</a>
