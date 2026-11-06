@@ -33,7 +33,9 @@ type YoutubeVideoResponse = {
 type IngestionRow = {
   id: string;
   portal_id: number;
-  youtube_id: string;
+  youtube_id: string | null;
+  source_provider: string;
+  source_id: string | null;
   video_url: string;
   title: string;
   description: string | null;
@@ -368,7 +370,6 @@ export async function processPendingIngestions(options: { portalId?: number | nu
   const admin = createAdminClient();
   let query = (admin as any).from("locapass_youtube_ingestions")
     .select("id, portal_id, title, description, candidate_name, candidate_address")
-    .eq("source_provider", "youtube")
     .eq("match_status", "pending")
     .is("match_reason", null)
     .order("created_at", { ascending: false })
@@ -467,7 +468,7 @@ export async function identifyShopFromVideo(input: { title: string; description?
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY が未設定です");
   const prompt = [
-    "YouTubeの紹介動画で取り上げられた、日本国内の店舗(飲食店・カフェ・美容室・ネイル・エステ・まつげ・バーバー・ペット施設・体験施設など)を1店舗特定してください。",
+    "YouTube/TikTokの紹介動画で取り上げられた、日本国内の店舗(飲食店・カフェ・美容室・ネイル・エステ・まつげ・バーバー・ペット施設・体験施設など)を1店舗特定してください。",
     "説明欄に店名・住所が書いてあればそれを最優先で使い、足りない部分だけGoogle検索で補ってください。",
     "",
     `動画タイトル: ${input.title}`,
@@ -607,13 +608,17 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   if (error || !row) throw new Error(error?.message ?? "候補が見つかりません");
   if (row.reel_id) return row.reel_id;
   if (!row.matched_shop_id) throw new Error("店舗を確定してから投稿してください");
+  // YouTubeはyoutube_id、TikTokはsource_id(動画ID)で、同じ動画の二重投稿を防ぐ。
+  const provider = row.source_provider === "tiktok" ? "tiktok" : "youtube";
+  const ref = provider === "tiktok" ? row.source_id : row.youtube_id;
+  if (!ref) throw new Error("動画IDが取得できていません");
 
   const { data: duplicate } = await (admin as any)
     .from("locapass_reels")
     .select("id")
     .eq("portal_id", row.portal_id)
-    .eq("embed_provider", "youtube")
-    .eq("embed_ref", row.youtube_id)
+    .eq("embed_provider", provider)
+    .eq("embed_ref", ref)
     .maybeSingle();
   if (duplicate?.id) {
     await (admin as any).from("locapass_youtube_ingestions").update({ reel_id: duplicate.id, reviewed_at: new Date().toISOString(), reviewed_by: userId }).eq("id", row.id);
@@ -623,9 +628,9 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   const form = new FormData();
   form.set("kind", "reel");
   form.set("video_url", row.video_url);
-  form.set("text", `YouTubeで紹介された ${row.title}`.slice(0, 500));
+  form.set("text", `${provider === "tiktok" ? "TikTok" : "YouTube"}で紹介された ${row.title}`.slice(0, 500));
   await createEmbedPostForShop(admin as any, row.matched_shop_id, form);
-  const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", row.portal_id).eq("embed_provider", "youtube").eq("embed_ref", row.youtube_id).order("published_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", row.portal_id).eq("embed_provider", provider).eq("embed_ref", ref).order("published_at", { ascending: false }).limit(1).maybeSingle();
   if (reelError || !reel?.id) throw new Error(reelError?.message ?? "リールIDを取得できませんでした");
   const { error: updateError } = await (admin as any).from("locapass_youtube_ingestions").update({ reel_id: reel.id, match_status: "matched_existing", reviewed_at: new Date().toISOString(), reviewed_by: userId, error_message: null }).eq("id", row.id);
   if (updateError) throw new Error(`投稿結果の保存に失敗しました: ${updateError.message}`);
