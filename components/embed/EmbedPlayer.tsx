@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Play, Volume2, VolumeX, X } from "lucide-react";
+import { ExternalLink, Play, RotateCw, Volume2, VolumeX, X } from "lucide-react";
 import { embedSrc } from "@/lib/embed";
 import { VIDEO_PROVIDER_LABEL, videoUrlFor, type VideoProvider } from "@/lib/video";
 
@@ -59,6 +59,9 @@ export function EmbedPlayer({
   const [loaded, setLoaded] = useState(false);
   // 閉じるを押したら、そのカードでは自動再生を再開しない(画面から外れるまで)。
   const [dismissed, setDismissed] = useState(false);
+  // TikTokのプレーヤーが「再生できない」と知らせてきたとき(onPlayerError)だけ立てる。読み込みが遅いだけでは立てない。
+  const [failed, setFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const autoPlay = autoStart && (provider === "youtube" || provider === "tiktok");
   const label = VIDEO_PROVIDER_LABEL[provider];
   const frame = useRef<HTMLIFrameElement>(null);
@@ -107,11 +110,25 @@ export function EmbedPlayer({
       setPlaying(false);
       setSoundOnInner(false);
       setDismissed(false);
+      setFailed(false);
     } else if (autoPlay && !dismissed) {
       setPlaying(true);
     }
     if (!active && !preload) setLoaded(false);
   }, [active, preload, autoPlay, dismissed]);
+
+  // TikTokのプレーヤーが明示的にエラー(onPlayerError。古い onError も)を通知したときだけ、
+  // 「再読み込み」と「TikTokで開く」を出す。通知が来ない遅さは失敗扱いにしない(正常な再生を壊さないため)。
+  useEffect(() => {
+    if (provider !== "tiktok" || !(playing || warm)) return;
+    const onMessage = (e: MessageEvent) => {
+      if (e.source !== frame.current?.contentWindow) return;
+      const d = e.data as { "x-tiktok-player"?: boolean; type?: string } | null;
+      if (d?.["x-tiktok-player"] && (d.type === "onPlayerError" || d.type === "onError")) setFailed(true);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [provider, playing, warm, reloadKey]);
 
   // TikTokは、URLの自動再生指定だけでは始まらないことがある(ブラウザの設定など)ため、
   // 再生が始まるまで「無音にして再生」の指示をプレーヤーへ繰り返し送る(再生位置が進み始めたら止める)。
@@ -135,7 +152,7 @@ export function EmbedPlayer({
       window.clearInterval(timer);
       window.removeEventListener("message", onMessage);
     };
-  }, [playing, autoPlay, provider]);
+  }, [playing, autoPlay, provider, reloadKey]);
 
   // 画面に出たら、埋め込み先への接続だけ先に済ませておく。
   useEffect(() => {
@@ -156,6 +173,7 @@ export function EmbedPlayer({
       {/* 同じiframeを出し入れしないよう、読み込み中も再生中も同じ要素のまま、見た目だけ切り替える(切り替えで読み込み直しにならない)。 */}
       {mounted && (
         <iframe
+          key={reloadKey}
           ref={frame}
           src={embedSrc(provider, refId, true, autoPlay)}
           title={title}
@@ -185,6 +203,32 @@ export function EmbedPlayer({
                 <img src={posterUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
               )}
               <span className="relative rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white">読み込み中…</span>
+            </div>
+          )}
+          {failed && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-zinc-900/95 px-6 text-center">
+              <p className="text-sm font-semibold text-white">動画を読み込めませんでした</p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFailed(false);
+                    setLoaded(false);
+                    setReloadKey((k) => k + 1);
+                  }}
+                  className="flex items-center gap-1 rounded-full bg-white px-4 py-2 text-xs font-bold text-black"
+                >
+                  <RotateCw size={13} /> 再読み込み
+                </button>
+                <a
+                  href={videoUrlFor(provider, refId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 rounded-full bg-white/15 px-4 py-2 text-xs font-bold text-white"
+                >
+                  {label}で開く <ExternalLink size={12} />
+                </a>
+              </div>
             </div>
           )}
           {/* 上の細い帯に「閉じる」と元の投稿へのリンクを置く(埋め込み側のボタンと重ならないように)。 */}
