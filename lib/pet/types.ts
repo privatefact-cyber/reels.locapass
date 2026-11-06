@@ -1,6 +1,6 @@
 export type PetSex = "male" | "female" | "unknown";
 export type PetVisibility = "private" | "followers" | "public";
-export type PetDocType = "rabies" | "license" | "mixed_vaccine" | "other";
+export type PetDocType = "rabies" | "license" | "mixed_vaccine" | "insurance" | "other";
 
 export type PetRow = {
   id: string;
@@ -97,6 +97,7 @@ export const DOC_TYPE_LABEL: Record<PetDocType, string> = {
   rabies: "狂犬病予防注射(注射済票)",
   license: "鑑札(犬の登録)",
   mixed_vaccine: "混合ワクチン",
+  insurance: "ペット保険証",
   other: "その他の書類",
 };
 
@@ -104,6 +105,7 @@ export const DOC_TYPE_SHORT: Record<PetDocType, string> = {
   rabies: "狂犬病",
   license: "鑑札",
   mixed_vaccine: "混合ワクチン",
+  insurance: "ペット保険",
   other: "その他",
 };
 
@@ -111,6 +113,7 @@ export const DOC_TYPE_EMOJI: Record<PetDocType, string> = {
   rabies: "💉",
   license: "🏷️",
   mixed_vaccine: "🩺",
+  insurance: "🛡️",
   other: "📄",
 };
 

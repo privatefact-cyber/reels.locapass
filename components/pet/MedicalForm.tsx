@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { Camera, Loader2, Plus, X } from "lucide-react";
 import { savePetMedical } from "@/app/pet/actions";
 import { todayJst } from "@/lib/pet/calc";
-import { uploadPetImage } from "./petUpload";
+import { downscaleImage } from "./petUpload";
+import { saveLocalImage } from "./localImages";
+import { LocalImageNotice } from "./LocalImage";
 import { PetCard, PetField, petButton, petInput } from "./ui";
 
 /** 病気・通院の記録を追加する(明細・処方の写真は最大6枚) */
@@ -24,7 +26,8 @@ export function MedicalForm({ petId, defaultHospital }: { petId: string; default
     setError(null);
     try {
       const imagePaths: string[] = [];
-      for (const file of files) imagePaths.push(await uploadPetImage("medical", petId, file));
+      // 明細・お薬の写真はサーバーに送らず、この端末(IndexedDB)にだけ保存する
+      for (const file of files) imagePaths.push(await saveLocalImage(await downscaleImage(file, 2000, 0.88), { petId, kind: "medical" }));
       const res = await savePetMedical({ petId, ...f, imagePaths });
       if (!res.ok) throw new Error(res.error);
       setOpen(false);
@@ -99,6 +102,7 @@ export function MedicalForm({ petId, defaultHospital }: { petId: string; default
         {busy && <Loader2 size={18} className="animate-spin" />}
         保存する
       </button>
+      <LocalImageNotice />
       <input
         ref={fileInput}
         type="file"

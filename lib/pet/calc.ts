@@ -74,6 +74,7 @@ export function daysToBirthday(birthday: string | null, today = todayJst()): num
  * - 狂犬病: 年1回(法律で毎年度。4〜6月が注射の時期)。書類に次回日があればそれ、無ければ接種日の1年後、
  *   日付がなく年度しか読めないときは「次の年度の6月30日」
  * - 混合ワクチン: 証明書の次回予定日。無ければ接種日の1年後
+ * - ペット保険: 満了日。無ければ開始日の1年後(多くは1年契約)
  * - その他: 書いてあれば次回予定日
  */
 export function expiryFor(docType: PetDocType, opts: { administeredOn?: string | null; nextDueOn?: string | null; fiscalYear?: number | null }): string | null {
@@ -85,7 +86,7 @@ export function expiryFor(docType: PetDocType, opts: { administeredOn?: string |
     if (fiscalYear) return `${fiscalYear + 1}-06-30`;
     return null;
   }
-  if (docType === "mixed_vaccine" && administeredOn) return addYears(administeredOn, 1);
+  if ((docType === "mixed_vaccine" || docType === "insurance") && administeredOn) return addYears(administeredOn, 1);
   return null;
 }
 

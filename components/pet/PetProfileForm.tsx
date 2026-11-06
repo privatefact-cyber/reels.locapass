@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { createPet, deletePet, updatePet, type PetProfileInput } from "@/app/pet/actions";
+import { deleteLocalImagesForPet } from "./localImages";
 import { ageLabel, humanAge } from "@/lib/pet/calc";
 import { BREED_SUGGESTIONS, COAT_COLOR_SUGGESTIONS, VISIBILITY_LABEL, type PetRow, type PetVisibility } from "@/lib/pet/types";
 import { PetCard, PetField, petButton, petInput } from "./ui";
@@ -70,6 +71,7 @@ export function PetProfileForm({ pet }: Props) {
     const res = await deletePet(pet.id);
     setBusy(false);
     if (!res.ok) return setError(res.error);
+    await deleteLocalImagesForPet(pet.id); // 端末内に保存した書類・明細の画像も消す
     router.push("/pet");
   }
 

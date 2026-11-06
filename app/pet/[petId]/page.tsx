@@ -12,6 +12,7 @@ import { MedicalForm } from "@/components/pet/MedicalForm";
 import { DiaryForm } from "@/components/pet/DiaryForm";
 import { WeightChart } from "@/components/pet/WeightChart";
 import { PetDeleteButton } from "@/components/pet/DeleteButton";
+import { LocalImage, LocalImageNotice } from "@/components/pet/LocalImage";
 import { PetProfileForm } from "@/components/pet/PetProfileForm";
 
 export const dynamic = "force-dynamic";
@@ -129,16 +130,16 @@ async function NotebookTab({ petId, petName, supabase }: { petId: string; petNam
   const latest = latestByType(docs);
   const signed = await signPetImages(docs.map((d) => d.image_path));
   const today = todayJst();
-  const summary: PetDocType[] = ["rabies", "mixed_vaccine", "license"];
+  const summary: PetDocType[] = ["rabies", "mixed_vaccine", "license", "insurance"];
 
   return (
     <div>
-      <div className="mt-2 grid grid-cols-3 gap-2">
+      <div className="mt-2 grid grid-cols-4 gap-1.5">
         {summary.map((t) => {
           const d = latest.get(t);
           const st = d ? (t === "license" ? "valid" : expiryStatus(d.expires_on, today)) : null;
           return (
-            <PetCard key={t} className="p-3 text-center">
+            <PetCard key={t} className="px-1.5 py-3 text-center">
               <p className="text-2xl" aria-hidden>
                 {DOC_TYPE_EMOJI[t]}
               </p>
@@ -180,7 +181,9 @@ async function NotebookTab({ petId, petName, supabase }: { petId: string; petNam
             const isLatest = latest.get(d.doc_type)?.id === d.id;
             return (
               <PetCard key={d.id} className={`flex gap-3 ${isLatest ? "" : "opacity-70"}`}>
-                {img ? (
+                {d.image_path?.startsWith("local:") ? (
+                  <LocalImage refId={d.image_path} className="h-16 w-16 rounded-2xl" fileName={`${DOC_TYPE_SHORT[d.doc_type]}.jpg`} />
+                ) : img ? (
                   <a href={img} target="_blank" rel="noreferrer" className="shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img} alt={DOC_TYPE_LABEL[d.doc_type]} className="h-16 w-16 rounded-2xl object-cover" />
@@ -207,7 +210,7 @@ async function NotebookTab({ petId, petName, supabase }: { petId: string; petNam
                   </p>
                   <p className="mt-0.5 truncate text-[11px] text-[#B39C8C]">{[d.clinic_name, d.vaccine_name, d.registration_no ? `No.${d.registration_no}` : null, d.note].filter(Boolean).join(" ・ ")}</p>
                   <div className="mt-1 text-right">
-                    <PetDeleteButton kind="document" id={d.id} />
+                    <PetDeleteButton kind="document" id={d.id} localRefs={[d.image_path]} />
                   </div>
                 </div>
               </PetCard>
@@ -216,6 +219,9 @@ async function NotebookTab({ petId, petName, supabase }: { petId: string; petNam
         </div>
       )}
       <p className="mt-4 px-2 text-center text-[11px] text-[#B39C8C]">🔒 手帳はあなただけが見られます。期限の30日前・7日前・当日にお知らせします。</p>
+      <div className="mt-1">
+        <LocalImageNotice />
+      </div>
     </div>
   );
 }
@@ -265,7 +271,9 @@ async function MedicalTab({ petId, vetName, supabase }: { petId: string; vetName
                 {r.image_paths.length > 0 && (
                   <div className="mt-2 flex gap-2 overflow-x-auto">
                     {r.image_paths.map((p) =>
-                      signed.get(p) ? (
+                      p.startsWith("local:") ? (
+                        <LocalImage key={p} refId={p} className="h-16 w-16 rounded-xl" fileName="通院明細.jpg" size="small" />
+                      ) : signed.get(p) ? (
                         <a key={p} href={signed.get(p)} target="_blank" rel="noreferrer">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={signed.get(p)} alt="" className="h-16 w-16 rounded-xl object-cover" />
@@ -275,7 +283,7 @@ async function MedicalTab({ petId, vetName, supabase }: { petId: string; vetName
                   </div>
                 )}
                 <div className="mt-1 text-right">
-                  <PetDeleteButton kind="medical" id={r.id} />
+                  <PetDeleteButton kind="medical" id={r.id} localRefs={r.image_paths} />
                 </div>
               </PetCard>
             </li>

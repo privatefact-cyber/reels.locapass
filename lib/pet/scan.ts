@@ -6,13 +6,13 @@ import type { PetDocType } from "./types";
  */
 export const PET_SCAN_PROMPT = `あなたは日本の犬の書類を読み取るアシスタントです。画像の書類について、次のJSONだけを返してください(説明文は不要)。
 {
-  "doc_type": "rabies" | "license" | "mixed_vaccine" | "other",
+  "doc_type": "rabies" | "license" | "mixed_vaccine" | "insurance" | "other",
   "administered_on": "YYYY-MM-DD" または null,
   "fiscal_year": 西暦の年度(数値) または null,
   "next_due_on": "YYYY-MM-DD" または null,
-  "clinic_name": 動物病院名 または null,
+  "clinic_name": 動物病院名(ペット保険証のときは保険会社名) または null,
   "vaccine_name": ワクチン名(例「6種混合」「デュラミューン」) または null,
-  "registration_no": 鑑札の登録番号・注射済票の番号 または null,
+  "registration_no": 鑑札の登録番号・注射済票の番号(ペット保険証のときは証券番号・保険証番号) または null,
   "pet_name": 犬の名前 または null,
   "confidence": 0〜1の数値
 }
@@ -20,9 +20,10 @@ export const PET_SCAN_PROMPT = `あなたは日本の犬の書類を読み取る
 - 「狂犬病予防注射済票」「注射済証」「狂犬病予防注射」→ rabies。金属やプラスチックの小さな札で「年度」だけが書かれていることが多い(例「令和7年度」= 2025年度 → fiscal_year: 2025)。
 - 「鑑札」「犬の登録」→ license(期限はない)。
 - 「混合ワクチン」「ワクチン接種証明書」「〇種混合」→ mixed_vaccine。次回接種予定日が書かれていれば next_due_on に入れる。
+- 「ペット保険」「どうぶつ健康保険証」「保険証」などペット保険の証券・カード → insurance。保険期間の開始日を administered_on、満了日(保険期間の終了日・有効期限)を next_due_on に入れる。保険会社名を clinic_name、証券番号を registration_no に入れる。
 - 和暦は西暦に直す(令和n年 = 2018+n年、平成n年 = 1988+n年)。
 - 読めない項目は null。推測で埋めない。
-- 飼い主の氏名・住所・電話番号は絶対に出力しない。`;
+- 飼い主の氏名・住所・電話番号・生年月日は絶対に出力しない。`;
 
 export type PetScanResult = {
   docType: PetDocType;
@@ -43,7 +44,7 @@ const date = (v: unknown) => (typeof v === "string" && DATE.test(v) && !Number.i
 export function normalizePetScan(raw: unknown): PetScanResult {
   const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const t = o.doc_type;
-  const docType: PetDocType = t === "rabies" || t === "license" || t === "mixed_vaccine" ? t : "other";
+  const docType: PetDocType = t === "rabies" || t === "license" || t === "mixed_vaccine" || t === "insurance" ? t : "other";
   const fy = typeof o.fiscal_year === "number" && o.fiscal_year > 1990 && o.fiscal_year < 2100 ? Math.trunc(o.fiscal_year) : null;
   const conf = typeof o.confidence === "number" ? Math.max(0, Math.min(1, o.confidence)) : null;
   return {

@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   const { data: due } = await admin
     .from("locapass_pet_documents")
     .select("pet_id")
-    .in("doc_type", ["rabies", "mixed_vaccine", "other"])
+    .in("doc_type", ["rabies", "mixed_vaccine", "insurance", "other"])
     .gte("expires_on", from)
     .lte("expires_on", to)
     .limit(5000);
@@ -70,10 +70,12 @@ export async function GET(req: Request) {
       const kind = DOC_TYPE_SHORT[doc.doc_type];
       const title =
         stage === "0d"
-          ? `${pet.name}ちゃんの${kind}の期限です`
+          ? `${pet.name}ちゃんの${kind}の${doc.doc_type === "insurance" ? "満了日" : "期限"}です`
           : `${pet.name}ちゃんの${kind}の時期が近づいています(あと${left}日)`;
       const body =
-        doc.doc_type === "rabies"
+        doc.doc_type === "insurance"
+          ? `満了日: ${formatJpDate(doc.expires_on)}\nペット保険の更新手続きを確認しておきましょう。`
+          : doc.doc_type === "rabies"
           ? `期限: ${formatJpDate(doc.expires_on)}\n狂犬病の予防注射は年に1回(毎年4〜6月)。動物病院か市区町村の集合注射で受けられます。`
           : `期限: ${formatJpDate(doc.expires_on)}\nかかりつけの動物病院で予約しておきましょう。`;
       await notifyPetUser({ userId: pet.owner_id, type: "pet_reminder", title, body, url: `/pet/${pet.id}?tab=notebook` }).catch((e) =>

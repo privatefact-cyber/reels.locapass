@@ -40,6 +40,15 @@ async function ownsPet(supabase: Awaited<ReturnType<typeof viewerOrError>>, petI
 function ownPath(userId: string, path: unknown): string | null {
   return typeof path === "string" && path.startsWith(`${userId}/`) && !path.includes("..") && path.length < 300 ? path : null;
 }
+/** 端末内(IndexedDB)の画像を指す参照 "local:<uuid>"。書類・通院明細の画像はサーバーに保存せず、これだけを持つ */
+const LOCAL_REF = /^local:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function localRef(v: unknown): string | null {
+  return typeof v === "string" && LOCAL_REF.test(v) ? v : null;
+}
+function localRefs(v: unknown, max = 6): string[] {
+  return Array.isArray(v) ? v.map(localRef).filter((p): p is string => p !== null).slice(0, max) : [];
+}
+
 function ownPaths(userId: string, paths: unknown, max = 6): string[] {
   return Array.isArray(paths) ? paths.map((p) => ownPath(userId, p)).filter((p): p is string => p !== null).slice(0, max) : [];
 }
@@ -61,6 +70,8 @@ export async function requestPetUpload(kind: UploadKind, targetId: string): Prom
     return guestUpload(kind, targetId);
   }
   if (kind !== "found" && !UUID.test(targetId)) return { ok: false, error: "対象が見つかりません" };
+  // 書類(保険証・狂犬病・鑑札など)と通院明細の画像は、個人情報保護のためサーバーに保存しない(端末内のみ)
+  if (kind === "document" || kind === "medical") return { ok: false, error: "書類・明細の画像は端末内にだけ保存します" };
 
   let path: string;
   if (kind === "found") {
@@ -257,7 +268,7 @@ export async function savePetDocument(input: PetDocumentInput): Promise<Result<{
   if ("error" in viewer) return { ok: false, error: viewer.error };
   const pet = await ownsPet(viewer, input.petId);
   if (!pet) return { ok: false, error: "この子の手帳は編集できません" };
-  const docType: PetDocType = ["rabies", "license", "mixed_vaccine", "other"].includes(input.docType) ? input.docType : "other";
+  const docType: PetDocType = ["rabies", "license", "mixed_vaccine", "insurance", "other"].includes(input.docType) ? input.docType : "other";
   const row = {
     pet_id: pet.id,
     owner_id: viewer.userId,
@@ -269,7 +280,7 @@ export async function savePetDocument(input: PetDocumentInput): Promise<Result<{
     vaccine_name: text(input.vaccineName, 60),
     registration_no: text(input.registrationNo, 40),
     note: text(input.note, 500),
-    image_path: input.imagePath ? ownPath(viewer.userId, input.imagePath) : null,
+    image_path: localRef(input.imagePath), // 端末内の画像の参照だけ(画像はサーバーに来ない)
     ...(input.aiResult !== undefined && !input.id ? { ai_result: input.aiResult } : {}),
   };
   const query = input.id
@@ -280,9 +291,13 @@ export async function savePetDocument(input: PetDocumentInput): Promise<Result<{
     console.error("[pet] save document failed", error);
     return { ok: false, error: "保存できませんでした" };
   }
-  // 鑑札の登録番号は、プロフィールが空なら自動で入れる
+  // 鑑札の登録番号・ペット保険の会社名と証券番号は、プロフィールが空なら自動で入れる
   if (docType === "license" && row.registration_no) {
     await viewer.supabase.from("locapass_pets").update({ registration_no: row.registration_no }).eq("id", pet.id).is("registration_no", null);
+  }
+  if (docType === "insurance") {
+    if (row.clinic_name) await viewer.supabase.from("locapass_pets").update({ insurance_name: row.clinic_name }).eq("id", pet.id).is("insurance_name", null);
+    if (row.registration_no) await viewer.supabase.from("locapass_pets").update({ insurance_no: row.registration_no }).eq("id", pet.id).is("insurance_no", null);
   }
   refresh();
   return { ok: true, id: data[0].id as string };
@@ -294,7 +309,8 @@ export async function deletePetDocument(id: string): Promise<Result> {
   const { data } = await viewer.supabase.from("locapass_pet_documents").delete().eq("id", id).select("id, image_path");
   if (!data?.length) return { ok: false, error: "削除できませんでした" };
   const img = data[0].image_path as string | null;
-  if (img) after(() => petAdmin().storage.from(PET_BUCKET).remove([img]).then(() => undefined));
+  // 以前の形式(サーバー保存)の画像だけサーバーから消す。端末内の画像は画面側で消す
+  if (img && !img.startsWith("local:")) after(() => petAdmin().storage.from(PET_BUCKET).remove([img]).then(() => undefined));
   refresh();
   return { ok: true };
 }
@@ -332,7 +348,7 @@ export async function savePetMedical(input: PetMedicalInput): Promise<Result> {
     medicines: text(input.medicines, 300),
     cost: num(input.cost, 0, 10_000_000),
     note: text(input.note, 1000),
-    image_paths: ownPaths(viewer.userId, input.imagePaths),
+    image_paths: localRefs(input.imagePaths), // 端末内の画像の参照だけ(画像はサーバーに来ない)
   };
   const { data } = input.id
     ? await viewer.supabase.from("locapass_pet_medical_records").update(row).eq("id", input.id).select("id")
@@ -347,7 +363,7 @@ export async function deletePetMedical(id: string): Promise<Result> {
   if ("error" in viewer) return { ok: false, error: viewer.error };
   const { data } = await viewer.supabase.from("locapass_pet_medical_records").delete().eq("id", id).select("id, image_paths");
   if (!data?.length) return { ok: false, error: "削除できませんでした" };
-  const imgs = (data[0].image_paths as string[]) ?? [];
+  const imgs = ((data[0].image_paths as string[]) ?? []).filter((p) => !p.startsWith("local:"));
   if (imgs.length) after(() => petAdmin().storage.from(PET_BUCKET).remove(imgs).then(() => undefined));
   refresh();
   return { ok: true };

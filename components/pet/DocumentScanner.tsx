@@ -7,7 +7,9 @@ import { savePetDocument } from "@/app/pet/actions";
 import { expiryFor } from "@/lib/pet/calc";
 import type { PetScanResult } from "@/lib/pet/scan";
 import { DOC_TYPE_EMOJI, DOC_TYPE_LABEL, type PetDocType } from "@/lib/pet/types";
-import { imageToBase64, uploadPetImage } from "./petUpload";
+import { downscaleImage, imageToBase64 } from "./petUpload";
+import { saveLocalImage } from "./localImages";
+import { LocalImageNotice } from "./LocalImage";
 import { PetCard, PetField, petButton, petInput } from "./ui";
 
 type Draft = {
@@ -91,7 +93,8 @@ export function DocumentScanner({ petId }: { petId: string }) {
     setPhase("saving");
     setError(null);
     try {
-      const imagePath = file ? await uploadPetImage("document", petId, file) : null;
+      // 画像はサーバーに送らず、この端末(IndexedDB)にだけ保存する。サーバーには参照("local:…")と読み取った文字だけを送る
+      const imagePath = file ? await saveLocalImage(await downscaleImage(file, 2000, 0.88), { petId, kind: "document" }) : null;
       const res = await savePetDocument({ petId, ...draft, imagePath, aiResult: scan ?? undefined });
       if (!res.ok) throw new Error(res.error);
       reset();
@@ -169,6 +172,7 @@ export function DocumentScanner({ petId }: { petId: string }) {
               </div>
               {draft.docType === "rabies" && <p className="px-1 text-xs text-[#B39C8C]">狂犬病の予防注射は年に1回(毎年4〜6月)。期限は接種日の1年後を目安に入れています。</p>}
               {draft.docType === "license" && <p className="px-1 text-xs text-[#B39C8C]">鑑札は一生に1回の登録で、期限はありません。</p>}
+              {draft.docType === "insurance" && <p className="px-1 text-xs text-[#B39C8C]">保険期間の開始日と満了日を入れてください。満了日が近づいたらお知らせします。</p>}
               <PetField label="動物病院・自治体">
                 <input className={petInput} value={draft.clinicName} onChange={(e) => set("clinicName", e.target.value)} />
               </PetField>
@@ -193,6 +197,7 @@ export function DocumentScanner({ petId }: { petId: string }) {
                 {phase === "saving" && <Loader2 size={18} className="animate-spin" />}
                 手帳に保存
               </button>
+              <LocalImageNotice />
             </>
           )}
           {error && <p className="rounded-2xl bg-[#FFF0C9] px-3 py-2 text-xs font-bold text-[#9A6B00]">{error}</p>}
