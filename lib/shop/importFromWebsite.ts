@@ -1,6 +1,7 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { geminiGenerateContentUrl } from "@/lib/gemini";
+import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
 
 /**
  * 店舗の公式サイトから、紹介文・営業時間・電話番号・料金表・写真の候補を読み取る(サーバー専用)。
@@ -43,6 +44,10 @@ export type ImportedPriceItem = { name: string; duration_minutes: number | null;
 
 export type ImportPreview = {
   sourceUrl: string;
+  /** 公式サイトに書かれた店名・所在地・業種(動画ストックの自動入力用。店舗情報画面の取り込みでは使わない)。 */
+  name: string | null;
+  address: string | null;
+  category: string | null;
   description: string | null;
   business_hours: string | null;
   phone: string | null;
@@ -229,18 +234,22 @@ function extractPage(html: string, base: URL) {
   return { title, metaDescription, text, imageCandidates: [...imageSet].slice(0, MAX_IMAGE_CANDIDATES) };
 }
 
-async function extractWithGemini(page: ReturnType<typeof extractPage>): Promise<Omit<ImportPreview, "sourceUrl">> {
+async function extractWithGemini(page: ReturnType<typeof extractPage>, hint?: string | null): Promise<Omit<ImportPreview, "sourceUrl">> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new ImportError("読み取り機能の設定が未完了です(運営者にお問い合わせください)");
 
   const prompt = [
-    "以下は日本の飲食店・ナイトワーク店舗の公式サイトから抜き出した内容です。",
+    "以下は日本の店舗(飲食店・美容室・ネイル・エステ・ペット施設・体験施設など)の公式サイトから抜き出した内容です。",
     "店舗ページに載せる情報を、サイトに書かれている内容だけから抜き出してください。書かれていないことは推測で埋めずnullや空配列にします。",
     "返すJSONの形:",
-    '{"description": string|null, "business_hours": string|null, "phone": string|null,',
+    '{"name": string|null, "address": string|null, "category": string|null, "description": string|null, "business_hours": string|null, "phone": string|null,',
     ' "price_items": [{"name": string, "duration_minutes": number|null, "price": number}],',
     ' "image_urls": [string]}',
     "ルール:",
+    "- name: 店舗名(支店名があれば含める。会社名・サイト名ではなく店舗の名前)。",
+    "- address: 所在地(都道府県から番地・建物名まで。営業時間・最寄り駅・電話番号は含めない)。",
+    `- category: 次のどれか1つ: ${LOCAPASS_CATEGORIES.join(" / ")}`,
+    ...(hint ? [`- 複数の支店・店舗が載っている場合は、次の手がかりに合う1店舗の情報だけを返す(合うものが無ければ name/address は null): ${hint.slice(0, 400)}`] : []),
     "- description: 店舗の紹介文。サイトの文章をもとに日本語で200文字以内。誇張しない。",
     "- business_hours: 営業時間と定休日を1行で(例: 18:00〜翌5:00／日曜定休)。",
     "- phone: 電話番号(ハイフン区切り)。",
@@ -261,6 +270,7 @@ async function extractWithGemini(page: ReturnType<typeof extractPage>): Promise<
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature: 0.1, responseMimeType: "application/json" },
     }),
+    signal: AbortSignal.timeout(30_000),
   });
   if (!res.ok) throw new ImportError("内容の読み取りに失敗しました。時間をおいて再度お試しください");
 
@@ -291,7 +301,12 @@ async function extractWithGemini(page: ReturnType<typeof extractPage>): Promise<
         .slice(0, MAX_PRICE_ITEMS)
     : [];
 
+  const category = typeof parsed.category === "string" && (LOCAPASS_CATEGORIES as readonly string[]).includes(parsed.category) ? parsed.category : null;
+  const address = str(parsed.address, 300);
   return {
+    name: str(parsed.name, 120),
+    address: address && /\d/.test(address) ? address : null,
+    category,
     description: str(parsed.description, 400),
     business_hours: str(parsed.business_hours, 200),
     phone: str(parsed.phone, 30),
@@ -303,14 +318,14 @@ async function extractWithGemini(page: ReturnType<typeof extractPage>): Promise<
 }
 
 /** 公式サイトのURLから、取り込み候補を読み取る(DBには何も書かない)。 */
-export async function previewShopImport(rawUrl: string): Promise<ImportPreview> {
+export async function previewShopImport(rawUrl: string, options?: { hint?: string | null }): Promise<ImportPreview> {
   const page = await guardedFetch(rawUrl, "text/html,application/xhtml+xml", MAX_PAGE_BYTES);
   if (!page.contentType.includes("html")) throw new ImportError("ホームページ(HTML)のURLを入力してください");
   const extracted = extractPage(decodeHtml(page.body, page.contentType), page.finalUrl);
   if (!extracted.text && extracted.imageCandidates.length === 0) {
     throw new ImportError("ページから内容を読み取れませんでした");
   }
-  return { sourceUrl: page.finalUrl.toString(), ...(await extractWithGemini(extracted)) };
+  return { sourceUrl: page.finalUrl.toString(), ...(await extractWithGemini(extracted, options?.hint)) };
 }
 
 /** 取り込む写真をサーバー側でダウンロードする(宛先の検査・サイズ上限つき)。 */
