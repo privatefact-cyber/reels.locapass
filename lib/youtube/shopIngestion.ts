@@ -5,6 +5,7 @@ import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
 import { previewShopImport, type ImportPreview } from "@/lib/shop/importFromWebsite";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import { randomBytes } from "node:crypto";
+import { getBlockedChannelTitles } from "./stockHygiene";
 
 export type YoutubeCandidate = {
   youtubeId: string;
@@ -221,8 +222,11 @@ export async function collectTokyoGourmetStock(options?: { portalId?: number; pe
 }
 
 /** 管理画面から同一動画を何度集めても候補を増やさない。 */
-export async function saveYoutubeCandidates(portalId: number, candidates: YoutubeCandidate[]) {
+export async function saveYoutubeCandidates(portalId: number, allCandidates: YoutubeCandidate[]) {
   const admin = createAdminClient();
+  // 「今後収集しない」にしたチャンネルの動画は、候補に入れない。
+  const blocked = new Set(await getBlockedChannelTitles());
+  const candidates = allCandidates.filter((video) => !(video.channelTitle && blocked.has(video.channelTitle)));
   const rows = candidates.map((video) => {
     const hint = extractShopHint(video.title, video.description);
     return {

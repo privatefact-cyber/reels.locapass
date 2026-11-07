@@ -271,6 +271,45 @@ export async function findOfficialSiteForIngestion(ingestionId: string) {
 }
 
 /**
+ * 選んだ動画のチャンネルを「今後収集しない」にし、そのチャンネルの未公開の候補をすべて「除外」にする。
+ * 公開済み(リール投稿済み)の動画は、除外にも非表示にもしない。データは消さない。
+ */
+export async function blockChannelsAndReject(ids: string[]) {
+  const user = await requireRootAdmin();
+  const list = [...new Set((Array.isArray(ids) ? ids : []).filter((id) => typeof id === "string" && id.length > 0))].slice(0, 500);
+  if (list.length === 0) return { blocked: 0, rejected: 0 };
+  const admin = createAdminClient();
+  const { data: picked, error: pickedError } = await (admin as any).from("locapass_youtube_ingestions").select("channel_title").in("id", list);
+  if (pickedError) throw new Error(`チャンネルの確認に失敗しました: ${pickedError.message}`);
+  const titles = [...new Set(((picked ?? []) as { channel_title: string | null }[]).map((row) => (row.channel_title ?? "").trim()).filter(Boolean))];
+  if (titles.length === 0) throw new Error("選んだ動画にチャンネル名がないため、チャンネルでは除外できません");
+  const { error: blockError } = await (admin as any)
+    .from("ingestion_blocked_channels")
+    .upsert(titles.map((channel_title) => ({ site: "locapass", channel_title, created_by: user.id })), { onConflict: "site,channel_title", ignoreDuplicates: true });
+  if (blockError) throw new Error(`収集しないチャンネルの保存に失敗しました: ${blockError.message}`);
+  const { data: rejected, error: rejectError } = await (admin as any)
+    .from("locapass_youtube_ingestions")
+    .update({ match_status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: user.id })
+    .in("channel_title", titles)
+    .is("reel_id", null)
+    .neq("match_status", "rejected")
+    .select("id");
+  if (rejectError) throw new Error(`除外に失敗しました: ${rejectError.message}`);
+  refresh();
+  return { blocked: titles.length, rejected: (rejected ?? []).length };
+}
+
+/** 「今後収集しない」から外す(すでに除外した動画は、除外タブから個別に戻せる)。 */
+export async function unblockChannel(channelTitle: string) {
+  await requireRootAdmin();
+  const title = String(channelTitle ?? "").trim();
+  if (!title) return;
+  const { error } = await (createAdminClient() as any).from("ingestion_blocked_channels").delete().eq("site", "locapass").eq("channel_title", title);
+  if (error) throw new Error(`解除に失敗しました: ${error.message}`);
+  refresh();
+}
+
+/**
  * 動画ストックの候補を「除外」にする(rejected=false なら除外を取り消して「保留」に戻す)。
  * データは消さず記録を残すので、次の収集で同じ動画が候補に戻ってこない。
  * 公開済み(リール投稿済み)の候補は対象外にして、公開を取り消さない。

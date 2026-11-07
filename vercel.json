@@ -7,6 +7,7 @@
     { "path": "/api/cron/youtube-beauty", "schedule": "15 17 * * *" },
     { "path": "/api/cron/youtube-gourmet", "schedule": "30 17 * * *" },
     { "path": "/api/cron/pet-reminders", "schedule": "0 0 * * *" },
-    { "path": "/api/cron/video-liveness", "schedule": "45 17 * * *" }
+    { "path": "/api/cron/video-liveness", "schedule": "45 17 * * *" },
+    { "path": "/api/cron/stock-auto-reject", "schedule": "55 17 * * *" }
   ]
 }

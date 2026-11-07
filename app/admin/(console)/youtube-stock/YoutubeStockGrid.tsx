@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { YoutubeStockCard } from "./YoutubeStockCard";
-import { setYoutubeStockRejected } from "../youtube-intake/actions";
+import { setYoutubeStockRejected, blockChannelsAndReject, unblockChannel } from "../youtube-intake/actions";
 
 type Row = Parameters<typeof YoutubeStockCard>[0]["row"];
 type Status = "all" | "pending" | "matched_existing" | "ready_to_create" | "rejected";
@@ -16,11 +16,13 @@ type RowActions = {
   setThumbnail: Action;
 };
 
-export function YoutubeStockGrid({ rows, shopName, portalOptions, actions }: {
+export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, blockedChannels }: {
   rows: Row[];
   shopName: Record<string, string>;
   portalOptions: { id: number; label: string }[];
   actions: Record<string, RowActions>;
+  /** 「今後収集しない」にしたチャンネルの名前。 */
+  blockedChannels: string[];
 }) {
   const [provider, setProvider] = useState<"all" | "youtube" | "tiktok">("all");
   const [status, setStatus] = useState<Status>("all");
@@ -75,10 +77,51 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions }: {
       setBusy(false);
     }
   };
+  // 同じチャンネルの、選べる動画をまとめて選ぶ。
+  const channelCounts = new Map<string, number>();
+  for (const row of selectableRows) if (row.channel_title) channelCounts.set(row.channel_title, (channelCounts.get(row.channel_title) ?? 0) + 1);
+  const selectChannel = (title: string) => setSelected((prev) => { const next = new Set(prev); selectableRows.forEach((row) => { if (row.channel_title === title) next.add(row.id); }); return next; });
+  // 選んだ動画のチャンネルを「今後収集しない」にして、そのチャンネルの未公開の候補を除外する。
+  const blockPicked = async () => {
+    const titles = new Set(picked.map((row) => row.channel_title).filter((t): t is string => Boolean(t)));
+    if (titles.size === 0) { setBulkError("選んだ動画にチャンネル名がありません"); return; }
+    const affected = rows.filter((row) => row.channel_title && titles.has(row.channel_title) && !row.reel_id && row.match_status !== "rejected").length;
+    if (!window.confirm(`選んだ動画の ${titles.size} チャンネルを、今後の収集から外します。\nそのチャンネルの未公開の動画 ${affected} 本も除外します(公開済みはそのままです)。よろしいですか?`)) return;
+    setBusy(true);
+    setBulkError(null);
+    try {
+      await blockChannelsAndReject(picked.map((row) => row.id));
+      setSelected(new Set());
+    } catch (e) {
+      setBulkError(e instanceof Error ? e.message : "更新に失敗しました");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const unblock = async (title: string) => {
+    setBusy(true);
+    setBulkError(null);
+    try {
+      await unblockChannel(title);
+    } catch (e) {
+      setBulkError(e instanceof Error ? e.message : "解除に失敗しました");
+    } finally {
+      setBusy(false);
+    }
+  };
   return <>
     <div className="mb-3 flex flex-wrap items-center gap-2 text-sm"><span className="font-semibold text-slate-600">状態:</span>{statusFilters.map(([value, label, color]) => <button key={value} type="button" aria-pressed={status === value} onClick={() => setStatus(value)} className={`rounded-full border px-3 py-1 transition ${status === value ? "border-slate-900 ring-2 ring-slate-900 ring-offset-1" : "border-transparent hover:border-slate-400"} ${color}`}>{label}</button>)}</div>
     <div className="mb-3 flex flex-wrap items-center gap-2 text-sm"><span className="font-semibold text-slate-600">投稿:</span>{publicationFilters.map(([value, label]) => <button key={value} type="button" aria-pressed={publication === value} onClick={() => setPublication(value)} className={`rounded-full border px-3 py-1 transition ${publication === value ? "border-emerald-700 bg-emerald-700 text-white" : "border-emerald-200 bg-white text-emerald-800 hover:border-emerald-500"}`}>{label}</button>)}</div>
     <div className="mb-4 flex flex-wrap items-center gap-2 text-sm"><span className="font-semibold text-slate-600">表示:</span>{([['all', `すべて ${scoped.length}`], ['youtube', `YouTube ${scoped.filter((row) => row.source_provider === 'youtube').length}`], ['tiktok', `TikTok ${scoped.filter((row) => row.source_provider === 'tiktok').length}`]] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setProvider(value)} className={`rounded-full border px-3 py-1 ${provider === value ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700"}`}>{label}</button>)}</div>
+    {blockedChannels.length > 0 && (
+      <details className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm">
+        <summary className="cursor-pointer font-semibold text-slate-700">収集しないチャンネル({blockedChannels.length})</summary>
+        <ul className="mt-2 space-y-1">
+          {blockedChannels.map((title) => (<li key={title} className="flex items-center justify-between gap-3 border-b border-slate-100 py-1"><span className="break-all">{title}</span><button type="button" disabled={busy} onClick={() => unblock(title)} className="shrink-0 rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">解除</button></li>))}
+        </ul>
+        <p className="mt-2 text-xs text-slate-500">解除しても、すでに除外した動画は、除外タブから個別に戻します。</p>
+      </details>
+    )}
     {bulkError && <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">{bulkError}</p>}
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.map((row) => {
       const rowActions = actions[row.id];
@@ -86,7 +129,7 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions }: {
       const isPicked = selected.has(row.id);
       return <div key={row.id} className={`relative rounded-2xl ${isPicked ? "ring-4 ring-slate-900" : ""}`}>
         {selectable(row) && <label className="absolute left-3 top-3 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/95 shadow-md"><input type="checkbox" checked={isPicked} onChange={() => toggle(row.id)} aria-label="この動画を選ぶ" className="h-5 w-5 accent-slate-900" /></label>}
-        <YoutubeStockCard row={row} shopLabel={row.matched_shop_id ? shopName[row.matched_shop_id] : undefined} portalOptions={portalOptions} {...rowActions} onToggleReject={row.match_status === "rejected" ? () => run([row.id], false) : !row.reel_id ? () => run([row.id], true) : undefined} />
+        <YoutubeStockCard row={row} shopLabel={row.matched_shop_id ? shopName[row.matched_shop_id] : undefined} portalOptions={portalOptions} {...rowActions} onSelectChannel={selectable(row) && row.channel_title && (channelCounts.get(row.channel_title) ?? 0) > 1 ? { count: channelCounts.get(row.channel_title) ?? 0, run: () => selectChannel(row.channel_title as string) } : undefined} onToggleReject={row.match_status === "rejected" ? () => run([row.id], false) : !row.reel_id ? () => run([row.id], true) : undefined} />
       </div>;
     })}</div>
     {filtered.length === 0 && <p className="text-sm text-slate-500">該当する動画はありません。</p>}
@@ -95,6 +138,7 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions }: {
         <span className="text-sm font-semibold text-slate-700">{picked.length}本を選択中</span>
         <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); selectableRows.forEach((row) => next.add(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">表示中の{selectableRows.length}本をすべて選ぶ</button>
         {picked.length > 0 && <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); picked.forEach((row) => next.delete(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">選択を外す</button>}
+        {!restoring && picked.length > 0 && <button type="button" disabled={busy} onClick={blockPicked} className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">チャンネルごと除外して今後収集しない</button>}
         <button type="button" disabled={busy || picked.length === 0} onClick={() => run(picked.map((row) => row.id), restoring)} className={`ml-auto rounded-lg px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 ${restoring ? "bg-slate-700" : "bg-red-600"}`}>{busy ? "処理中…" : restoring ? `除外を取り消す(${picked.length}本)` : `除外する(${picked.length}本)`}</button>
       </div>
     )}
