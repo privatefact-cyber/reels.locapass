@@ -56,7 +56,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <nav className="border-b border-slate-200 bg-white">
+      {/* 上に固定して、スクロールしても消えないようにする。PWA(ホーム画面に追加)ではviewport-fit=coverで画面全体が使われ、
+          ステータスバー(時計・電波)の下に潜り込んで押せなくなるので、セーフエリア分だけ上に余白を足す。 */}
+      <nav className="sticky top-0 z-40 border-b border-slate-200 bg-white pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-2 sm:px-6">
           <Link href="/admin" className="hidden shrink-0 text-sm font-bold tracking-wide text-slate-900 md:block">
             LOCAPASS 管理コンソール
