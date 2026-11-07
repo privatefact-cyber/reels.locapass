@@ -396,9 +396,9 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
             >
               {s.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" loading="lazy" />
+                <img src={s.imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover" loading="lazy" />
               ) : (
-                <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl ${s.placeCategory === "dog_run" ? "bg-[#E5F7F0]" : s.placeCategory === "dog_ok" ? "bg-[#FFEBDD]" : "bg-[#E8F3FD]"}`}>
+                <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-2xl ${s.placeCategory === "dog_run" ? "bg-[#E5F7F0]" : s.placeCategory === "dog_ok" ? "bg-[#FFEBDD]" : "bg-[#E8F3FD]"}`}>
                   {s.placeCategory ? PLACE_CATEGORY_EMOJI[s.placeCategory] : "🐾"}
                 </span>
               )}

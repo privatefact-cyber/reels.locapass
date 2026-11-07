@@ -99,9 +99,9 @@ export function SpotsExplorer({ spots, origin: initialOrigin }: { spots: PetSpot
               <PetCard className="flex items-center gap-3 p-3">
                 {s.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" loading="lazy" />
+                  <img src={s.imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover" loading="lazy" />
                 ) : (
-                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#E8F3FD] text-2xl">🐾</span>
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#E8F3FD] text-2xl">🐾</span>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-extrabold">{s.name}</p>
