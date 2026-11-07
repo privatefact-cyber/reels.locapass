@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { YoutubeStockCard } from "./YoutubeStockCard";
 import { setYoutubeStockRejected, blockChannelsAndReject, unblockChannel, deleteRejectedStock } from "../youtube-intake/actions";
 
@@ -30,6 +31,8 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
   // まとめて除外するための選択。表示中の(いまの絞り込みに合う)ものだけが対象になる。
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
+  // 件数が多いので、画面に出すのは60本ずつ(「もっと見る」で増やす)。選ぶ・除外するのは、出ていない分も含めて絞り込み全体が対象。
+  const [shown, setShown] = useState(60);
   // 動画が多くて一覧が長いので、少しスクロールしたら「先頭へ」「末尾へ」のボタンを出す。
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -39,10 +42,14 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   const [bulkError, setBulkError] = useState<string | null>(null);
+  // 操作の結果は、画面の下のバーに出す(一覧が長いと、上のエラー表示が見えないため)。
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const router = useRouter();
   const counts = useMemo(() => rows.reduce<Record<string, number>>((result, row) => {
     result[row.match_status] = (result[row.match_status] ?? 0) + 1;
     return result;
   }, {}), [rows]);
+  useEffect(() => { setShown(60); }, [status, provider, publication]);
   const filtered = useMemo(() => rows.filter((row) => {
     // 「候補」(すべて)の一覧には、除外した動画を出さない(「除外」を選ぶと見られる)。
     const matchesStatus = status === "all" ? row.match_status !== "rejected" : row.match_status === status;
@@ -76,11 +83,26 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
     if (ids.length === 0) return;
     setBusy(true);
     setBulkError(null);
+    setNotice(null);
     try {
-      await setYoutubeStockRejected(ids, rejected);
+      // 多いときは40本ずつに分けて送る(1回の通信を小さくして、結果を数えて確かめる)。
+      let updated = 0;
+      for (let i = 0; i < ids.length; i += 40) {
+        const res = await setYoutubeStockRejected(ids.slice(i, i + 40), rejected);
+        updated += res?.updated ?? 0;
+      }
       setSelected((prev) => { const next = new Set(prev); ids.forEach((id) => next.delete(id)); return next; });
+      const verb = rejected ? "除外" : "取り消し";
+      setNotice(
+        updated === ids.length
+          ? { ok: true, text: `${updated}本を${verb}しました` }
+          : updated === 0
+            ? { ok: false, text: `${verb}できませんでした(更新された動画が0本でした)。画面を再読み込みして、もう一度お試しください` }
+            : { ok: false, text: `${ids.length}本のうち${updated}本だけ${verb}できました(残りは公開済みなどで対象外です)` },
+      );
+      router.refresh();
     } catch (e) {
-      setBulkError(e instanceof Error ? e.message : "更新に失敗しました");
+      setNotice({ ok: false, text: e instanceof Error ? e.message : "更新に失敗しました" });
     } finally {
       setBusy(false);
     }
@@ -146,7 +168,7 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
       </details>
     )}
     {bulkError && <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">{bulkError}</p>}
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.map((row) => {
+    <div className="grid gap-3 xl:grid-cols-2">{filtered.slice(0, shown).map((row) => {
       const rowActions = actions[row.id];
       if (!rowActions) return null;
       const isPicked = selected.has(row.id);
@@ -156,10 +178,17 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
       </div>;
     })}</div>
     {filtered.length === 0 && <p className="text-sm text-slate-500">該当する動画はありません。</p>}
+    {filtered.length > shown && (
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <button type="button" onClick={() => setShown((n) => n + 60)} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">もっと見る(あと{filtered.length - shown}本)</button>
+        <button type="button" onClick={() => setShown(filtered.length)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">すべて表示</button>
+      </div>
+    )}
     {selectableRows.length > 0 && (
       <div className="sticky bottom-20 z-30 mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-slate-300 bg-white/95 px-4 py-3 shadow-lg backdrop-blur md:bottom-4">
+        {notice && <p className={`w-full rounded-lg px-3 py-2 text-sm font-semibold ${notice.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>{notice.text}</p>}
         <span className="text-sm font-semibold text-slate-700">{picked.length}本を選択中</span>
-        <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); selectableRows.forEach((row) => next.add(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">表示中の{selectableRows.length}本をすべて選ぶ</button>
+        <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); selectableRows.forEach((row) => next.add(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">この条件の{selectableRows.length}本をすべて選ぶ</button>
         {!restoring && picked.length > 0 && <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); picked.forEach((row) => next.delete(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">選択を外す</button>}
         {picked.length > 0 && <button type="button" disabled={busy} onClick={blockPicked} className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">チャンネルごと除外して今後収集しない</button>}
         {restoring && picked.length > 0 && <button type="button" disabled={busy} onClick={deletePicked} className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-60">完全に削除({picked.length}本)</button>}

@@ -18,10 +18,11 @@ export default async function YoutubeStockPage({ searchParams }: { searchParams:
   const collectionResult = await searchParams;
   const admin = createAdminClient();
   const [{ data }, { data: portals }] = await Promise.all([
-    (admin as any).from("locapass_youtube_ingestions").select("*").order("created_at", { ascending: false }).limit(200),
+    (admin as any).from("locapass_youtube_ingestions").select("*").order("created_at", { ascending: false }).limit(2000),
     admin.from("locapass_portals").select("id, slug, name, status").eq("status", "active").order("id"),
   ]);
-  const rows = (data ?? []) as Row[];
+  // 一覧が長いので、説明文は300文字までにして、画面に渡すデータを軽くする。
+  const rows = ((data ?? []) as Row[]).map((row) => ({ ...row, description: row.description ? row.description.slice(0, 300) : row.description }));
   const shopIds = [...new Set(rows.map((row) => row.matched_shop_id).filter((id): id is string => Boolean(id)))];
   const { data: shops } = shopIds.length ? await admin.from("locapass_shops").select("id, name, address, status, cover_url, address_en").in("id", shopIds) : { data: [] };
   const activeShops = (shops ?? []).filter((shop) => shop.status === "active");
