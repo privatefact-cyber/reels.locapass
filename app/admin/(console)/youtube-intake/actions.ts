@@ -270,6 +270,26 @@ export async function findOfficialSiteForIngestion(ingestionId: string) {
   refresh();
 }
 
+/**
+ * 動画ストックの候補を「除外」にする(rejected=false なら除外を取り消して「保留」に戻す)。
+ * データは消さず記録を残すので、次の収集で同じ動画が候補に戻ってこない。
+ * 公開済み(リール投稿済み)の候補は対象外にして、公開を取り消さない。
+ */
+export async function setYoutubeStockRejected(ids: string[], rejected: boolean) {
+  const user = await requireRootAdmin();
+  const list = [...new Set((Array.isArray(ids) ? ids : []).filter((id) => typeof id === "string" && id.length > 0))].slice(0, 500);
+  if (list.length === 0) return { updated: 0 };
+  const admin = createAdminClient();
+  const patch = { match_status: rejected ? "rejected" : "pending", reviewed_at: new Date().toISOString(), reviewed_by: user.id };
+  let query = (admin as any).from("locapass_youtube_ingestions").update(patch).in("id", list);
+  query = rejected ? query.is("reel_id", null).neq("match_status", "rejected") : query.eq("match_status", "rejected");
+  // 対象が0件でもエラーにならないので、更新できた件数を返して確かめられるようにする。
+  const { data, error } = await query.select("id");
+  if (error) throw new Error(`更新に失敗しました: ${error.message}`);
+  refresh();
+  return { updated: (data ?? []).length };
+}
+
 export async function reviewYoutubeIngestion(ingestionId: string, formData: FormData) {
   const user = await requireRootAdmin();
   const admin = createAdminClient();
