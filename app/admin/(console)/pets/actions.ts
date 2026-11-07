@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { petAdmin, PET_BUCKET } from "@/lib/pet/db";
 
-/** 運営: 迷子のお知らせ/見つけました通報を非表示・再表示する */
-export async function setPetReportHidden(type: "lost" | "found", id: string, hidden: boolean) {
+/** 運営: 迷子のお知らせ/見つけました通報/うちの子自慢(公開日誌)を非表示・再表示する */
+export async function setPetReportHidden(type: "lost" | "found" | "diary", id: string, hidden: boolean) {
   await requireRootAdmin();
-  const table = type === "lost" ? "locapass_pet_lost_reports" : "locapass_pet_found_reports";
+  const table = type === "lost" ? "locapass_pet_lost_reports" : type === "found" ? "locapass_pet_found_reports" : "locapass_pet_diary_entries";
   const { data, error } = await petAdmin()
     .from(table)
     .update({ hidden_at: hidden ? new Date().toISOString() : null })
@@ -32,7 +32,7 @@ export async function deleteFoundReportAsAdmin(id: string) {
 }
 
 /** 運営: 報告を確認済みにする(報告を消す) */
-export async function clearPetFlags(type: "lost" | "found", id: string) {
+export async function clearPetFlags(type: "lost" | "found" | "diary", id: string) {
   await requireRootAdmin();
   await petAdmin().from("locapass_pet_flags").delete().eq("target_type", type).eq("target_id", id);
   revalidatePath("/admin/pets");

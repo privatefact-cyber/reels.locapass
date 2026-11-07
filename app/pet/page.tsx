@@ -7,12 +7,19 @@ import { ageLabel, daysBetween, daysToBirthday, expiryStatus, formatJpDate, late
 import { DOC_TYPE_EMOJI, DOC_TYPE_SHORT, SEX_LABEL, type PetDocumentRow } from "@/lib/pet/types";
 import { PetAvatar, PetCard, PetSectionTitle, StatusPill, petButton } from "@/components/pet/ui";
 import { VerifiedBadge } from "@/components/pet/VerifiedBadge";
+import { GalleryHomeSections } from "@/components/pet/GalleryHomeSections";
 
 export const dynamic = "force-dynamic";
 
 export default async function PetHomePage() {
   const viewer = await getPetViewer();
-  if (!viewer) return <Welcome />;
+  if (!viewer)
+    return (
+      <>
+        <Welcome />
+        <GalleryHomeSections viewerId={null} />
+      </>
+    );
 
   const pets = await getMyPets(viewer.supabase);
   const { data: docRows } = pets.length
@@ -163,6 +170,8 @@ export default async function PetHomePage() {
         </>
       )}
 
+      <GalleryHomeSections viewerId={viewer.userId} />
+
       {nearbySpots.length > 0 && (
         <>
           <PetSectionTitle
@@ -196,11 +205,11 @@ export default async function PetHomePage() {
         </>
       )}
 
-      <Link href="/photo/new" className="mt-3 flex items-center gap-3 rounded-[24px] border-2 border-dashed border-[#FFC9A8] bg-[#FFF3E6] p-3 active:scale-[0.99]">
+      <Link href="/pet/post" className="mt-3 flex items-center gap-3 rounded-[24px] border-2 border-dashed border-[#FFC9A8] bg-[#FFF3E6] p-3 active:scale-[0.99]">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF8E5E] text-xl text-white">📸</span>
         <span className="min-w-0 flex-1 text-xs leading-relaxed text-[#7A6050]">
-          <b className="block text-sm text-[#4A3426]">ドッグランで遊んだ?いいカフェあった?</b>
-          LOCAPASS snap に投稿してみませんか
+          <b className="block text-sm text-[#4A3426]">ドッグランで遊んだ?いい景色あった?</b>
+          うちの子自慢に投稿。場所を付けると LOCAPASS snap にも載ります
         </span>
         <ChevronRight className="shrink-0 text-[#E3A27F]" size={18} />
       </Link>

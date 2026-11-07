@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Dog, Heart, MapPin, Search, Settings } from "lucide-react";
+import { Dog, MapPin, Search, Settings, Trophy } from "lucide-react";
 
 const TABS = [
   { href: "/pet", label: "うちの子", icon: Dog, match: (p: string) => p === "/pet" || (/^\/pet\/[0-9a-f-]{36}/.test(p) && !p.endsWith("/lost")) || p === "/pet/new" },
   { href: "/pet/spots", label: "おでかけ", icon: MapPin, match: (p: string) => p.startsWith("/pet/spots") || p.startsWith("/pet/place") },
+  { href: "/pet/gallery", label: "自慢", icon: Trophy, match: (p: string) => p.startsWith("/pet/gallery") || p.startsWith("/pet/follows") || p.startsWith("/pet/post") },
   { href: "/pet/lost", label: "迷子さがし", icon: Search, match: (p: string) => p.startsWith("/pet/lost") || p.startsWith("/pet/found") || p.endsWith("/lost") },
-  { href: "/pet/follows", label: "フォロー", icon: Heart, match: (p: string) => p.startsWith("/pet/follows") },
   { href: "/pet/settings", label: "設定", icon: Settings, match: (p: string) => p.startsWith("/pet/settings") },
 ];
 

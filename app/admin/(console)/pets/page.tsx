@@ -6,7 +6,7 @@ import { clearPetFlags, deleteFoundReportAsAdmin, setPetReportHidden } from "./a
 export const dynamic = "force-dynamic";
 
 type Row = {
-  type: "lost" | "found";
+  type: "lost" | "found" | "diary";
   id: string;
   title: string;
   status: string;
@@ -28,7 +28,7 @@ export default async function AdminPetsPage() {
   const admin = petAdmin();
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
-  const [{ data: lost }, { data: found }, { data: flags }] = await Promise.all([
+  const [{ data: lost }, { data: found }, { data: flags }, { data: diaries }] = await Promise.all([
     admin
       .from("locapass_pet_lost_reports")
       .select("id, pet_id, status, last_seen_address, created_at, hidden_at")
@@ -37,8 +37,15 @@ export default async function AdminPetsPage() {
       .limit(300),
     admin.from("locapass_pet_found_reports").select("id, kind, species, status, address, created_at, hidden_at").order("created_at", { ascending: false }).limit(300),
     admin.from("locapass_pet_flags").select("target_type, target_id, reason").limit(5000),
+    admin
+      .from("locapass_pet_diary_entries")
+      .select("id, pet_id, body, created_at, hidden_at, snap_post_id")
+      .eq("visibility", "public")
+      .neq("image_paths", "{}")
+      .order("created_at", { ascending: false })
+      .limit(300),
   ]);
-  const petIds = [...new Set((lost ?? []).map((l) => l.pet_id as string))];
+  const petIds = [...new Set([...(lost ?? []), ...(diaries ?? [])].map((l) => l.pet_id as string))];
   const { data: pets } = petIds.length ? await admin.from("locapass_pets").select("id, name").in("id", petIds) : { data: [] };
   const petName = new Map((pets ?? []).map((p) => [p.id as string, p.name as string]));
 
@@ -72,6 +79,18 @@ export default async function AdminPetsPage() {
       flags: flagMap.get(`found:${f.id}`)?.length ?? 0,
       reasons: flagMap.get(`found:${f.id}`) ?? [],
       href: `/pet/found/${f.id}`,
+    })),
+    ...(diaries ?? []).map((d) => ({
+      type: "diary" as const,
+      id: d.id as string,
+      title: `自慢: ${petName.get(d.pet_id as string) ?? "?"}${d.body ? ` 「${(d.body as string).slice(0, 20)}」` : ""}`,
+      status: d.snap_post_id ? "公開+snap" : "公開",
+      address: null,
+      createdAt: d.created_at as string,
+      hidden: Boolean(d.hidden_at),
+      flags: flagMap.get(`diary:${d.id}`)?.length ?? 0,
+      reasons: flagMap.get(`diary:${d.id}`) ?? [],
+      href: `/pet/gallery/${d.id}`,
     })),
   ].sort((a, b) => b.flags - a.flags || b.createdAt.localeCompare(a.createdAt));
 
@@ -144,9 +163,9 @@ export default async function AdminPetsPage() {
   return (
     <div className="space-y-8">
       <section>
-        <h1 className="text-2xl font-bold text-slate-900">迷子さがし(ロカわん)</h1>
+        <h1 className="text-2xl font-bold text-slate-900">迷子さがし・うちの子自慢(ロカわん)</h1>
         <p className="mt-1 text-sm text-slate-600">
-          迷子のお知らせと「見つけました」通報の確認。いたずら・重複は「非表示」にすると、一覧・地図・共有ページから消えます。迷子のお知らせは飼い主のものなので削除せず非表示で対応します。悪質な投稿者は
+          迷子のお知らせ・「見つけました」通報・うちの子自慢ギャラリーの確認。いたずら・重複は「非表示」にすると、一覧・地図・共有ページから消えます。迷子のお知らせは飼い主のものなので削除せず非表示で対応します。悪質な投稿者は
           <Link href="/admin/comments" className="mx-1 text-blue-700 hover:underline">
             コメント管理
           </Link>
@@ -160,7 +179,7 @@ export default async function AdminPetsPage() {
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">最近の投稿(迷子のお知らせはお知らせ中+30日以内、通報は最新300件)</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">最近の投稿(迷子のお知らせはお知らせ中+30日以内、通報・うちの子自慢は最新300件)</h2>
         {rows.length === 0 ? <p className="text-sm text-slate-500">まだありません</p> : <Table list={rows} />}
       </section>
     </div>

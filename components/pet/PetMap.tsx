@@ -231,6 +231,8 @@ export function PetMap({
     }
     if (!pickMarker.current) pickMarker.current = new maplibregl.Marker({ color: "#FF8E5E" }).setLngLat([pickLng, pickLat]).addTo(map);
     else pickMarker.current.setLngLat([pickLng, pickLat]);
+    // 外から場所が決まったとき(写真の撮影位置・施設を選んだとき)、見えていなければそこへ動かす
+    if (!map.getBounds().contains([pickLng, pickLat])) map.easeTo({ center: [pickLng, pickLat], zoom: Math.max(map.getZoom(), 15), duration: 500 });
   }, [isPicker, pickLat, pickLng]);
 
   function locate() {

@@ -369,8 +369,14 @@ export async function deletePetMedical(id: string): Promise<Result> {
 }
 
 // ---------------------------------------------------------------------------
-// 成長日誌
+// 成長日誌(公開にすると「うちの子自慢ギャラリー」に並ぶ。場所を付けると LOCAPASS snap にも投稿)
 // ---------------------------------------------------------------------------
+/**
+ * snapにも投稿するときの場所。施設を選んだときは、ブラウザから届いた位置ではなく施設の登録位置を使う。
+ * 自由な場所(景色の良い場所など)のときは、本人が地図で決めた点をそのまま使う。
+ */
+export type PetSnapPlace = { lat: number; lng: number; spotName: string; address?: string | null; shopId?: string | null; placeId?: string | null };
+
 export type PetDiaryInput = {
   id?: string;
   petId: string;
@@ -379,9 +385,107 @@ export type PetDiaryInput = {
   body?: string;
   imagePaths?: string[];
   visibility?: PetVisibility;
+  snap?: PetSnapPlace | null;
 };
 
-export async function savePetDiary(input: PetDiaryInput): Promise<Result> {
+const SNAP_RATE_LIMIT_PER_10MIN = 10;
+
+async function loadPetImages(paths: string[]) {
+  const admin = petAdmin();
+  const out: { data: Buffer; mimeType: string }[] = [];
+  for (const p of paths) {
+    const { data } = await admin.storage.from(PET_BUCKET).download(p);
+    if (data) out.push({ data: Buffer.from(await data.arrayBuffer()), mimeType: data.type || "image/jpeg" });
+  }
+  return out;
+}
+
+/** snapに出す場所を決める(施設なら登録位置に固定)。だめなら null */
+async function resolveSnapPlace(input: PetSnapPlace) {
+  const admin = petAdmin();
+  if (input.shopId && UUID.test(input.shopId)) {
+    const { data: shop } = await admin.from("locapass_shops").select("id, name, address, lat, lng, venue_id").eq("id", input.shopId).eq("status", "active").maybeSingle();
+    if (shop && shop.lat != null && shop.lng != null)
+      return { lat: shop.lat as number, lng: shop.lng as number, spotName: (shop.name as string).slice(0, 100), address: (shop.address as string | null)?.slice(0, 200) ?? null, shop: { id: shop.id as string, venueId: (shop.venue_id as string | null) ?? null } };
+  }
+  if (input.placeId && UUID.test(input.placeId)) {
+    const { data: place } = await admin.from("locapass_pet_places").select("name, address, lat, lng").eq("id", input.placeId).eq("hidden", false).maybeSingle();
+    if (place) return { lat: place.lat as number, lng: place.lng as number, spotName: (place.name as string).slice(0, 100), address: (place.address as string | null)?.slice(0, 200) ?? null, shop: null };
+  }
+  const lat = num(input.lat, -90, 90);
+  const lng = num(input.lng, -180, 180);
+  const spotName = text(input.spotName, 100);
+  if (lat === null || lng === null || !spotName) return null;
+  return { lat, lng, spotName, address: text(input.address, 200), shop: null };
+}
+
+/** 日誌の1枚目を LOCAPASS snap(area_photo_posts)に投稿する。投稿のIDを返す */
+async function postDiaryToSnap(userId: string, image: { data: Buffer; mimeType: string }, place: NonNullable<Awaited<ReturnType<typeof resolveSnapPlace>>>, comment: string | null): Promise<Result<{ postId: string }>> {
+  const admin = petAdmin();
+  const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { count } = await admin.from("area_photo_posts").select("id", { count: "exact", head: true }).eq("member_id", userId).gte("created_at", since);
+  if ((count ?? 0) >= SNAP_RATE_LIMIT_PER_10MIN) return { ok: false, error: "snapへの投稿が続いています。少し時間をおいてからお試しください" };
+
+  const [{ moderateAndTag }, { resolveAreaAndVenue }, { translatePostFields }] = await Promise.all([
+    import("@/lib/photo/moderate"),
+    import("@/lib/photo/resolveArea"),
+    import("@/lib/photo/translate"),
+  ]);
+  const moderation = await moderateAndTag(image.data, image.mimeType, place.spotName, comment ?? "");
+  if (!moderation.appropriate) return { ok: false, error: moderation.rejectReason ?? "この写真はsnapに投稿できませんでした" };
+
+  const { data: profile } = await admin.from("locapass_members").select("nickname, avatar_url").eq("id", userId).maybeSingle();
+  // 写真はロカわん側で縮小・再エンコード済み(撮影位置などのExifは残っていない)
+  const path = `${userId}/${Date.now()}-${crypto.randomBytes(4).toString("hex")}.jpg`;
+  const { error: upErr } = await admin.storage.from("map-photos").upload(path, image.data, { contentType: "image/jpeg" });
+  if (upErr) {
+    console.error("[pet-snap] upload failed", upErr);
+    return { ok: false, error: "snapへの投稿に失敗しました" };
+  }
+  const imageUrl = admin.storage.from("map-photos").getPublicUrl(path).data.publicUrl;
+  const { site, venueId } = await resolveAreaAndVenue(place.lat, place.lng);
+  const snapComment = comment ? comment.slice(0, 500) : null;
+  const { data: inserted, error } = await admin
+    .from("area_photo_posts")
+    .insert({
+      member_id: userId,
+      user_name: (profile?.nickname as string | null) ?? "ゲスト",
+      avatar_url: (profile?.avatar_url as string | null) ?? null,
+      image_url: imageUrl,
+      latitude: place.lat,
+      longitude: place.lng,
+      address: place.address,
+      spot_name: place.spotName,
+      comment: snapComment,
+      tags: moderation.tags,
+      site,
+      venue_id: place.shop?.venueId ?? venueId,
+      place_kind: place.shop?.venueId ? "listed" : "free",
+      place_id: null,
+      place_name: place.shop ? place.spotName : null,
+    })
+    .select("id")
+    .single();
+  if (error || !inserted) {
+    console.error("[pet-snap] insert failed", error);
+    await admin.storage.from("map-photos").remove([path]);
+    return { ok: false, error: "snapへの投稿に失敗しました" };
+  }
+  // LOCAPASSのお店を選んだときは、お店のページの写真一覧にも出るように紐づける
+  if (place.shop) {
+    const { error: linkErr } = await admin
+      .from("locapass_shop_photo_links")
+      .upsert({ post_id: inserted.id, shop_id: place.shop.id, mode: "attach", created_by: userId }, { onConflict: "post_id,shop_id" });
+    if (linkErr) console.error("[pet-snap] shop link failed", linkErr);
+  }
+  after(async () => {
+    const translations = await translatePostFields({ spot_name: place.spotName, comment: snapComment, address: place.address });
+    if (translations) await admin.from("area_photo_posts").update({ translations }).eq("id", inserted.id);
+  });
+  return { ok: true, postId: inserted.id as string };
+}
+
+export async function savePetDiary(input: PetDiaryInput): Promise<Result<{ snapPostId?: string | null }>> {
   const viewer = await viewerOrError();
   if ("error" in viewer) return { ok: false, error: viewer.error };
   const pet = await ownsPet(viewer, input.petId);
@@ -392,11 +496,27 @@ export async function savePetDiary(input: PetDiaryInput): Promise<Result> {
   const body = text(input.body, 1000);
   const imagePaths = ownPaths(viewer.userId, input.imagePaths, 4);
   if (weight === null && !body && imagePaths.length === 0) return { ok: false, error: "写真・体重・ひとことのどれかを入れてください" };
-  const row = { pet_id: pet.id, owner_id: viewer.userId, entry_date: entryDate, weight_kg: weight, body, image_paths: imagePaths, visibility: visibility(input.visibility) };
+  const vis = visibility(input.visibility);
+  const wantsSnap = !input.id && Boolean(input.snap);
+  if (wantsSnap && (vis !== "public" || imagePaths.length === 0)) return { ok: false, error: "snapに投稿するには、写真を付けて「公開」にしてください" };
+
+  // 公開(ギャラリーに並ぶ)ときは、AIで「犬が写っているか・住所の手がかりが写っていないか」を確かめる
+  let images: { data: Buffer; mimeType: string }[] = [];
+  if (vis === "public" && imagePaths.length > 0) {
+    images = await loadPetImages(imagePaths);
+    const { checkGalleryImages } = await import("@/lib/pet/gallery");
+    const check = await checkGalleryImages(images);
+    if (!check.ok) return { ok: false, error: `${check.reason}(「自分だけ」「フォロワー」なら、このまま保存できます)` };
+  }
+  const snapPlace = wantsSnap ? await resolveSnapPlace(input.snap!) : null;
+  if (wantsSnap && !snapPlace) return { ok: false, error: "snapに出す場所と、場所の名前を入れてください" };
+
+  const row = { pet_id: pet.id, owner_id: viewer.userId, entry_date: entryDate, weight_kg: weight, body, image_paths: imagePaths, visibility: vis };
   const { data } = input.id
     ? await viewer.supabase.from("locapass_pet_diary_entries").update(row).eq("id", input.id).select("id")
     : await viewer.supabase.from("locapass_pet_diary_entries").insert(row).select("id");
   if (!data?.length) return { ok: false, error: "保存できませんでした" };
+  const entryId = data[0].id as string;
 
   // 一番新しい体重をプロフィールにも反映
   if (weight !== null) {
@@ -411,19 +531,63 @@ export async function savePetDiary(input: PetDiaryInput): Promise<Result> {
     const w = latest?.[0]?.weight_kg;
     if (w != null) await viewer.supabase.from("locapass_pets").update({ weight_kg: w }).eq("id", pet.id);
   }
+
+  // snapへ(失敗しても日誌は保存済み。理由を返して知らせる)
+  let snapPostId: string | null = null;
+  if (snapPlace && images[0]) {
+    const posted = await postDiaryToSnap(viewer.userId, images[0], snapPlace, body);
+    if (!posted.ok) {
+      refresh();
+      return { ok: false, error: `日誌は保存しました。${posted.error}` };
+    }
+    snapPostId = posted.postId;
+    const { data: linked } = await petAdmin().from("locapass_pet_diary_entries").update({ snap_post_id: snapPostId }).eq("id", entryId).select("id");
+    if (!linked?.length) console.error("[pet-snap] diary link failed", entryId);
+  }
   refresh();
-  return { ok: true };
+  return { ok: true, snapPostId };
 }
 
 export async function deletePetDiary(id: string): Promise<Result> {
   const viewer = await viewerOrError();
   if ("error" in viewer) return { ok: false, error: viewer.error };
-  const { data } = await viewer.supabase.from("locapass_pet_diary_entries").delete().eq("id", id).select("id, image_paths");
+  const { data } = await viewer.supabase.from("locapass_pet_diary_entries").delete().eq("id", id).select("id, image_paths, snap_post_id");
   if (!data?.length) return { ok: false, error: "削除できませんでした" };
   const imgs = (data[0].image_paths as string[]) ?? [];
-  if (imgs.length) after(() => petAdmin().storage.from(PET_BUCKET).remove(imgs).then(() => undefined));
+  const snapId = data[0].snap_post_id as string | null;
+  after(async () => {
+    const admin = petAdmin();
+    if (imgs.length) await admin.storage.from(PET_BUCKET).remove(imgs);
+    // いっしょに投稿したsnapも消す(本人の投稿だけ)
+    if (snapId) {
+      const { data: gone } = await admin.from("area_photo_posts").delete().eq("id", snapId).eq("member_id", viewer.userId).select("image_url");
+      const url = gone?.[0]?.image_url as string | undefined;
+      const marker = "/map-photos/";
+      if (url?.includes(marker)) await admin.storage.from("map-photos").remove([url.slice(url.indexOf(marker) + marker.length)]);
+    }
+  });
   refresh();
   return { ok: true };
+}
+
+/** 肉球(いいね)を押す/取り消す */
+export async function togglePetDiaryLike(entryId: string): Promise<Result<{ liked: boolean; count: number }>> {
+  const viewer = await viewerOrError();
+  if ("error" in viewer) return { ok: false, error: viewer.error };
+  if (!UUID.test(entryId)) return { ok: false, error: "見つかりません" };
+  const admin = petAdmin();
+  const { data: entry } = await admin.from("locapass_pet_diary_entries").select("id, visibility, hidden_at").eq("id", entryId).maybeSingle();
+  if (!entry || entry.visibility !== "public" || entry.hidden_at) return { ok: false, error: "この投稿は見られなくなりました" };
+  const { data: removed } = await admin.from("locapass_pet_diary_likes").delete().eq("entry_id", entryId).eq("user_id", viewer.userId).select("entry_id");
+  let liked = false;
+  if (!removed?.length) {
+    const { error } = await admin.from("locapass_pet_diary_likes").insert({ entry_id: entryId, user_id: viewer.userId });
+    if (error && error.code !== "23505") return { ok: false, error: "押せませんでした" };
+    liked = true;
+  }
+  const { data: after_ } = await admin.from("locapass_pet_diary_entries").select("like_count").eq("id", entryId).maybeSingle();
+  revalidatePath("/pet/gallery", "layout");
+  return { ok: true, liked, count: (after_?.like_count as number | undefined) ?? 0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -964,10 +1128,10 @@ export async function deleteFoundReport(id: string, manageToken?: string | null)
 }
 
 /** 不適切の報告(迷子のお知らせ・見つけました通報)。運営が管理画面で確認する */
-export async function flagPetReport(targetType: "lost" | "found", targetId: string, reason: string): Promise<Result> {
+export async function flagPetReport(targetType: "lost" | "found" | "diary", targetId: string, reason: string): Promise<Result> {
   const viewer = await viewerOrError();
   if ("error" in viewer) return { ok: false, error: viewer.error };
-  if (!UUID.test(targetId) || (targetType !== "lost" && targetType !== "found")) return { ok: false, error: "見つかりません" };
+  if (!UUID.test(targetId) || (targetType !== "lost" && targetType !== "found" && targetType !== "diary")) return { ok: false, error: "見つかりません" };
   const { error } = await petAdmin().from("locapass_pet_flags").insert({ target_type: targetType, target_id: targetId, reporter_id: viewer.userId, reason: text(reason, 300) });
   if (error && error.code !== "23505") return { ok: false, error: "送れませんでした" };
   return { ok: true };

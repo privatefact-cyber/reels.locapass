@@ -4,10 +4,14 @@ import { useState } from "react";
 import { Flag, Loader2 } from "lucide-react";
 import { flagPetReport } from "@/app/pet/actions";
 
-const REASONS = ["いたずら・うその情報", "同じ内容が重複している", "個人情報がのっている", "もう解決している", "その他"];
+const REASONS_BY_TYPE = {
+  lost: ["いたずら・うその情報", "同じ内容が重複している", "個人情報がのっている", "もう解決している", "その他"],
+  found: ["いたずら・うその情報", "同じ内容が重複している", "個人情報がのっている", "もう解決している", "その他"],
+  diary: ["犬が写っていない", "住所・表札などが写っている", "不快な写真", "他人の写真の無断使用", "その他"],
+};
 
 /** 迷子のお知らせ・見つけました通報の「不適切を報告」(運営が管理画面で確認) */
-export function FlagButton({ targetType, targetId, loggedIn }: { targetType: "lost" | "found"; targetId: string; loggedIn: boolean }) {
+export function FlagButton({ targetType, targetId, loggedIn }: { targetType: "lost" | "found" | "diary"; targetId: string; loggedIn: boolean }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -30,7 +34,7 @@ export function FlagButton({ targetType, targetId, loggedIn }: { targetType: "lo
         <div className="rounded-2xl bg-white p-3 text-left shadow-sm">
           <p className="mb-2 text-xs font-extrabold text-[#7A6050]">報告の理由</p>
           <div className="flex flex-wrap gap-1.5">
-            {REASONS.map((r) => (
+            {REASONS_BY_TYPE[targetType].map((r) => (
               <button
                 key={r}
                 type="button"

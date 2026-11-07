@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { requirePetViewer } from "@/lib/pet/db";
 import { lineConfigured } from "@/lib/pet/notify";
 import { PetSettingsForm } from "@/components/pet/PetSettingsForm";
@@ -34,6 +36,18 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
       <div className="mb-4">
         <PetPushCard />
       </div>
+      <Link href="/pet/follows" className="mb-4 block">
+        <PetCard className="flex items-center gap-3">
+          <span className="text-2xl" aria-hidden>
+            💗
+          </span>
+          <span className="flex-1 text-sm">
+            <b className="block">フォロー</b>
+            <span className="text-xs text-[#9C8273]">フォロー中の子・フォローのお願いの承認</span>
+          </span>
+          <ChevronRight className="text-[#D9C4B4]" size={20} />
+        </PetCard>
+      </Link>
       <PetSettingsForm
         walkAreas={(areas ?? []) as { id: string; lat: number; lng: number; label: string | null }[]}
         lostAlertOptIn={s?.lost_alert_opt_in ?? true}
