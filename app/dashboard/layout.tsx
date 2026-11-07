@@ -1,4 +1,4 @@
-import { AdminLanguageSelect } from "@/components/locapass-dashboard/AdminLanguageSelect";
+import { DashboardLanguageRow } from "@/components/locapass-dashboard/DashboardLanguageRow";
 import { DashboardTranslator } from "@/components/locapass-dashboard/DashboardTranslator";
 import { getAdminLocale } from "@/lib/i18n/getAdminLocale";
 import catalog from "@/lib/dashboard-i18n/catalog.json";
@@ -21,9 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         );
   return (
     <>
-      <div className="mx-auto flex max-w-6xl justify-end px-4 pt-3">
-        <AdminLanguageSelect current={locale} />
-      </div>
+      <DashboardLanguageRow current={locale} />
       <DashboardTranslator locale={locale} catalog={slice}>
         {children}
       </DashboardTranslator>

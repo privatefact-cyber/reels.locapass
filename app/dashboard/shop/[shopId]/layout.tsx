@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { DashboardSignOutButton } from "@/components/locapass-dashboard/DashboardSignOutButton";
+import { AdminLanguageSelect } from "@/components/locapass-dashboard/AdminLanguageSelect";
+import { getAdminLocale } from "@/lib/i18n/getAdminLocale";
 import { RecoveryInfoGateModal } from "@/components/locapass-dashboard/RecoveryInfoGateModal";
 import { PasswordSetupGate } from "@/components/locapass-dashboard/PasswordSetupGate";
 import { ShopNavMenu, type ShopNavGroup } from "@/components/locapass-dashboard/ShopNavMenu";
@@ -69,6 +71,7 @@ export default async function LocapassShopDashboardLayout({
 }) {
   const { shopId } = await params;
   const viewer = await getShopForManager(shopId);
+  const adminLocale = await getAdminLocale();
   if (!viewer) notFound();
   const shop = viewer.shop;
 
@@ -140,6 +143,7 @@ export default async function LocapassShopDashboardLayout({
             <Link href={`${basePath}/support`} className="hidden whitespace-nowrap rounded-lg bg-sky-50 px-3 py-2 text-sm font-bold text-sky-700 hover:bg-sky-100 sm:block">
               ❓ 使い方
             </Link>
+            <AdminLanguageSelect current={adminLocale} onLight />
             <DashboardSignOutButton redirectTo={viewer.isOperator ? "/admin/login" : "/login"} />
           </div>
         </div>
