@@ -271,6 +271,26 @@ export async function findOfficialSiteForIngestion(ingestionId: string) {
 }
 
 /**
+ * 「除外」の動画をデータベースから完全に削除する(元に戻せない)。除外済みで、リール未公開のものだけが対象。
+ * 同じ動画が次の収集でまた候補に入ってくることがある(記録が無くなるため)。チャンネルごと「今後収集しない」にすると防げる。
+ */
+export async function deleteRejectedStock(ids: string[]) {
+  await requireRootAdmin();
+  const list = [...new Set((Array.isArray(ids) ? ids : []).filter((id) => typeof id === "string" && id.length > 0))].slice(0, 500);
+  if (list.length === 0) return { deleted: 0 };
+  const { data, error } = await (createAdminClient() as any)
+    .from("locapass_youtube_ingestions")
+    .delete()
+    .in("id", list)
+    .eq("match_status", "rejected")
+    .is("reel_id", null)
+    .select("id");
+  if (error) throw new Error(`削除に失敗しました: ${error.message}`);
+  refresh();
+  return { deleted: (data ?? []).length };
+}
+
+/**
  * 選んだ動画のチャンネルを「今後収集しない」にし、そのチャンネルの未公開の候補をすべて「除外」にする。
  * 公開済み(リール投稿済み)の動画は、除外にも非表示にもしない。データは消さない。
  */
