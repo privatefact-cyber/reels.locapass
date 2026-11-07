@@ -37,6 +37,7 @@ const NAV_GROUPS: ShopNavGroup[] = [
     title: "分析と契約",
     items: [
       { href: "/admin/analytics", label: "アクセス解析", icon: "📊", description: "閲覧数などのアクセス状況" },
+      { href: "/admin/pets/analytics", label: "ロカわん解析", icon: "🐾", description: "ロカわんのアクセス・利用状況・LOCAPASSへの送客" },
       { href: "/admin/options", label: "オプション管理", icon: "🧩", description: "店舗ごとの有料オプションの設定" },
       { href: "/admin/billing", label: "掲載料・代理店", icon: "💴", description: "掲載料と代理店手数料の管理" },
     ],
