@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { YoutubeStockCard } from "./YoutubeStockCard";
 import { setYoutubeStockRejected, blockChannelsAndReject, unblockChannel, deleteRejectedStock } from "../youtube-intake/actions";
 
@@ -39,6 +40,9 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   const [bulkError, setBulkError] = useState<string | null>(null);
+  // 操作の結果は、画面の下のバーに出す(一覧が長いと、上のエラー表示が見えないため)。
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const router = useRouter();
   const counts = useMemo(() => rows.reduce<Record<string, number>>((result, row) => {
     result[row.match_status] = (result[row.match_status] ?? 0) + 1;
     return result;
@@ -76,11 +80,26 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
     if (ids.length === 0) return;
     setBusy(true);
     setBulkError(null);
+    setNotice(null);
     try {
-      await setYoutubeStockRejected(ids, rejected);
+      // 多いときは40本ずつに分けて送る(1回の通信を小さくして、結果を数えて確かめる)。
+      let updated = 0;
+      for (let i = 0; i < ids.length; i += 40) {
+        const res = await setYoutubeStockRejected(ids.slice(i, i + 40), rejected);
+        updated += res?.updated ?? 0;
+      }
       setSelected((prev) => { const next = new Set(prev); ids.forEach((id) => next.delete(id)); return next; });
+      const verb = rejected ? "除外" : "取り消し";
+      setNotice(
+        updated === ids.length
+          ? { ok: true, text: `${updated}本を${verb}しました` }
+          : updated === 0
+            ? { ok: false, text: `${verb}できませんでした(更新された動画が0本でした)。画面を再読み込みして、もう一度お試しください` }
+            : { ok: false, text: `${ids.length}本のうち${updated}本だけ${verb}できました(残りは公開済みなどで対象外です)` },
+      );
+      router.refresh();
     } catch (e) {
-      setBulkError(e instanceof Error ? e.message : "更新に失敗しました");
+      setNotice({ ok: false, text: e instanceof Error ? e.message : "更新に失敗しました" });
     } finally {
       setBusy(false);
     }
@@ -158,6 +177,7 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
     {filtered.length === 0 && <p className="text-sm text-slate-500">該当する動画はありません。</p>}
     {selectableRows.length > 0 && (
       <div className="sticky bottom-20 z-30 mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-slate-300 bg-white/95 px-4 py-3 shadow-lg backdrop-blur md:bottom-4">
+        {notice && <p className={`w-full rounded-lg px-3 py-2 text-sm font-semibold ${notice.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>{notice.text}</p>}
         <span className="text-sm font-semibold text-slate-700">{picked.length}本を選択中</span>
         <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); selectableRows.forEach((row) => next.add(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">表示中の{selectableRows.length}本をすべて選ぶ</button>
         {!restoring && picked.length > 0 && <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); picked.forEach((row) => next.delete(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">選択を外す</button>}
