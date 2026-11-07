@@ -184,6 +184,42 @@ export async function collectTokyoBeautyStock(options?: {
   return { portalId, queries: TOKYO_BEAUTY_QUERIES.length, fetched, saved, publishedAfter, errors };
 }
 
+/** 東京のカフェ・グルメ系の検索語。定期収集(/api/cron/youtube-gourmet)が使う。 */
+export const TOKYO_GOURMET_QUERIES = [
+  "東京 カフェ",
+  "東京 グルメ",
+  "東京 ランチ",
+  "東京 スイーツ",
+  "東京 居酒屋",
+  "東京 ラーメン",
+  "東京 パン屋",
+  "東京 ディナー",
+] as const;
+
+/**
+ * 東京のカフェ・グルメ系を新着順で収集し、ロカパス(ハブ)ポータルへストックする(手動収集の初期ポータルと同じ)。
+ * 店舗特定・公開は processPendingIngestions が行う(定期実行では、この収集で入れた分だけを処理する)。
+ */
+export async function collectTokyoGourmetStock(options?: { portalId?: number; perQuery?: number; publishedAfter?: string }) {
+  const portalId = options?.portalId ?? LOCAPASS_HUB_PORTAL_ID;
+  const perQuery = Math.min(Math.max(options?.perQuery ?? 25, 1), 50);
+  const publishedAfter = options?.publishedAfter ?? new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString();
+  let fetched = 0;
+  let saved = 0;
+  const errors: string[] = [];
+  for (const query of TOKYO_GOURMET_QUERIES) {
+    // 1つの検索語が失敗(クォータ・一時的なエラー)しても、残りの検索語と後段の公開処理は続ける。
+    try {
+      const candidates = await collectYoutubeCandidates(query, perQuery, publishedAfter);
+      fetched += candidates.length;
+      saved += await saveYoutubeCandidates(portalId, candidates);
+    } catch (error) {
+      errors.push(`${query}: ${error instanceof Error ? error.message.slice(0, 160) : "収集に失敗"}`);
+    }
+  }
+  return { portalId, queries: TOKYO_GOURMET_QUERIES.length, fetched, saved, publishedAfter, errors };
+}
+
 /** 管理画面から同一動画を何度集めても候補を増やさない。 */
 export async function saveYoutubeCandidates(portalId: number, candidates: YoutubeCandidate[]) {
   const admin = createAdminClient();
@@ -365,7 +401,16 @@ export async function processPendingIngestion(row: PendingRow, userId: string | 
  * 未判定の保留(match_reasonなし)を新しい順に処理して公開する。管理画面のボタンとcronの両方から使う。
  * Geminiを続けて呼ぶので、件数とともに経過時間でも打ち切る(serverless の上限内に収める)。
  */
-export async function processPendingIngestions(options: { portalId?: number | null; limit: number; userId: string | null; budgetMs?: number }) {
+export async function processPendingIngestions(options: {
+  portalId?: number | null;
+  limit: number;
+  userId: string | null;
+  budgetMs?: number;
+  /** 指定すると、この検索語で収集した候補だけを処理する(手動で集めた古い未判定の候補を巻き込まない)。 */
+  sourceQueries?: readonly string[];
+  /** 指定すると、この日時以降に収集した候補だけを処理する(ISO文字列)。 */
+  createdAfter?: string;
+}) {
   const started = Date.now();
   const budgetMs = options.budgetMs ?? 200_000;
   const admin = createAdminClient();
@@ -376,6 +421,8 @@ export async function processPendingIngestions(options: { portalId?: number | nu
     .order("created_at", { ascending: false })
     .limit(Math.min(Math.max(options.limit, 1), 50));
   if (options.portalId) query = query.eq("portal_id", options.portalId);
+  if (options.sourceQueries?.length) query = query.in("source_query", [...options.sourceQueries]);
+  if (options.createdAfter) query = query.gte("created_at", options.createdAfter);
   const { data: rows, error } = await query;
   if (error) throw new Error(`保留候補の取得に失敗しました: ${error.message}`);
   const summary = { scanned: 0, published: 0, held: 0, errors: 0 };
