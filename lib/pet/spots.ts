@@ -28,7 +28,7 @@ export type PetSpot = {
   placeCategory?: PetPlaceCategory | null;
 };
 
-export type PetPlaceCategory = "dog_run" | "vet" | "pet_shop" | "pet_hotel" | "trimming" | "training" | "other";
+export type PetPlaceCategory = "dog_run" | "vet" | "pet_shop" | "pet_hotel" | "trimming" | "training" | "dog_ok" | "other";
 export const PLACE_CATEGORY_LABEL: Record<PetPlaceCategory, string> = {
   dog_run: "ドッグラン",
   vet: "動物病院",
@@ -36,9 +36,10 @@ export const PLACE_CATEGORY_LABEL: Record<PetPlaceCategory, string> = {
   pet_hotel: "ペットホテル",
   trimming: "トリミング",
   training: "しつけ教室",
+  dog_ok: "犬OKのお店",
   other: "ペット施設",
 };
-export const PLACE_CATEGORY_EMOJI: Record<PetPlaceCategory, string> = { dog_run: "🐕", vet: "🏥", pet_shop: "🛍️", pet_hotel: "🏨", trimming: "✂️", training: "🎓", other: "🐾" };
+export const PLACE_CATEGORY_EMOJI: Record<PetPlaceCategory, string> = { dog_run: "🐕", vet: "🏥", pet_shop: "🛍️", pet_hotel: "🏨", trimming: "✂️", training: "🎓", dog_ok: "☕", other: "🐾" };
 
 const PET_FACILITY_PORTAL = "lizand";
 const COLUMNS = "id, name, slug, area, category, address, lat, lng, icon_url, cover_url, portal:locapass_portals ( slug )";

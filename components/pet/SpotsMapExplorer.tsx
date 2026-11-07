@@ -16,14 +16,18 @@ const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 const DEFAULT_CENTER = { lat: 35.658, lng: 139.7016, zoom: 11 }; // 渋谷
 /** LOCAPASS認証のお店を写真ピンで出す上限(取り込んだ施設は、いつも点+まとめピン) */
 const PHOTO_PIN_LIMIT = 60;
-const COLOR = { facility: "#6AADEB", with_pet: "#FF8E5E", dog_run: "#4FBF9F", vet: "#6AADEB", other: "#B39C8C" };
+/** 取り込んだ施設の点の色(種類ごと) */
+const PLACE_COLOR: Record<string, string> = { dog_run: "#4FBF9F", dog_ok: "#FF8E5E", vet: "#6AADEB", pet_shop: "#B58AE0", trimming: "#F27BA6", pet_hotel: "#E3A33B", training: "#E3A33B", other: "#B39C8C" };
 
-type Filter = "all" | "verified" | "dog_run" | "vet" | "with_pet";
+type Filter = "all" | "verified" | "dog_run" | "with_pet" | "care" | "pet_shop" | "vet";
 
 function matches(s: PetSpot, f: Filter) {
   if (f === "all") return true;
   if (f === "verified") return Boolean(s.verified);
-  if (f === "with_pet") return s.kinds.includes("with_pet");
+  // 一緒に行ける店 = LOCAPASSの🐾のお店+OpenStreetMapの犬OKのお店
+  if (f === "with_pet") return s.kinds.includes("with_pet") || s.placeCategory === "dog_ok";
+  // トリミング・ホテル・しつけ
+  if (f === "care") return s.placeCategory === "trimming" || s.placeCategory === "pet_hotel" || s.placeCategory === "training";
   return s.placeCategory === f;
 }
 type Snap = "peek" | "half" | "full";
@@ -204,7 +208,7 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
         features: others.map((s) => ({
           type: "Feature" as const,
           geometry: { type: "Point" as const, coordinates: [s.lng!, s.lat!] },
-          properties: { id: s.id, color: s.placeCategory === "dog_run" ? COLOR.dog_run : s.placeCategory === "vet" ? COLOR.vet : COLOR.other },
+          properties: { id: s.id, color: PLACE_COLOR[s.placeCategory ?? "other"] ?? PLACE_COLOR.other },
         })),
       });
     };
@@ -323,6 +327,8 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
           {chip("verified", "✓ LOCAPASS認証")}
           {chip("dog_run", "🐕 ドッグラン")}
           {chip("with_pet", "🐾 一緒に行ける店")}
+          {chip("care", "✂️ トリミング・ホテル")}
+          {chip("pet_shop", "🛍️ ペットショップ")}
           {chip("vet", "🏥 動物病院")}
           <button type="button" onClick={locate} className="flex shrink-0 items-center gap-1 rounded-full bg-white/95 px-3 py-2 text-xs font-extrabold text-[#EE6A36] shadow-sm">
             <LocateFixed size={13} />
@@ -392,7 +398,7 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={s.imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" loading="lazy" />
               ) : (
-                <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl ${s.placeCategory === "dog_run" ? "bg-[#E5F7F0]" : "bg-[#E8F3FD]"}`}>
+                <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl ${s.placeCategory === "dog_run" ? "bg-[#E5F7F0]" : s.placeCategory === "dog_ok" ? "bg-[#FFEBDD]" : "bg-[#E8F3FD]"}`}>
                   {s.placeCategory ? PLACE_CATEGORY_EMOJI[s.placeCategory] : "🐾"}
                 </span>
               )}

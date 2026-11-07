@@ -41,7 +41,7 @@ export default async function PetPlacePage({ params }: { params: Promise<{ id: s
   return (
     <div className="pt-2">
       <div className="flex items-center gap-3">
-        <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl text-3xl ${place.category === "dog_run" ? "bg-[#E5F7F0]" : "bg-[#E8F3FD]"}`}>{PLACE_CATEGORY_EMOJI[place.category]}</span>
+        <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl text-3xl ${place.category === "dog_run" ? "bg-[#E5F7F0]" : place.category === "dog_ok" ? "bg-[#FFEBDD]" : "bg-[#E8F3FD]"}`}>{PLACE_CATEGORY_EMOJI[place.category]}</span>
         <div className="min-w-0">
           <p className="text-xs font-bold text-[#9C8273]">{PLACE_CATEGORY_LABEL[place.category]}</p>
           <h1 className="text-xl font-extrabold leading-tight">{place.name}</h1>
