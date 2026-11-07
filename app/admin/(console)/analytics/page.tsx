@@ -15,6 +15,16 @@ type Summary = {
   devices: { device: string; pv: number }[];
 };
 
+type Flow = {
+  sessions: number;
+  refs: { host: string; sessions: number; pv: number; avg_pv: number; bounce_pct: number }[];
+  landings: { path: string; sessions: number; avg_pv: number }[];
+  next_pages: { path: string; pv: number }[];
+  pv_dist: { ord: number; label: string; sessions: number }[];
+};
+const DIRECT = "__direct__";
+const DIRECT_LABEL = "(直接・ブックマーク等)";
+
 const DEVICE_LABEL: Record<string, string> = { mobile: "スマホ", tablet: "タブレット", desktop: "PC" };
 const RANGES = [
   { days: 7, label: "直近7日" },
@@ -30,7 +40,7 @@ function jstDate(offsetDays: number) {
 export default async function AnalyticsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ days?: string; pref?: string }>;
+  searchParams: Promise<{ days?: string; pref?: string; ref?: string }>;
 }) {
   const sp = await searchParams;
   const days = RANGES.some((r) => r.days === Number(sp.days)) ? Number(sp.days) : 30;
@@ -41,6 +51,16 @@ export default async function AnalyticsPage({
   const { data, error } = await (supabase as unknown as {
     rpc: (fn: string, args: object) => Promise<{ data: Summary | null; error: { message: string } | null }>;
   }).rpc("site_hits_summary", { p_site: ANALYTICS_SITE, p_since: since, p_pref: sel });
+  // 外部流入別の動き(流入元ごとの着地ページ・その後に見たページ)。ref 未指定=外部流入すべて。都道府県の絞り込みとは別。
+  const refSel = typeof sp.ref === "string" && sp.ref.length > 0 && sp.ref.length <= 100 ? sp.ref : null;
+  const { data: flowData, error: flowError } = await (supabase as unknown as {
+    rpc: (fn: string, args: object) => Promise<{ data: Flow | null; error: { message: string } | null }>;
+  }).rpc("site_hits_referrer_flow", { p_site: ANALYTICS_SITE, p_since: since, p_ref: refSel });
+  const flow: Flow = flowData ?? { sessions: 0, refs: [], landings: [], next_pages: [], pv_dist: [] };
+  const flowSelected = refSel ? flow.refs.find((r) => r.host === refSel) : null;
+  const externalRefs = flow.refs.filter((r) => r.host !== DIRECT);
+  const externalSessions = externalRefs.reduce((sum, r) => sum + Number(r.sessions), 0);
+  const externalPv = externalRefs.reduce((sum, r) => sum + Number(r.pv), 0);
   const s: Summary = data ?? { pv: 0, uv: 0, prefs: [], overseas: [], unknown: 0, daily: [], pages: [], refs: [], devices: [] };
 
   const byPref = new Map(s.prefs.map((p) => [p.pref_code, p]));
@@ -57,12 +77,15 @@ export default async function AnalyticsPage({
     series
       .map((d, i) => `${((series.length > 1 ? i / (series.length - 1) : 0.5) * W).toFixed(1)},${(H - (d[key] / maxPv) * (H - 10) - 2).toFixed(1)}`)
       .join(" ");
-  const href = (p: { days?: number; pref?: string | null }) => {
+  const href = (p: { days?: number; pref?: string | null; ref?: string | null }) => {
     const q = new URLSearchParams({ days: String(p.days ?? days) });
     const pref = p.pref === undefined ? sel : p.pref;
     if (pref) q.set("pref", pref);
+    const ref = p.ref === undefined ? refSel : p.ref;
+    if (ref) q.set("ref", ref);
     return `/admin/analytics?${q.toString()}`;
   };
+  const refLabel = (host: string) => (host === DIRECT ? DIRECT_LABEL : host);
 
   return (
     <div className="space-y-5">
@@ -163,6 +186,61 @@ export default async function AnalyticsPage({
             </tbody></table>
           </div>
         ))}
+      </div>
+      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+        <h2 className="text-sm font-bold">外部流入別の動き <span className="font-normal text-slate-400">— どこから来て、どのページに着地し、何ページ見たか(都道府県の絞り込みとは別)</span></h2>
+        {flowError && <p className="rounded bg-rose-50 p-3 text-sm text-rose-700">集計の取得に失敗しました: {flowError.message}</p>}
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <Link href={href({ ref: null })} className={`rounded-full border px-3 py-1 ${!refSel ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700"}`}>外部流入すべて</Link>
+          {flow.refs.map((r) => (
+            <Link key={r.host} href={href({ ref: r.host })} className={`rounded-full border px-3 py-1 ${refSel === r.host ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700"}`}>
+              {refLabel(r.host)} <span className="opacity-60">{r.sessions}</span>
+            </Link>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {(() => {
+            const sessions = flowSelected ? Number(flowSelected.sessions) : externalSessions;
+            const pv = flowSelected ? Number(flowSelected.pv) : externalPv;
+            const bounce = flowSelected ? Number(flowSelected.bounce_pct) : externalSessions ? Math.round((flow.pv_dist.find((d) => d.ord === 1)?.sessions ?? 0) / externalSessions * 100) : 0;
+            return [
+              [sessions.toLocaleString(), "訪問数(同じ日・同じ訪問者を1訪問)"],
+              [sessions ? (pv / sessions).toFixed(1) : "—", "1訪問あたりのページ数"],
+              [sessions ? `${bounce}%` : "—", "1ページだけで帰った割合"],
+              [`${flow.sessions.toLocaleString()}`, "全体の訪問数(直接を含む)"],
+            ].map(([v, l]) => (
+              <div key={l} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                <div className="text-xl font-bold text-emerald-800">{v}</div>
+                <div className="text-xs text-slate-500">{l}</div>
+              </div>
+            ));
+          })()}
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-lg border border-slate-100 p-3">
+            <h3 className="mb-2 text-sm font-bold">着地ページ <span className="font-normal text-slate-400">最初に開いたページ</span></h3>
+            <table className="w-full text-sm"><tbody>
+              {flow.landings.map((l) => (<tr key={l.path} className="border-b border-slate-100"><td className="break-all py-1.5 pr-2">{l.path}</td><td className="text-right tabular-nums">{l.sessions}</td><td className="w-16 pl-2 text-right text-xs tabular-nums text-slate-400">{Number(l.avg_pv).toFixed(1)}頁</td></tr>))}
+              {flow.landings.length === 0 && <tr><td className="py-2 text-slate-400">データなし</td></tr>}
+            </tbody></table>
+            <p className="mt-1 text-[11px] text-slate-400">列: 訪問数 / 1訪問あたりのページ数</p>
+          </div>
+          <div className="rounded-lg border border-slate-100 p-3">
+            <h3 className="mb-2 text-sm font-bold">その後に見たページ <span className="font-normal text-slate-400">着地の次以降</span></h3>
+            <table className="w-full text-sm"><tbody>
+              {flow.next_pages.map((p) => (<tr key={p.path} className="border-b border-slate-100"><td className="break-all py-1.5 pr-2">{p.path}</td><td className="text-right tabular-nums">{p.pv}</td></tr>))}
+              {flow.next_pages.length === 0 && <tr><td className="py-2 text-slate-400">データなし</td></tr>}
+            </tbody></table>
+          </div>
+          <div className="rounded-lg border border-slate-100 p-3">
+            <h3 className="mb-2 text-sm font-bold">1訪問で見たページ数</h3>
+            <table className="w-full text-sm"><tbody>
+              {flow.pv_dist.map((d) => (<tr key={d.ord} className="border-b border-slate-100"><td className="py-1.5 pr-2">{d.label}</td><td className="text-right tabular-nums">{d.sessions}</td></tr>))}
+              {flow.pv_dist.length === 0 && <tr><td className="py-2 text-slate-400">データなし</td></tr>}
+            </tbody></table>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400">流入元は、タブを開いて最初に見たページにだけ記録されます。1訪問は「同じ日・同じ訪問者」で、日をまたぐ訪問は別に数えます。</p>
       </div>
       <p className="text-xs text-slate-400">IPアドレスは保存しません。訪問者は日替わりの匿名ハッシュで数えます。運営ログイン中のアクセスとボットは除外。IPベースのため、携帯回線やVPNでは実際の居住地とずれることがあります。</p>
     </div>
