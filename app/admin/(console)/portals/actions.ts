@@ -393,6 +393,19 @@ export async function setMachiNoKoeBetaEnabled(enabled: boolean) {
   revalidatePath("/admin");
 }
 
+/**
+ * 店舗ダッシュボードの「LOCAPASS経由の連絡」カードを、店舗に見せるかどうか。スーパー管理者のみ。オフでも集計(連絡ボタンの押下回数)は続く。
+ * platform_settings はLUXELAと共通のテーブルなので、locapass用の列だけをRPC経由で切り替える。
+ */
+export async function setContactStatsVisible(enabled: boolean) {
+  await requireRootAdmin();
+  const supabase = await createClient();
+  const { error } = await (supabase as any).rpc("locapass_set_contact_stats_visible", { p_visible: enabled });
+  if (error) throw new Error(`連絡カードの表示設定の変更に失敗しました: ${error.message}`);
+  revalidatePath("/admin");
+  revalidatePath("/dashboard/shop", "layout");
+}
+
 /** locapass のサイト全体の配色テーマ。null は自動(12/1〜12/25はクリスマス、それ以外は通常)。LUXELAとは別に切り替わる。 */
 export async function setSiteTheme(theme: SiteTheme | null) {
   await requireRootAdmin();

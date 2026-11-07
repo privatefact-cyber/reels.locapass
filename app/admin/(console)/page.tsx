@@ -7,6 +7,7 @@ import { CreatePortalShopForm } from "@/components/admin/portal/CreatePortalShop
 import { EditPortalNameForm } from "@/components/admin/portal/EditPortalNameForm";
 import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusToggle";
 import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
+import { ContactStatsToggle } from "@/components/admin/ContactStatsToggle";
 import { SiteThemeSelector } from "@/components/admin/SiteThemeSelector";
 import { isSiteTheme, resolveSiteTheme } from "@/lib/theme";
 import { LoginUrlCard } from "@/components/locapass-dashboard/LoginUrlCard";
@@ -70,6 +71,9 @@ export default async function AdminShopsPage({
     supabase.from("platform_settings").select("locapass_machi_no_koe_beta_enabled, locapass_site_theme").eq("id", true).maybeSingle(),
   ]);
   const machiNoKoeEnabled = settings?.locapass_machi_no_koe_beta_enabled ?? false;
+  // 店舗ダッシュボードの「経由の連絡」カードの表示(別に読んで、列が無い間も他の設定の読み込みを壊さない)。
+  const { data: contactStatsSetting } = await (supabase as any).from("platform_settings").select("locapass_contact_stats_visible").eq("id", true).maybeSingle();
+  const contactStatsVisible = Boolean(contactStatsSetting?.locapass_contact_stats_visible);
   const siteTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
   // 登録ユーザー数(locapass_members)。会員はポータルに紐づかず、運営者でも本人の行しかRLSで読めないため、
@@ -139,6 +143,30 @@ export default async function AdminShopsPage({
           <StatCard label="登録ユーザー(一般)" value={generalMemberCount} accent="text-indigo-600" />
           <StatCard label="店舗・運営側の会員" value={staffSideMemberCount} />
           <StatCard label="直近7日の新規(一般)" value={generalMemberCount7d} />
+        </div>
+      )}
+
+      {scope.portalIds === null && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900">店舗への「LOCAPASS経由の連絡」表示</h2>
+              <span
+                className={
+                  contactStatsVisible
+                    ? "rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700"
+                    : "rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-500"
+                }
+              >
+                {contactStatsVisible ? "表示中" : "非表示"}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              店舗の管理画面にある、連絡ボタン(LINE・電話・QR)が押された回数のカードを、店舗に見せるかどうか。アクセスが少ないうちは非表示にしておく。
+              非表示でも集計は続き、運営が代理で見るときは出る。
+            </p>
+          </div>
+          <ContactStatsToggle enabled={contactStatsVisible} />
         </div>
       )}
 

@@ -7,13 +7,16 @@ const ROWS: { kind: string; label: string }[] = [
   { kind: "line_qr", label: "LINEのQRコードを表示" },
 ];
 
-export function ContactTapStatsCard({ stats }: { stats: ContactTapStat[] }) {
+export function ContactTapStatsCard({ stats, hiddenFromShop = false }: { stats: ContactTapStat[]; /** 店舗にはまだ出していないとき(運営が代理で見ているときだけ表示する)。 */ hiddenFromShop?: boolean }) {
   const byKind = new Map(stats.map((s) => [s.kind, s]));
   const total7 = stats.reduce((sum, s) => sum + Number(s.taps_7d), 0);
   const total30 = stats.reduce((sum, s) => sum + Number(s.taps_30d), 0);
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6">
+      {hiddenFromShop && (
+        <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">運営にだけ表示中です。店舗には出していません(管理コンソールで、店舗への表示を切り替えられます)。</p>
+      )}
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">LOCAPASS経由の連絡</h2>
