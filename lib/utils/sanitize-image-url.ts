@@ -25,22 +25,26 @@ export function sanitizeImageUrl(url: string | null | undefined): string | undef
   if (/^https:\/\/dev\.locapass\.net\/(?:[a-z0-9_-]+\/)*wp-content\/uploads\/[\w./%-]+$/i.test(urlStr)) return urlStr;
 
   // URLが有効か検証
+  let parsed: URL;
   try {
-    new URL(urlStr);
+    parsed = new URL(urlStr);
   } catch {
     // URLパースエラー: 無効なURLは除外
     return undefined;
   }
+
+  // 自分たちのSupabaseストレージにアップロードした画像は、ファイル名がタイムスタンプ+乱数なので、
+  // 数字の並びに "403"/"404" が偶然含まれる(例: 1794041509141-xxxx.png)。それを「古い壊れたURL」と
+  // 誤判定して画像が出なくなっていたので(2026-11-07)、"/shops/" と 403/404 の判定は対象外にする。
+  const isOwnStorage = /\.supabase\.co$/i.test(parsed.hostname) && parsed.pathname.startsWith("/storage/v1/object/public/");
 
   // 古いWP関連URLパターンを検出
   if (
     urlStr.includes("wp-content") ||
     urlStr.includes("placeholder-") ||
     urlStr.includes("bakumatsu-") ||
-    urlStr.includes("/shops/") ||
     urlStr.includes("dev.locapass.net") ||
-    urlStr.includes("403") ||
-    urlStr.includes("404")
+    (!isOwnStorage && (urlStr.includes("/shops/") || urlStr.includes("403") || urlStr.includes("404")))
   ) {
     return undefined;
   }
