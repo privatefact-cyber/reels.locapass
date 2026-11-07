@@ -4,20 +4,28 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import * as maplibreNs from "maplibre-gl";
-import { ChevronRight, Loader2, LocateFixed, MapPin, Search, X } from "lucide-react";
+import { Camera, ChevronRight, Loader2, LocateFixed, MapPin, Search, X } from "lucide-react";
 import { geocode } from "@/lib/map/geocode";
-import type { PetSpot } from "@/lib/pet/spots";
+import { PLACE_CATEGORY_EMOJI, type PetSpot } from "@/lib/pet/spots";
 import { PET_RETURN_KEY } from "./SpotsExplorer";
+import { VerifiedBadge } from "./VerifiedBadge";
 
 // maplibre-glはCJS(UMD)なので、読み込み経路によってdefaultの有無が変わる(components/photo/PhotoMap.tsx と同じ対処)
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 const DEFAULT_CENTER = { lat: 35.658, lng: 139.7016, zoom: 11 }; // 渋谷
-/** 写真ピンで出す上限。これより多いときは、数字の丸(まとめピン)と点で出す */
-const PHOTO_PIN_LIMIT = 40;
-const COLOR = { facility: "#6AADEB", with_pet: "#FF8E5E" };
+/** LOCAPASS認証のお店を写真ピンで出す上限(取り込んだ施設は、いつも点+まとめピン) */
+const PHOTO_PIN_LIMIT = 60;
+const COLOR = { facility: "#6AADEB", with_pet: "#FF8E5E", dog_run: "#4FBF9F", vet: "#6AADEB", other: "#B39C8C" };
 
-type Filter = "all" | "facility" | "with_pet";
+type Filter = "all" | "verified" | "dog_run" | "vet" | "with_pet";
+
+function matches(s: PetSpot, f: Filter) {
+  if (f === "all") return true;
+  if (f === "verified") return Boolean(s.verified);
+  if (f === "with_pet") return s.kinds.includes("with_pet");
+  return s.placeCategory === f;
+}
 type Snap = "peek" | "half" | "full";
 
 function markReturn() {
@@ -68,12 +76,12 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
   const snapH = useCallback((s: Snap) => (s === "peek" ? 128 : s === "half" ? Math.round(wrapH * 0.48) : Math.max(200, wrapH - 72)), [wrapH]);
   const sheetH = dragH ?? snapH(snap);
 
+  // 一覧はLOCAPASS認証のお店を先頭に、その中で近い順(ロカわんはLOCAPASSへ案内するのが役目)
   const visible = useMemo(() => {
-    const list = spots.filter((s) => filter === "all" || s.kinds.includes(filter));
-    return list
-      .filter((s) => s.lat != null && s.lng != null)
+    return spots
+      .filter((s) => matches(s, filter) && s.lat != null && s.lng != null)
       .map((s) => ({ ...s, dist: km(center, { lat: s.lat!, lng: s.lng! }) }))
-      .sort((a, b) => a.dist - b.dist);
+      .sort((a, b) => Number(Boolean(b.verified)) - Number(Boolean(a.verified)) || a.dist - b.dist);
   }, [spots, filter, center]);
 
   // 見えている範囲のお店を取り直す(移動が止まってから)
@@ -128,7 +136,8 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
         type: "circle",
         source: "spots",
         filter: ["has", "point_count"],
-        paint: { "circle-color": "#FF8E5E", "circle-radius": ["step", ["get", "point_count"], 17, 10, 21, 50, 27], "circle-stroke-width": 3, "circle-stroke-color": "#fff" },
+        // 取り込んだ施設のまとめピンは控えめな青(LOCAPASS認証のお店の金色を目立たせる)
+        paint: { "circle-color": "#8DB8E4", "circle-radius": ["step", ["get", "point_count"], 15, 10, 19, 50, 24], "circle-stroke-width": 2, "circle-stroke-color": "#fff", "circle-opacity": 0.9 },
       });
       map.addLayer({
         id: "spot-count",
@@ -143,7 +152,7 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
         type: "circle",
         source: "spots",
         filter: ["!", ["has", "point_count"]],
-        paint: { "circle-color": ["get", "color"], "circle-radius": 9, "circle-stroke-width": 3, "circle-stroke-color": "#fff" },
+        paint: { "circle-color": ["get", "color"], "circle-radius": 7, "circle-stroke-width": 2, "circle-stroke-color": "#fff" },
       });
       map.on("click", "spot-clusters", (e) => {
         const f = e.features?.[0];
@@ -180,44 +189,46 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
     setTimeout(() => cardRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 250);
   }, []);
 
-  // ピンを描く(少ないときは写真ピン、多いときはまとめピン+点)
+  // ピンを描く: LOCAPASS認証のお店は写真ピン(認証マーク付き)、取り込んだ施設は色分けした点+まとめピン
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
-    const usePhotos = visible.length <= PHOTO_PIN_LIMIT;
+    const verified = visible.filter((s) => s.verified).slice(0, PHOTO_PIN_LIMIT);
+    const others = visible.filter((s) => !s.verified);
     const apply = () => {
       const src = map.getSource("spots") as maplibregl.GeoJSONSource | undefined;
       src?.setData({
         type: "FeatureCollection",
-        features: usePhotos
-          ? []
-          : visible.map((s) => ({
-              type: "Feature" as const,
-              geometry: { type: "Point" as const, coordinates: [s.lng!, s.lat!] },
-              properties: { id: s.id, color: s.kinds.includes("facility") ? COLOR.facility : COLOR.with_pet },
-            })),
+        features: others.map((s) => ({
+          type: "Feature" as const,
+          geometry: { type: "Point" as const, coordinates: [s.lng!, s.lat!] },
+          properties: { id: s.id, color: s.placeCategory === "dog_run" ? COLOR.dog_run : s.placeCategory === "vet" ? COLOR.vet : COLOR.other },
+        })),
       });
     };
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
-    if (usePhotos) {
-      for (const s of visible) {
-        const el = document.createElement("button");
-        el.type = "button";
-        const color = s.kinds.includes("facility") ? COLOR.facility : COLOR.with_pet;
-        const big = s.id === selected;
-        el.style.cssText = `display:block;width:${big ? 56 : 44}px;height:${big ? 56 : 44}px;border-radius:9999px;border:3px solid ${color};background:#fff center/cover no-repeat;box-shadow:0 4px 10px rgba(0,0,0,.25);font-size:18px;line-height:36px;text-align:center;cursor:pointer;z-index:${big ? 2 : 1};`;
-        if (s.imageUrl) el.style.backgroundImage = `url("${s.imageUrl}")`;
-        else el.textContent = "🐾";
-        el.title = s.name;
-        el.addEventListener("click", (ev) => {
-          ev.stopPropagation();
-          selectSpot(s.id);
-        });
-        markersRef.current.push(new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([s.lng!, s.lat!]).addTo(map));
-      }
+    for (const s of verified) {
+      const el = document.createElement("button");
+      el.type = "button";
+      const big = s.id === selected;
+      const size = big ? 58 : 46;
+      el.style.cssText = `position:relative;display:block;width:${size}px;height:${size}px;border-radius:9999px;border:3px solid #F59E0B;background:#fff center/cover no-repeat;box-shadow:0 4px 12px rgba(245,158,11,.45);font-size:18px;line-height:${size - 8}px;text-align:center;cursor:pointer;`;
+      if (s.imageUrl) el.style.backgroundImage = `url("${s.imageUrl}")`;
+      else el.textContent = "🐾";
+      // 右下の認証チェック
+      const check = document.createElement("span");
+      check.textContent = "✓";
+      check.style.cssText = "position:absolute;right:-4px;bottom:-4px;width:18px;height:18px;border-radius:9999px;background:#F59E0B;color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;border:2px solid #fff;";
+      el.appendChild(check);
+      el.title = `${s.name}(LOCAPASS認証)`;
+      el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        selectSpot(s.id);
+      });
+      markersRef.current.push(new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([s.lng!, s.lat!]).addTo(map));
     }
   }, [visible, selected, selectSpot]);
 
@@ -309,8 +320,10 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
         </form>
         <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-1">
           {chip("all", "すべて")}
-          {chip("facility", "🏠 ペット施設")}
+          {chip("verified", "✓ LOCAPASS認証")}
+          {chip("dog_run", "🐕 ドッグラン")}
           {chip("with_pet", "🐾 一緒に行ける店")}
+          {chip("vet", "🏥 動物病院")}
           <button type="button" onClick={locate} className="flex shrink-0 items-center gap-1 rounded-full bg-white/95 px-3 py-2 text-xs font-extrabold text-[#EE6A36] shadow-sm">
             <LocateFixed size={13} />
             現在地
@@ -350,29 +363,49 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
           {visible.length === 0 && !loading && (
             <p className="py-6 text-center text-sm text-[#9C8273]">この範囲にお店はありません。地図を動かすか、場所を検索してください。</p>
           )}
+          <Link
+            href="/photo/new"
+            className="flex items-center gap-3 rounded-[22px] border-2 border-dashed border-[#FFC9A8] bg-[#FFF3E6] p-3 active:scale-[0.99]"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF8E5E] text-white">
+              <Camera size={20} />
+            </span>
+            <span className="min-w-0 flex-1 text-xs leading-relaxed text-[#7A6050]">
+              <b className="block text-sm text-[#4A3426]">ドッグランで遊んだ?いいカフェあった?</b>
+              写真を LOCAPASS snap に投稿してみませんか。近くの施設のページにも並びます。
+            </span>
+            <ChevronRight size={16} className="shrink-0 text-[#E3A27F]" />
+          </Link>
           {truncated && <p className="px-1 text-[11px] text-[#B39C8C]">お店が多いので、地図の真ん中に近い300件を出しています。拡大すると絞れます。</p>}
           {visible.map((s) => (
             <Link
               key={s.id}
               href={s.href}
-              onClick={markReturn}
+              onClick={s.verified ? markReturn : undefined}
               ref={(el) => {
                 if (el) cardRefs.current.set(s.id, el);
                 else cardRefs.current.delete(s.id);
               }}
-              className={`flex items-center gap-3 rounded-[22px] border bg-white p-2.5 transition active:scale-[0.99] ${selected === s.id ? "border-[#FF8E5E] shadow-[0_0_0_3px_rgba(255,142,94,0.25)]" : "border-[#F1E1CF]"}`}
+              className={`flex items-center gap-3 rounded-[22px] border p-2.5 transition active:scale-[0.99] ${s.verified ? "bg-gradient-to-r from-[#FFFBEB] to-white" : "bg-white"} ${selected === s.id ? "border-[#FF8E5E] shadow-[0_0_0_3px_rgba(255,142,94,0.25)]" : s.verified ? "border-[#FCD34D]" : "border-[#F1E1CF]"}`}
             >
               {s.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={s.imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" loading="lazy" />
               ) : (
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#E8F3FD] text-2xl">🐾</span>
+                <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl ${s.placeCategory === "dog_run" ? "bg-[#E5F7F0]" : "bg-[#E8F3FD]"}`}>
+                  {s.placeCategory ? PLACE_CATEGORY_EMOJI[s.placeCategory] : "🐾"}
+                </span>
               )}
               <div className="min-w-0 flex-1">
+                {s.verified && (
+                  <div className="mb-0.5">
+                    <VerifiedBadge />
+                  </div>
+                )}
                 <p className="truncate text-sm font-extrabold text-[#4A3426]">{s.name}</p>
                 <p className="truncate text-xs text-[#9C8273]">{[s.area, s.category].filter(Boolean).join(" ・ ") || s.address}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {s.kinds.includes("facility") && <span className="rounded-full bg-[#E8F3FD] px-2 py-0.5 text-[10px] font-bold text-[#3F7FBF]">ペット施設</span>}
+                  {s.verified && s.kinds.includes("facility") && <span className="rounded-full bg-[#E8F3FD] px-2 py-0.5 text-[10px] font-bold text-[#3F7FBF]">ペット施設</span>}
                   {s.kinds.includes("with_pet") && <span className="rounded-full bg-[#FFEBDD] px-2 py-0.5 text-[10px] font-bold text-[#C2562A]">🐾 一緒に行ける</span>}
                   <span className="rounded-full bg-[#F4EEE8] px-2 py-0.5 text-[10px] font-bold text-[#7A6050]">{s.dist < 1 ? `${Math.round(s.dist * 1000)}m` : `${s.dist.toFixed(1)}km`}</span>
                 </div>

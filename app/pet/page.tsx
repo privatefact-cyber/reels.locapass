@@ -6,6 +6,7 @@ import { getPetSpots } from "@/lib/pet/spots";
 import { ageLabel, daysBetween, daysToBirthday, expiryStatus, formatJpDate, latestByType, todayJst } from "@/lib/pet/calc";
 import { DOC_TYPE_EMOJI, DOC_TYPE_SHORT, SEX_LABEL, type PetDocumentRow } from "@/lib/pet/types";
 import { PetAvatar, PetCard, PetSectionTitle, StatusPill, petButton } from "@/components/pet/ui";
+import { VerifiedBadge } from "@/components/pet/VerifiedBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -184,13 +185,25 @@ export default async function PetHomePage() {
                   ) : (
                     <div className="flex aspect-square items-center justify-center bg-[#E8F3FD] text-3xl">🐾</div>
                   )}
-                  <p className="truncate px-2 py-1.5 text-xs font-bold">{s.name}</p>
+                  <div className="px-2 py-1.5">
+                    <VerifiedBadge />
+                    <p className="mt-0.5 truncate text-xs font-bold">{s.name}</p>
+                  </div>
                 </div>
               </Link>
             ))}
           </div>
         </>
       )}
+
+      <Link href="/photo/new" className="mt-3 flex items-center gap-3 rounded-[24px] border-2 border-dashed border-[#FFC9A8] bg-[#FFF3E6] p-3 active:scale-[0.99]">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF8E5E] text-xl text-white">📸</span>
+        <span className="min-w-0 flex-1 text-xs leading-relaxed text-[#7A6050]">
+          <b className="block text-sm text-[#4A3426]">ドッグランで遊んだ?いいカフェあった?</b>
+          LOCAPASS snap に投稿してみませんか
+        </span>
+        <ChevronRight className="shrink-0 text-[#E3A27F]" size={18} />
+      </Link>
 
       <PetSectionTitle emoji="🔔">お知らせの受け取り</PetSectionTitle>
       <Link href="/pet/settings" className="block">

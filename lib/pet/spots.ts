@@ -22,7 +22,23 @@ export type PetSpot = {
   lng: number | null;
   imageUrl: string | null;
   kinds: ("facility" | "with_pet")[];
+  /** true = LOCAPASSに掲載中のお店(営業を確認済み=認証マーク)。false = OpenStreetMap等から取り込んだ施設 */
+  verified?: boolean;
+  /** 取り込んだ施設の種類(ドッグラン・動物病院など)。LOCAPASSのお店は null */
+  placeCategory?: PetPlaceCategory | null;
 };
+
+export type PetPlaceCategory = "dog_run" | "vet" | "pet_shop" | "pet_hotel" | "trimming" | "training" | "other";
+export const PLACE_CATEGORY_LABEL: Record<PetPlaceCategory, string> = {
+  dog_run: "ドッグラン",
+  vet: "動物病院",
+  pet_shop: "ペットショップ",
+  pet_hotel: "ペットホテル",
+  trimming: "トリミング",
+  training: "しつけ教室",
+  other: "ペット施設",
+};
+export const PLACE_CATEGORY_EMOJI: Record<PetPlaceCategory, string> = { dog_run: "🐕", vet: "🏥", pet_shop: "🛍️", pet_hotel: "🏨", trimming: "✂️", training: "🎓", other: "🐾" };
 
 const PET_FACILITY_PORTAL = "lizand";
 const COLUMNS = "id, name, slug, area, category, address, lat, lng, icon_url, cover_url, portal:locapass_portals ( slug )";
@@ -109,9 +125,8 @@ export async function getPetSpotsInBounds(b: SpotBounds): Promise<{ spots: PetSp
       .limit(3000),
   ]);
   const list = (rows ?? []) as unknown as (Row & { portal_id: string })[];
-  if (list.length === 0) return { spots: [], truncated: false };
 
-  // 範囲内の店のうち、🐾属性(ペット同伴可・ペット専用)がある店
+  // 範囲内の店のうち、🐾属性(ペット同伴可・ペット専用)がある店(範囲内にお店がなければ、下の取り込んだ施設だけになる)
   const ids = list.map((r) => r.id);
   const withPet = new Set<string>();
   for (let i = 0; i < ids.length; i += 200) {
@@ -136,12 +151,64 @@ export async function getPetSpotsInBounds(b: SpotBounds): Promise<{ spots: PetSp
   for (const { r, kinds } of kept.slice(0, SPOTS_IN_VIEW_LIMIT)) {
     const p = Array.isArray(r.portal) ? r.portal[0] : r.portal;
     if (!p?.slug || !r.slug) continue;
-    spots.push({ id: r.id, name: r.name, href: shopPath(p.slug, r.slug), area: r.area, category: r.category, address: r.address, lat: r.lat, lng: r.lng, imageUrl: image(r.cover_url ?? r.icon_url), kinds });
+    spots.push({ id: r.id, name: r.name, href: shopPath(p.slug, r.slug), area: r.area, category: r.category, address: r.address, lat: r.lat, lng: r.lng, imageUrl: image(r.cover_url ?? r.icon_url), kinds, verified: true, placeCategory: null });
   }
   const noPhoto = spots.filter((s) => !s.imageUrl).map((s) => s.id);
   if (noPhoto.length) {
     const stills = await latestReelStillsByShop(noPhoto);
     for (const s of spots) if (!s.imageUrl) s.imageUrl = image(stills.get(s.id) ?? null);
   }
-  return { spots, truncated };
+
+  // 取り込んだ施設(ドッグラン・動物病院など。LOCAPASSの地図には出さない)。中心から近い順に最大300件
+  const { data: placeRows } = await db
+    .from("locapass_pet_places")
+    .select("id, category, name, address, lat, lng")
+    .gte("lat", b.minLat)
+    .lte("lat", b.maxLat)
+    .gte("lng", b.minLng)
+    .lte("lng", b.maxLng)
+    .limit(3000);
+  const places = ((placeRows ?? []) as { id: string; category: PetPlaceCategory; name: string; address: string | null; lat: number; lng: number }[])
+    .sort((a, z) => (a.lat - cLat) ** 2 + (a.lng - cLng) ** 2 - ((z.lat - cLat) ** 2 + (z.lng - cLng) ** 2));
+  const placeTruncated = places.length > SPOTS_IN_VIEW_LIMIT;
+  for (const pl of places.slice(0, SPOTS_IN_VIEW_LIMIT)) {
+    spots.push({
+      id: pl.id,
+      name: pl.name,
+      href: `/pet/place/${pl.id}`,
+      area: null,
+      category: PLACE_CATEGORY_LABEL[pl.category] ?? "ペット施設",
+      address: pl.address,
+      lat: pl.lat,
+      lng: pl.lng,
+      imageUrl: null,
+      kinds: ["facility"],
+      verified: false,
+      placeCategory: pl.category,
+    });
+  }
+  return { spots, truncated: truncated || placeTruncated };
+}
+
+/** 施設ページ用: 取り込んだ施設1件 */
+export async function getPetPlace(id: string) {
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+  const { data } = await db.from("locapass_pet_places").select("id, source, category, name, address, lat, lng, website, opening_hours, attribution").eq("id", id).maybeSingle();
+  return data as { id: string; source: string; category: PetPlaceCategory; name: string; address: string | null; lat: number; lng: number; website: string | null; opening_hours: string | null; attribution: string | null } | null;
+}
+
+/** 施設の近く(約150m)で投稿された LOCAPASS snap(みんなのフォト)。新しい順 */
+export async function getNearbySnaps(lat: number, lng: number, limit = 12) {
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+  const d = 0.0015;
+  const { data } = await db
+    .from("area_photo_posts")
+    .select("id, image_url, video_url, spot_name, comment, created_at")
+    .gte("latitude", lat - d)
+    .lte("latitude", lat + d)
+    .gte("longitude", lng - d)
+    .lte("longitude", lng + d)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data ?? []) as { id: string; image_url: string | null; video_url: string | null; spot_name: string | null; comment: string | null; created_at: string }[];
 }
