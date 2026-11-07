@@ -117,22 +117,22 @@ export function YoutubeStockCard({
   const thumbnail = row.thumbnail_url ?? (row.youtube_id ? `https://i.ytimg.com/vi/${row.youtube_id}/hqdefault.jpg` : null);
 
   return (
-    <article onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) e.preventDefault(); }} onDrop={(e) => { if (pickImage(e.dataTransfer.files[0])) e.preventDefault(); }} className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
-      <button type="button" onClick={() => setPreview((value) => !value)} className="group relative block aspect-square w-full overflow-hidden bg-slate-900 text-left" aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
+    <article onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) e.preventDefault(); }} onDrop={(e) => { if (pickImage(e.dataTransfer.files[0])) e.preventDefault(); }} className={`flex flex-wrap items-start overflow-hidden rounded-xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
+      <button type="button" onClick={() => setPreview((value) => !value)} className={`group relative block shrink-0 overflow-hidden bg-slate-900 text-left ${preview ? "m-3 aspect-[9/16] h-[26rem] max-h-[70vh] rounded-lg" : "m-3 aspect-square w-28 rounded-lg"}`} aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
         {preview ? (
           <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
         ) : (
           <>
             {thumbnail ? <img src={thumbnail} alt="" className={`h-full w-full object-cover transition ${customThumb ? "" : "scale-[1.35] group-hover:scale-[1.42]"}`} /> : <div className="flex h-full items-center justify-center text-sm text-white">サムネイル未取得</div>}
-            <span className="absolute inset-0 flex items-center justify-center bg-black/20"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-xl text-slate-900 shadow">▶</span></span>
+            <span className="absolute inset-0 flex items-center justify-center bg-black/20"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-sm text-slate-900 shadow">▶</span></span>
           </>
         )}
       </button>
-      <div className="space-y-4 p-4">
+      <div className={`min-w-[14rem] flex-1 space-y-2 p-3 ${preview ? "" : "pl-0"}`}>
         <div className="flex flex-wrap items-center gap-2">
           <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setThumbError(null); setCropFile(f); } }} />
-          <button type="button" disabled={thumbBusy} onClick={() => fileInput.current?.click()} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60">{thumbBusy ? "サムネイルを保存中…" : thumbnail ? "サムネイルを差し替え(正方形に切り取り)" : "サムネイルを設定(正方形に切り取り)"}</button>
-          <span className="text-[11px] text-slate-500">コピーした画像は、カードにマウスを乗せて貼り付け(Cmd/Ctrl+V)、またはドロップでも設定できます</span>
+          <button type="button" disabled={thumbBusy} onClick={() => fileInput.current?.click()} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60">{thumbBusy ? "サムネイルを保存中…" : thumbnail ? "サムネイル差し替え" : "サムネイル設定"}</button>
+          <span className="hidden" title="コピーした画像は、カードにマウスを乗せて貼り付け(Cmd/Ctrl+V)、またはドロップでも設定できます" />
           {thumbError && <span className="text-xs font-semibold text-red-600">{thumbError}</span>}
         </div>
         {cropFile && <AvatarCropModal file={cropFile} plain shape="square" title="サムネイルを切り取り" outputSize={720} applyLabel="この範囲で保存" onCancel={() => setCropFile(null)} onCropped={saveThumbnail} />}
@@ -145,10 +145,10 @@ export function YoutubeStockCard({
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">{row.reel_id && (row.auto_hidden_at ? <span className="rounded-full bg-amber-600 px-2.5 py-1 text-xs font-bold text-white">自動で非表示中</span> : <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">公開済み</span>)}<span className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><span className={isTikTok ? "rounded bg-black px-1.5 py-0.5 text-[10px] text-white" : "rounded bg-red-600 px-1.5 py-0.5 text-[10px] text-white"}>{isTikTok ? "TikTok" : "YouTube"}</span>{status}</span>{row.matched_shop_id && row.match_status === "ready_to_create" && <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-semibold text-orange-800">自動仮登録・要手動確認</span>}{onToggleReject && <button type="button" disabled={rejectBusy} onClick={async () => { setRejectBusy(true); try { await onToggleReject(); } finally { setRejectBusy(false); } }} className={`rounded-lg px-3 py-1.5 text-xs font-bold disabled:cursor-wait disabled:opacity-60 ${row.match_status === "rejected" ? "border border-slate-300 text-slate-700 hover:bg-slate-50" : "bg-red-50 text-red-700 hover:bg-red-100"}`}>{rejectBusy ? "処理中…" : row.match_status === "rejected" ? "除外を取り消す" : "除外"}</button>}</div>
         </div>
-        {row.description && <p className="line-clamp-2 text-xs leading-5 text-slate-600">{row.description}</p>}
-        <div className={`rounded-lg border px-3 py-2 text-xs ${row.match_reason ? "border-amber-200 bg-amber-50 text-amber-900" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
-          <p className="font-semibold">判定理由</p>
-          <p className="mt-1 line-clamp-2 whitespace-pre-wrap leading-5">{row.match_reason ?? "理由未記録。店名・住所・公式サイトを確認してください。"}</p>
+        {row.description && <p className="line-clamp-1 text-xs leading-5 text-slate-600">{row.description}</p>}
+        <div className={`rounded-lg border px-2 py-1 text-xs ${row.match_reason ? "border-amber-200 bg-amber-50 text-amber-900" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+          <p className="sr-only">判定理由</p>
+          <p className="line-clamp-1 whitespace-pre-wrap leading-5">{row.match_reason ?? "理由未記録。店名・住所・公式サイトを確認してください。"}</p>
         </div>
         {row.reel_id && (row.auto_hidden_at || (row.liveness_fail_count ?? 0) > 0) && (
           <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
