@@ -170,7 +170,7 @@ export default async function RootLayout({
 
           {/* メインコンテンツ(PC幅ではワイドに広がる、リール一覧はデスクトップでグリッド表示に切り替わる) */}
           <AppShell>{children}</AppShell>
-          {/* ワンコ手帳の「おでかけ」から店舗ページへ来たときだけ出る「ワンコ手帳にもどる」 */}
+          {/* ロカわんの「おでかけ」から店舗ページへ来たときだけ出る「ロカわんにもどる」 */}
           <PetReturnButton />
         </LocaleProvider>
       </body>

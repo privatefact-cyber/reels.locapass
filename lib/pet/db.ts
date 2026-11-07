@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 /**
- * ワンコ手帳(/pet)用のSupabaseクライアント。
+ * ロカわん(/pet)用のSupabaseクライアント。
  * locapass_pet_* のテーブルはまだ型生成(types/supabase.ts)に入っていないので、型なしのクライアントを使う。
  * - petUserClient: ログイン中の本人として(RLSで本人の行だけ読み書きできる)
  * - petAdmin: サーバー専用(RLSを無視)。他人に見せる部分(名刺・迷子・フォロー・通知)だけで使い、

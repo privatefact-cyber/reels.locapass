@@ -6,7 +6,7 @@ import { shopPath } from "@/lib/locapass/publicUrls";
 import { PET_ATTRIBUTE_KEYS } from "@/lib/verticals/attributes";
 
 /**
- * ワンコ手帳の「おでかけ」に出すお店。地図(/map の🐾)と同じ店舗データを使う。
+ * ロカわんの「おでかけ」に出すお店。地図(/map の🐾)と同じ店舗データを使う。
  * - facility: ペット施設(ペット施設ポータル Lizand の店)
  * - with_pet: ペットと一緒に行ける店(属性「ペット同伴可」「ペット専用」が付いた店)
  * 種類(トリミング・病院など)の分類は持たない(2026-11-06 ユーザー判断)。

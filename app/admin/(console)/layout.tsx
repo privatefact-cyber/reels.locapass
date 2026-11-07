@@ -20,7 +20,7 @@ const NAV_GROUPS: ShopNavGroup[] = [
     title: "投稿と動画",
     items: [
       { href: "/admin/comments", label: "コメント管理", icon: "💬", description: "リールへのコメントの確認・削除" },
-      { href: "/admin/pets", label: "迷子さがし", icon: "🐶", description: "ワンコ手帳の迷子のお知らせ・見つけました通報の確認・非表示" },
+      { href: "/admin/pets", label: "迷子さがし", icon: "🐶", description: "ロカわんの迷子のお知らせ・見つけました通報の確認・非表示" },
       { href: "/admin/ads", label: "広告投稿", icon: "📣", description: "リールフィードに混ぜる広告(PR)の投稿" },
       { href: "/admin/embeds", label: "外部動画", icon: "🎞️", description: "外部の動画をリールとして追加" },
       { href: "/admin/youtube-stock", label: "YouTube収集・動画ストック", icon: "📦", description: "YouTube Shortsの収集・判定・ステータス管理" },

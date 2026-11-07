@@ -125,7 +125,7 @@ export function FoundActions({
       )}
       {needLost && (
         <p className="mt-2 rounded-2xl bg-[#FFF8E1] px-3 py-2 text-xs text-[#8A6A00]">
-          相手があなたに連絡できるよう、ワンコ手帳で「迷子のお知らせ」を出して連絡先を入れてください。
+          相手があなたに連絡できるよう、ロカわんで「迷子のお知らせ」を出して連絡先を入れてください。
           <Link href="/pet" className="ml-1 font-extrabold underline">
             うちの子から出す
           </Link>

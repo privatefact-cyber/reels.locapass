@@ -176,7 +176,7 @@ export function AiInquiryWidget({
   placement?: "floating" | "map";
   /** このウィジェットだけ配色を変えたいときに指定。未指定ならサイト全体のテーマ(12/1〜12/25はクリスマス)に従う。 */
   theme?: AiWidgetTheme;
-  /** 置き場所だけ変えたいとき(ワンコ手帳は下のタブが高いので、その上に出す)。未指定なら placement の既定位置 */
+  /** 置き場所だけ変えたいとき(ロカわんは下のタブが高いので、その上に出す)。未指定なら placement の既定位置 */
   positionClassName?: string;
 }) {
   const isMap = placement === "map";

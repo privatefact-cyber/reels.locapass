@@ -43,7 +43,7 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
         lineReady={lineConfigured()}
       />
       <p className="mt-6 px-2 text-center text-[11px] leading-relaxed text-[#B39C8C]">
-        ワンコ手帳はLOCAPASSのアカウントで動いています。
+        ロカわんはLOCAPASSのアカウントで動いています。
         <br />
         手帳・通院の記録はあなただけが見られます。
       </p>

@@ -1,6 +1,6 @@
 {
-  "name": "ワンコ手帳 by LOCAPASS",
-  "short_name": "ワンコ手帳",
+  "name": "ロカわん by LOCAPASS",
+  "short_name": "ロカわん",
   "description": "ワクチン手帳・通院の記録・成長日誌・迷子さがし",
   "start_url": "/pet",
   "scope": "/",

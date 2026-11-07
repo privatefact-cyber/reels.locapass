@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function lostShareText(r: { petName: string; breed: string | null; address: string | null }) {
-  return `【迷子のワンコを探しています】${r.petName}${r.breed ? `(${r.breed})` : ""}${r.address ? ` ${r.address}付近` : ""} 見かけた方はご連絡ください。拡散お願いします #迷子犬 #ワンコ手帳`;
+  return `【迷子のワンコを探しています】${r.petName}${r.breed ? `(${r.breed})` : ""}${r.address ? ` ${r.address}付近` : ""} 見かけた方はご連絡ください。拡散お願いします #迷子犬 #ロカわん`;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ reportId: string }> }): Promise<Metadata> {

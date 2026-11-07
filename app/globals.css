@@ -160,7 +160,7 @@
  * tone-950 / panel-950 はページ背景(bg-base)と同じ白にそろえる(ヒーロー下のグラデーションが背景と溶け合うため)。
  */
 /*
- * ワンコ手帳(/pet)のコンシェルジュAI用の配色。クリーム地・ココア色の文字・ピーチのアクセント(components/pet/ui.tsx と同じ色)。
+ * ロカわん(/pet)のコンシェルジュAI用の配色。クリーム地・ココア色の文字・ピーチのアクセント(components/pet/ui.tsx と同じ色)。
  * サイト全体には使わず、AiInquiryWidget theme="pet" のときだけ効く。
  */
 [data-theme="pet"] {

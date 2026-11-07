@@ -9,13 +9,13 @@ import { getPetViewer } from "@/lib/pet/db";
 
 const rounded = M_PLUS_Rounded_1c({ weight: ["400", "700", "800"], subsets: ["latin"], display: "swap", preload: false });
 
-// ワンコ手帳はアプリから開く入口だけで、検索結果には出さない
+// ロカわんはアプリから開く入口だけで、検索結果には出さない
 export const metadata: Metadata = {
-  title: "ワンコ手帳",
+  title: "ロカわん",
   robots: { index: false, follow: false },
   // ホーム画面に追加(PWA)。iPhoneはホーム画面に追加したときだけWebでも端末通知が届く
   manifest: "/pet.webmanifest",
-  appleWebApp: { capable: true, title: "ワンコ手帳", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "ロカわん", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = { themeColor: "#FFF7EC" };

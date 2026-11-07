@@ -24,7 +24,7 @@ function whenStyleLoaded(map: maplibregl.Map, fn: () => void) {
 export type PetMapMarker = { id: string; lat: number; lng: number; kind: "lost" | "sighting" | "last_seen" | "found" | "shop"; label?: string; imageUrl?: string | null; href?: string };
 
 /**
- * ワンコ手帳の地図。
+ * ロカわんの地図。
  * - markers: 迷子(赤)・目撃(黄)・最後に見た場所(ピーチ)のピン
  * - picker: 地図をタップ(または「現在地」)で場所を1つ選ぶ
  */

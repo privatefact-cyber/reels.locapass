@@ -23,7 +23,7 @@ function isStandalone() {
 }
 
 /**
- * ワンコ手帳の端末通知(Webプッシュ)。LOCAPASS共通の仕組み(public/sw.js・/api/push/subscribe)をそのまま使う。
+ * ロカわんの端末通知(Webプッシュ)。LOCAPASS共通の仕組み(public/sw.js・/api/push/subscribe)をそのまま使う。
  * iPhoneは「ホーム画面に追加」したアプリから開いたときだけWebプッシュが使えるので、その案内を出す。
  */
 export function PetPushCard() {
@@ -83,13 +83,13 @@ export function PetPushCard() {
       {status === "no-key" && <p className="rounded-2xl bg-[#F4EEE8] px-3 py-2 text-xs font-bold text-[#9C8273]">端末への通知は準備中です。いまはアプリ内のお知らせ(🔔)でお届けします。</p>}
       {status === "ios-install" && (
         <div className="space-y-2 text-sm text-[#5C4535]">
-          <p>iPhoneでは、ワンコ手帳を「ホーム画面に追加」すると通知を受け取れます。</p>
+          <p>iPhoneでは、ロカわんを「ホーム画面に追加」すると通知を受け取れます。</p>
           <ol className="list-decimal space-y-1 rounded-2xl bg-[#FFF8F2] py-2 pl-8 pr-3 text-xs">
             <li>
               Safariの下の <Share size={12} className="inline" /> (共有)を押す
             </li>
             <li>「ホーム画面に追加」を選ぶ</li>
-            <li>ホーム画面のワンコ手帳から開いて、この画面で通知をオンにする</li>
+            <li>ホーム画面のロカわんから開いて、この画面で通知をオンにする</li>
           </ol>
         </div>
       )}

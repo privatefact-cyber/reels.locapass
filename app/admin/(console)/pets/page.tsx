@@ -22,7 +22,7 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-/** ワンコ手帳の迷子さがし(迷子のお知らせ・見つけました通報)の確認。全ポータル横断なので super_admin のみ。 */
+/** ロカわんの迷子さがし(迷子のお知らせ・見つけました通報)の確認。全ポータル横断なので super_admin のみ。 */
 export default async function AdminPetsPage() {
   await requireRootAdmin();
   const admin = petAdmin();
@@ -144,7 +144,7 @@ export default async function AdminPetsPage() {
   return (
     <div className="space-y-8">
       <section>
-        <h1 className="text-2xl font-bold text-slate-900">迷子さがし(ワンコ手帳)</h1>
+        <h1 className="text-2xl font-bold text-slate-900">迷子さがし(ロカわん)</h1>
         <p className="mt-1 text-sm text-slate-600">
           迷子のお知らせと「見つけました」通報の確認。いたずら・重複は「非表示」にすると、一覧・地図・共有ページから消えます。迷子のお知らせは飼い主のものなので削除せず非表示で対応します。悪質な投稿者は
           <Link href="/admin/comments" className="mx-1 text-blue-700 hover:underline">

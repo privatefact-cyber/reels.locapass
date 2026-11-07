@@ -37,7 +37,7 @@ export default async function PetCardPage({ params }: { params: Promise<{ code: 
         <p className="mt-4 font-extrabold">この名刺は見つかりませんでした</p>
         <p className="mt-1 text-sm text-[#9C8273]">飼い主さんが公開をやめたか、QRが古い可能性があります。</p>
         <Link href="/pet" className={`${petButton.soft} mt-6`}>
-          ワンコ手帳を見る
+          ロカわんを見る
         </Link>
       </div>
     );

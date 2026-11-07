@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * ワンコ手帳の「LINEで通知を受け取る」の入り口。ログイン中の人だけ。
+ * ロカわんの「LINEで通知を受け取る」の入り口。ログイン中の人だけ。
  * いつものLINEログインと同じチャネル・同じ戻り先(/api/auth/line/callback)を使い、Cookieの mode で連携だと伝える。
  * bot_prompt=aggressive で、LINE公式アカウントの友だち追加もその場で出す
  * (LINE Developersで、LINEログインのチャネルに公式アカウントがリンクされている必要がある)。

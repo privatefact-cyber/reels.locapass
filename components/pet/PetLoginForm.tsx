@@ -8,7 +8,7 @@ import { checkEmailRegistered } from "@/app/pet/actions";
 import { PetCard, petButton, petInput } from "./ui";
 
 /**
- * ワンコ手帳のログイン・新規登録。仕組みはLOCAPASSと同じ(同じアカウント)。
+ * ロカわんのログイン・新規登録。仕組みはLOCAPASSと同じ(同じアカウント)。
  * - LINE / Google / メールのリンク(未登録ならそのまま新規登録) / パスワード
  * - メールのときは先に、そのアドレスがLOCAPASSに登録済みかを確かめて案内する
  */
@@ -83,7 +83,7 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
             {result.registered ? (
               <p className="rounded-2xl bg-[#FFF8E1] px-3 py-3 font-bold text-[#8A6A00]">
                 🐾 このメールアドレスは、LOCAPASSに登録済みです。
-                <span className="mt-1 block text-xs font-normal">LOCAPASSと同じアカウントで、ワンコ手帳をそのまま使えます。ログイン用のリンクを送りました。</span>
+                <span className="mt-1 block text-xs font-normal">LOCAPASSと同じアカウントで、ロカわんをそのまま使えます。ログイン用のリンクを送りました。</span>
               </p>
             ) : (
               <p className="rounded-2xl bg-[#E5F7F0] px-3 py-3 font-bold text-[#22806A]">
@@ -135,7 +135,7 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
       </PetCard>
 
       <p className="px-2 text-center text-[11px] leading-relaxed text-[#B39C8C]">
-        ワンコ手帳はLOCAPASS(ロカパス)のアカウントで使えます。
+        ロカわんはLOCAPASS(ロカパス)のアカウントで使えます。
         <br />
         登録すると、
         <a href="/terms" className="underline">

@@ -35,7 +35,7 @@ const UNLOCALIZED_PREFIXES = [
   "/auth",
   "/api",
   "/embed",
-  "/pet", // ワンコ手帳(当面は日本語のみ)
+  "/pet", // ロカわん(当面は日本語のみ)
   "/lp",
   "/_next",
 ];

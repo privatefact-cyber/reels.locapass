@@ -48,7 +48,7 @@ export default async function PetTagPage({ params }: { params: Promise<{ petId: 
           首輪にAirTagを付けておくと、iPhoneの<b>「探す」アプリ</b>で、だいたいの場所を探せます。
         </p>
         <p className="text-xs text-[#9C8273]">
-          AirTagの位置はAppleの「探す」アプリの中だけで見られる仕組みのため、ワンコ手帳には表示できません。迷子のときは「探す」アプリで位置を確認しつつ、ワンコ手帳の迷子のお知らせでご近所に協力をお願いしてください。
+          AirTagの位置はAppleの「探す」アプリの中だけで見られる仕組みのため、ロカわんには表示できません。迷子のときは「探す」アプリで位置を確認しつつ、ロカわんの迷子のお知らせでご近所に協力をお願いしてください。
         </p>
       </PetCard>
     </div>

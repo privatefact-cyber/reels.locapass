@@ -4,7 +4,7 @@ import { PetLoginForm } from "@/components/pet/PetLoginForm";
 
 export const dynamic = "force-dynamic";
 
-/** ワンコ手帳のログイン・新規登録(LOCAPASSと同じアカウント)。戻り先は /pet の中だけ */
+/** ロカわんのログイン・新規登録(LOCAPASSと同じアカウント)。戻り先は /pet の中だけ */
 export default async function PetLoginPage({ searchParams }: { searchParams: Promise<{ redirect?: string; line_error?: string }> }) {
   const sp = await searchParams;
   const back = typeof sp.redirect === "string" && sp.redirect.startsWith("/pet") && !sp.redirect.startsWith("//") ? sp.redirect : "/pet";

@@ -164,7 +164,7 @@ export function PetSettingsForm(p: Props) {
           sub="登録した散歩エリアのどれかから半径3km以内で、迷子のお知らせ・見つけました通報が出たとき"
         />
         <div className="border-t border-[#F6EBDF] pt-4">
-          <Toggle on={hereOptIn} onChange={toggleHere} label="いまいる場所の近くでも受け取る" sub="旅行先・おでかけ先でも届きます。ワンコ手帳を開いた場所を約100m単位で48時間だけ覚え、自動で消します" />
+          <Toggle on={hereOptIn} onChange={toggleHere} label="いまいる場所の近くでも受け取る" sub="旅行先・おでかけ先でも届きます。ロカわんを開いた場所を約100m単位で48時間だけ覚え、自動で消します" />
           {busy === "here" && <Loader2 size={14} className="mt-2 animate-spin text-[#B39C8C]" />}
         </div>
       </PetCard>

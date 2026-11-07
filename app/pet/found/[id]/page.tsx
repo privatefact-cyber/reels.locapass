@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function shareText(r: { kind: "protected" | "sighted"; species: "dog" | "cat" | "other"; address: string | null }) {
-  return `【迷子の${SPECIES_LABEL[r.species]}を${FOUND_KIND_LABEL[r.kind]}】${r.address ? `${r.address}付近` : ""} 飼い主さんを探しています。拡散お願いします #迷子犬 #ワンコ手帳`;
+  return `【迷子の${SPECIES_LABEL[r.species]}を${FOUND_KIND_LABEL[r.kind]}】${r.address ? `${r.address}付近` : ""} 飼い主さんを探しています。拡散お願いします #迷子犬 #ロカわん`;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -113,7 +113,7 @@ export default async function FoundDetailPage({ params, searchParams }: { params
       <p className="mt-6 text-center text-xs text-[#B39C8C]">
         うちの子が迷子のときは
         <Link href="/pet" className="ml-1 font-bold text-[#EE6A36] underline">
-          ワンコ手帳
+          ロカわん
         </Link>
         で迷子のお知らせを出せます
       </p>

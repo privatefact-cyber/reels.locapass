@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { AiInquiryWidget } from "@/components/AiInquiryWidget";
 
 /**
- * ワンコ手帳のコンシェルジュAI(LOCAPASSと同じAI・同じ会話)。配色だけワンコ手帳(theme="pet")。
+ * ロカわんのコンシェルジュAI(LOCAPASSと同じAI・同じ会話)。配色だけロカわん(theme="pet")。
  * 下のタブが高いので、その上に浮かせる。おでかけ(全画面地図)では、引き出しと重ならないよう地図の右上(ズームの下)に置く。
  */
 export function PetConcierge() {

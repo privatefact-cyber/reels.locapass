@@ -7,7 +7,7 @@ import type { PetSpot } from "@/lib/pet/spots";
 import { PetMap, type PetMapMarker } from "./PetMap";
 import { PetCard } from "./ui";
 
-/** 店舗ページからワンコ手帳へ戻るボタン(components/pet/PetReturnButton.tsx)を出すための印 */
+/** 店舗ページからロカわんへ戻るボタン(components/pet/PetReturnButton.tsx)を出すための印 */
 export const PET_RETURN_KEY = "locapass_pet_return";
 
 function markReturn(to: string) {

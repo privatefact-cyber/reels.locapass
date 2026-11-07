@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { finishPetLineLink } from "@/lib/pet/lineLink";
 
-// mode: "pet_link" は、ログイン中の人がワンコ手帳の通知をLINEで受け取るための連携(ログインはしない)。
+// mode: "pet_link" は、ログイン中の人がロカわんの通知をLINEで受け取るための連携(ログインはしない)。
 type LineOAuthCookie = { state: string; nonce: string; redirect: string; mode?: "pet_link" };
 
 type LineTokenResponse = {
@@ -19,7 +19,7 @@ type LineVerifyResponse = {
 
 function loginErrorRedirect(origin: string, redirect: string, reason: string, detail?: unknown) {
   console.error(`[line-login] ${reason}`, detail ?? "");
-  // ワンコ手帳から来た人は、ワンコ手帳のログイン画面へ戻す
+  // ロカわんから来た人は、ロカわんのログイン画面へ戻す
   const url = new URL(redirect.startsWith("/pet") ? "/pet/login" : "/mypage/login", origin);
   url.searchParams.set("redirect", redirect);
   url.searchParams.set("line_error", "1");

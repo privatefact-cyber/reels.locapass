@@ -98,7 +98,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  // ワンコ手帳の迷子のお知らせ(お知らせ中)と「見つけました」通報(受付中・14日以内)。日本語のみ(言語別URLなし)。
+  // ロカわんの迷子のお知らせ(お知らせ中)と「見つけました」通報(受付中・14日以内)。日本語のみ(言語別URLなし)。
   // 連絡先はページのHTMLに載せていない(ボタンを押したときだけ表示)。IDと日時だけを引く。
   const petEntries: MetadataRoute.Sitemap = [];
   try {

@@ -4,7 +4,7 @@ import { petAdmin } from "./db";
 import { pushLineText } from "./notify";
 
 /**
- * ワンコ手帳の「LINEで通知を受け取る」の完了処理(/api/auth/line/callback から mode=pet_link で呼ばれる)。
+ * ロカわんの「LINEで通知を受け取る」の完了処理(/api/auth/line/callback から mode=pet_link で呼ばれる)。
  * ログイン中のLOCAPASS会員に、LINEのユーザーIDを結びつける(ログイン用の locapass_line_identities とは別に持つ)。
  * つないだ直後にLINEへ確認メッセージを送り、届けば「友だち追加済み」と判断する。
  */
@@ -33,7 +33,7 @@ export async function finishPetLineLink(origin: string, lineUserId: string, frie
 
   const delivered = await pushLineText(
     lineUserId,
-    "🐶 ワンコ手帳のLINE通知をオンにしました。\nワクチン・狂犬病の時期が近づいたら、ここでお知らせします。",
+    "🐶 ロカわんのLINE通知をオンにしました。\nワクチン・狂犬病の時期が近づいたら、ここでお知らせします。",
   );
   return back(delivered ? "ok" : friendAdded ? "pending" : "friend");
 }

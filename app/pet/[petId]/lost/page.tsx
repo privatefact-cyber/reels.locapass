@@ -36,7 +36,7 @@ export default async function PetLostOwnerPage({ params }: { params: Promise<{ p
           <p className="mt-1 text-sm text-[#9C8273]">お知らせを出すと、次の人たちに通知が届きます。</p>
         </div>
         <PetCard className="mb-4 space-y-1.5 text-sm text-[#5C4535]">
-          <p>🏘️ 最後に見た場所から<b>半径3km</b>以内を散歩エリアにしているワンコ手帳の利用者</p>
+          <p>🏘️ 最後に見た場所から<b>半径3km</b>以内を散歩エリアにしているロカわんの利用者</p>
           <p>💛 {pet.name}ちゃんをフォローしている人</p>
           <p>🏷️ 首輪のQRを読んだ人には、迷子の情報と連絡先が表示されます</p>
           <p className="pt-1 text-xs text-[#9C8273]">AirTagを付けている場合は、iPhoneの「探す」アプリでも位置を確認してください。</p>
@@ -96,9 +96,9 @@ export default async function PetLostOwnerPage({ params }: { params: Promise<{ p
       <PetSectionTitle emoji="📣">みんなに広める</PetSectionTitle>
       <ShareButtons
         url={`https://locapass.net/pet/lost/${report.id}`}
-        text={`【迷子のワンコを探しています】${pet.name}${pet.breed ? `(${pet.breed})` : ""}${report.last_seen_address ? ` ${report.last_seen_address}付近` : ""} 見かけた方はご連絡ください。拡散お願いします #迷子犬 #ワンコ手帳`}
+        text={`【迷子のワンコを探しています】${pet.name}${pet.breed ? `(${pet.breed})` : ""}${report.last_seen_address ? ` ${report.last_seen_address}付近` : ""} 見かけた方はご連絡ください。拡散お願いします #迷子犬 #ロカわん`}
       />
-      <p className="mt-1 px-1 text-[11px] text-[#B39C8C]">旅行先などワンコ手帳の利用者が少ない場所では、LINEやXで広めるのがいちばん効果的です。</p>
+      <p className="mt-1 px-1 text-[11px] text-[#B39C8C]">旅行先などロカわんの利用者が少ない場所では、LINEやXで広めるのがいちばん効果的です。</p>
 
       <PetSectionTitle emoji="👀">目撃情報({sightings.length}件)</PetSectionTitle>
       <PetMap markers={markers} height={280} />

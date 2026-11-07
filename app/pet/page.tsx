@@ -213,7 +213,13 @@ function Welcome() {
       <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-full bg-gradient-to-br from-[#FFD3B8] to-[#CDEFE3] text-7xl shadow-inner" aria-hidden>
         🐶
       </div>
-      <h1 className="mt-5 text-2xl font-extrabold">ワンコ手帳</h1>
+      <h1 className="mt-5 text-2xl font-extrabold">ロカわん</h1>
+      <p className="text-xs font-bold tracking-[0.15em] text-[#B39C8C]">
+        by{" "}
+        <Link href="/" className="underline underline-offset-2">
+          LOCAPASS
+        </Link>
+      </p>
       <p className="mt-2 text-sm leading-relaxed text-[#7A6050]">
         ワクチンの手帳・通院の記録・成長日誌を
         <br />

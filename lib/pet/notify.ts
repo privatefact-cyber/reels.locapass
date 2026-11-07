@@ -33,7 +33,7 @@ export function lineConfigured(): boolean {
 const SITE = "https://locapass.net";
 
 /**
- * ワンコ手帳の通知を1件送る。
+ * ロカわんの通知を1件送る。
  * 1) アプリ内のお知らせ(locapass_notifications)に入れる(必ず)
  * 2) 端末プッシュ(鍵がある環境・購読している端末だけ)
  * 3) LINE(連携済みで「LINEで受け取る」がオンの人だけ)
