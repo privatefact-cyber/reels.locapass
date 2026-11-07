@@ -103,7 +103,18 @@ export function EmbedPlayer({
 
   // タップ前から読み込んでおくのはInstagramだけ(再生ボタンを押しても自動では鳴らない)。
   const warm = (active || preload) && provider === "instagram";
-  const mounted = playing || warm;
+
+  // YouTube/TikTokも、次のカード(画面に出る直前)を見えない状態で先に読み込んでおく(自動再生はしない)。
+  // 画面に出た瞬間に再生の指示だけ送るので、プレーヤー本体の読み込み待ちが無くなる。
+  //  - played: そのカードを一度再生した後は先読みしない(戻る側のカードが、見えないまま再生し続けないように)。
+  //  - noAutoSrc: 先読みで作ったiframeは「自動再生なし」のURLのまま、画面に出ても作り直さずに使う。
+  const [played, setPlayed] = useState(false);
+  const [noAutoSrc, setNoAutoSrc] = useState(false);
+  const prewarm = autoPlay && !dismissed && !played && ((preload && !active) || (active && noAutoSrc));
+  const mounted = playing || warm || prewarm;
+  // 先読みで作られるときだけ、自動再生なしのURLにする(描画中に切り替えて、同じ描画のうちに反映する)。
+  if (mounted && !playing && !active && autoPlay && !noAutoSrc) setNoAutoSrc(true);
+  if (!mounted && noAutoSrc) setNoAutoSrc(false);
 
   useEffect(() => {
     if (!active) {
@@ -117,10 +128,34 @@ export function EmbedPlayer({
     if (!active && !preload) setLoaded(false);
   }, [active, preload, autoPlay, dismissed]);
 
+  useEffect(() => {
+    if (playing) setPlayed(true);
+    else if (!active && !preload) setPlayed(false);
+  }, [playing, active, preload]);
+
+  // iframeが無くなったら「読み込み済み」も解除する(次に作るiframeの読み込み中表示を正しく出すため)。
+  useEffect(() => {
+    if (!mounted) setLoaded(false);
+  }, [mounted]);
+
+  // 先読みしたYouTubeは自動再生なしで作ってあるので、画面に出たら再生の指示を送る。
+  // プレーヤーの準備ができる前の指示は無視されるため、始まるまで数秒間、繰り返し送る。
+  useEffect(() => {
+    if (!(playing && noAutoSrc && provider === "youtube")) return;
+    const send = () => frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
+    send();
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      if (++tries > 14) return window.clearInterval(timer);
+      send();
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [playing, noAutoSrc, provider, reloadKey]);
+
   // TikTokのプレーヤーが明示的にエラー(onPlayerError。古い onError も)を通知したときだけ、
   // 「再読み込み」と「TikTokで開く」を出す。通知が来ない遅さは失敗扱いにしない(正常な再生を壊さないため)。
   useEffect(() => {
-    if (provider !== "tiktok" || !(playing || warm)) return;
+    if (provider !== "tiktok" || !mounted) return;
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.current?.contentWindow) return;
       const d = e.data as { "x-tiktok-player"?: boolean; type?: string } | null;
@@ -128,7 +163,7 @@ export function EmbedPlayer({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [provider, playing, warm, reloadKey]);
+  }, [provider, mounted, reloadKey]);
 
   // TikTokは、URLの自動再生指定だけでは始まらないことがある(ブラウザの設定など)ため、
   // 再生が始まるまで「無音にして再生」の指示をプレーヤーへ繰り返し送る(再生位置が進み始めたら止める)。
@@ -138,7 +173,11 @@ export function EmbedPlayer({
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.current?.contentWindow) return;
       const d = e.data as { "x-tiktok-player"?: boolean; type?: string; value?: { currentTime?: number } } | null;
-      if (d?.["x-tiktok-player"] && d.type === "onCurrentTime" && (d.value?.currentTime ?? 0) > 0.2) started = true;
+      if (d?.["x-tiktok-player"] && d.type === "onCurrentTime" && (d.value?.currentTime ?? 0) > 0.2) {
+        started = true;
+        // 再生が始まったら、固定の待ち時間(onLoadから3秒)を待たずに「読み込み中…」を消す。
+        setLoaded(true);
+      }
     };
     window.addEventListener("message", onMessage);
     const send = (type: string) => frame.current?.contentWindow?.postMessage({ "x-tiktok-player": true, type, value: undefined }, "*");
@@ -175,7 +214,7 @@ export function EmbedPlayer({
         <iframe
           key={reloadKey}
           ref={frame}
-          src={embedSrc(provider, refId, true, autoPlay)}
+          src={embedSrc(provider, refId, !noAutoSrc, autoPlay)}
           title={title}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
