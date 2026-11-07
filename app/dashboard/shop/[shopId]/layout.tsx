@@ -109,15 +109,17 @@ export default async function LocapassShopDashboardLayout({
     <div className="min-h-screen bg-slate-50 text-slate-900">
       {viewer.needsRecoverySetup && <RecoveryInfoGateModal />}
       {!viewer.isOperator && !viewer.needsRecoverySetup && <PasswordSetupGate />}
+      {/* 上に固定。PWAではステータスバーの下に潜り込むので、セーフエリア分の余白を足す(代理閲覧バナーの時は、バナー側で足す)。 */}
+      <div className="sticky top-0 z-40">
       {viewer.isOperator && (
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-amber-500 px-4 py-2 text-sm font-semibold text-amber-950 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-amber-500 px-4 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] text-sm font-semibold text-amber-950 sm:px-6">
           <span>運営者として代理閲覧中: {shop.name}(店舗のパスワードは変更されていません)</span>
           <Link href="/admin" className="rounded-lg bg-amber-950/10 px-3 py-1 text-xs hover:bg-amber-950/20">
             終了して管理コンソールに戻る
           </Link>
         </div>
       )}
-      <nav className="border-b border-slate-200 bg-white">
+      <nav className={`border-b border-slate-200 bg-white ${viewer.isOperator ? "" : "pt-[env(safe-area-inset-top)]"}`}>
         <div className="mx-auto flex max-w-[1400px] items-center gap-2 px-4 py-2 sm:px-6">
           {/* メニューは「メニュー」ボタン1つにまとめ、押すとモーダルで全項目を出す。右の「ログアウト」は常に見える位置に置く(「使い方」はスマホではメニューの中)。 */}
           <div className="min-w-0 flex-1">
@@ -142,6 +144,7 @@ export default async function LocapassShopDashboardLayout({
           </div>
         </div>
       </nav>
+      </div>
       <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">{children}</div>
     </div>
   );
