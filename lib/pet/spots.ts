@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { gridThumb } from "@/lib/images/thumb";
-import { latestReelStillsByShop } from "@/lib/map/getVenues";
 import { shopPath } from "@/lib/locapass/publicUrls";
 import { PET_ATTRIBUTE_KEYS } from "@/lib/verticals/attributes";
 
@@ -88,17 +87,12 @@ export async function getPetSpots(): Promise<PetSpot[]> {
       address: row.address,
       lat: row.lat,
       lng: row.lng,
-      imageUrl: image(row.cover_url ?? row.icon_url),
+      imageUrl: image(row.cover_url),
       kinds: [...kinds],
     });
   }
 
-  // 写真のない店は、最新リールの写真で補う(地図と同じ)
-  const noPhoto = spots.filter((s) => !s.imageUrl).map((s) => s.id);
-  if (noPhoto.length) {
-    const stills = await latestReelStillsByShop(noPhoto);
-    for (const s of spots) if (!s.imageUrl) s.imageUrl = image(stills.get(s.id) ?? null);
-  }
+  // ピンの写真はカバー写真だけ(未登録なら🐾。ユーザー決定 2026-11-07)
   return spots;
 }
 
@@ -152,13 +146,9 @@ export async function getPetSpotsInBounds(b: SpotBounds): Promise<{ spots: PetSp
   for (const { r, kinds } of kept.slice(0, SPOTS_IN_VIEW_LIMIT)) {
     const p = Array.isArray(r.portal) ? r.portal[0] : r.portal;
     if (!p?.slug || !r.slug) continue;
-    spots.push({ id: r.id, name: r.name, href: shopPath(p.slug, r.slug), area: r.area, category: r.category, address: r.address, lat: r.lat, lng: r.lng, imageUrl: image(r.cover_url ?? r.icon_url), kinds, verified: true, placeCategory: null });
+    spots.push({ id: r.id, name: r.name, href: shopPath(p.slug, r.slug), area: r.area, category: r.category, address: r.address, lat: r.lat, lng: r.lng, imageUrl: image(r.cover_url), kinds, verified: true, placeCategory: null });
   }
-  const noPhoto = spots.filter((s) => !s.imageUrl).map((s) => s.id);
-  if (noPhoto.length) {
-    const stills = await latestReelStillsByShop(noPhoto);
-    for (const s of spots) if (!s.imageUrl) s.imageUrl = image(stills.get(s.id) ?? null);
-  }
+  // ピンの写真はお店のカバー写真だけ。未登録なら🐾(アイコン画像・リールの1コマでは補わない。ユーザー決定 2026-11-07)
 
   // 取り込んだ施設(ドッグラン・動物病院など。LOCAPASSの地図には出さない)。中心から近い順に最大300件
   const { data: placeRows } = await db
