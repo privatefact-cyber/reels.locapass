@@ -223,6 +223,9 @@ export default async function LocapassShopSettingsPage({
     : null;
 
   const { data: contactTapStats } = await supabase.rpc("locapass_contact_tap_stats", { p_shop_id: currentShop.id });
+  // 連絡カードは、運営が表示をオンにするまで店舗には出さない(集計は続けている)。運営が代理で見るときは常に出す。
+  const { data: contactStatsSetting } = await (supabase as any).from("platform_settings").select("locapass_contact_stats_visible").eq("id", true).maybeSingle();
+  const contactStatsVisible = Boolean(contactStatsSetting?.locapass_contact_stats_visible);
   const { count: openInquiries } = await supabase
     .from("locapass_shop_inquiries")
     .select("id", { count: "exact", head: true })
@@ -254,7 +257,7 @@ export default async function LocapassShopSettingsPage({
         </div>
       </section>
 
-      <ContactTapStatsCard stats={contactTapStats ?? []} />
+      {(contactStatsVisible || viewer.isOperator) && <ContactTapStatsCard stats={contactTapStats ?? []} hiddenFromShop={!contactStatsVisible} />}
 
       <SpotNoticeOption shopId={currentShop.id} initialEnabled={Boolean(spotNoticeRow?.spot_notice_enabled)} />
 
