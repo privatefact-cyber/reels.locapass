@@ -192,7 +192,7 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
         {!restoring && picked.length > 0 && <button type="button" disabled={busy} onClick={() => setSelected((prev) => { const next = new Set(prev); picked.forEach((row) => next.delete(row.id)); return next; })} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">選択を外す</button>}
         {picked.length > 0 && <button type="button" disabled={busy} onClick={blockPicked} className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">チャンネルごと除外して今後収集しない</button>}
         {restoring && picked.length > 0 && <button type="button" disabled={busy} onClick={deletePicked} className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-60">完全に削除({picked.length}本)</button>}
-        <button type="button" disabled={busy || picked.length === 0} onClick={() => run(picked.map((row) => row.id), restoring)} className={`ml-auto rounded-lg px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 ${restoring ? "bg-slate-700" : "bg-red-600"}`}>{busy ? "処理中…" : restoring ? `除外を取り消す(${picked.length}本)` : `除外する(${picked.length}本)`}</button>
+        <button type="button" disabled={busy || picked.length === 0} onClick={() => run(picked.map((row) => row.id), !restoring)} className={`ml-auto rounded-lg px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 ${restoring ? "bg-slate-700" : "bg-red-600"}`}>{busy ? "処理中…" : restoring ? `除外を取り消す(${picked.length}本)` : `除外する(${picked.length}本)`}</button>
       </div>
     )}
     {scrolled && (
