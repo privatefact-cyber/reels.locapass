@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { YoutubeStockCard } from "./YoutubeStockCard";
 import { setYoutubeStockRejected, blockChannelsAndReject, unblockChannel, deleteRejectedStock } from "../youtube-intake/actions";
 
@@ -30,6 +30,14 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
   // まとめて除外するための選択。表示中の(いまの絞り込みに合う)ものだけが対象になる。
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
+  // 動画が多くて一覧が長いので、少しスクロールしたら「先頭へ」「末尾へ」のボタンを出す。
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 600);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [bulkError, setBulkError] = useState<string | null>(null);
   const counts = useMemo(() => rows.reduce<Record<string, number>>((result, row) => {
     result[row.match_status] = (result[row.match_status] ?? 0) + 1;
@@ -156,6 +164,12 @@ export function YoutubeStockGrid({ rows, shopName, portalOptions, actions, block
         {picked.length > 0 && <button type="button" disabled={busy} onClick={blockPicked} className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">チャンネルごと除外して今後収集しない</button>}
         {restoring && picked.length > 0 && <button type="button" disabled={busy} onClick={deletePicked} className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-60">完全に削除({picked.length}本)</button>}
         <button type="button" disabled={busy || picked.length === 0} onClick={() => run(picked.map((row) => row.id), restoring)} className={`ml-auto rounded-lg px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 ${restoring ? "bg-slate-700" : "bg-red-600"}`}>{busy ? "処理中…" : restoring ? `除外を取り消す(${picked.length}本)` : `除外する(${picked.length}本)`}</button>
+      </div>
+    )}
+    {scrolled && (
+      <div className="fixed right-3 bottom-[9.5rem] z-30 flex flex-col gap-2 md:bottom-24">
+        <button type="button" aria-label="ページの先頭へ" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-white shadow-lg">↑</button>
+        <button type="button" aria-label="ページの末尾へ" onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" })} className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-700 text-lg font-bold text-white shadow-lg">↓</button>
       </div>
     )}
   </>;
