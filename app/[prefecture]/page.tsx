@@ -15,6 +15,7 @@ import { isSiteTheme } from "@/lib/theme";
 import type { Metadata } from "next";
 import { portalMeta } from "@/lib/seo/portalMeta";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
+import { JsonLd } from "@/components/JsonLd";
 
 // 注記: このディレクトリ名は[prefecture]だが、既存の/[prefecture]/[city]/[category]
 // (LUXELA側のSEO用ルート、lib/seo/area.tsのPREFECTURE_SLUG="tokyo"固定)と同じNext.jsの
@@ -70,6 +71,25 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
 
   return (
     <div id="portal-feed" className="space-y-4">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: locale !== "ja" && portal.name_en ? portal.name_en : portal.name,
+          url: `https://locapass.net/${slug}`,
+          isPartOf: { "@type": "WebSite", name: "LOCAPASS", url: "https://locapass.net" },
+        }}
+      />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "LOCAPASS", item: "https://locapass.net" },
+            { "@type": "ListItem", position: 2, name: locale !== "ja" && portal.name_en ? portal.name_en : portal.name, item: `https://locapass.net/${slug}` },
+          ],
+        }}
+      />
       {/* このポータルで選んだ配色テーマ(未設定ならサイト全体の配色) */}
       <PortalThemeScope theme={isSiteTheme(portal.theme) ? portal.theme : null} />
       <PortalHero

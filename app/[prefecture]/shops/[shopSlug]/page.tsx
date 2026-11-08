@@ -64,6 +64,7 @@ import { getPublicShopAttributes } from "@/lib/verticals/shopAttributes";
 import { ShopAttributeBadges } from "@/components/shop/ShopAttributeBadges";
 import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
+import { isDemoShop } from "@/lib/seo/demo";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
@@ -116,12 +117,15 @@ export async function generateMetadata({
       `「${shopRow.name}」の店舗情報・リールを今すぐチェック。`
     : `${shopRow.name} — shop info and reels on LOCAPASS.`;
   const { url, alternates } = await localizedPageUrls(shopPath(portal.slug, shopRow.slug));
+  const demo = isDemoShop(shopRow.name, shopRow.slug);
   const image = shopRow.cover_url ?? shopRow.icon_url ?? undefined;
 
   return {
     title,
     description,
     alternates,
+    // デモ(営業・動作確認用)の店舗は、検索エンジンに出さない。
+    robots: demo ? { index: false, follow: false } : undefined,
     openGraph: {
       title,
       description,

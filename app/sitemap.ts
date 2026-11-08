@@ -9,6 +9,9 @@ import { isLowProfilePortal } from "@/lib/seo/portalMeta";
 import { LOCALES } from "@/lib/i18n/locale";
 import { localeLanguageAlternates, localeUrl } from "@/lib/i18n/localePath";
 import { petAdmin } from "@/lib/pet/db";
+import { fetchAllRows } from "@/lib/supabase/fetchAll";
+import { isDemoShop } from "@/lib/seo/demo";
+import { MIN_SHOPS_FOR_GUIDE, getPortalStats } from "@/lib/seo/areaStats";
 
 const BASE_URL = "https://locapass.net";
 
@@ -28,15 +31,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createStaticClient();
   const journalPosts = await listPublishedJournalPosts();
 
-  const [{ data: shops }, { data: castRows }] = await Promise.all([
-    supabase
-      .from("locapass_shops")
-      .select("id, slug, area, genre:category, created_at, portal:locapass_portals ( slug )")
-      .eq("status", "active")
-      .or(EXCLUDE_OFFICIAL_FILTER),
+  // 店舗・キャストが1000件を超えても、途中で切れないよう、範囲を区切って全件取る。
+  type ShopRow = { id: string; slug: string; name: string; area: string | null; genre: string | null; created_at: string | null; portal: { slug: string } | { slug: string }[] | null };
+  type CastRow = { issue_no: number | null; shop: { slug: string; portal: { slug: string } | { slug: string }[] | null } | { slug: string; portal: { slug: string } | { slug: string }[] | null }[] | null };
+  const [allShops, castRows] = await Promise.all([
+    fetchAllRows<ShopRow>((from, to) =>
+      supabase
+        .from("locapass_shops")
+        .select("id, slug, name, area, genre:category, created_at, portal:locapass_portals ( slug )")
+        .eq("status", "active")
+        .or(EXCLUDE_OFFICIAL_FILTER)
+        .order("id")
+        .range(from, to) as unknown as PromiseLike<{ data: ShopRow[] | null; error: { message: string } | null }>,
+    ),
     // 公開用ビューは公開中店舗のキャストだけを返す(個人情報の列は含まない)。
-    supabase.from("locapass_public_casts").select("issue_no, shop:locapass_shops ( slug, portal:locapass_portals ( slug ) )"),
+    fetchAllRows<CastRow>((from, to) =>
+      supabase.from("locapass_public_casts").select("issue_no, shop:locapass_shops ( slug, portal:locapass_portals ( slug ) )").order("issue_no").range(from, to) as unknown as PromiseLike<{ data: CastRow[] | null; error: { message: string } | null }>,
+    ),
   ]);
+  // デモ(営業・動作確認用)の店舗は、検索エンジンに見せない。
+  const shops = allShops.filter((s) => !isDemoShop(s.name, s.slug));
+  const portalStats = await getPortalStats(supabase);
+  const areaGuideSlugs = portalStats.filter((p) => p.total >= MIN_SHOPS_FOR_GUIDE && !isLowProfilePortal(p.slug)).map((p) => p.slug);
 
   // ポータルトップ。これまでサイトマップに無く、検索エンジンが各ポータルのトップを見つけにくかった。
   const { data: portalRows } = await supabase.from("locapass_portals").select("slug").eq("status", "active");
@@ -63,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/legal`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
-  const shopEntries: MetadataRoute.Sitemap = (shops ?? [])
+  const shopEntries: MetadataRoute.Sitemap = shops
     .map((s) => {
       const portal = Array.isArray(s.portal) ? s.portal[0] : s.portal;
       if (!portal) return null;
@@ -77,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
-  const castEntries: MetadataRoute.Sitemap = (castRows ?? [])
+  const castEntries: MetadataRoute.Sitemap = castRows
     .map((c) => {
       const shop = Array.isArray(c.shop) ? c.shop[0] : c.shop;
       const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
@@ -90,7 +106,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
-  const areaCategoryEntries: MetadataRoute.Sitemap = listAreaCategorySlugs(shops ?? [], genreToSlug).map(
+  const areaCategoryEntries: MetadataRoute.Sitemap = listAreaCategorySlugs(shops, genreToSlug).map(
     ({ city, category }) => ({
       url: `${BASE_URL}/${PREFECTURE_SLUG}/${city}/${category}`,
       changeFrequency: "daily",
@@ -114,5 +130,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] pet entries failed", e);
   }
 
-  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]), ...petEntries];
+  // エリア一覧とエリアガイド(/areas・/areas/○○)は、日本語のみ(言語別URLに展開しない)。
+  const areaGuideEntries: MetadataRoute.Sitemap = [
+    { url: `${BASE_URL}/areas`, changeFrequency: "weekly", priority: 0.8 },
+    ...areaGuideSlugs.map((slug) => ({ url: `${BASE_URL}/areas/${slug}`, changeFrequency: "weekly" as const, priority: 0.8 })),
+  ];
+
+  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]), ...areaGuideEntries, ...petEntries];
 }

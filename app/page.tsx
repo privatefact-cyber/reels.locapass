@@ -8,6 +8,7 @@ import { getNowReels } from "@/lib/reels/getNowReels";
 import Link from "@/components/i18n/LocaleLink";
 import { getActiveBoosts } from "@/lib/boost/getBoosts";
 import { boostText } from "@/lib/boost/text";
+import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 60;
 
@@ -27,6 +28,11 @@ export default async function TopPage() {
 
   return (
     <div className="space-y-4">
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "WebSite", name: "LOCAPASS", alternateName: "ロカパス", url: "https://locapass.net", inLanguage: ["ja", "en", "zh", "ar"] }} />
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "Organization", name: "LOCAPASS", url: "https://locapass.net" }} />
+      <h1 className="sr-only">
+        {locale === "ja" ? "LOCAPASS(ロカパス)｜街のカフェ・お店・ペットと行ける場所を、リールで探すローカルメディア" : "LOCAPASS — find local cafes, shops and pet-friendly places through short reels"}
+      </h1>
       {/* 公開ローンチ告知。合言葉ゲート解除にあわせて、トップ初回訪問時にだけ出す。 */}
       <BetaLaunchModal />
 

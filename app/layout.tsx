@@ -17,9 +17,9 @@ import "./globals.css";
 const SITE_META: Record<string, { brand: string; title: string; description: string; short: string; ogLocale: string }> = {
   ja: {
     brand: "LOCAPASS【ロカパス】",
-    title: "LOCAPASS【ロカパス】| 街と人が繋がるリールメディア",
+    title: "LOCAPASS【ロカパス】｜街のカフェ・お店・ペットと行ける場所を、リールで探す",
     description:
-      "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。最新のショート動画やリールから、エリアごとの人気スポットや話題の店舗、街のリアルな雰囲気をダイレクトに発見できます。",
+      "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。渋谷・横浜・大洗などのカフェ・飲食店・ペット同伴OKのお店・美容室を、ショート動画(リール)で探せます。最新のショート動画やリールから、エリアごとの人気スポットや話題の店舗、街のリアルな雰囲気をダイレクトに発見できます。",
     short: "街が繋がる、人が繋がるリールメディア「LOCAPASS（ロカパス）」。街や店舗のリアルな今をショート動画でお届け。",
     ogLocale: "ja_JP",
   },
@@ -60,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL("https://locapass.net"),
     title: { default: m.title, template: `%s | ${m.brand}` },
     description: m.description,
-    keywords: ["LOCAPASS", "ロカパス", "リール", "ショート動画", "店舗情報", "スポット情報", "地域情報", "街歩き", "ローカルメディア"],
+    keywords: ["LOCAPASS", "ロカパス", "リール", "ショート動画", "カフェ", "グルメ", "ペット同伴", "美容室", "店舗情報", "スポット情報", "地域情報", "街歩き", "ローカルメディア"],
     openGraph: {
       title: m.title,
       description: m.description,
