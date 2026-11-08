@@ -4,6 +4,7 @@
 // 紹介文が変わった店だけ、意味ベクトル(埋め込み)を作り直す。「新しさ」「有料」の点数は毎回つけ直す(安い処理)。
 // 定期実行(pg_cron)と、手動の実行の両方から呼べる。何度呼んでも安全(変更が無ければ何もしない)。
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { loadShopAttributeLines } from "../_shared/shopAttributes.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -109,12 +110,15 @@ Deno.serve(async (req: Request) => {
     if (!lastReelByShop.has(sid) && r.published_at) lastReelByShop.set(sid, r.published_at as string);
   }
 
+  const attributeLineByShop = await loadShopAttributeLines(pub);
+
   for (const s of shops ?? []) {
     const activity = [s.updated_at as string | null, lastReelByShop.get(s.id as string) ?? null]
       .filter((v): v is string => Boolean(v))
       .sort()
       .pop();
-    const parts = [s.category, s.tagline, s.address, s.description ? String(s.description).slice(0, 400) : null].filter(Boolean);
+    // 属性(ペット同伴可など)も検索の対象にする。「ペットOKのカフェ」のような質問で、その店が候補に残るように。
+    const parts = [s.category, attributeLineByShop.get(s.id as string), s.tagline, s.address, s.description ? String(s.description).slice(0, 400) : null].filter(Boolean);
     rows.push({
       scope_key: "locapass",
       shop_id: s.id as string,
