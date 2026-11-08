@@ -2,7 +2,7 @@
 /* ★ 送信先の設定(どちらか一方を入れてください)
    endpoint : フォーム内容を JSON で POST する API の URL(例: "/api/lp-inquiry")
    email    : endpoint が空のとき、メールアプリを開いて送る宛先(mailto) */
-window.LP_CONFIG = window.LP_CONFIG || { endpoint: "", email: "contact@locapass.net" };
+window.LP_CONFIG = window.LP_CONFIG || { endpoint: "/api/lp-inquiry", email: "contact@locapass.net" };
 
 document.documentElement.classList.add("js");
 
