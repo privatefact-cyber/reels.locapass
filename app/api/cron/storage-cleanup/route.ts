@@ -25,9 +25,8 @@ function optionalDaysEnv(name: string): number | null {
  * 環境変数:
  *  R2_CLEANUP_APPLY=1            実際に削除する
  *  R2_ORPHAN_GRACE_DAYS          孤児とみなすまでの猶予(既定7日)
- *  HIDDEN_STOCK_DAYS             書庫(非表示)に置かれた人気のないリールを消すまでの日数(未設定なら無効)
- *  HIDDEN_STOCK_PLANS            上の対象にするプラン(安いプラン)。カンマ区切り(既定 free)
- *  HIDDEN_STOCK_MAX_VIEWS        「人気がない」とみなす閲覧数の上限(既定10。いいね・コメントは0であること)
+ *  FREE_PLAN_VIDEO_DAYS          無料プランの古い動画を消すまでの日数(既定30。最新の1本は残す。0で無効)
+ *  FREE_PLANS                    上の対象にする無料プラン名。カンマ区切り(既定 free)
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -43,12 +42,12 @@ export async function GET(req: Request) {
     const report = await runStorageCleanup({
       apply,
       graceDays: intEnv("R2_ORPHAN_GRACE_DAYS", 7),
-      hiddenStockDays: optionalDaysEnv("HIDDEN_STOCK_DAYS"),
-      hiddenStockPlans: (process.env.HIDDEN_STOCK_PLANS ?? "free")
+      // 未設定なら30日。0 を設定すると、この掃除だけ無効になる。
+      freePlanVideoDays: process.env.FREE_PLAN_VIDEO_DAYS === undefined ? 30 : optionalDaysEnv("FREE_PLAN_VIDEO_DAYS"),
+      freePlans: (process.env.FREE_PLANS ?? "free")
         .split(",")
         .map((plan) => plan.trim())
         .filter(Boolean),
-      hiddenStockMaxViews: Math.max(0, Number(process.env.HIDDEN_STOCK_MAX_VIEWS ?? 10) || 0),
       maxPages: Number.isFinite(pagesParam) && pagesParam > 0 ? Math.min(Math.floor(pagesParam), 200) : 50,
       rowLimit: 500,
       timeBudgetMs: 240_000,
