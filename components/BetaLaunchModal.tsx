@@ -48,8 +48,8 @@ export function BetaLaunchModal() {
           className="pointer-events-none absolute inset-0 bg-gradient-to-br from-main/10 via-transparent to-transparent"
         />
 
-        <span className="relative rounded-full border border-main/25 bg-main/[0.03] px-4 py-1 text-[11px] font-medium tracking-[0.35em] text-main/70">
-          NOW OPEN
+        <span className="relative whitespace-nowrap rounded-full border border-main/25 bg-main/[0.03] px-4 py-1 text-[11px] font-medium tracking-[0.2em] text-main/70">
+          WELCOME LOCAPASS OPEN
         </span>
 
         <div className="relative flex flex-col gap-1.5 text-[15px] font-light leading-relaxed tracking-[0.2em] text-main/80">
