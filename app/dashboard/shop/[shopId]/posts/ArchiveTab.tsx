@@ -37,7 +37,7 @@ export async function ArchiveTab({ shopId }: { shopId: string }) {
         <h1 className="mt-1 text-3xl font-bold text-slate-900">書庫</h1>
         <p className="mt-1 text-sm text-slate-600">
           非表示にして保管しているリールです。店のものなので、再表示も削除も自由にできます。
-          ご契約のプランによっては、一定期間置かれた人気のないリールが自動で削除されることがあります(規約をご確認ください)。
+          無料プランでは、最新の動画1本を除き、投稿から30日を過ぎた動画は(書庫にあるものも含め)自動で削除されます。必要な動画は、事前に保存してください(規約をご確認ください)。
         </p>
       </section>
 
