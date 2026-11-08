@@ -8,40 +8,107 @@ const DISMISS_KEY = "locapass_beta_launch_dismissed";
 
 type Stats = { shops: number; reels: number } | null;
 
+const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+
+/** 数字が「カカカッ」と切り替わる、機械式カウンターの動き。桁ごとに縦にロールし、整数の間は素早く切り替わって、次の数字まではほぼ止まる。 */
+function snapRoll(pos: number) {
+  const base = Math.floor(pos);
+  const frac = pos - base;
+  const t = Math.min(Math.max((frac - 0.3) / 0.45, 0), 1);
+  return (base % 10) + t * t * (3 - 2 * t);
+}
+
 /**
- * いま表示している数から目標の数まで、ゆっくり減速しながら数え上げる(最初は0から)。
- * 目標が変わったら、そこから続けて動くので、登録が増えるとその場で数字が増える。動きを減らす設定のときは、すぐ最終値にする。
+ * 機械式(空港のフラップ表示のような)カウンター。各桁が独立して縦に高速で回り、左の桁から順に、最終値で「ピタッ」と止まる。
+ *  - 最初は0から。右の桁ほど多く回り、止まるのも遅い。全体で約2秒(delay の分だけ遅れて始まる)。
+ *  - 目標の数が変わったら(登録が増えたとき)、いま表示している数字から短く回して合わせる。
+ *  - 全部止まった瞬間に、数字をほんの一瞬だけ明るくして、すぐ通常の白へ戻す。
+ *  - 動きを減らす設定のときは、回さずに最終値をそのまま出す。
  */
-function CountUp({ to, delay = 0 }: { to: number; delay?: number }) {
-  const [n, setN] = useState(0);
-  const shown = useRef(0);
+function Odometer({ to, delay = 0 }: { to: number; delay?: number }) {
+  const text = String(Math.max(0, Math.trunc(to)));
+  const n = text.length;
+  const [y, setY] = useState<number[]>([]);
+  const [phase, setPhase] = useState<"spin" | "flash" | "idle">("spin");
+  // 右端の桁を 0 として、桁ごとの「いまの位置」(回転量)を持つ。目標が変わっても、いまの数字から続けられる。
+  const cur = useRef<number[]>([]);
   const first = useRef(true);
+
   useEffect(() => {
+    const digits = text.split("").map(Number);
+    const isFirst = first.current;
+    first.current = false;
     let reduced = false;
     try {
       reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     } catch {}
     if (reduced) {
-      shown.current = to;
-      setN(to);
+      digits.forEach((d, c) => (cur.current[n - 1 - c] = d));
+      setY(digits);
+      setPhase("idle");
       return;
     }
-    const from = shown.current;
-    const duration = first.current ? 1800 : 1200;
-    const start = performance.now() + (first.current ? delay : 0);
-    first.current = false;
+
+    setPhase("spin");
+    const t0 = performance.now() + (isFirst ? delay : 0);
+    const plan = digits.map((target, c) => {
+      const from = cur.current[n - 1 - c] ?? 0;
+      const laps = isFirst ? 1 + c : 1;
+      const move = ((target - (from % 10)) % 10 + 10) % 10 + 10 * laps;
+      return { from, move, duration: isFirst ? 1500 + c * 220 : 900 };
+    });
     let raf = 0;
+    let timer = 0;
     const tick = (now: number) => {
-      const p = Math.min(Math.max((now - start) / duration, 0), 1);
-      const value = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 4)));
-      shown.current = value;
-      setN(value);
-      if (p < 1) raf = requestAnimationFrame(tick);
+      let done = true;
+      const next = plan.map((pl, c) => {
+        const p = Math.min(Math.max((now - t0) / pl.duration, 0), 1);
+        if (p < 1) done = false;
+        // 最初は速く、止まる直前に減速する。
+        const pos = p >= 1 ? Math.round(pl.from + pl.move) : pl.from + pl.move * (1 - Math.pow(1 - p, 2.2));
+        cur.current[n - 1 - c] = pos;
+        return snapRoll(pos);
+      });
+      setY(next);
+      if (!done) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      setPhase("flash");
+      timer = window.setTimeout(() => setPhase("idle"), 160);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [to, delay]);
-  return <span className="tabular-nums">{n.toLocaleString("ja-JP")}</span>;
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
+  }, [text, n, delay]);
+
+  return (
+    <span
+      role="img"
+      aria-label={to.toLocaleString("ja-JP")}
+      className={`inline-flex origin-bottom scale-y-[1.12] ${
+        phase === "spin"
+          ? "opacity-80"
+          : phase === "flash"
+            ? "opacity-100 brightness-150"
+            : "opacity-100 transition-[opacity,filter] duration-300"
+      }`}
+    >
+      {Array.from({ length: n }, (_, c) => (
+        <span key={c} aria-hidden className="inline-block h-[1em] w-[0.56em] overflow-hidden text-center leading-none tabular-nums">
+          <span className="block will-change-transform" style={{ transform: `translateY(-${(y[c] ?? 0) * 1}em)` }}>
+            {DIGITS.map((d, i) => (
+              <span key={i} className="block h-[1em] leading-none">
+                {d}
+              </span>
+            ))}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
 }
 
 export function BetaLaunchModal({ stats: initialStats = null }: { stats?: Stats }) {
@@ -124,17 +191,17 @@ export function BetaLaunchModal({ stats: initialStats = null }: { stats?: Stats 
         {stats && (
           <div className="relative flex w-full items-start justify-center gap-0">
             <div className="flex flex-1 flex-col items-center gap-1.5">
-              <span className="text-4xl font-thin leading-none tracking-wider text-main">
-                <CountUp to={stats.shops} />
+              <span className="text-[2.6rem] font-thin leading-none text-main">
+                <Odometer to={stats.shops} />
               </span>
-              <span className="text-[10px] tracking-[0.3em] text-main/50">登録店舗</span>
+              <span className="text-[9px] tracking-[0.3em] text-main/50">登録店舗</span>
             </div>
             <div aria-hidden className="h-12 w-px self-center bg-main/20" />
             <div className="flex flex-1 flex-col items-center gap-1.5">
-              <span className="text-4xl font-thin leading-none tracking-wider text-main">
-                <CountUp to={stats.reels} delay={150} />
+              <span className="text-[2.6rem] font-thin leading-none text-main">
+                <Odometer to={stats.reels} delay={260} />
               </span>
-              <span className="text-[10px] tracking-[0.3em] text-main/50">公開動画</span>
+              <span className="text-[9px] tracking-[0.3em] text-main/50">公開動画</span>
             </div>
           </div>
         )}
