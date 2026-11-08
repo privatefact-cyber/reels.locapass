@@ -43,6 +43,8 @@ export async function ReelsTab({
     .eq("shop_id", shop.id)
     // ダミー(イメージ映像)は店舗の投稿ではないので、管理画面の一覧・インサイトには出さない。
     .eq("is_placeholder", false)
+    // 書庫に保管したリール(hidden_reasonあり)は「書庫」タブで扱う。
+    .is("hidden_reason", null)
     .order("published_at", { ascending: false, nullsFirst: false });
 
   // 本家reelsの形(media配列・likes_count・status=published・post_type=reel)に揃える。

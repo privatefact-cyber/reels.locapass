@@ -5,13 +5,14 @@ import { getR2Client, R2_BUCKET, R2_PUBLIC_BASE_URL } from "@/lib/storage/r2";
 /**
  * R2(動画ファイル)の掃除。
  *
- * 方針: リールは本人の資産なので「古いから消す」はしない。消すのは次の3種類だけ。
+ * 方針: リールは店舗の資産なので「古いから消す」はしない。消すのは次の2種類だけ。
  *  1) 孤児ファイル: どのリールからも参照されていないR2のファイル。
  *     投稿の取り消し・本人/店舗による削除(DBの行だけ消えてファイルが残る)・途中離脱の残骸・退会で行が消えた分など。
- *  2) 退会したキャスト(cast_members.deleted_at)のリール。猶予(既定30日)を過ぎたものだけ。
- *  3) 閲覧・いいね・コメントが一切ない古いリール。環境変数 ZERO_VIEW_REEL_DAYS を設定したときだけ有効。
+ *  2) 店の書庫(非表示のストック)に一定期間置かれた、人気のないリール。ただし安いプランの店だけ(規約に明記する前提)。
+ *     環境変数 HIDDEN_STOCK_DAYS を設定したときだけ有効。
  *
- * 2と3は「リールの行」を消す。ファイルは次回以降の1(孤児掃除)が、猶予期間を置いてから消す。
+ * リールの持ち主は店舗。キャストの退店・退会を理由にリールは消さない(退店時は店が「書庫に残す/削除」を選ぶ)。
+ * 2は「リールの行」を消す。ファイルは次回以降の1(孤児掃除)が、猶予期間を置いてから消す。
  * つまりDBの行を誤って消しても、ファイルは猶予の間は残る。
  *
  * 既定はドライラン(何も消さず、消す予定のものを報告するだけ)。
@@ -32,10 +33,12 @@ export type CleanupOptions = {
   apply: boolean;
   /** 孤児とみなすまでの猶予(日)。アップロード直後・投稿作成の途中のファイルを巻き込まないため。 */
   graceDays: number;
-  /** 退会後、リールを消すまでの猶予(日)。null なら対象外。 */
-  castWithdrawnDays: number | null;
-  /** 閲覧・いいね・コメントが一切ないリールを消すまでの日数。null なら対象外。 */
-  zeroViewDays: number | null;
+  /** 書庫(非表示)に置かれてから、人気のないリールを消すまでの日数。null なら対象外。 */
+  hiddenStockDays: number | null;
+  /** 上の掃除の対象にするプラン(安いプラン)。 */
+  hiddenStockPlans: string[];
+  /** 「人気がない」とみなす閲覧数の上限(いいね・コメントは常に0であること)。 */
+  hiddenStockMaxViews: number;
   /** 1回の実行で走査するR2の一覧ページ数(1ページ=最大1000件)。 */
   maxPages: number;
   /** 1回の実行でDBから消すリール行数の上限。 */
@@ -156,13 +159,14 @@ async function sweepOrphans(prefix: string, options: CleanupOptions, deadline: n
   return report;
 }
 
-/** 2・3) 退会後に猶予を過ぎたキャストのリール / 反応が一切ない古いリール。DBの行を消す(ファイルは孤児掃除が後で消す)。 */
+/** 2) 書庫に一定期間置かれた、人気のないリール(安いプランの店だけ)。DBの行を消す(ファイルは孤児掃除が後で消す)。 */
 async function removeRows(options: CleanupOptions): Promise<CleanupReport["rows"]> {
-  if (options.castWithdrawnDays === null && options.zeroViewDays === null) return [];
+  if (options.hiddenStockDays === null || options.hiddenStockPlans.length === 0) return [];
 
   const { data, error } = await admin().rpc("locapass_cleanup_reel_candidates", {
-    p_deleted_cast_days: options.castWithdrawnDays,
-    p_zero_view_days: options.zeroViewDays,
+    p_hidden_days: options.hiddenStockDays,
+    p_plans: options.hiddenStockPlans,
+    p_max_views: options.hiddenStockMaxViews,
     p_limit: options.rowLimit,
   });
   if (error) throw new Error(`削除候補の抽出に失敗: ${error.message}`);

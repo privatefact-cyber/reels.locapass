@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { InviteCastButton } from "@/components/locapass-dashboard/InviteCastButton";
-import { DeleteMemberButton } from "@/components/locapass-dashboard/DeleteMemberButton";
+import { DeleteCastButton } from "@/components/locapass-dashboard/DeleteCastButton";
 import { CastAvatarEditor } from "@/components/locapass-dashboard/CastAvatarEditor";
 import { CastPhotoUploader } from "@/components/locapass-dashboard/CastPhotoUploader";
 import { CastLoginLinkCard } from "@/components/locapass-dashboard/CastLoginLinkCard";
@@ -137,7 +137,7 @@ export default async function LocapassCastEditPage({
           <p className="text-xs text-slate-500">{shop.name}</p>
           <h1 className="text-3xl font-bold text-slate-900">{cast.name} の管理</h1>
         </div>
-        <DeleteMemberButton action={boundDeleteCast} label="FACESを削除" targetName={cast.name} />
+        <DeleteCastButton action={boundDeleteCast} targetName={cast.name} />
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
