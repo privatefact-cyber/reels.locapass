@@ -217,6 +217,14 @@ export function BetaLaunchModal({ stats: initialStats = null }: { stats?: Stats 
         >
           見る
         </button>
+
+        {/* 店舗向けの掲載案内(静的LP)へ。内部の静的ページなので、通常のリンクで開く。 */}
+        <a
+          href="/lp/shop"
+          className="relative -mt-2 text-[11px] tracking-[0.15em] text-main/60 underline decoration-main/30 underline-offset-4 transition hover:text-main/90 hover:decoration-main/60"
+        >
+          掲載のお問い合わせはこちら
+        </a>
       </div>
     </div>
   );
