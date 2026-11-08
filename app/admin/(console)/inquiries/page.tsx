@@ -55,6 +55,18 @@ export default async function AdminInquiriesPage({ searchParams }: { searchParam
         <p className="mt-1 text-sm text-slate-600">LPの「掲載のお問い合わせ」「販売代理店のお問い合わせ」から届いた内容です。状態の確認と、返信ができます。</p>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={"/admin/inquiries/export" + (statusFilter || typeFilter ? "?" + new URLSearchParams({ ...(statusFilter ? { status: statusFilter } : {}), ...(typeFilter ? { type: typeFilter } : {}) }).toString() : "")}
+          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          CSVで書き出す{statusFilter || typeFilter ? "(いまの絞り込み)" : ""}
+        </a>
+        <Link href="/admin/inquiries/import" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          過去の問い合わせを取り込む
+        </Link>
+      </div>
+
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {STATUSES.map((s) => (
           <Link key={s} href={href(s, typeFilter)} className="rounded-2xl border border-slate-200 bg-white p-4 hover:border-slate-400">
