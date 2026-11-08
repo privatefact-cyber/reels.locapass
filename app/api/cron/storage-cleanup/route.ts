@@ -48,6 +48,8 @@ export async function GET(req: Request) {
       rowLimit: 500,
       timeBudgetMs: 240_000,
     });
+    // 定期実行の結果は呼び出し元に残らないので、ログにも出しておく(Vercelのログで確認できる)。
+    console.log("[storage-cleanup]", JSON.stringify(report));
     return NextResponse.json(report, { status: report.errors.length > 0 ? 502 : 200 });
   } catch (error) {
     console.error("R2の掃除に失敗しました", error);
