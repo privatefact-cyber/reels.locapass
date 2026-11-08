@@ -20,6 +20,7 @@ import { isHiddenByDefaultGenre } from "@/lib/shop/genres";
 import { photoResized } from "@/components/photo/photoUtils";
 import { focusThumb, gridThumb } from "@/lib/images/thumb";
 import { FEED_REELS_INITIAL, FEED_REELS_PAGE } from "@/lib/reels/feedPaging";
+import { EMPTY_REEL_FILTER_KEY, appendReelFilterParams, reelFilterKey, type ReelFeedFilter } from "@/lib/reels/feedFilter";
 
 export type { ReelItem } from "@/lib/reels/types";
 
@@ -307,44 +308,7 @@ export function ReelFeed({
   boostHref?: string;
 }) {
   const { locale, t } = useLocale();
-  // リールは初回ぶんだけサーバーから受け取り、スクロール/スワイプが末尾に近づいたらAPIで続きを足す
-  // (初回表示を速くしつつ、見ていくと無限に続く)。
   const [reels, setReels] = useState(initialReels);
-  const [hasMoreReels, setHasMoreReels] = useState(reelsHasMore);
-  const reelsFetchingRef = useRef(false);
-  const reelsOffsetRef = useRef(FEED_REELS_INITIAL);
-  useEffect(() => {
-    // サーバー側のデータが差し替わったとき(再読み込み・ページ遷移)は、取得済みの続きを捨てて取り直す。
-    setReels(initialReels);
-    setHasMoreReels(reelsHasMore);
-    reelsOffsetRef.current = FEED_REELS_INITIAL;
-  }, [initialReels, reelsHasMore]);
-  const loadMoreReels = useCallback(async () => {
-    if (reelsFetchingRef.current) return;
-    reelsFetchingRef.current = true;
-    try {
-      const qs = new URLSearchParams({
-        offset: String(reelsOffsetRef.current),
-        limit: String(FEED_REELS_PAGE),
-        lang: locale,
-      });
-      if (feedPortalId !== null) qs.set("portal", String(feedPortalId));
-      const res = await fetch(`/api/reels/feed?${qs}`);
-      if (!res.ok) throw new Error(`feed ${res.status}`);
-      const data = (await res.json()) as { reels: ReelItem[]; hasMore: boolean };
-      reelsOffsetRef.current += FEED_REELS_PAGE;
-      setReels((prev) => {
-        const seen = new Set(prev.map((r) => r.id));
-        return [...prev, ...data.reels.filter((r) => !seen.has(r.id))];
-      });
-      setHasMoreReels(data.hasMore);
-    } catch {
-      // 通信失敗で無限に再試行しない。取得済みのぶんは従来どおり(最後まで見たら先頭から繰り返す)。
-      setHasMoreReels(false);
-    } finally {
-      reelsFetchingRef.current = false;
-    }
-  }, [locale, feedPortalId]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [activeGenres, setActiveGenres] = useState<string[]>([]);
@@ -372,6 +336,84 @@ export function ReelFeed({
   // リールの投稿者種別での絞り込み(ショップアカウント投稿 vs ICON本人投稿)。
   // 2段目のゲートで選んだ結果を保持する(null=絞り込みなし)。
   const [reelAuthorFilter, setReelAuthorFilter] = useState<"cast" | "shop" | null>(null);
+  // ── リールの取得 ──
+  // リールは初回ぶんだけサーバーから受け取り、スクロール/スワイプが末尾に近づいたらAPIで続きを足す
+  // (初回表示を速くしつつ、見ていくと無限に続く)。
+  // 絞り込み(投稿者種別・ジャンル・キーワード)は、取得済みの分ではなく、サーバー(DB)側で行う。
+  // リールは埋め込み動画も含めて増え続けるので、全件を端末に集めてから絞る方式は破綻するため。
+  // 条件が変わったら、その条件の先頭60件を取り直し、続きは同じ条件のままoffsetで足す。
+  const [hasMoreReels, setHasMoreReels] = useState(reelsHasMore);
+  const serverFilter = useMemo<ReelFeedFilter>(
+    () => ({ author: reelAuthorFilter, genres: activeGenres, q: keyword }),
+    [reelAuthorFilter, activeGenres, keyword],
+  );
+  const serverFilterKey = reelFilterKey(serverFilter);
+  const serverFilterRef = useRef(serverFilter);
+  serverFilterRef.current = serverFilter;
+  // いま持っているリールが、どの条件で取ったものか(serverFilterKeyと違う間は、取り直しの途中)。
+  const [reelsFilterKey, setReelsFilterKey] = useState(EMPTY_REEL_FILTER_KEY);
+  const reelsInSync = reelsFilterKey === serverFilterKey;
+  const reelsGenRef = useRef(0); // 条件が変わるたびに増やす。古い条件の返事は捨てる。
+  const reelsInflightGenRef = useRef(-1); // 取得中の世代(なければ-1)
+  const reelsOffsetRef = useRef(FEED_REELS_INITIAL);
+
+  const fetchReelPage = useCallback(
+    async (offset: number, replace: boolean) => {
+      const gen = reelsGenRef.current;
+      if (reelsInflightGenRef.current === gen) return;
+      reelsInflightGenRef.current = gen;
+      const filter = serverFilterRef.current;
+      const key = reelFilterKey(filter);
+      try {
+        const qs = new URLSearchParams({ offset: String(offset), limit: String(FEED_REELS_PAGE), lang: locale });
+        if (feedPortalId !== null) qs.set("portal", String(feedPortalId));
+        appendReelFilterParams(qs, filter);
+        const res = await fetch(`/api/reels/feed?${qs}`);
+        if (!res.ok) throw new Error(`feed ${res.status}`);
+        const data = (await res.json()) as { reels: ReelItem[]; hasMore: boolean };
+        if (gen !== reelsGenRef.current) return; // 取得中に条件が変わった
+        reelsOffsetRef.current = offset + FEED_REELS_PAGE;
+        setReels((prev) => {
+          if (replace) return data.reels;
+          const seen = new Set(prev.map((r) => r.id));
+          return [...prev, ...data.reels.filter((r) => !seen.has(r.id))];
+        });
+        setReelsFilterKey(key);
+        setHasMoreReels(data.hasMore);
+      } catch {
+        // 通信失敗で無限に再試行しない。取得済みのぶんは従来どおり(最後まで見たら先頭から繰り返す)。
+        // 取り直しに失敗したときは、取得済みのリールを端末側の絞り込みで見せる(reelsInSyncがfalseのまま)。
+        if (gen === reelsGenRef.current) setHasMoreReels(false);
+      } finally {
+        if (reelsInflightGenRef.current === gen) reelsInflightGenRef.current = -1;
+      }
+    },
+    [locale, feedPortalId],
+  );
+  const loadMoreReels = useCallback(() => fetchReelPage(reelsOffsetRef.current, false), [fetchReelPage]);
+
+  // 条件が変わったとき(キーワード入力・ジャンル・投稿者種別)や、サーバー側のデータが差し替わったとき
+  // (再読み込み・ページ遷移)に、リールを取り直す。条件なしならサーバーから受け取った初回ぶんに戻す。
+  // キーワードは入力のたびに通信しないよう、少し待ってから取る。
+  const reelsMountedRef = useRef(false);
+  useEffect(() => {
+    if (!reelsMountedRef.current) {
+      reelsMountedRef.current = true;
+      return;
+    }
+    reelsGenRef.current += 1;
+    if (serverFilterKey === EMPTY_REEL_FILTER_KEY) {
+      setReels(initialReels);
+      setHasMoreReels(reelsHasMore);
+      setReelsFilterKey(EMPTY_REEL_FILTER_KEY);
+      reelsOffsetRef.current = FEED_REELS_INITIAL;
+      return;
+    }
+    setHasMoreReels(true);
+    const timer = window.setTimeout(() => void fetchReelPage(0, true), 250);
+    return () => window.clearTimeout(timer);
+  }, [serverFilterKey, initialReels, reelsHasMore, fetchReelPage]);
+
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [peek, setPeek] = useState<{ shop: ShopGridItem; rect: DOMRect } | null>(null);
   const { liked, likeCounts, toggleLike } = useReelLikes(reels);
@@ -561,6 +603,10 @@ export function ReelFeed({
     () =>
       reels.filter((r) => {
         if (!showCast) return false;
+        // いま持っているリールが今の条件でサーバーが絞ったものなら、そのまま使う
+        // (端末側でもう一度絞ると、サーバーの絞り込みと食い違って欠けることがある)。
+        // 取り直しの途中(条件が変わった直後)だけ、前の取得分を端末側で絞って仮に見せる。
+        if (reelsInSync) return true;
         if (hiddenUnlessSelected(r.genre)) return false;
         if (reelAuthorFilter === "cast" && !r.castId) return false;
         if (reelAuthorFilter === "shop" && r.castId) return false;
@@ -572,7 +618,7 @@ export function ReelFeed({
         }
         return true;
       }),
-    [reels, showCast, reelAuthorFilter, keyword, searchIndex, activeGenres, hiddenUnlessSelected],
+    [reels, showCast, reelsInSync, reelAuthorFilter, keyword, searchIndex, activeGenres, hiddenUnlessSelected],
   );
 
   const filteredShops = useMemo(
@@ -696,12 +742,13 @@ export function ReelFeed({
   // 末尾に届きそうになったら、続きを取る。絞り込み(キーワード・FACESなど)で一致が尽きたときも、
   // 続きがあるかぎり取り続ける(取得済みの40〜60件だけに絞り込みが効いて少なく見えるのを防ぐ)。
   useEffect(() => {
-    if (!hasMoreReels || nowOnly || !showCast) return;
+    // 取り直しの途中(持っているリールが今の条件のものでない間)は、続きを足さない。
+    if (!hasMoreReels || nowOnly || !showCast || !reelsInSync) return;
     const reach = Math.min((openIndex !== null ? overlayActiveIndex + 10 : visibleCount + 12), tiles.length);
     let seen = 0;
     for (let i = 0; i < reach; i++) if (tiles[i].kind === "cast") seen++;
     if (seen >= filteredReels.length) void loadMoreReels();
-  }, [hasMoreReels, nowOnly, showCast, tiles, openIndex, overlayActiveIndex, visibleCount, filteredReels.length, loadMoreReels]);
+  }, [hasMoreReels, nowOnly, showCast, reelsInSync, tiles, openIndex, overlayActiveIndex, visibleCount, filteredReels.length, loadMoreReels]);
 
   useEffect(() => {
     // 絞り込み条件が変わってタイルの中身が変わったら、開いていたオーバーレイは閉じる。
