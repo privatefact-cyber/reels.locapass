@@ -2,6 +2,7 @@
 // AI推論はn8n(既存の「アル」と同じ運用)に委譲し、ここでは認証・DB管理・中継のみ行う。
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { narrowKbDocs } from "./retrieval.ts";
+import { loadShopAttributeLines } from "../_shared/shopAttributes.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -462,12 +463,17 @@ Deno.serve(async (req: Request) => {
 
     for (const shop of shopsList) shopIdByUrl.set(locapassShopUrl(shop), shop.id as string);
 
+    // 属性(ペット同伴可・駐車場など)。オンの属性だけを「設備・条件」欄としてAIに渡す。
+    // 欄が無い店は「なし」ではなく「未設定」(AIには、欄が無い=記載なし、と伝える)。
+    const attributeLineByShop = await loadShopAttributeLines(supabasePublic);
+
     kbDocs = shopsList.map((shop) => ({
       title: shop.name as string,
       url: locapassShopUrl(shop),
       content:
         [
           shop.category ? `ジャンル: ${shop.category}` : null,
+          attributeLineByShop.get(shop.id as string) ? `設備・条件タグ: ${attributeLineByShop.get(shop.id as string)}` : null,
           shop.tagline ? `一言: ${shop.tagline}` : null,
           shop.address ? `住所: ${shop.address}` : null,
           shop.tel ? `電話: ${shop.tel}` : null,
