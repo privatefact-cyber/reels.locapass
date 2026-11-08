@@ -408,7 +408,7 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
       await matchOrCreateAndPublish(ingestionId, {
         portalId, name: candidateName, address: candidateAddress, officialUrl,
         category: resolved.category ?? defaultCategoryForPortal(portalId),
-        reason: reason ?? "公式サイトのURLから店名・住所を自動取得して掲載", userId: user.id, preview: resolved.preview,
+        reason: reason ?? "公式サイトのURLから店名・住所を自動取得して掲載", userId: user.id, preview: resolved.preview, ignoreOption: true,
       });
     } catch (publishError) {
       const message = publishError instanceof Error ? publishError.message.slice(0, 500) : "自動掲載に失敗しました";

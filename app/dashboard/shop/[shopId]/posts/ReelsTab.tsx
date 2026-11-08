@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { ShopReelPostForm } from "@/components/locapass-dashboard/ShopReelPostForm";
 import { ShopEmbedSection } from "@/components/locapass-dashboard/ShopEmbedSection";
-import { deleteReel, setMapPreviewReel } from "../actions";
+import { deleteReel, hideReel, setMapPreviewReel } from "../actions";
 import { StreamThumb } from "@/components/video/StreamThumb";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
@@ -211,14 +211,26 @@ export async function ReelsTab({
                       </form>
                     ))}
                 </div>
-                <form action={deleteReel.bind(null, shop.id, r.id)} className="absolute right-1 top-1">
-                  <ConfirmSubmitButton
-                    message={"この動画を削除しますか?\n削除すると元に戻せません。"}
-                    className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white hover:bg-red-600"
-                  >
-                    削除
-                  </ConfirmSubmitButton>
-                </form>
+                <div className="absolute right-1 top-1 flex gap-1">
+                  {r.status === "published" && (
+                    <form action={hideReel.bind(null, shop.id, r.id)}>
+                      <ConfirmSubmitButton
+                        message={"この動画を非表示にしますか?\nトップ・マップ・店舗ページから見えなくなります。「書庫」タブからいつでも再表示できます。"}
+                        className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white hover:bg-slate-600"
+                      >
+                        非表示
+                      </ConfirmSubmitButton>
+                    </form>
+                  )}
+                  <form action={deleteReel.bind(null, shop.id, r.id)}>
+                    <ConfirmSubmitButton
+                      message={"この動画を削除しますか?\n削除すると元に戻せません。"}
+                      className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white hover:bg-red-600"
+                    >
+                      削除
+                    </ConfirmSubmitButton>
+                  </form>
+                </div>
                 <div className="absolute right-1 top-7 flex flex-col items-end gap-1">
                   {media?.type === "video" && <ReelCaptionEditButton reelId={r.id} />}
                   <ReelTagEditButton reelId={r.id} />
