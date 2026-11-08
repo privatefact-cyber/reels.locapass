@@ -9,6 +9,7 @@ import { withOriginal, type OriginalText } from "@/lib/i18n/originalText";
 import type { Locale } from "@/lib/i18n/locale";
 import { toEmbedRef } from "@/lib/embed";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
+import { FEED_REELS_INITIAL } from "@/lib/reels/feedPaging";
 
 export type ReelRow = {
   id: string;
@@ -95,10 +96,41 @@ export const REEL_SELECT =
 
 export type PortalFeedData = {
   reels: ReelItem[];
+  /** reelsの先に、まだ取得していないリールがあるか(あれば/api/reels/feedで続きを足す)。 */
+  reelsHasMore: boolean;
   shopItems: ShopGridItem[];
   genreChoices: string[];
   ads: AdItem[];
 };
+
+/**
+ * 公開中リールを新しい順に offset から limit 件取る(siteIdがnullなら全エリア横断)。
+ * limit+1件取って、続きがあるか(hasMore)も返す。
+ * 並びは published_at → id で固定し、ページをまたいで重複・欠落しないようにする。
+ */
+export async function getReelPage(
+  siteId: number | null,
+  offset: number,
+  limit: number,
+  locale: Locale,
+): Promise<{ reels: ReelItem[]; hasMore: boolean }> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("locapass_reels")
+    .select(REEL_SELECT)
+    .eq("status", "publish")
+    .or("expires_at.is.null,expires_at.gt.now()")
+    .order("published_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(offset, offset + limit);
+  if (siteId !== null) query = query.eq("portal_id", siteId);
+
+  const { data: rows } = await query;
+  const all = rows ?? [];
+  const hasMore = all.length > limit;
+  const reels = all.slice(0, limit).flatMap((row) => toReelItem(row, locale) ?? []);
+  return { reels, hasMore };
+}
 
 /**
  * locapass_shops/locapass_reelsから1エリア分(またはsiteIdがnullなら全エリア横断)の
@@ -116,18 +148,11 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     .order("created_at", { ascending: false });
   if (siteId !== null) shopsQuery = shopsQuery.eq("portal_id", siteId);
 
-  let reelsQuery = supabase
-    .from("locapass_reels")
-    .select(REEL_SELECT)
-    .eq("status", "publish")
-    .or("expires_at.is.null,expires_at.gt.now()")
-    .order("published_at", { ascending: false })
-    .limit(40);
-  if (siteId !== null) reelsQuery = reelsQuery.eq("portal_id", siteId);
-
-  const [{ data: shops }, { data: reelRows }, { data: adRows }] = await Promise.all([
+  const [{ data: shops }, reelPage, { data: adRows }] = await Promise.all([
     shopsQuery,
-    reelsQuery,
+    // 初回は少なめ(FEED_REELS_INITIAL)だけ渡して描画を速くする。続きはクライアントが
+    // /api/reels/feed で足していく(スワイプ・スクロールが末尾に近づいたとき)。
+    getReelPage(siteId, 0, FEED_REELS_INITIAL, locale),
     // システム管理者が投稿するPR。指定頻度でリールフィードに紛れ込ませる(システム管理者のみ投稿可)。
     supabase
       .from("locapass_ads")
@@ -135,7 +160,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
       .eq("is_active", true),
   ]);
 
-  const reels: ReelItem[] = (reelRows ?? []).flatMap((row) => toReelItem(row, locale) ?? []);
+  const { reels, hasMore: reelsHasMore } = reelPage;
 
   // 表紙もアイコンも無い店は、最新リールの画像をタイルに使う(無ければイメージ写真になり、後ろへ回す)。
   const noOwnPhotoIds = (shops ?? []).filter((s) => !sanitizeImageUrl(s.cover_url ?? s.icon_url)).map((s) => s.id);
@@ -176,7 +201,7 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     frequency: a.frequency,
   }));
 
-  return { reels, shopItems, genreChoices, ads };
+  return { reels, reelsHasMore, shopItems, genreChoices, ads };
 }
 
 /** 投稿文(表示言語に合わせた翻訳)と、4言語以外の原文のときの「原文を見る」用の原文。 */
