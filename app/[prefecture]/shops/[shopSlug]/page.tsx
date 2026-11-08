@@ -478,10 +478,12 @@ export default async function ShopDetailPage({
       {/* 1. トップヒーローセクション */}
       {/* space-y-10 の間隔が、画面に見えない部品(スクリプト)の次のここにもかかり、ヘッダーとの間に40pxの隙間ができていたので、!で打ち消す */}
       <section className="relative !-mt-px h-[300px] w-full overflow-hidden sm:h-[380px]">
-        {/* 子ポータルへの戻る導線: ヒーロー左上にすりガラスピル型で浮かせる */}
+        {/* 子ポータルへの戻る導線: ヒーロー左上にすりガラスピル型で浮かせる。
+            写真の上なので data-surface="media" で、白地のテーマ(ビューティー・Caravanなど)でも文字を白にする(これが無いと、濃い文字が暗い背景に沈む)。 */}
         <Link
+          data-surface="media"
           href={`/${site.slug}`}
-          className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-full border border-main/20 bg-black/40 px-3 py-1.5 text-xs font-medium text-main/90 shadow-lg backdrop-blur-md transition hover:border-main/40 hover:bg-black/60 hover:text-main sm:left-6 sm:top-6"
+          className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-full border border-main/25 bg-black/50 px-3 py-1.5 text-xs font-medium text-main/90 shadow-lg backdrop-blur-md transition hover:border-main/40 hover:bg-black/60 hover:text-main sm:left-6 sm:top-6"
         >
           <ChevronLeft size={14} />
           <span>{locale !== "ja" && site.name_en ? site.name_en : site.name}</span>
