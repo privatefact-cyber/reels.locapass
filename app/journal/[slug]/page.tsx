@@ -50,6 +50,9 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
     .map((p) => localizeJournalPost(p, locale));
   const image = post.cover ? (post.cover.src.startsWith("/") ? `https://locapass.net${post.cover.src}` : post.cover.src) : null;
 
+  // シェアするURL: その記事の、今の言語のURL(正規ドメイン)。
+  const { url: shareUrl } = await localizedPageUrls(`/journal/${post.slug}`);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -71,7 +74,7 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
         </Link>
         <EditorBar editSlug={post.slug} />
       </div>
-      <ArticleView post={post} locale={locale} />
+      <ArticleView post={post} locale={locale} shareUrl={shareUrl} />
 
       {more.length > 0 ? (
         <section className="space-y-4 border-t border-main/10 pt-8">

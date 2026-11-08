@@ -1,12 +1,14 @@
 import Link from "@/components/i18n/LocaleLink";
 import { Cover } from "@/components/journal/Cover";
+import { ShareButton } from "@/components/journal/ShareButton";
 import { PostBody } from "@/components/journal/PostBody";
 import { isSafeLinkUrl, type JournalPost } from "@/lib/journal/posts";
 import type { Locale } from "@/lib/i18n/locale";
 import { formatJournalDateFor, journalText } from "@/lib/journal/text";
 
 /** 記事の見た目(表紙・見出し・導入・本文)。公開ページと、編集画面のプレビューで同じものを使う。 */
-export function ArticleView({ post, linkCategory = true, locale = "ja" }: { post: JournalPost; linkCategory?: boolean; locale?: Locale }) {
+/** shareUrl を渡すと、記事の上と下にシェアボタンを出す(編集画面のプレビューでは渡さない)。 */
+export function ArticleView({ post, linkCategory = true, locale = "ja", shareUrl }: { post: JournalPost; linkCategory?: boolean; locale?: Locale; shareUrl?: string }) {
   const t = journalText(locale);
   return (
     <>
@@ -22,6 +24,7 @@ export function ArticleView({ post, linkCategory = true, locale = "ja" }: { post
           )}
           <span aria-hidden>·</span>
           <time dateTime={post.date}>{formatJournalDateFor(post.date, locale)}</time>
+          {shareUrl ? <ShareButton url={shareUrl} title={post.title} className="ml-auto" /> : null}
         </div>
         <h1 className="text-2xl font-bold leading-snug text-main">{post.title || t.untitled}</h1>
         {post.lead ? <p className="text-base leading-8 text-tone-200">{post.lead}</p> : null}
@@ -46,6 +49,11 @@ export function ArticleView({ post, linkCategory = true, locale = "ja" }: { post
               {post.link.label}
             </a>
           )}
+        </div>
+      ) : null}
+      {shareUrl ? (
+        <div className="flex justify-center border-t border-main/10 pt-6">
+          <ShareButton url={shareUrl} title={post.title} className="px-5 py-2 text-sm" />
         </div>
       ) : null}
     </>
