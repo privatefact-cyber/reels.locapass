@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 // トップ画面の初期検索ゲート(ReelFeedのGateOverlay)と同じすりガラスカードの見た目を流用した、
-// 公開ローンチ告知用のワンショットモーダル。合言葉ゲート解除にあわせて、初回訪問時にだけ出す。
+// 正式ローンチ告知用のワンショットモーダル。初回訪問時にだけ出す。
 const DISMISS_KEY = "locapass_beta_launch_dismissed";
 
 export function BetaLaunchModal() {
@@ -49,7 +49,7 @@ export function BetaLaunchModal() {
         />
 
         <span className="relative rounded-full border border-main/25 bg-main/[0.03] px-4 py-1 text-[11px] font-medium tracking-[0.35em] text-main/70">
-          BETA
+          NOW OPEN
         </span>
 
         <div className="relative flex flex-col gap-1.5 text-[15px] font-light leading-relaxed tracking-[0.2em] text-main/80">
@@ -63,7 +63,7 @@ export function BetaLaunchModal() {
         </span>
 
         <p className="relative text-[11px] tracking-widest text-main/50">
-          ベータ版 まもなくローンチ
+          正式ローンチ
         </p>
 
         <button
