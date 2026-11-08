@@ -360,6 +360,28 @@ export async function showArchivedReel(shopId: string, reelId: string) {
   revalidatePath("/");
 }
 
+/**
+ * 公開中のリールを非表示にして、書庫に保管する(自店舗のものだけ)。削除とは違い、書庫から「再表示」で元に戻せる。
+ * トップ・マップ・店舗詳細など、公開されているどこからも見えなくなる。自動で追加された動画を店が外したいときにも使う。
+ */
+export async function hideReel(shopId: string, reelId: string) {
+  const supabase = await requireShopAccess(shopId);
+  const { data, error } = await supabase
+    .from("locapass_reels")
+    .update({ status: "draft", hidden_at: new Date().toISOString(), hidden_reason: "manual" })
+    .eq("id", reelId)
+    .eq("shop_id", shopId)
+    .eq("status", "publish")
+    .select("id");
+
+  if (error || !data || data.length === 0) {
+    throw new Error(`非表示に失敗しました: ${error?.message ?? "対象が見つかりません"}`);
+  }
+
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
+  revalidatePath("/");
+}
+
 /** 店舗詳細ページのリール並び順とピン留め(最大10件)を保存する。ids は表示したい順。 */
 export async function saveShopReelOrder(shopId: string, orderedIds: string[], pinnedIds: string[]) {
   const supabase = await requireShopAccess(shopId);

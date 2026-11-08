@@ -104,9 +104,16 @@ export async function runVideoLivenessCheck(options: { dryRun?: boolean } = {}) 
       // 自動で下げたものだけを戻す。下書きのまま運営が触っていないことは auto_hidden_at が残っていることで分かる。
       if (row.auto_hidden_at && status === "draft") {
         if (!options.dryRun) {
-          const { data: restored, error: restoreError } = await admin.from("locapass_reels").update({ status: "publish" }).eq("id", row.reel_id).eq("status", "draft").select("id");
-          if (restoreError || !restored?.length) {
-            summary.errors.push(`復活失敗 ${row.reel_id}: ${restoreError?.message ?? "更新0件"}`);
+          // 店舗が自分で非表示(書庫)にしたリール(hidden_reasonあり)は、動画が見られても戻さない。
+          const { data: restored, error: restoreError } = await admin.from("locapass_reels").update({ status: "publish" }).eq("id", row.reel_id).eq("status", "draft").is("hidden_reason", null).select("id");
+          if (restoreError) {
+            summary.errors.push(`復活失敗 ${row.reel_id}: ${restoreError.message}`);
+            continue;
+          }
+          if (!restored?.length) {
+            // 店舗側で非表示にされていた。自動で下げた記録だけ消して、公開には戻さない。
+            patch.auto_hidden_at = null;
+            if (!options.dryRun) await admin.from("locapass_youtube_ingestions").update(patch).eq("id", row.id);
             continue;
           }
         }

@@ -348,6 +348,8 @@ export async function matchOrCreateAndPublish(ingestionId: string, input: {
   reason: string;
   userId: string | null;
   preview?: ImportPreview | null;
+  /** 運営者が自分の操作で掲載するときは true(店舗の「動画の自動追加」オプションを問わない)。毎日の自動処理は false。 */
+  ignoreOption?: boolean;
 }): Promise<"published" | "held"> {
   const admin = createAdminClient();
   const existing = await findExistingShop(input.portalId, input.name, input.address);
@@ -357,6 +359,21 @@ export async function matchOrCreateAndPublish(ingestionId: string, input: {
       match_reason: input.reason.slice(0, 500), error_message: `既存店舗が${existing.length}件一致したため、重複登録を避けて保留(既存店舗IDを手動で紐づけてください)`,
     }).eq("id", ingestionId);
     return "held";
+  }
+  if (existing.length === 1 && !input.ignoreOption) {
+    // 自動追加はオプション契約の店舗だけ。未契約の店は、紐づけまで行って公開は見送る(運営が確認して「リールを投稿」で追加できる)。
+    const { data: optionRow } = await (admin as any).from("locapass_shops").select("auto_video_enabled").eq("id", existing[0].id).maybeSingle();
+    if (!optionRow?.auto_video_enabled) {
+      const { error: holdError } = await (admin as any).from("locapass_youtube_ingestions").update({
+        portal_id: input.portalId, candidate_name: input.name, candidate_address: input.address,
+        official_url: input.officialUrl ?? existing[0].url, official_url_verified: Boolean(input.officialUrl ?? existing[0].url),
+        matched_shop_id: existing[0].id, match_status: "matched_existing",
+        match_reason: `既存店舗に一意一致(「動画の自動追加」オプション未契約のため、公開せず保留): ${input.reason}`.slice(0, 500),
+        error_message: null,
+      }).eq("id", ingestionId);
+      if (holdError) throw new Error(`候補の更新に失敗しました: ${holdError.message}`);
+      return "held";
+    }
   }
   if (existing.length === 1) {
     const { error } = await (admin as any).from("locapass_youtube_ingestions").update({
