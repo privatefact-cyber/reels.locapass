@@ -1921,6 +1921,8 @@ export type Database = {
           created_by: string | null
           expires_at: string | null
           genres: string[]
+          hidden_at: string | null
+          hidden_reason: string | null
           id: string
           images: Json
           is_comments_enabled: boolean
@@ -1967,6 +1969,8 @@ export type Database = {
           created_by?: string | null
           expires_at?: string | null
           genres?: string[]
+          hidden_at?: string | null
+          hidden_reason?: string | null
           id?: string
           images?: Json
           is_comments_enabled?: boolean
@@ -2013,6 +2017,8 @@ export type Database = {
           created_by?: string | null
           expires_at?: string | null
           genres?: string[]
+          hidden_at?: string | null
+          hidden_reason?: string | null
           id?: string
           images?: Json
           is_comments_enabled?: boolean
@@ -5244,7 +5250,7 @@ export type Database = {
       }
       locapass_slugify: { Args: { input: string }; Returns: string }
       locapass_soft_delete_cast_member: {
-        Args: { p_cast_id: string }
+        Args: { p_cast_id: string; p_reels?: string }
         Returns: undefined
       }
       locapass_soft_delete_staff_member: {

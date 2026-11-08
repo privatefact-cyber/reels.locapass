@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ReelsTab } from "./ReelsTab";
 import { EventsTab } from "./EventsTab";
+import { ArchiveTab } from "./ArchiveTab";
 
 const TABS = [
   { key: "reel", label: "リール" },
   { key: "event", label: "イベント" },
+  { key: "archive", label: "書庫" },
 ] as const;
 
 /** 投稿系をまとめたページ。タブはURL(?tab=)で切り替える。 */
@@ -17,7 +19,7 @@ export default async function LocapassShopPostsPage({
 }) {
   const { shopId } = await params;
   const { tab } = await searchParams;
-  const current = tab === "event" ? "event" : "reel";
+  const current = tab === "event" ? "event" : tab === "archive" ? "archive" : "reel";
 
   return (
     <div className="space-y-6">
@@ -34,7 +36,13 @@ export default async function LocapassShopPostsPage({
           </Link>
         ))}
       </div>
-      {current === "event" ? <EventsTab shopId={shopId} /> : <ReelsTab params={Promise.resolve({ shopId })} />}
+      {current === "event" ? (
+        <EventsTab shopId={shopId} />
+      ) : current === "archive" ? (
+        <ArchiveTab shopId={shopId} />
+      ) : (
+        <ReelsTab params={Promise.resolve({ shopId })} />
+      )}
     </div>
   );
 }

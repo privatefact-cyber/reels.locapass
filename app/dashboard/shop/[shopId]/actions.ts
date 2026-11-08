@@ -337,6 +337,29 @@ export async function deleteReel(shopId: string, reelId: string) {
   revalidatePath("/");
 }
 
+/**
+ * 書庫(非表示のストック)のリールを、再び公開する(自店舗のものだけ)。
+ * 退店したパートナーのリールでも、店が判断して再表示できる(プラットフォームは使う/使わないを判断しない)。
+ */
+export async function showArchivedReel(shopId: string, reelId: string) {
+  const supabase = await requireShopAccess(shopId);
+  const { data, error } = await supabase
+    .from("locapass_reels")
+    .update({ status: "publish", hidden_at: null, hidden_reason: null })
+    .eq("id", reelId)
+    .eq("shop_id", shopId)
+    .eq("status", "draft")
+    .not("hidden_reason", "is", null)
+    .select("id");
+
+  if (error || !data || data.length === 0) {
+    throw new Error(`再表示に失敗しました: ${error?.message ?? "対象が見つかりません"}`);
+  }
+
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
+  revalidatePath("/");
+}
+
 /** 店舗詳細ページのリール並び順とピン留め(最大10件)を保存する。ids は表示したい順。 */
 export async function saveShopReelOrder(shopId: string, orderedIds: string[], pinnedIds: string[]) {
   const supabase = await requireShopAccess(shopId);

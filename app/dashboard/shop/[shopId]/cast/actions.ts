@@ -169,10 +169,12 @@ export async function regenerateCastLoginToken(shopId: string, castId: string) {
  * パートナーの退店処理。即時削除ではなくソフト削除で、ログインは即座にできなくなるが、
  * 30日以内なら同じアカウントを復帰できる(deleteCast名は維持、UI文言は「削除」のまま)。
  */
-export async function deleteCast(shopId: string, castId: string) {
+export async function deleteCast(shopId: string, castId: string, formData?: FormData) {
   await requireShopAdmin(shopId);
+  // リールは店舗の資産なので、店が選ぶ。archive(既定)=非表示にして店の書庫に残す / delete=リールも削除する。
+  const choice = formData?.get("reels") === "delete" ? "delete" : "archive";
   const supabase = await createClient();
-  const { error } = await supabase.rpc("locapass_soft_delete_cast_member", { p_cast_id: castId });
+  const { error } = await supabase.rpc("locapass_soft_delete_cast_member", { p_cast_id: castId, p_reels: choice });
   if (error) throw new Error(`FACESの削除に失敗しました: ${error.message}`);
   revalidatePath(castPath(shopId));
   redirect(castPath(shopId));
