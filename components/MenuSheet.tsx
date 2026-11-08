@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
-import { Bell, BookOpen, Camera, ChevronRight, CircleHelp, Settings, User, X, Zap } from "lucide-react";
+import { Bell, BookOpen, Camera, ChevronRight, CircleHelp, MapPinned, Settings, User, X, Zap } from "lucide-react";
 import { SELECT_FEED_EVENT, type FeedKind } from "@/lib/reels/events";
 import { useLocale, usePublicPathname, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
@@ -30,7 +30,7 @@ const FEEDS: { kind: FeedKind; label: string }[] = [
 export function MenuSheet({ open, onClose, home, boostHref, accountHref, hasManagement }: Props) {
   const router = useLocaleRouter();
   const pathname = usePublicPathname();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   // マウント直後は画面の下に置き、次のフレームで引き上げてスライドさせる。
   const [shown, setShown] = useState(false);
 
@@ -151,6 +151,14 @@ export function MenuSheet({ open, onClose, home, boostHref, accountHref, hasMana
             Journal
             <ChevronRight size={16} className="ml-auto text-tone-500" />
           </Link>
+          {/* エリアの一覧は日本語のみ */}
+          {locale === "ja" && (
+            <Link href="/areas" className={row}>
+              <MapPinned size={18} className="text-tone-300" />
+              エリアから探す
+              <ChevronRight size={16} className="ml-auto text-tone-500" />
+            </Link>
+          )}
           <Link href="/support" className={row}>
             <CircleHelp size={18} className="text-tone-300" />
             {t.nav.help}
