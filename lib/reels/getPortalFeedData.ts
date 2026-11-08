@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { EXCLUDE_OFFICIAL_FILTER } from "@/lib/shop/genres";
+import { EXCLUDE_OFFICIAL_FILTER, HIDDEN_BY_DEFAULT_GENRES } from "@/lib/shop/genres";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import type { ReelItem, AdItem, ShopGridItem } from "@/lib/reels/types";
 import { latestReelStillsByShop } from "@/lib/map/getVenues";
@@ -10,6 +10,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { toEmbedRef } from "@/lib/embed";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { FEED_REELS_INITIAL } from "@/lib/reels/feedPaging";
+import { EMPTY_REEL_FILTER, type ReelFeedFilter } from "@/lib/reels/feedFilter";
 
 export type ReelRow = {
   id: string;
@@ -104,7 +105,18 @@ export type PortalFeedData = {
 };
 
 /**
+ * ページ取得用のselect。店舗・ポータルを内部結合(!inner)にして、店舗やポータルが無いリールは
+ * そもそも取らない(取ってから捨てるとoffsetと件数がずれる)。店舗の列(店名・住所・ジャンル)での
+ * 絞り込みにも内部結合が必要。
+ */
+const REEL_PAGE_SELECT = REEL_SELECT.replace(
+  "locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) )",
+  "locapass_shops!locapass_reels_shop_id_fkey!inner ( name, address, category, slug, portal:locapass_portals!inner ( slug ) )",
+);
+
+/**
  * 公開中リールを新しい順に offset から limit 件取る(siteIdがnullなら全エリア横断)。
+ * filter(投稿者種別・ジャンル・キーワード)はDB側で絞る。
  * limit+1件取って、続きがあるか(hasMore)も返す。
  * 並びは published_at → id で固定し、ページをまたいで重複・欠落しないようにする。
  */
@@ -113,11 +125,12 @@ export async function getReelPage(
   offset: number,
   limit: number,
   locale: Locale,
+  filter: ReelFeedFilter = EMPTY_REEL_FILTER,
 ): Promise<{ reels: ReelItem[]; hasMore: boolean }> {
   const supabase = await createClient();
   let query = supabase
     .from("locapass_reels")
-    .select(REEL_SELECT)
+    .select(REEL_PAGE_SELECT)
     .eq("status", "publish")
     .or("expires_at.is.null,expires_at.gt.now()")
     .order("published_at", { ascending: false })
@@ -125,8 +138,22 @@ export async function getReelPage(
     .range(offset, offset + limit);
   if (siteId !== null) query = query.eq("portal_id", siteId);
 
-  const { data: rows } = await query;
-  const all = rows ?? [];
+  if (filter.author === "cast") query = query.not("cast_id", "is", null);
+  if (filter.author === "shop") query = query.is("cast_id", null);
+  if (filter.genres.length) {
+    query = query.in("locapass_shops.category", filter.genres);
+  } else if (HIDDEN_BY_DEFAULT_GENRES.length) {
+    // アフター(深夜飲食店)などは、そのタグを選んだときだけ出す(通常の一覧・検索には出さない)。
+    const hidden = HIDDEN_BY_DEFAULT_GENRES.map((g) => `"${g}"`).join(",");
+    query = query.or(`category.is.null,category.not.in.(${hidden})`, { referencedTable: "locapass_shops" });
+  }
+  if (filter.q) {
+    query = query.or(`name.ilike.*${filter.q}*,address.ilike.*${filter.q}*`, { referencedTable: "locapass_shops" });
+  }
+
+  const { data: rows, error } = await query;
+  if (error) throw new Error(`getReelPage: ${error.message}`);
+  const all = (rows ?? []) as unknown as ReelRow[];
   const hasMore = all.length > limit;
   const reels = all.slice(0, limit).flatMap((row) => toReelItem(row, locale) ?? []);
   return { reels, hasMore };
@@ -152,7 +179,8 @@ export async function getPortalFeedData(siteId: number | null): Promise<PortalFe
     shopsQuery,
     // 初回は少なめ(FEED_REELS_INITIAL)だけ渡して描画を速くする。続きはクライアントが
     // /api/reels/feed で足していく(スワイプ・スクロールが末尾に近づいたとき)。
-    getReelPage(siteId, 0, FEED_REELS_INITIAL, locale),
+    // 失敗してもトップ全体は表示する(リールだけ空になる)。
+    getReelPage(siteId, 0, FEED_REELS_INITIAL, locale).catch(() => ({ reels: [] as ReelItem[], hasMore: false })),
     // システム管理者が投稿するPR。指定頻度でリールフィードに紛れ込ませる(システム管理者のみ投稿可)。
     supabase
       .from("locapass_ads")
