@@ -117,8 +117,8 @@ export function YoutubeStockCard({
   const thumbnail = row.thumbnail_url ?? (row.youtube_id ? `https://i.ytimg.com/vi/${row.youtube_id}/hqdefault.jpg` : null);
 
   return (
-    <article onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) e.preventDefault(); }} onDrop={(e) => { if (pickImage(e.dataTransfer.files[0])) e.preventDefault(); }} className={`flex flex-wrap items-start overflow-hidden rounded-xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
-      <button type="button" onClick={() => setPreview((value) => !value)} className={`group relative block shrink-0 overflow-hidden bg-slate-900 text-left ${preview ? "m-3 aspect-[9/16] h-[26rem] max-h-[70vh] rounded-lg" : "m-3 aspect-square w-28 rounded-lg"}`} aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
+    <article onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) e.preventDefault(); }} onDrop={(e) => { if (pickImage(e.dataTransfer.files[0])) e.preventDefault(); }} className={`flex flex-wrap items-start overflow-clip rounded-xl border bg-white shadow-sm ${row.reel_id ? "border-emerald-400 ring-1 ring-emerald-200" : "border-slate-200"}`}>
+      <button type="button" onClick={() => setPreview((value) => !value)} className={`group sticky top-3 z-[1] self-start block shrink-0 overflow-hidden bg-slate-900 text-left ${preview ? "m-3 aspect-[9/16] h-[26rem] max-h-[70vh] rounded-lg" : "m-3 aspect-square w-28 rounded-lg"}`} aria-label={`${preview ? "サムネイルに戻す" : "プレビューを再生"}: ${row.title}`}>
         {preview ? (
           <iframe className="h-full w-full" src={isTikTok ? `https://www.tiktok.com/player/v1/${row.source_id}?music_info=1&description=1` : `https://www.youtube.com/embed/${row.youtube_id}?autoplay=1&mute=1&playsinline=1`} title={row.title} allow="autoplay; encrypted-media; picture-in-picture" />
         ) : (
