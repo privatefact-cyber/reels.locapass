@@ -63,7 +63,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
   const { data: ytPortal } = await (await createClient() as any).from("locapass_portals").select("hero_youtube_id").eq("id", portal.id).maybeSingle();
   const locale = await getServerLocale();
   const featuredShops = await getFeaturedShops(locale);
-  const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(portal.id);
+  const { reels, reelsHasMore, shopItems, genreChoices, ads } = await getPortalFeedData(portal.id);
   const nowReels: ReelItem[] = await getNowReels(portal.id).catch(() => []);
   // このポータルの店舗の緊急ブーストだけ(失敗してもポータル全体は表示する)。
   const boosts = await getActiveBoosts(portal.id).catch(() => []);
@@ -111,7 +111,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
           <span className="rounded-full bg-black px-3 py-0.5 text-xs font-black text-amber-300">{boosts.length}</span>
         </Link>
       )}
-      <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} boostHref={`/${slug}/boost`} />
+      <ReelFeed reels={reels} reelsHasMore={reelsHasMore} feedPortalId={portal.id} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} boostHref={`/${slug}/boost`} />
     </div>
   );
 }

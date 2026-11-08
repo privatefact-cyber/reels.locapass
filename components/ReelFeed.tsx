@@ -19,6 +19,7 @@ import { setAiSelectedContext } from "@/lib/aiContext";
 import { isHiddenByDefaultGenre } from "@/lib/shop/genres";
 import { photoResized } from "@/components/photo/photoUtils";
 import { focusThumb, gridThumb } from "@/lib/images/thumb";
+import { FEED_REELS_INITIAL, FEED_REELS_PAGE } from "@/lib/reels/feedPaging";
 
 export type { ReelItem } from "@/lib/reels/types";
 
@@ -278,7 +279,9 @@ const GridTile = memo(function GridTile({
 });
 
 export function ReelFeed({
-  reels,
+  reels: initialReels,
+  reelsHasMore = false,
+  feedPortalId = null,
   nowReels,
   shops,
   genreChoices,
@@ -286,7 +289,12 @@ export function ReelFeed({
   boostCount = 0,
   boostHref = "/boost",
 }: {
+  /** 初回表示ぶんのリール。続きは reelsHasMore が true の間、/api/reels/feed で足していく。 */
   reels: ReelItem[];
+  /** reelsの先に、まだ取得していないリールがあるか。 */
+  reelsHasMore?: boolean;
+  /** 子ポータルのときそのポータルid(続きの取得を同じポータルに絞る)。全体トップはnull。 */
+  feedPortalId?: number | null;
   /** 今営業中(店舗の曜日別営業時間カレンダー基準)の店舗の、最新リール1本ずつ。 */
   nowReels: ReelItem[];
   shops: ShopGridItem[];
@@ -299,6 +307,44 @@ export function ReelFeed({
   boostHref?: string;
 }) {
   const { locale, t } = useLocale();
+  // リールは初回ぶんだけサーバーから受け取り、スクロール/スワイプが末尾に近づいたらAPIで続きを足す
+  // (初回表示を速くしつつ、見ていくと無限に続く)。
+  const [reels, setReels] = useState(initialReels);
+  const [hasMoreReels, setHasMoreReels] = useState(reelsHasMore);
+  const reelsFetchingRef = useRef(false);
+  const reelsOffsetRef = useRef(FEED_REELS_INITIAL);
+  useEffect(() => {
+    // サーバー側のデータが差し替わったとき(再読み込み・ページ遷移)は、取得済みの続きを捨てて取り直す。
+    setReels(initialReels);
+    setHasMoreReels(reelsHasMore);
+    reelsOffsetRef.current = FEED_REELS_INITIAL;
+  }, [initialReels, reelsHasMore]);
+  const loadMoreReels = useCallback(async () => {
+    if (reelsFetchingRef.current) return;
+    reelsFetchingRef.current = true;
+    try {
+      const qs = new URLSearchParams({
+        offset: String(reelsOffsetRef.current),
+        limit: String(FEED_REELS_PAGE),
+        lang: locale,
+      });
+      if (feedPortalId !== null) qs.set("portal", String(feedPortalId));
+      const res = await fetch(`/api/reels/feed?${qs}`);
+      if (!res.ok) throw new Error(`feed ${res.status}`);
+      const data = (await res.json()) as { reels: ReelItem[]; hasMore: boolean };
+      reelsOffsetRef.current += FEED_REELS_PAGE;
+      setReels((prev) => {
+        const seen = new Set(prev.map((r) => r.id));
+        return [...prev, ...data.reels.filter((r) => !seen.has(r.id))];
+      });
+      setHasMoreReels(data.hasMore);
+    } catch {
+      // 通信失敗で無限に再試行しない。取得済みのぶんは従来どおり(最後まで見たら先頭から繰り返す)。
+      setHasMoreReels(false);
+    } finally {
+      reelsFetchingRef.current = false;
+    }
+  }, [locale, feedPortalId]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [activeGenres, setActiveGenres] = useState<string[]>([]);
@@ -571,9 +617,11 @@ export function ReelFeed({
     [nowOnly, filteredNowReels, filteredReels, filteredShops, ads],
   );
   // 絞り込み・タブが変わったら、先頭からやり直す。
+  // (続きのリールを足しただけのときは、見ている位置を保つため、やり直さない。)
+  const filterKey = JSON.stringify([keyword, activeGenres, activeTypes, reelAuthorFilter, nowOnly]);
   useEffect(() => {
     setVisibleCount(GRID_PAGE);
-  }, [tiles]);
+  }, [filterKey]);
 
   // 末尾の目印が画面の手前(800px)に来たら、続きの GRID_PAGE 枚を足す。
   const hasMoreTiles = visibleCount < tiles.length;
@@ -637,15 +685,29 @@ export function ReelFeed({
 
   useEffect(() => {
     if (!tiles.length) return;
+    // まだ続きのリールがあるあいだは、同じ並びを繰り返さず、続きの取得を待つ。
+    if (hasMoreReels && showCast && !nowOnly) return;
     if (overlayActiveIndex >= loopedTiles.length - 3) {
       setCycles((c) => Math.min(c + 1, MAX_CYCLES));
     }
-  }, [overlayActiveIndex, loopedTiles.length, tiles.length]);
+  }, [overlayActiveIndex, loopedTiles.length, tiles.length, hasMoreReels, showCast, nowOnly]);
+
+  // 見えている範囲(グリッドは表示済み+先読み、縦スワイプは今のカード+先読み)が、取得済みリールの
+  // 末尾に届きそうになったら、続きを取る。絞り込み(キーワード・FACESなど)で一致が尽きたときも、
+  // 続きがあるかぎり取り続ける(取得済みの40〜60件だけに絞り込みが効いて少なく見えるのを防ぐ)。
+  useEffect(() => {
+    if (!hasMoreReels || nowOnly || !showCast) return;
+    const reach = Math.min((openIndex !== null ? overlayActiveIndex + 10 : visibleCount + 12), tiles.length);
+    let seen = 0;
+    for (let i = 0; i < reach; i++) if (tiles[i].kind === "cast") seen++;
+    if (seen >= filteredReels.length) void loadMoreReels();
+  }, [hasMoreReels, nowOnly, showCast, tiles, openIndex, overlayActiveIndex, visibleCount, filteredReels.length, loadMoreReels]);
 
   useEffect(() => {
     // 絞り込み条件が変わってタイルの中身が変わったら、開いていたオーバーレイは閉じる。
+    // (続きのリールを足してタイル数が増えただけのときは、開いたまま。)
     setOpenIndex(null);
-  }, [tiles.length]);
+  }, [filterKey]);
 
   useEffect(() => {
     if (openIndex === null) return;

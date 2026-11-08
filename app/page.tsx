@@ -17,7 +17,7 @@ export default async function TopPage() {
   const featuredShops = await getFeaturedShops(locale);
 
   // 全体トップは特定エリアに絞らず、全locapass_portalsを横断してshops/reelsを取得する。
-  const { reels, shopItems, genreChoices, ads } = await getPortalFeedData(null);
+  const { reels, reelsHasMore, shopItems, genreChoices, ads } = await getPortalFeedData(null);
   // 緊急ブーストが掲載中ならトップに入口を出す(失敗してもトップ全体は表示する)。
   const boosts = await getActiveBoosts().catch(() => []);
   const bt = boostText(locale);
@@ -56,7 +56,7 @@ export default async function TopPage() {
           「本日の出勤」の一覧は店舗詳細ページ、フォロー中のみの出勤状況はマイページで
           それぞれ表示する(トップでは全パートナー分を出すと件数に上限がないため扱わない)。
           adsはシステム管理者が投稿するPRで、指定頻度でグリッド/リール一覧の両方に紛れ込ませる。 */}
-      <ReelFeed reels={reels} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} />
+      <ReelFeed reels={reels} reelsHasMore={reelsHasMore} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} />
     </div>
   );
 }
