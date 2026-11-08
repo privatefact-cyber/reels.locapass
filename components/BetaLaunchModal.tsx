@@ -6,7 +6,35 @@ import { useEffect, useState } from "react";
 // 正式ローンチ告知用のワンショットモーダル。初回訪問時にだけ出す。
 const DISMISS_KEY = "locapass_beta_launch_dismissed";
 
-export function BetaLaunchModal() {
+type Stats = { shops: number; reels: number } | null;
+
+/** 0 から目標の数まで、ゆっくり減速しながら数え上げる。動きを減らす設定のときは、最初から最終値を出す。 */
+function CountUp({ to, delay = 0 }: { to: number; delay?: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let reduced = false;
+    try {
+      reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {}
+    if (reduced) {
+      setN(to);
+      return;
+    }
+    const duration = 1800;
+    const start = performance.now() + delay;
+    let raf = 0;
+    const tick = (now: number) => {
+      const p = Math.min(Math.max((now - start) / duration, 0), 1);
+      setN(Math.round(to * (1 - Math.pow(1 - p, 4))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [to, delay]);
+  return <span className="tabular-nums">{n.toLocaleString("ja-JP")}</span>;
+}
+
+export function BetaLaunchModal({ stats = null }: { stats?: Stats }) {
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
 
@@ -61,6 +89,24 @@ export function BetaLaunchModal() {
         <span className="relative text-3xl font-thin tracking-[0.35em] text-main uppercase">
           LOCAPASS
         </span>
+
+        {stats && (
+          <div className="relative flex w-full items-start justify-center gap-0">
+            <div className="flex flex-1 flex-col items-center gap-1.5">
+              <span className="text-4xl font-thin leading-none tracking-wider text-main">
+                <CountUp to={stats.shops} />
+              </span>
+              <span className="text-[10px] tracking-[0.3em] text-main/50">登録店舗</span>
+            </div>
+            <div aria-hidden className="h-12 w-px self-center bg-main/20" />
+            <div className="flex flex-1 flex-col items-center gap-1.5">
+              <span className="text-4xl font-thin leading-none tracking-wider text-main">
+                <CountUp to={stats.reels} delay={150} />
+              </span>
+              <span className="text-[10px] tracking-[0.3em] text-main/50">公開動画</span>
+            </div>
+          </div>
+        )}
 
         <p className="relative text-[11px] tracking-widest text-main/50">
           正式ローンチ

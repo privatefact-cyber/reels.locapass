@@ -1,6 +1,7 @@
 import { ReelFeed, type ReelItem } from "@/components/ReelFeed";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { BetaLaunchModal } from "@/components/BetaLaunchModal";
+import { getLaunchStats } from "@/lib/stats/launchStats";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { getPortalFeedData } from "@/lib/reels/getPortalFeedData";
@@ -15,6 +16,8 @@ export const revalidate = 60;
 export default async function TopPage() {
   const locale = await getServerLocale();
   const featuredShops = await getFeaturedShops(locale);
+  // モーダルに出す現在の登録件数(失敗してもトップ全体は表示する)。
+  const launchStats = await getLaunchStats();
 
   // 全体トップは特定エリアに絞らず、全locapass_portalsを横断してshops/reelsを取得する。
   const { reels, reelsHasMore, shopItems, genreChoices, ads } = await getPortalFeedData(null);
@@ -34,7 +37,7 @@ export default async function TopPage() {
         {locale === "ja" ? "LOCAPASS(ロカパス)｜街のカフェ・お店・ペットと行ける場所を、リールで探すローカルメディア" : "LOCAPASS — find local cafes, shops and pet-friendly places through short reels"}
       </h1>
       {/* 公開ローンチ告知。合言葉ゲート解除にあわせて、トップ初回訪問時にだけ出す。 */}
-      <BetaLaunchModal />
+      <BetaLaunchModal stats={launchStats} />
 
       {/* トップの提携店舗特集(FEATURED)。運営がshops.featured_rankで選んだ店舗だけを、
           黒×ゴールドのコンパクトな見せ方で出す。1件も無ければ/×で閉じたら何も表示しない。 */}
