@@ -6,11 +6,13 @@ import { publishThreadsImagePost, threadsConfigFromEnv } from "@/lib/social/thre
 
 /**
  * 公開中のリールを、LOCAPASS公式のThreadsへ自動で紹介する。
+ * 対象外: 他サイトの動画(YouTube・TikTok・Instagram)を埋め込んだリール。他の人の動画のサムネイルを、公式アカウントの投稿に使わないため。
  * 対象: 「公式SNSでの紹介をOKにする」を入れた公開中の店舗の、直近7日以内の公開リール(まだ投稿していないもの)。
  * 既定はオフ。THREADS_AUTOPOST_ENABLED=1 と、THREADS_USER_ID / THREADS_ACCESS_TOKEN が揃ったときだけ実際に投稿する。
  * 1回の実行で最大 PER_RUN 件、24時間で最大 DAILY_MAX 件まで(投稿の連打で不自然にならないように)。
  */
-const WINDOW_DAYS = 7;
+/** 投稿の対象にする、リールの公開からの日数。動作確認で古いリールを使いたいときは、環境変数 THREADS_WINDOW_DAYS で延ばせる。 */
+const WINDOW_DAYS = Number(process.env.THREADS_WINDOW_DAYS ?? 7) || 7;
 const PER_RUN = 2;
 const DAILY_MAX = Number(process.env.THREADS_DAILY_MAX ?? 6) || 6;
 
@@ -43,6 +45,7 @@ export async function runThreadsAutopost(options: { dryRun: boolean }) {
     .from("locapass_reels")
     .select("id, caption, poster_url, images, published_at, shop:locapass_shops!locapass_reels_shop_id_fkey!inner ( name, slug, social_repost_ok, status )")
     .eq("status", "publish")
+    .is("embed_provider", null)
     .or("expires_at.is.null,expires_at.gt.now()")
     .gte("published_at", since)
     .eq("locapass_shops.status", "active")
