@@ -9,9 +9,11 @@ export type BrandAccount = "locapass" | "luxela";
 export type ImageHint = { mime: string; base64: string };
 
 const IMAGE_RULES = `# 添付の画像
-- 画像(写真、または動画の1コマ)を添付している。写っている物・場面を、確認できる範囲で具体的に拾い、投稿の出だしの手がかりにする。
+- 画像(写真、または動画の1コマ)を添付している。写っている物・場面を、確認できる範囲で具体的に読み取る。
+- 出だしは、画像を説明する文(「〜の場面は〜です」)にしない。画像から連想される、読み手の場面・困りごとから書き始める。
 - 写っていないこと・場所・店名・人物の素性を、決めつけて書かない。人物の顔や容姿には触れない。
-- 画像の話題を読み手の困りごとにつなげ、サービスのどの仕様がどう助けるかをセットで説明する。画像とサービスが無理なくつながらないときは、こじつけず、画像の話題を中心に書き、最後にサイトを案内する。`;
+- 仕様の紹介は、下の「事実メモ」の中から、画像の場面に一番近いものを1つだけ選んで説明する(例: 雰囲気が伝わる動画や写真の掲載、営業時間・メニューの登録、多言語の字幕や表示)。選んだ仕様が、画像の場面で何が減る・分かるのかを、具体的に書く。
+- 画像に近い仕様が事実メモに無いときは、こじつけて別の仕様を持ち出さない。仕様の説明は入れず、画像の話題を中心に書き、最後にサイトを案内するだけにする。`;
 /** 投稿先ごとの、ブランド名・URL・事実メモ。 */
 const BRANDS: Record<BrandAccount, { name: string; display: string; url: string; facts: string; other: RegExp; otherUrl: string }> = {
   locapass: { name: "LOCAPASS", display: "LOCAPASS【ロカパス】", url: "https://locapass.net", facts: THREADS_FACTS, other: /LUXELA|ルクセラ|luxela/i, otherUrl: "LOCAPASS以外のURLがある" },
