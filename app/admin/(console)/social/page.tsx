@@ -7,7 +7,7 @@ import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/
 import { getAutomationSettings } from "@/lib/social/socialAutomation";
 import { listLatestInsights, type InsightRow } from "@/lib/social/socialInsights";
 import { latestAuditRows } from "@/lib/social/apiAudit";
-import { runApiAuditNow, attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
+import { publishBoth, retargetDraftNow, runApiAuditNow, attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
 import { PostComposer } from "./PostComposer";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
@@ -50,13 +50,26 @@ function PostCard({ p }: { p: PostRow }) {
           <span className="text-[11px] text-slate-500">付けると画像つきの投稿(3MBまで)</span>
         </form>
       )}
+      {!scheduled && (
+        <form action={retargetDraftNow.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-slate-700">投稿先</span>
+          <select name="platform" defaultValue={p.platform === "instagram" ? "threads" : "instagram"} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900">
+            <option value="threads">Threads</option><option value="instagram">Instagram</option>
+          </select>
+          <button name="mode" value="move" className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>投稿先を変える</button>
+          <button name="mode" value="copy" className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>こちらにもコピーを作る</button>
+          <span className="text-[11px] text-slate-500">書いたあとに決められます。Instagramは写真か動画が必要です</span>
+        </form>
+      )}
       <form action={schedulePost.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
         <input type="datetime-local" name="scheduled_at" required defaultValue={jstInputValue(p.scheduled_at)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
+        {!scheduled && <label className="flex items-center gap-1 text-xs text-slate-700"><input type="checkbox" name="both" /> ThreadsとInstagramの両方に</label>}
         <button className={`${btn} bg-sky-700 py-1.5 text-white`}>{scheduled ? "日時を変える" : "この日時に予約"}</button>
         <span className="text-[11px] text-slate-500">日本時間。30分おきに確認して、時間になると自動で投稿します</span>
       </form>
       <div className="flex flex-wrap gap-2">
         <form action={publishDraft.bind(null, p.id)}><button className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</button></form>
+        {!scheduled && <form action={publishBoth.bind(null, p.id)}><button className={`${btn} bg-emerald-900 text-white`}>ThreadsとInstagramの両方に今すぐ投稿(公開されます)</button></form>}
         {scheduled && <form action={unschedulePost.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>予約を取り消す</button></form>}
         <form action={discardDraft.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>破棄</button></form>
       </div>

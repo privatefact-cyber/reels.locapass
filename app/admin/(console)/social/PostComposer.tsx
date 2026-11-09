@@ -198,18 +198,17 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
           <button type="button" disabled={busy} onClick={() => setTextMode("manual")} className={chip(textMode === "manual")}>自分で書く</button>
         </div>
         {textMode === "auto" ? (
-          isShopMedia ? (
-            <p className="text-xs text-slate-600">店舗の写真・動画を使うときは、文章は定型(店名・リンク・お店のタグ)になります。AIの文章にはなりません。</p>
-          ) : (
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-xs text-slate-600">読者
-                <select value={audience} onChange={(e) => setAudience(e.target.value)} disabled={busy} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900">
-                  <option value="public">一般(ユーザー)向け</option><option value="shop">店舗向け</option><option value="auto">おまかせ(交互)</option>
-                </select>
-              </label>
-              <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} disabled={busy} placeholder="今回だけの一言(任意)例: 雨の日の話にして / もっと短く" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
-            </div>
-          )
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs text-slate-600">読者
+              <select value={isShopMedia && audience === "auto" ? "public" : audience} onChange={(e) => setAudience(e.target.value)} disabled={busy} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900">
+                <option value="public">{isShopMedia ? "一般(ユーザー)向け(その店の紹介)" : "一般(ユーザー)向け"}</option>
+                <option value="shop">{isShopMedia ? "店舗向け(その店を例に、仕様を説明)" : "店舗向け"}</option>
+                {!isShopMedia && <option value="auto">おまかせ(交互)</option>}
+              </select>
+            </label>
+            {isShopMedia && <p className="text-xs text-slate-600">店舗の写真・動画を使うときも、読者に合わせてAIが文章を書きます。店舗向けは、その店を掲載の一例として、オーナーに向けて仕様を説明します。</p>}
+            <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} disabled={busy} placeholder="今回だけの一言(任意)例: 雨の日の話にして / もっと短く" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
+          </div>
         ) : (
           <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={busy} rows={5} maxLength={2200} placeholder="投稿する文章(Instagramは2200文字、Threadsは500文字まで)" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
         )}

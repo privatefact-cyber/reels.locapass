@@ -9,7 +9,7 @@ import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
 import { runSocialApiAudit } from "@/lib/social/apiAudit";
-import { composeDraftWithScene, prepareCompose, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
+import { composeDraftWithScene, createCounterpartDraft, prepareCompose, retargetDraft, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
 import { generateAiImage } from "@/lib/social/socialImages";
 import { saveAutomationSetting, type AutomationMode, type AutomationSource } from "@/lib/social/socialAutomation";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
@@ -66,6 +66,46 @@ export async function publishDraft(id: string) {
   }
   if (message) back("error", message);
   back("ok", "投稿しました(反映まで数分かかることがあります)");
+}
+
+const PLATFORM_LABEL = { threads: "Threads", instagram: "Instagram" } as const;
+
+/**
+ * 同じ文章を、ThreadsとInstagramの両方に今すぐ投稿する(公開される)。
+ * 先にもう一方のコピーを作って条件を確認し(Instagramは写真か動画が必要)、そのあと1つずつ投稿する。片方が失敗しても、もう片方は止めない。
+ */
+export async function publishBoth(id: string) {
+  await requireRootAdmin();
+  const lines: string[] = [];
+  let allOk = true;
+  try {
+    const { copyId, from, to } = await createCounterpartDraft(id);
+    for (const [postId, platform] of [[id, from], [copyId, to]] as const) {
+      try {
+        await publishThreadsDraft(postId);
+        lines.push(`${PLATFORM_LABEL[platform]}: 投稿しました`);
+      } catch (e) {
+        allOk = false;
+        lines.push(`${PLATFORM_LABEL[platform]}: 失敗(${e instanceof Error ? e.message : "投稿に失敗"})`);
+      }
+    }
+  } catch (e) {
+    back("error", e instanceof Error ? e.message : "両方への投稿を始められませんでした(何も公開していません)");
+  }
+  back(allOk ? "ok" : "error", lines.join(" / "));
+}
+
+/** 書いたあとに投稿先を決める。「変える」か「その投稿先にもコピーを作る」。公開はしない。 */
+export async function retargetDraftNow(id: string, formData: FormData) {
+  await requireRootAdmin();
+  const platform = formData.get("platform") === "instagram" ? "instagram" : "threads";
+  const copy = formData.get("mode") === "copy";
+  try {
+    await retargetDraft(id, platform, copy);
+  } catch (e) {
+    back("error", e instanceof Error ? e.message : "投稿先を変えられませんでした");
+  }
+  back("ok", copy ? `${platform === "instagram" ? "Instagram" : "Threads"}用のコピーを下書きに作りました(まだ公開されていません)` : `投稿先を${platform === "instagram" ? "Instagram" : "Threads"}に変えました`);
 }
 
 export async function discardDraft(id: string) {
@@ -179,12 +219,15 @@ export async function schedulePost(id: string, formData: FormData) {
   try {
     when = parseJstDateTime(formData.get("scheduled_at"));
     if (!when) throw new Error("予約する日時を入力してください");
+    // 両方に予約するときは、先にもう一方のコピーを作って条件を確認してから、どちらも予約する。
+    const counterpart = formData.get("both") === "on" ? await createCounterpartDraft(id) : null;
     await scheduleThreadsPost(id, when);
+    if (counterpart) await scheduleThreadsPost(counterpart.copyId, when);
   } catch (e) {
     message = e instanceof Error ? e.message : "予約に失敗しました";
   }
   if (message) back("error", message);
-  back("ok", `予約しました(${when!.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })})`);
+  back("ok", `予約しました(${when!.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}${formData.get("both") === "on" ? "・ThreadsとInstagramの両方" : ""})`);
 }
 
 /** 予約を取り消して、下書きに戻す。 */

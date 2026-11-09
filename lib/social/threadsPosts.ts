@@ -125,7 +125,7 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination, a
     const photo = await pickShopPhoto(rows.filter((r) => r.topic.startsWith("shop:")).map((r) => r.topic.slice(5)), dest.account);
     const site = dest.account === "luxela" ? { url: "https://luxela.jp", name: "LUXELA" } : { url: "https://locapass.net", name: "LOCAPASS" };
     const link = photo.shopCode ? `${site.url}/s/${photo.shopCode}` : site.url;
-    const written = await writeShopFeaturePost({ account: dest.account, shopName: photo.shopName, description: photo.description, link, media: "photo", recent: rows.map((r) => r.body) });
+    const written = await writeShopFeaturePost({ account: dest.account, shopName: photo.shopName, description: photo.description, link, media: "photo", recent: rows.map((r) => r.body), audience: audience === "shop" ? "shop" : "public", note });
     body = written.ok ? written.text : [`📍 ${photo.shopName}`, "写真でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。", `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${link}`].join("\n\n");
     generatedByAi = written.ok;
     imageUrl = photo.imageUrl;
@@ -211,6 +211,36 @@ export async function discardThreadsDraft(id: string): Promise<void> {
   const { data, error } = await db().from("locapass_threads_posts").update({ status: "discarded", scheduled_at: null }).eq("id", id).in("status", ["draft", "scheduled"]).select("id");
   if (error) throw new Error(`破棄に失敗しました: ${error.message}`);
   if (!data?.length) throw new Error("破棄できませんでした(対象が見つからないか、処理済みです)");
+}
+
+/**
+ * 書いたあとに、投稿先を決める。下書きの投稿先を変える(copy=false)か、同じ内容を別の投稿先にも下書きとして作る(copy=true)。
+ * Instagramは写真か動画が必要。Threadsは文字数の上限がある。予約中のものは、先に予約を取り消す。
+ */
+export async function retargetDraft(id: string, platform: "threads" | "instagram", copy: boolean): Promise<string> {
+  const { data: row, error } = await db().from("locapass_threads_posts").select("id, topic, body, image_url, video_url, source, platform, account, status").eq("id", id).maybeSingle();
+  if (error || !row) throw new Error("下書きが見つかりません");
+  if (row.status !== "draft") throw new Error("下書きだけ、投稿先を変えられます(予約中のものは、先に予約を取り消してください)");
+  if (row.platform === platform && !copy) throw new Error("いまの投稿先と同じです");
+  if (platform === "instagram" && !row.image_url && !row.video_url) throw new Error("Instagramは写真か動画が必要です。この下書きには付いていません");
+  checkManualText(row.body, platform); // 文字数の上限(Instagram 2200 / Threads 500)
+  if (!copy) {
+    const { data, error: updateError } = await db().from("locapass_threads_posts").update({ platform }).eq("id", id).eq("status", "draft").select("id");
+    if (updateError || !data?.length) throw new Error(`投稿先を変えられませんでした: ${updateError?.message ?? "対象が見つかりません"}`);
+    return id;
+  }
+  const { data: created, error: insertError } = await db().from("locapass_threads_posts").insert({ topic: row.topic, body: row.body, image_url: row.image_url, video_url: row.video_url, source: row.source, status: "draft", platform, account: row.account }).select("id").single();
+  if (insertError || !created) throw new Error(`コピーを作れませんでした: ${insertError?.message ?? "0件"}`);
+  return created.id as string;
+}
+
+/** 同じ文章を、もう一方の投稿先(Threads⇄Instagram)にも出すための下書きを作る。条件(Instagramは写真か動画)も、ここで確認する。 */
+export async function createCounterpartDraft(id: string): Promise<{ copyId: string; from: "threads" | "instagram"; to: "threads" | "instagram" }> {
+  const { data: row, error } = await db().from("locapass_threads_posts").select("platform").eq("id", id).maybeSingle();
+  if (error || !row) throw new Error("下書きが見つかりません");
+  const from = row.platform === "instagram" ? "instagram" : "threads";
+  const to = from === "instagram" ? "threads" : "instagram";
+  return { copyId: await retargetDraft(id, to, true), from, to };
 }
 
 /** 日本時間の「いま何時か」「今日の0時はいつか」。 */
@@ -441,7 +471,10 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   if (text.mode === "manual") {
     body = checkManualText(text.body, dest.platform); // 手書きの文章は、そのままは画像のテーマに渡さない(文字として描かれるため)。場面だけを取り出して使う
   } else if (shopFeature) {
-    const written = await writeShopFeaturePost({ account: dest.account, ...shopFeature, recent: rows.map((r) => r.body) });
+    const audience = text.audience === "shop" ? "shop" : "public";
+    const written = await writeShopFeaturePost({ account: dest.account, ...shopFeature, recent: rows.map((r) => r.body), audience, note: text.note });
+    // 店舗向け(営業)の文章は、失敗したときにお客さん向けの定型文へ置き換えない(読者が違うため)。
+    if (audience === "shop" && !written.ok) throw new Error(`店舗向けの文章を作れませんでした: ${written.error}`);
     body = written.ok ? written.text : [`${shopFeature.media === "video" ? "🎬" : "📍"} ${shopFeature.shopName}`, shopFeature.media === "video" ? "動画でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。" : "写真でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。", `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${shopFeature.link}`].join("\n\n");
     source = written.ok ? "ai" : "manual";
   } else if (template) {
