@@ -145,7 +145,7 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination, a
 
 /** 下書きの文章を直す(下書き・予約中のものだけ)。 */
 export async function updateThreadsPostBody(id: string, text: string): Promise<void> {
-  const body = checkManualText(text);
+  const body = checkManualText(text, "instagram"); // 投稿先ごとの上限は、投稿のときに確認する
   const { data, error } = await db().from("locapass_threads_posts").update({ body }).eq("id", id).in("status", ["draft", "scheduled"]).select("id");
   if (error) throw new Error(`保存に失敗しました: ${error.message}`);
   if (!data?.length) throw new Error("直せませんでした(対象が見つからないか、処理済みです)");
@@ -213,34 +213,38 @@ export async function discardThreadsDraft(id: string): Promise<void> {
   if (!data?.length) throw new Error("破棄できませんでした(対象が見つからないか、処理済みです)");
 }
 
+export type PostTarget = "threads" | "instagram";
+
 /**
- * 書いたあとに、投稿先を決める。下書きの投稿先を変える(copy=false)か、同じ内容を別の投稿先にも下書きとして作る(copy=true)。
- * Instagramは写真か動画が必要。Threadsは文字数の上限がある。予約中のものは、先に予約を取り消す。
+ * 書いたあとに、投稿先を決める。下書き1つを、チェックされた投稿先の数だけの投稿(行)に展開する。
+ * 先に全部の条件を確認し(Instagramは写真か動画が必要・文字数の上限)、1つでもだめなら何も変えない。
+ * もとの下書きは、そのうち1つの投稿先として使い、残りは同じ内容のコピーにする。
+ * Instagramは、素材が写真ならフィード、動画ならリールとして出る。
  */
-export async function retargetDraft(id: string, platform: "threads" | "instagram", copy: boolean): Promise<string> {
+export async function fanOutDraft(id: string, targets: PostTarget[]): Promise<{ id: string; platform: PostTarget }[]> {
+  const wanted = [...new Set(targets)];
+  if (!wanted.length) throw new Error("投稿先を1つ以上選んでください");
   const { data: row, error } = await db().from("locapass_threads_posts").select("id, topic, body, image_url, video_url, source, platform, account, status").eq("id", id).maybeSingle();
   if (error || !row) throw new Error("下書きが見つかりません");
-  if (row.status !== "draft") throw new Error("下書きだけ、投稿先を変えられます(予約中のものは、先に予約を取り消してください)");
-  if (row.platform === platform && !copy) throw new Error("いまの投稿先と同じです");
-  if (platform === "instagram" && !row.image_url && !row.video_url) throw new Error("Instagramは写真か動画が必要です。この下書きには付いていません");
-  checkManualText(row.body, platform); // 文字数の上限(Instagram 2200 / Threads 500)
-  if (!copy) {
-    const { data, error: updateError } = await db().from("locapass_threads_posts").update({ platform }).eq("id", id).eq("status", "draft").select("id");
-    if (updateError || !data?.length) throw new Error(`投稿先を変えられませんでした: ${updateError?.message ?? "対象が見つかりません"}`);
-    return id;
+  if (row.status !== "draft") throw new Error("下書きだけ、投稿先を選んで出せます");
+  for (const target of wanted) {
+    if (target === "instagram" && !row.image_url && !row.video_url) throw new Error("Instagramは写真か動画が必要です。この下書きには付いていません(Instagramのチェックを外してください)");
+    checkManualText(row.body, target);
   }
-  const { data: created, error: insertError } = await db().from("locapass_threads_posts").insert({ topic: row.topic, body: row.body, image_url: row.image_url, video_url: row.video_url, source: row.source, status: "draft", platform, account: row.account }).select("id").single();
-  if (insertError || !created) throw new Error(`コピーを作れませんでした: ${insertError?.message ?? "0件"}`);
-  return created.id as string;
-}
-
-/** 同じ文章を、もう一方の投稿先(Threads⇄Instagram)にも出すための下書きを作る。条件(Instagramは写真か動画)も、ここで確認する。 */
-export async function createCounterpartDraft(id: string): Promise<{ copyId: string; from: "threads" | "instagram"; to: "threads" | "instagram" }> {
-  const { data: row, error } = await db().from("locapass_threads_posts").select("platform").eq("id", id).maybeSingle();
-  if (error || !row) throw new Error("下書きが見つかりません");
-  const from = row.platform === "instagram" ? "instagram" : "threads";
-  const to = from === "instagram" ? "threads" : "instagram";
-  return { copyId: await retargetDraft(id, to, true), from, to };
+  // もとの下書きは、いまの投稿先がチェックに入っていればそれに、無ければ最初の投稿先に使う。
+  const keep: PostTarget = wanted.includes(row.platform) ? row.platform : wanted[0];
+  const out: { id: string; platform: PostTarget }[] = [];
+  if (row.platform !== keep) {
+    const { data, error: updateError } = await db().from("locapass_threads_posts").update({ platform: keep }).eq("id", id).eq("status", "draft").select("id");
+    if (updateError || !data?.length) throw new Error(`投稿先を設定できませんでした: ${updateError?.message ?? "対象が見つかりません"}`);
+  }
+  out.push({ id, platform: keep });
+  for (const target of wanted.filter((w) => w !== keep)) {
+    const { data: created, error: insertError } = await db().from("locapass_threads_posts").insert({ topic: row.topic, body: row.body, image_url: row.image_url, video_url: row.video_url, source: row.source, status: "draft", platform: target, account: row.account }).select("id").single();
+    if (insertError || !created) throw new Error(`${target === "instagram" ? "Instagram" : "Threads"}用のコピーを作れませんでした: ${insertError?.message ?? "0件"}`);
+    out.push({ id: created.id as string, platform: target });
+  }
+  return out;
 }
 
 /** 日本時間の「いま何時か」「今日の0時はいつか」。 */
@@ -469,7 +473,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   let source: "ai" | "manual" = "manual";
   let theme = "街の雰囲気";
   if (text.mode === "manual") {
-    body = checkManualText(text.body, dest.platform); // 手書きの文章は、そのままは画像のテーマに渡さない(文字として描かれるため)。場面だけを取り出して使う
+    body = checkManualText(text.body, "instagram"); // 投稿先は書いたあとに選ぶので、ここでは長い方(2200文字)の上限だけ確認し、投稿先ごとの上限は投稿のときに確認する。手書きの文章は、そのままは画像のテーマに渡さない(文字として描かれるため)。場面だけを取り出して使う
   } else if (shopFeature) {
     const audience = text.audience === "shop" ? "shop" : "public";
     const written = await writeShopFeaturePost({ account: dest.account, ...shopFeature, recent: rows.map((r) => r.body), audience, note: text.note });

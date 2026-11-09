@@ -7,7 +7,7 @@ import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/
 import { getAutomationSettings } from "@/lib/social/socialAutomation";
 import { listLatestInsights, type InsightRow } from "@/lib/social/socialInsights";
 import { latestAuditRows } from "@/lib/social/apiAudit";
-import { publishBoth, retargetDraftNow, runApiAuditNow, attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
+import { postToChecked, runApiAuditNow, attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
 import { PostComposer } from "./PostComposer";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
@@ -24,15 +24,18 @@ const jstInputValue = (iso: string | null) => (iso ? new Date(new Date(iso).getT
 const DEST_LABEL = (p: PostRow) => `${p.platform === "instagram" ? "Instagram" : "Threads"} ${p.account === "luxela" ? "LUXELA" : "LOCAPASS"}`;
 const label = (p: PostRow) => DEST_LABEL(p) + " ・ " + (p.source === "manual" ? (p.topic.startsWith("shop:") ? "店舗写真(定型文)" : "自分で書いた文章") : `AI・${AUDIENCE_LABEL[[...THREADS_TOPICS, ...LUXELA_TOPICS].find((t) => t.id === p.topic)?.audience ?? "shop"]}`);
 
+const BRAND_LABEL = (p: PostRow) => (p.account === "luxela" ? "LUXELA" : "LOCAPASS");
+
 function PostCard({ p }: { p: PostRow }) {
   const scheduled = p.status === "scheduled";
+  const hasMedia = Boolean(p.image_url || p.video_url);
   return (
     <article className={`space-y-3 rounded-xl border p-4 ${scheduled ? "border-sky-300 bg-sky-50" : "border-amber-300 bg-amber-50"}`}>
       <p className="text-xs font-semibold text-slate-700">
-        {scheduled ? `予約中 ・ ${fmt(p.scheduled_at)} に自動で投稿` : "下書き"} ・ {label(p)} ・ {p.body.length}文字
+        {scheduled ? `予約中 ・ ${fmt(p.scheduled_at)} に自動で投稿 ・ ${label(p)}` : `下書き ・ ${BRAND_LABEL(p)} ・ 投稿先は下のチェックで選びます`} ・ {p.body.length}文字
       </p>
       <form action={editPostBody.bind(null, p.id)} className="space-y-2">
-        <textarea name="body" defaultValue={p.body} rows={Math.min(14, Math.max(5, Math.ceil(p.body.length / 28) + 2))} maxLength={500} className={input} />
+        <textarea name="body" defaultValue={p.body} rows={Math.min(14, Math.max(5, Math.ceil(p.body.length / 28) + 2))} maxLength={2200} className={input} />
         <button className={`${btn} border border-slate-300 bg-white text-slate-700`}>文章を保存</button>
       </form>
       {p.video_url ? (
@@ -50,29 +53,40 @@ function PostCard({ p }: { p: PostRow }) {
           <span className="text-[11px] text-slate-500">付けると画像つきの投稿(3MBまで)</span>
         </form>
       )}
-      {!scheduled && (
-        <form action={retargetDraftNow.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-slate-700">投稿先</span>
-          <select name="platform" defaultValue={p.platform === "instagram" ? "threads" : "instagram"} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900">
-            <option value="threads">Threads</option><option value="instagram">Instagram</option>
-          </select>
-          <button name="mode" value="move" className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>投稿先を変える</button>
-          <button name="mode" value="copy" className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>こちらにもコピーを作る</button>
-          <span className="text-[11px] text-slate-500">書いたあとに決められます。Instagramは写真か動画が必要です</span>
-        </form>
+      {scheduled ? (
+        <>
+          <form action={schedulePost.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
+            <input type="datetime-local" name="scheduled_at" required defaultValue={jstInputValue(p.scheduled_at)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
+            <button className={`${btn} bg-sky-700 py-1.5 text-white`}>日時を変える</button>
+            <span className="text-[11px] text-slate-500">日本時間。30分おきに確認して、時間になると自動で投稿します</span>
+          </form>
+          <div className="flex flex-wrap gap-2">
+            <form action={publishDraft.bind(null, p.id)}><button className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</button></form>
+            <form action={unschedulePost.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>予約を取り消す</button></form>
+            <form action={discardDraft.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>破棄</button></form>
+          </div>
+        </>
+      ) : (
+        <>
+          <form action={postToChecked.bind(null, p.id)} className="space-y-2 rounded-lg border border-slate-300 bg-white p-3">
+            <p className="text-xs font-semibold text-slate-700">どこに投稿しますか(チェックした全部に、同じ内容が出ます)</p>
+            <div className="flex flex-wrap gap-4 text-sm text-slate-800">
+              <label className={`flex items-center gap-1 ${hasMedia ? "" : "text-slate-400"}`}>
+                <input type="checkbox" name="to_instagram" defaultChecked={hasMedia} disabled={!hasMedia} />
+                Instagram{p.video_url ? "(リール)" : p.image_url ? "(フィード)" : ""}{!hasMedia && <span className="text-[11px]">(写真か動画が必要です)</span>}
+              </label>
+              <label className="flex items-center gap-1"><input type="checkbox" name="to_threads" defaultChecked /> Threads</label>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button name="intent" value="now" className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</button>
+              <input type="datetime-local" name="scheduled_at" defaultValue={jstInputValue(p.scheduled_at)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
+              <button name="intent" value="schedule" className={`${btn} bg-sky-700 py-1.5 text-white`}>この日時に予約</button>
+              <span className="text-[11px] text-slate-500">日本時間。予約は30分おきに確認して、時間になると自動で投稿します</span>
+            </div>
+          </form>
+          <form action={discardDraft.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>破棄</button></form>
+        </>
       )}
-      <form action={schedulePost.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
-        <input type="datetime-local" name="scheduled_at" required defaultValue={jstInputValue(p.scheduled_at)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
-        {!scheduled && <label className="flex items-center gap-1 text-xs text-slate-700"><input type="checkbox" name="both" /> ThreadsとInstagramの両方に</label>}
-        <button className={`${btn} bg-sky-700 py-1.5 text-white`}>{scheduled ? "日時を変える" : "この日時に予約"}</button>
-        <span className="text-[11px] text-slate-500">日本時間。30分おきに確認して、時間になると自動で投稿します</span>
-      </form>
-      <div className="flex flex-wrap gap-2">
-        <form action={publishDraft.bind(null, p.id)}><button className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</button></form>
-        {!scheduled && <form action={publishBoth.bind(null, p.id)}><button className={`${btn} bg-emerald-900 text-white`}>ThreadsとInstagramの両方に今すぐ投稿(公開されます)</button></form>}
-        {scheduled && <form action={unschedulePost.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>予約を取り消す</button></form>}
-        <form action={discardDraft.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>破棄</button></form>
-      </div>
     </article>
   );
 }

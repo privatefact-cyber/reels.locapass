@@ -6,8 +6,6 @@ import { composeFlyerJpeg } from "@/lib/social/composeFlyer";
 import { imageToReelFile } from "@/lib/social/imageToReel";
 
 type Result = { ok: boolean; message: string };
-type Sns = "instagram" | "threads";
-type Form = "feed" | "reel" | "story" | "post";
 type MediaKind = "none" | "shop-photo" | "shop-video" | "ai-image" | "upload-photo" | "upload-video" | "reel-ai" | "reel-shop-photo" | "reel-upload-photo";
 
 const MEDIA_LABEL: Record<MediaKind, { title: string; hint: string; soon?: boolean }> = {
@@ -16,27 +14,14 @@ const MEDIA_LABEL: Record<MediaKind, { title: string; hint: string; soon?: boole
   "ai-image": { title: "AIで画像を作る", hint: "街の雰囲気の画像を、AIが作ります" },
   "upload-photo": { title: "自分の写真をアップロード", hint: "JPEG・PNG・WebP、3MBまで" },
   "upload-video": { title: "自分の動画をアップロード", hint: "MP4・MOV、200MBまで。縦長(9:16)が基本" },
-  none: { title: "画像・動画なし(文章だけ)", hint: "Threadsだけ" },
-  "reel-ai": { title: "AIで画像を作って、動画にする", hint: "写真風またはイラストの画像を、約6秒の動画にします" },
-  "reel-shop-photo": { title: "掲載店舗の写真を、動画にする(自動で選ぶ)", hint: "店名・リンク・タグつきの定型文" },
-  "reel-upload-photo": { title: "自分の写真を、動画にする", hint: "JPEG・PNG・WebP、3MBまで" },
+  none: { title: "画像・動画なし(文章だけ)", hint: "Threadsにだけ出せます" },
+  "reel-ai": { title: "AIで画像を作って、動画にする", hint: "リールに出したいときだけ。約6秒の動画にします" },
+  "reel-shop-photo": { title: "掲載店舗の写真を、動画にする(自動で選ぶ)", hint: "リールに出したいときだけ" },
+  "reel-upload-photo": { title: "自分の写真を、動画にする", hint: "リールに出したいときだけ。JPEG・PNG・WebP、3MBまで" },
 };
 
-const FORMS: Record<Sns, { value: Form; title: string; hint: string; soon?: boolean }[]> = {
-  instagram: [
-    { value: "feed", title: "フィード(写真)", hint: "プロフィールに残る普通の投稿" },
-    { value: "reel", title: "リール(縦動画)", hint: "新しい人に見つけてもらいやすい" },
-    { value: "story", title: "ストーリーズ", hint: "準備中(まだ使えません)", soon: true },
-  ],
-  threads: [{ value: "post", title: "投稿", hint: "文章・写真・動画" }],
-};
-
-function mediaOptionsFor(sns: Sns, form: Form): MediaKind[] {
-  if (sns === "threads") return ["none", "shop-photo", "ai-image", "upload-photo", "shop-video", "upload-video"];
-  if (form === "feed") return ["shop-photo", "ai-image", "upload-photo"];
-  if (form === "reel") return ["shop-video", "upload-video", "reel-ai", "reel-shop-photo", "reel-upload-photo"];
-  return [];
-}
+/** 素材の選択肢。投稿先は、下書きができたあとにカードで選ぶ(写真→Instagramフィード+Threads / 動画→リール+Threads / なし→Threadsだけ)。 */
+const MEDIA_OPTIONS: MediaKind[] = ["shop-photo", "ai-image", "upload-photo", "shop-video", "upload-video", "none", "reel-ai", "reel-shop-photo", "reel-upload-photo"];
 
 const chip = (selected: boolean, disabled = false) =>
   `rounded-lg border px-3 py-2 text-left text-sm ${disabled ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400" : selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-800 hover:border-slate-500"}`;
@@ -51,42 +36,27 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
   const photoRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const [account, setAccount] = useState<"locapass" | "luxela">("locapass");
-  const [sns, setSns] = useState<Sns>("instagram");
-  const [form, setForm] = useState<Form>("reel");
   const [textMode, setTextMode] = useState<"auto" | "manual">("auto");
   const [audience, setAudience] = useState("public");
   const [note, setNote] = useState("");
   const [body, setBody] = useState("");
   const [style, setStyle] = useState<"photo" | "illustration" | "flyer">("photo");
   const [headline, setHeadline] = useState("");
-  const [media, setMedia] = useState<MediaKind>("shop-video");
+  const [media, setMedia] = useState<MediaKind>("ai-image");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const [stage, setStage] = useState("");
   const [notice, setNotice] = useState<Result | null>(null);
 
-  const options = mediaOptionsFor(sns, form);
-  const pickSns = (next: Sns) => {
-    setSns(next);
-    const nextForm: Form = next === "threads" ? "post" : "reel";
-    setForm(nextForm);
-    setMedia(next === "threads" ? "none" : "shop-video");
-  };
-  const pickForm = (next: Form) => {
-    setForm(next);
-    setMedia(mediaOptionsFor(sns, next).find((m) => !MEDIA_LABEL[m].soon) ?? "none");
-  };
-
   const isShopMedia = media === "shop-photo" || media === "shop-video" || media === "reel-shop-photo";
-  const unavailable = form === "story";
 
   const submit = async () => {
     setNotice(null);
-    if (unavailable) { setNotice({ ok: false, message: "この組み合わせは、まだ使えません" }); return; }
     if (textMode === "manual" && !body.trim()) { setNotice({ ok: false, message: "投稿の文章を入力してください" }); return; }
     const fd = new FormData();
-    fd.set("dest", `${sns}:${account}`);
-    fd.set("form", form);
+    // 投稿先は、下書きができたあとに選ぶ。ここでは仮に Threads としておく(カードの投稿先チェックで確定する)。
+    fd.set("dest", `threads:${account}`);
+    fd.set("form", "post");
     fd.set("textMode", textMode);
     fd.set("audience", audience);
     fd.set("note", note);
@@ -115,7 +85,7 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
         const { uploadURL, publicUrl } = (await created.json()) as { uploadURL: string; publicUrl: string };
         const put = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": "video/mp4" }, body: file });
         if (!put.ok) throw new Error(`アップロードに失敗しました(${put.status})`);
-        const saved = await reelSave({ dest: `${sns}:${account}`, videoUrl: publicUrl, body: prepared.body, topicId: prepared.topicId, source: prepared.source ?? "manual" });
+        const saved = await reelSave({ dest: `threads:${account}`, videoUrl: publicUrl, body: prepared.body, topicId: prepared.topicId, source: prepared.source ?? "manual" });
         setNotice(saved);
         if (saved.ok) { setBody(""); setNote(""); }
         router.refresh();
@@ -175,20 +145,11 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
   return (
     <div className="space-y-4">
       <div className={step}>
-        <p className={stepTitle}>① どこに出しますか</p>
+        <p className={stepTitle}>① どちらのサービスの投稿ですか</p>
         <div className="flex flex-wrap gap-2">
           {(["locapass", "luxela"] as const).map((a) => <button key={a} type="button" disabled={busy} onClick={() => setAccount(a)} className={chip(account === a)}>{a === "locapass" ? "LOCAPASS" : "LUXELA"}</button>)}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {(["instagram", "threads"] as const).map((s) => <button key={s} type="button" disabled={busy} onClick={() => pickSns(s)} className={chip(sns === s)}>{s === "instagram" ? "Instagram" : "Threads"}</button>)}
-        </div>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {FORMS[sns].map((f) => (
-            <button key={f.value} type="button" disabled={busy || f.soon} onClick={() => pickForm(f.value)} className={chip(form === f.value, f.soon)}>
-              <span className="block font-semibold">{f.title}</span><span className="block text-xs opacity-80">{f.hint}</span>
-            </button>
-          ))}
-        </div>
+        <p className="text-xs text-slate-600">投稿先(Instagram・Threads)は、下書きができたあとに、カードのチェックで選びます。</p>
       </div>
 
       <div className={step}>
@@ -210,21 +171,20 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
             <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} disabled={busy} placeholder="今回だけの一言(任意)例: 雨の日の話にして / もっと短く" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
           </div>
         ) : (
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={busy} rows={5} maxLength={2200} placeholder="投稿する文章(Instagramは2200文字、Threadsは500文字まで)" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={busy} rows={5} maxLength={2200} placeholder="投稿する文章(Threadsは500文字、Instagramは2200文字まで)" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
         )}
       </div>
 
       <div className={step}>
         <p className={stepTitle}>③ 画像・動画はどうしますか</p>
-        {options.length === 0 ? <p className="text-xs text-slate-500">ストーリーズは準備中です。</p> : (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {options.map((m) => (
-              <button key={m} type="button" disabled={busy || MEDIA_LABEL[m].soon} onClick={() => setMedia(m)} className={chip(media === m, MEDIA_LABEL[m].soon)}>
-                <span className="block font-semibold">{MEDIA_LABEL[m].title}</span><span className="block text-xs opacity-80">{MEDIA_LABEL[m].hint}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        <p className="text-xs text-slate-600">写真は動画にしません。写真ならInstagramのフィードとThreads、動画ならInstagramのリールとThreadsに出せます。</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {MEDIA_OPTIONS.map((m) => (
+            <button key={m} type="button" disabled={busy} onClick={() => setMedia(m)} className={chip(media === m)}>
+              <span className="block font-semibold">{MEDIA_LABEL[m].title}</span><span className="block text-xs opacity-80">{MEDIA_LABEL[m].hint}</span>
+            </button>
+          ))}
+        </div>
         {media === "reel-ai" && (
           <label className="flex flex-wrap items-center gap-2 text-xs text-slate-600">画像の種類
             <select value={style === "flyer" ? "photo" : style} onChange={(e) => setStyle(e.target.value as "photo" | "illustration")} disabled={busy} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900">
@@ -253,9 +213,9 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
 
       <div className={step}>
         <p className={stepTitle}>④ 下書きを作る(まだ公開されません)</p>
-        <p className="text-xs text-slate-600">作ると、下の「下書き」に入ります。そこで内容を確認して、「今すぐ投稿」か「この日時に予約」を押すと公開されます。</p>
+        <p className="text-xs text-slate-600">作ると、下の「下書き」に入ります。そこで内容を確認し、投稿先(Instagram・Threads)にチェックを入れて、「今すぐ投稿」か「この日時に予約」を押すと公開されます。</p>
         <div className="flex flex-wrap items-center gap-3">
-          <button type="button" disabled={busy || unavailable} onClick={submit} className="rounded-lg bg-slate-900 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">下書きを作る</button>
+          <button type="button" disabled={busy} onClick={submit} className="rounded-lg bg-slate-900 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">下書きを作る</button>
           {busy && <span role="status" className="text-sm font-semibold text-amber-700">{stage ? `${stage}${progress !== null && progress > 0 && progress < 100 ? ` ${progress}%` : ""}` : progress !== null ? `アップロード中…${progress}%` : "作っています…(AIの画像は最大1分ほど)"}</span>}
         </div>
         {notice && <p role="status" className={`whitespace-pre-wrap text-sm font-semibold ${notice.ok ? "text-emerald-700" : "text-red-700"}`}>{notice.message}</p>}
