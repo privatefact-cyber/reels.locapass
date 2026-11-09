@@ -15,7 +15,8 @@ const btn = "rounded-lg px-4 py-2 text-sm font-semibold";
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "");
 /** datetime-local 用(日本時間)。 */
 const jstInputValue = (iso: string | null) => (iso ? new Date(new Date(iso).getTime() + 9 * 3_600_000).toISOString().slice(0, 16) : "");
-const label = (p: PostRow) => (p.source === "manual" ? "自分で書いた文章" : `AI・${AUDIENCE_LABEL[THREADS_TOPICS.find((t) => t.id === p.topic)?.audience ?? "shop"]}`);
+const DEST_LABEL = (p: PostRow) => `${p.platform === "instagram" ? "Instagram" : "Threads"} ${p.account === "luxela" ? "LUXELA" : "LOCAPASS"}`;
+const label = (p: PostRow) => DEST_LABEL(p) + " ・ " + (p.source === "manual" ? "自分で書いた文章" : `AI・${AUDIENCE_LABEL[THREADS_TOPICS.find((t) => t.id === p.topic)?.audience ?? "shop"]}`);
 
 function PostCard({ p }: { p: PostRow }) {
   const scheduled = p.status === "scheduled";
@@ -88,7 +89,13 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-bold text-slate-900">自分で書いて投稿する</h2>
         <form action={createManualPost} className="space-y-3">
-          <textarea name="body" required rows={7} maxLength={500} placeholder="投稿する文章(500文字まで)" className={input} />
+          <select name="dest" defaultValue="instagram:locapass" className={input}>
+            <option value="instagram:locapass">Instagram LOCAPASS(写真が必要)</option>
+            <option value="instagram:luxela">Instagram LUXELA(写真が必要)</option>
+            <option value="threads:locapass">Threads LOCAPASS</option>
+            <option value="threads:luxela">Threads LUXELA</option>
+          </select>
+          <textarea name="body" required rows={7} maxLength={2200} placeholder="投稿する文章(Instagramは2200文字、Threadsは500文字まで)" className={input} />
           <div className="flex flex-wrap items-center gap-3">
             <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-xs text-slate-700" />
             <span className="text-[11px] text-slate-500">写真(任意・3MBまで)</span>

@@ -7,8 +7,8 @@ const API = "https://graph.threads.net/v1.0";
 /** userId は任意。未設定なら、トークンの持ち主のidを Threads に問い合わせて使う(設定するのはトークンだけで足りる)。 */
 export type ThreadsConfig = { userId: string | null; accessToken: string };
 
-export function threadsConfigFromEnv(): ThreadsConfig | null {
-  const accessToken = process.env.THREADS_ACCESS_TOKEN?.trim();
+export function threadsConfigFromEnv(account: "locapass" | "luxela" = "locapass"): ThreadsConfig | null {
+  const accessToken = (account === "luxela" ? process.env.THREADS_ACCESS_TOKEN_LUXELA : process.env.THREADS_ACCESS_TOKEN)?.trim();
   if (!accessToken) return null;
   return { userId: process.env.THREADS_USER_ID?.trim() || null, accessToken };
 }

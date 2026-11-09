@@ -114,7 +114,9 @@ export async function createManualPost(formData: FormData) {
     const scheduledAt = mode === "schedule" ? parseJstDateTime(formData.get("scheduled_at")) : null;
     if (mode === "schedule" && !scheduledAt) throw new Error("予約する日時を入力してください");
     const imageUrl = await uploadOptionalImage(formData.get("image"));
-    const id = await createManualThreadsPost({ text: String(formData.get("body") ?? ""), imageUrl, scheduledAt });
+    const [platform, account] = String(formData.get("dest") ?? "threads:locapass").split(":");
+    const dest = { platform: platform === "instagram" ? "instagram" : "threads", account: account === "luxela" ? "luxela" : "locapass" } as const;
+    const id = await createManualThreadsPost({ text: String(formData.get("body") ?? ""), imageUrl, scheduledAt, dest });
     if (mode === "now") {
       await publishThreadsDraft(id);
       done = "Threadsに投稿しました";

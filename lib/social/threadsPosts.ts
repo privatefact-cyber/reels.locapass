@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publishThreadsImagePost, publishThreadsTextPost, threadsConfigFromEnv } from "@/lib/social/threads";
+import { instagramTokenFor, publishInstagramImagePost, type SocialAccount } from "@/lib/social/instagram";
 import { THREADS_TOPICS, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { THREADS_MAX_CHARS, validateThreadsText, writeThreadsPost } from "@/lib/social/threadsWriter";
 
@@ -27,13 +28,15 @@ export type PostRow = {
   body: string;
   image_url: string | null;
   source: "ai" | "manual";
+  platform: "threads" | "instagram";
+  account: SocialAccount;
   status: "draft" | "scheduled" | "posted" | "failed" | "discarded";
   error: string | null;
   created_at: string;
   posted_at: string | null;
   scheduled_at: string | null;
 };
-const COLUMNS = "id, topic, body, image_url, source, status, error, created_at, posted_at, scheduled_at";
+const COLUMNS = "id, topic, body, image_url, source, platform, account, status, error, created_at, posted_at, scheduled_at";
 
 /** 直近のAIの投稿(重複を避けるための材料)。破棄したものは除く。 */
 async function recentRows(limit = 40): Promise<PostRow[]> {
@@ -77,19 +80,24 @@ export async function createThreadsDraft(options?: { dry?: boolean; audience?: T
   return { ok: true, id: data.id as string, topic: topic.id, text: written.text };
 }
 
-function checkManualText(text: string): string {
+export type Destination = { platform: "threads" | "instagram"; account: SocialAccount };
+const maxChars = (platform: string) => (platform === "instagram" ? 2200 : 500);
+
+function checkManualText(text: string, platform: string = "threads"): string {
   const t = text.trim();
   if (t.length < 1) throw new Error("文章を入力してください");
-  if (t.length > 500) throw new Error(`Threadsの上限(500文字)を超えています(${t.length}文字)`);
+  if (t.length > maxChars(platform)) throw new Error(`${platform === "instagram" ? "Instagram" : "Threads"}の上限(${maxChars(platform)}文字)を超えています(${t.length}文字)`);
   return t;
 }
 
 /** 自分で書いた文章を保存する。scheduledAt があれば予約、無ければ下書き。 */
-export async function createManualThreadsPost(input: { text: string; imageUrl: string | null; scheduledAt: Date | null }): Promise<string> {
-  const body = checkManualText(input.text);
+export async function createManualThreadsPost(input: { text: string; imageUrl: string | null; scheduledAt: Date | null; dest?: Destination }): Promise<string> {
+  const dest = input.dest ?? { platform: "threads", account: "locapass" };
+  const body = checkManualText(input.text, dest.platform);
+  if (dest.platform === "instagram" && !input.imageUrl && input.scheduledAt) throw new Error("Instagramは写真が必要です。写真を付けてください");
   if (input.scheduledAt && input.scheduledAt.getTime() < Date.now() - 60_000) throw new Error("予約の日時が、過去になっています");
   const { data, error } = await db().from("locapass_threads_posts").insert({
-    topic: "manual", body, image_url: input.imageUrl, source: "manual",
+    topic: "manual", body, image_url: input.imageUrl, source: "manual", platform: dest.platform, account: dest.account,
     status: input.scheduledAt ? "scheduled" : "draft",
     scheduled_at: input.scheduledAt ? input.scheduledAt.toISOString() : null,
   }).select("id").single();
@@ -117,16 +125,20 @@ export async function scheduleThreadsPost(id: string, when: Date | null): Promis
 /** 下書き・予約中の投稿を、Threadsに投稿する。失敗しても、理由を記録に残す(同じ文章を勝手に再投稿しない)。 */
 export async function publishThreadsDraft(id: string): Promise<void> {
   const admin = db();
-  const { data: row, error } = await admin.from("locapass_threads_posts").select("id, body, image_url, source, status").eq("id", id).maybeSingle();
+  const { data: row, error } = await admin.from("locapass_threads_posts").select("id, body, image_url, source, platform, account, status").eq("id", id).maybeSingle();
   if (error || !row) throw new Error(error?.message ?? "下書きが見つかりません");
   if (row.status !== "draft" && row.status !== "scheduled") throw new Error("この投稿は、すでに処理済みです");
-  const config = threadsConfigFromEnv();
-  if (!config) throw new Error("THREADS_ACCESS_TOKEN が未設定です");
+  const isInstagram = row.platform === "instagram";
+  const config = isInstagram ? null : threadsConfigFromEnv(row.account);
+  const igToken = isInstagram ? instagramTokenFor(row.account) : null;
+  if (isInstagram && !igToken) throw new Error(`Instagram(${row.account})のトークンが未設定です`);
+  if (isInstagram && !row.image_url) throw new Error("Instagramは写真が必要です。写真を付けてください");
+  if (!isInstagram && !config) throw new Error(`Threads(${row.account})のトークンが未設定です`);
   // AIが書いた文章は、投稿の直前にもう一度、安全チェックをする。自分で書いた文章は、文字数だけ確認する。
   if (row.source === "ai") {
     const problem = validateThreadsText(row.body, []);
     if (problem) throw new Error(`投稿できない文章です: ${problem}`);
-  } else if (row.body.length > THREADS_MAX_CHARS + 20) {
+  } else if (row.body.length > (isInstagram ? 2200 : THREADS_MAX_CHARS + 20)) {
     throw new Error("文章が長すぎます");
   }
   // 二重に投稿しないよう、先に「投稿中」の印として、同じ状態のときだけ予約を外す(同時に動いても、1回しか通らない)。
@@ -134,9 +146,11 @@ export async function publishThreadsDraft(id: string): Promise<void> {
   if (!claimed?.length) throw new Error("この投稿は、いま別の処理で投稿中です");
   try {
     // 写真が付いていれば、画像つきの投稿にする(Threadsは、公開されたURLの画像を取り込む)。
-    const externalId = row.image_url
-      ? await publishThreadsImagePost(config, { text: row.body, imageUrl: row.image_url })
-      : await publishThreadsTextPost(config, { text: row.body });
+    const externalId = isInstagram
+      ? await publishInstagramImagePost(igToken!, { caption: row.body, imageUrl: row.image_url! })
+      : row.image_url
+        ? await publishThreadsImagePost(config!, { text: row.body, imageUrl: row.image_url })
+        : await publishThreadsTextPost(config!, { text: row.body });
     const { data: updated, error: updateError } = await admin.from("locapass_threads_posts").update({ status: "posted", external_id: externalId, posted_at: new Date().toISOString(), error: null }).eq("id", id).select("id");
     if (updateError || !updated?.length) throw new Error("投稿はできましたが、記録の更新に失敗しました。Threadsで二重に投稿しないよう確認してください");
   } catch (e) {
