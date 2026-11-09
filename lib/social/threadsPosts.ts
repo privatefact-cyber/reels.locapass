@@ -358,3 +358,20 @@ export async function createVideoDraft(dest: Destination): Promise<string> {
   if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
   return data.id as string;
 }
+
+
+/** 管理画面からアップロードした動画(R2の social/ 以下)で、下書きを作る。形式・大きさは、実際のファイルで確認する。 */
+export async function createUploadedVideoDraft(input: { dest: Destination; videoUrl: string; text: string }): Promise<string> {
+  const { R2_PUBLIC_BASE_URL } = await import("@/lib/storage/r2");
+  if (!input.videoUrl.startsWith(`${R2_PUBLIC_BASE_URL}/social/`)) throw new Error("動画のURLが正しくありません");
+  const text = checkManualText(input.text, input.dest.platform);
+  const head = await fetch(input.videoUrl, { method: "HEAD", signal: AbortSignal.timeout(15_000) }).catch(() => null);
+  if (!head?.ok) throw new Error("アップロードした動画を確認できませんでした。もう一度アップロードしてください");
+  const type = head.headers.get("content-type") ?? "";
+  const size = Number(head.headers.get("content-length") ?? 0);
+  if (!/^video\/(mp4|quicktime)/i.test(type)) throw new Error("動画の形式が正しくありません(MP4またはMOV)");
+  if (size > 200 * 1024 * 1024) throw new Error("動画は200MB以下にしてください");
+  const { data, error } = await db().from("locapass_threads_posts").insert({ topic: "upload-video", body: text, video_url: input.videoUrl, source: "manual", status: "draft", platform: input.dest.platform, account: input.dest.account }).select("id").single();
+  if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
+  return data.id as string;
+}

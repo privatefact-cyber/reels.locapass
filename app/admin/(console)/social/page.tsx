@@ -4,8 +4,9 @@ import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/thre
 import { getTokenStatuses } from "@/lib/social/tokens";
 import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
-import { attachDraftImage, createDraftNow, createImageDraftNow, createVideoDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
+import { attachDraftImage, createDraftNow, createImageDraftNow, createVideoDraftNow, createUploadedVideoDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
 import { TextDraftForm } from "./TextDraftForm";
+import { VideoUploadForm } from "./VideoUploadForm";
 import { ImageDraftForm } from "./ImageDraftForm";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
@@ -156,6 +157,12 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
             </form>
           </details>
         ))}
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">動画をアップロードして投稿する(リール・動画)</h2>
+        <p className="text-xs text-slate-500">手元の動画をそのまま、Instagramのリール/Threadsの動画として出せます。アップロード後は「下書き」に入るので、再生して確認してから、予約か投稿をします。</p>
+        <VideoUploadForm action={createUploadedVideoDraftNow} />
       </section>
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">

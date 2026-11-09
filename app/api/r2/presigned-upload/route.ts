@@ -49,6 +49,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ uploadURL, publicUrl: `${R2_PUBLIC_BASE_URL}/${key}` });
   }
 
+  // SNS自動投稿(管理画面)の動画: ルート管理者だけが、social/ 以下にMP4/MOVを送れる(200MBまで)。
+  if (context === "social_admin") {
+    const { data: rootAdmin } = await supabase.from("locapass_super_admins").select("user_id").eq("user_id", user.id).maybeSingle();
+    if (!rootAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const size = Number(body?.size);
+    const type = typeof contentType === "string" ? contentType : "";
+    const videoExt = type === "video/mp4" ? "mp4" : type === "video/quicktime" ? "mov" : null;
+    if (!videoExt) return NextResponse.json({ error: "MP4またはMOVの動画を選んでください" }, { status: 400 });
+    if (!Number.isFinite(size) || size <= 0 || size > 200 * 1024 * 1024) {
+      return NextResponse.json({ error: "動画は200MB以下にしてください" }, { status: 400 });
+    }
+    const key = `social/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${videoExt}`;
+    const uploadURL = await getSignedUrl(
+      client,
+      new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, ContentType: type, CacheControl: "public, max-age=31536000, immutable" }),
+      { expiresIn: 900 },
+    );
+    return NextResponse.json({ uploadURL, publicUrl: `${R2_PUBLIC_BASE_URL}/${key}` });
+  }
+
   // エリアフォトの動画投稿: ログイン中の会員なら誰でも、自分のフォルダ(photo/<自分のID>/)にだけ送れる。
   // 申告サイズで上限を確認し、実際の大きさは投稿を作る時に(/api/photo/posts)R2へのHEADで再確認する。
   if (context === "photo_user") {

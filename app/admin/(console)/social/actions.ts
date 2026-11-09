@@ -8,7 +8,7 @@ import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
-import { createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
+import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
   revalidatePath("/admin/social");
@@ -239,4 +239,18 @@ export async function createVideoDraftNow(dest: string): Promise<DraftActionResu
   }
   revalidatePath("/admin/social");
   return message ? { ok: false, message } : { ok: true, message: "動画の下書きを作りました。下の「下書き」に出ています(再生して確認できます)" };
+}
+
+/** アップロード済みの動画で、下書きを作る(動画本体はブラウザからR2へ直接送られている)。 */
+export async function createUploadedVideoDraftNow(dest: string, videoUrl: string, text: string): Promise<DraftActionResult> {
+  await requireRootAdmin();
+  const [platform, account] = dest.split(":");
+  let message: string | null = null;
+  try {
+    await createUploadedVideoDraft({ dest: { platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" }, videoUrl, text });
+  } catch (e) {
+    message = e instanceof Error ? e.message : "下書きを作れませんでした";
+  }
+  revalidatePath("/admin/social");
+  return message ? { ok: false, message } : { ok: true, message: "動画の下書きを作りました。下の「下書き」で再生して確認し、予約か投稿をしてください" };
 }
