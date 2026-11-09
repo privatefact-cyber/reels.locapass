@@ -37,7 +37,7 @@ export async function publishDraft(id: string) {
     message = e instanceof Error ? e.message : "投稿に失敗しました";
   }
   if (message) back("error", message);
-  back("ok", "Threadsに投稿しました");
+  back("ok", "投稿しました(反映まで数分かかることがあります)");
 }
 
 export async function discardDraft(id: string) {
@@ -119,7 +119,7 @@ export async function createManualPost(formData: FormData) {
     const id = await createManualThreadsPost({ text: String(formData.get("body") ?? ""), imageUrl, scheduledAt, dest });
     if (mode === "now") {
       await publishThreadsDraft(id);
-      done = "Threadsに投稿しました";
+      done = "投稿しました(反映まで数分かかることがあります)";
     } else if (scheduledAt) {
       done = `予約しました(${scheduledAt.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })})`;
     }
