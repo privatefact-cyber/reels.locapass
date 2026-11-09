@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { geminiGenerateWithFallback } from "@/lib/gemini";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isPlacePhotoUrl } from "@/components/shop/PlacePhotoCredit";
 import { uploadThumb } from "@/lib/embed-post/createEmbedPost";
@@ -55,7 +56,7 @@ export async function pickShopPhoto(recentShopKeys: string[], account: "locapass
 /** B: テーマに合う、街・お店の雰囲気の画像をAIで作る。人物の顔・文字・ロゴは入れない。 */
 export type AiImageStyle = "photo" | "illustration" | "flyer";
 
-export async function generateAiImage(theme: string, account: "locapass" | "luxela" = "locapass", opts: { style?: AiImageStyle; aspect?: "1:1" | "9:16"; headline?: string } = {}): Promise<string> {
+export async function generateAiImage(theme: string, account: "locapass" | "luxela" = "locapass", opts: { style?: AiImageStyle; aspect?: "1:1" | "9:16"; headline?: string; scene?: string } = {}): Promise<string> {
   const style = opts.style ?? "photo";
   const aspect = opts.aspect ?? "1:1";
   const key = process.env.GEMINI_API_KEY;
@@ -65,8 +66,12 @@ export async function generateAiImage(theme: string, account: "locapass" | "luxe
   const headline = (opts.headline ?? "").replace(/\s+/g, " ").trim().slice(0, 20) || brand;
   const look = style === "illustration" ? "おしゃれで上品な、手描き風のイラスト" : "写真風の画像";
   // チラシの文字は、AIに描かせると崩れるため、ここでは文字なしのイラストだけを作る(見出しは、管理画面のブラウザで正しいフォントで重ねる)。
-  const flyerPrompt = `SNSのチラシの背景にする、おしゃれな${account === "luxela" ? "夜の街(ネオン・落ち着いた大人の雰囲気)" : "街のお店(あたたかい雰囲気)"}のイラスト。中央に、あとで文字を重ねられる、すっきりした広めの余白を残す。文字・ロゴ・看板の文字は一切入れない。人物の顔は描かない。題材(これは画像に書かない): ${theme}。`;
-  const prompt = (style === "flyer" ? flyerPrompt : account === "luxela"
+  const flyerPrompt = `SNSのチラシの背景にする、おしゃれな${account === "luxela" ? "夜の街(ネオン・落ち着いた大人の雰囲気)" : "街のお店(あたたかい雰囲気)"}のイラスト。中央に、あとで文字を重ねられる、すっきりした広めの余白を残す。文字・ロゴ・看板の文字は一切入れない。人物の顔は描かない。題材(これは画像に書かない): ${opts.scene || theme}。`;
+  // 投稿の文章から決めた「場面」があるときは、それを主役にして描く(雰囲気だけの絵にしない)。
+  const scenePrompt = opts.scene
+    ? `${look}。場面: ${opts.scene}。この場面の中心になる物や状況を、はっきり大きく写す。${account === "luxela" ? "夜のお店らしい、落ち着いた暗めの照明と大人っぽい色調。" : "あたたかい自然光。"}${style === "photo" ? "スマホで撮ったような自然な構図。" : "すっきりした構図。"}人物の顔・文字・ロゴ・看板の文字・画面の中の文字・露出の多い表現は入れない。` + noText
+    : null;
+  const prompt = scenePrompt && style !== "flyer" ? scenePrompt : (style === "flyer" ? flyerPrompt : account === "luxela"
     ? `日本の夜の繁華街の、大人っぽく落ち着いた雰囲気の${look}。ネオンや街灯、グラスや店先の明かりなど。題材(これは画像に書かない): ${theme}。人物の顔・文字・ロゴ・看板の文字・露出の多い表現は入れない。`
     : `日本の街の、あたたかい雰囲気の${look}。題材(これは画像に書かない): ${theme}。${style === "photo" ? "自然光、スマホで撮ったような自然な構図。" : "やさしい色合いで、すっきりした構図。"}人物の顔・文字・ロゴ・看板の文字は入れない。`) + noText;
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${key}`, {
@@ -79,4 +84,36 @@ export async function generateAiImage(theme: string, account: "locapass" | "luxe
   const b64 = data.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData?.data;
   if (!b64) throw new Error("画像が返ってきませんでした");
   return aspect === "9:16" ? toJpegUrl(Buffer.from(b64, "base64"), 1080, 1920) : toSquareJpegUrl(Buffer.from(b64, "base64"));
+}
+
+/**
+ * 完成した投稿の文章を読んで、添える画像の「場面」を1〜2文で決める。
+ * 画像を話題の見出しだけで作ると、文章と関係のない雰囲気の絵になるため、文章の中心の1点を物や状況で表す。
+ * 失敗したら空文字を返す(呼び出し側は、これまでの作り方に戻る)。
+ */
+export async function imageSceneFromPost(body: string, account: "locapass" | "luxela" = "locapass"): Promise<string> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key || !body.trim()) return "";
+  const who = account === "luxela" ? "夜のお店(キャバクラ・ラウンジ・ガールズバー等)のオーナーや店長" : "地域のお店のオーナーや、街のお店を探す人";
+  const prompt = `次のSNS投稿に添える画像の「場面の指示」を、日本語1〜2文で書いてください。読み手は${who}です。
+- 投稿が伝えたい中心の1点(現場の課題・仕様・発見)を、見ただけで連想できる、具体的な物や状況にする。
+- 例: 出勤の調整なら「手帳に書き込まれた出勤表と、横に置かれたスマホ」、閉店後の作業なら「片付けられたカウンターに置かれたタブレット」。
+- 夜景やネオンなど、雰囲気だけの絵にしない。投稿の話題が分かる物を主役にする。
+- 人物の顔は写さない。人を入れるなら手元か後ろ姿だけ。
+- 画像に入れる文字は指示しない。投稿の文章を書き写さない。
+
+投稿:
+${body.slice(0, 700)}
+
+JSONだけを返す: {"scene": "場面の指示"}`;
+  try {
+    const res = await geminiGenerateWithFallback(key, { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.5, responseMimeType: "application/json" } }, "social-image-scene", 25_000);
+    if (!res) return "";
+    const json = (await res.json()) as any;
+    const text = String(json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "");
+    const scene = String((JSON.parse(text.replace(/```json\s*|```/g, "").trim()) as { scene?: string }).scene ?? "").replace(/\s+/g, " ").trim();
+    return scene.length >= 8 ? scene.slice(0, 220) : "";
+  } catch {
+    return "";
+  }
 }

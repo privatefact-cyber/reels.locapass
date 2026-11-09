@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { geminiGenerateWithFallback } from "@/lib/gemini";
-import { generateAiImage } from "@/lib/social/socialImages";
+import { generateAiImage, imageSceneFromPost } from "@/lib/social/socialImages";
 import type { Destination } from "@/lib/social/threadsPosts";
 import { validateThreadsText } from "@/lib/social/threadsWriter";
 
@@ -34,7 +34,7 @@ JSONだけを返す: {"candidates":[{"title":"","summary":"検索で確認した
   if (!sources.length) throw new Error("出典を確認できる話題がありませんでした");
   if (!choices.length) throw new Error("投稿に使える水準の話題が見つかりませんでした");
   const best = choices[0];
-  const imageUrl = await generateAiImage(best.title, dest.account);
+  const imageUrl = await generateAiImage(best.title, dest.account, { scene: await imageSceneFromPost(best.post, dest.account) });
   const { data: research, error: researchError } = await db().from("locapass_social_research").insert({ account: dest.account, title: best.title, summary: best.summary, why_now: best.why_now, audience_value: best.audience_value, score: best.score, body: best.post, sources, search_queries: queries }).select("id").single();
   if (researchError || !research) throw new Error(`リサーチ結果を保存できませんでした: ${researchError?.message ?? "0件"}`);
   const { data, error } = await db().from("locapass_threads_posts").insert({ topic: `research:${research.id}`, body: best.post, image_url: imageUrl, source: "ai", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();

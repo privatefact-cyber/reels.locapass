@@ -4,7 +4,7 @@ import { createInstagramReelContainer, instagramContainerState, publishInstagram
 import { pickShopVideo } from "@/lib/social/socialVideos";
 import { resolveSocialToken } from "@/lib/social/tokens";
 import { THREADS_TOPICS, LUXELA_TOPICS, topicsFor, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
-import { generateAiImage, pickShopPhoto } from "@/lib/social/socialImages";
+import { generateAiImage, imageSceneFromPost, pickShopPhoto } from "@/lib/social/socialImages";
 import { THREADS_MAX_CHARS, validateThreadsText, writeShopFeaturePost, writeThreadsPost } from "@/lib/social/threadsWriter";
 
 /**
@@ -135,7 +135,7 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination, a
     const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account, note);
     if (!written.ok) throw new Error(written.error);
     body = written.text;
-    imageUrl = await generateAiImage(t.title, dest.account);
+    imageUrl = await generateAiImage(t.title, dest.account, { scene: await imageSceneFromPost(body, dest.account) });
     topic = t.id;
   }
   const { data, error } = await admin.from("locapass_threads_posts").insert({ topic, body, image_url: imageUrl, source: generatedByAi ? "ai" : "manual", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
@@ -439,7 +439,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   let source: "ai" | "manual" = "manual";
   let theme = "街の雰囲気";
   if (text.mode === "manual") {
-    body = checkManualText(text.body, dest.platform); // 手書きの文章は、画像のテーマに使わない(文字として描かれてしまうため)
+    body = checkManualText(text.body, dest.platform); // 手書きの文章は、そのままは画像のテーマに渡さない(文字として描かれるため)。場面だけを取り出して使う
   } else if (shopFeature) {
     const written = await writeShopFeaturePost({ account: dest.account, ...shopFeature, recent: rows.map((r) => r.body) });
     body = written.ok ? written.text : [`${shopFeature.media === "video" ? "🎬" : "📍"} ${shopFeature.shopName}`, shopFeature.media === "video" ? "動画でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。" : "写真でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。", `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${shopFeature.link}`].join("\n\n");
@@ -456,8 +456,11 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
     theme = t.title;
   }
 
-  if (media.kind === "ai-image") imageUrl = await generateAiImage(theme, dest.account, { style: input.style, headline: input.headline });
-  if (media.kind === "reel-ai") imageUrl = await generateAiImage(theme, dest.account, { style: input.style, aspect: "9:16" });
+  // 画像は、完成した文章を読んで決めた「場面」で作る(手書きの文章も、そのまま絵に書き写さず、場面だけを取り出す)。
+  if (media.kind === "ai-image" || media.kind === "reel-ai") {
+    const scene = await imageSceneFromPost(body, dest.account);
+    imageUrl = await generateAiImage(theme, dest.account, media.kind === "ai-image" ? { style: input.style, headline: input.headline, scene } : { style: input.style, aspect: "9:16", scene });
+  }
   return { topicId, body, source, imageUrl, videoUrl };
 }
 
