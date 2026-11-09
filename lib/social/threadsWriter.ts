@@ -69,7 +69,9 @@ function audienceBlock(topic: ThreadsTopic, account: BrandAccount): { reader: st
     const shop = topic.audience === "shop";
     return {
       reader: shop ? "キャバクラ・ラウンジ・クラブ・ガールズバー・コンカフェなど、夜のお店のオーナーや店長。" : "夜のお店(キャバクラ・ラウンジ・ガールズバー・コンカフェなど)を探している、20歳以上の大人。",
-      style: "- 落ち着いた、大人向けの自然な話し言葉。です・ますを基本に、あおらない。\n- 最初の1〜2行は、読み手が自分ごとにできる具体的な場面・悩み・発見から始める。毎回問いかけにしない。\n- 1文を短くし、2〜4段落で読みやすくする。箇条書きは本当に必要なときだけ。\n- 性的な表現・ほのめかし、お酒を勧める表現、容姿の評価は書かない。",
+      style: shop
+        ? "- 夜のお店のオーナーや店長に向けた、現場目線の実利・業務改善の投稿にする。\n- 落ち着いた、事実を淡々と突くプロフェッショナルな文体。です・ますを基本にする。\n- 箇条書き(・や番号付きのリスト)は一切使わない。広告チラシに見えるため厳禁。\n- 「〜していませんか?」「〜って思うことありませんか?」のような紋切り型の問いかけから書き始めない。\n- 「先進的な」「スムーズに」「魅力をしっかり届ける」のような抽象的な宣伝言葉は使わない。\n- 機能を紹介するときは、機能名を自慢せず、先に「店舗の現場が抱える日々の無駄な作業や集客の課題」を示し、LUXELAのどの仕様がどう解決するのかをセットで説明する。\n- 性的な表現・ほのめかし、お酒を勧める表現、容姿の評価は書かない。"
+        : "- 落ち着いた、大人向けの自然な話し言葉。です・ますを基本に、あおらない。\n- 最初の1〜2行は、読み手が自分ごとにできる具体的な場面・悩み・発見から始める。毎回問いかけにしない。\n- 1文を短くし、2〜4段落で読みやすくする。箇条書きは本当に必要なときだけ。\n- 性的な表現・ほのめかし、お酒を勧める表現、容姿の評価は書かない。",
       closing: `最後に、「${brand.name}で見てみてください」のような、押しつけがましくない一言を添え、次のURLを1つだけ入れる: ${brand.url}`,
     };
   }
@@ -87,12 +89,17 @@ function audienceBlock(topic: ThreadsTopic, account: BrandAccount): { reader: st
   };
 }
 
+/** 全体の文字数。LUXELAの店舗向けは、現場の課題と仕様の説明を両方入れるので長めにする。 */
+function lengthFor(audience: ThreadsTopic["audience"], account: BrandAccount): string {
+  return account === "luxela" && audience === "shop" ? "200〜420文字" : "110〜260文字";
+}
+
 /** 管理画面に見せる、いまの標準の書き方(指示欄が空のときに、AIが従っているもの)。 */
-export function defaultStyleFor(account: BrandAccount): { label: string; reader: string; style: string }[] {
+export function defaultStyleFor(account: BrandAccount): { label: string; reader: string; style: string; length: string }[] {
   const aud = (audience: "public" | "shop") => audienceBlock({ id: "", title: "", angle: "", audience }, account);
   return (["public", "shop"] as const).map((a) => {
     const b = aud(a);
-    return { label: a === "public" ? "一般向け" : "店舗向け", reader: b.reader, style: b.style };
+    return { label: a === "public" ? "一般向け" : "店舗向け", reader: b.reader, style: b.style, length: lengthFor(a, account) };
   });
 }
 
@@ -112,7 +119,7 @@ ${topic.title}
 # 文体と構成
 ${style}
 - ${closing}
-- 全体で110〜260文字。伝えることを1つに絞り、説明を詰め込まない。
+- 全体で${lengthFor(topic.audience, account)}。伝えることを1つに絞り、説明を詰め込まない。
 - 「魅力」「ワクワク」「一流」「豪華」「特別な時間」のような、具体性のない宣伝文句は使わない。
 - 「〜をご存じですか」「〜してみませんか」で始めない。サービスの説明より先に、読み手の場面を書く。
 - 絵文字は0〜1個。飾りではなく、内容に合う場合だけ使う。

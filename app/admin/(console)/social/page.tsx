@@ -179,9 +179,10 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
                   <p className="font-semibold">{d.label}</p>
                   <p>読者: {d.reader}</p>
                   <p className="whitespace-pre-wrap">{d.style}</p>
+                  <p>全体の長さ: {d.length}</p>
                 </div>
               ))}
-              <p className="mt-2">共通: 全体で200〜420文字 / 最後にサイトのURLを1つだけ / 数字・料金・最上級・他社比較は書かない(指示では外せません)</p>
+              <p className="mt-2">共通: 最後にサイトのURLを1つだけ / 数字・料金・最上級・他社比較は書かない(指示では外せません)</p>
             </div>
             <form action={saveAiSettings.bind(null, key)} className="mt-3 space-y-2">
               <label className="block text-xs font-semibold text-slate-700">指示(最大{MAX_INSTRUCTIONS}文字)</label>
