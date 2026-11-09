@@ -130,7 +130,7 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination): 
     imageUrl = await generateAiImage(t.title);
     topic = t.id;
   }
-  const { data, error } = await admin.from("locapass_threads_posts").insert({ topic, body, image_url: imageUrl, source: "ai", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
+  const { data, error } = await admin.from("locapass_threads_posts").insert({ topic, body, image_url: imageUrl, source: kind === "shop" ? "manual" : "ai", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
   if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
   return data.id as string;
 }

@@ -17,7 +17,7 @@ const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("ja-JP",
 /** datetime-local 用(日本時間)。 */
 const jstInputValue = (iso: string | null) => (iso ? new Date(new Date(iso).getTime() + 9 * 3_600_000).toISOString().slice(0, 16) : "");
 const DEST_LABEL = (p: PostRow) => `${p.platform === "instagram" ? "Instagram" : "Threads"} ${p.account === "luxela" ? "LUXELA" : "LOCAPASS"}`;
-const label = (p: PostRow) => DEST_LABEL(p) + " ・ " + (p.source === "manual" ? "自分で書いた文章" : `AI・${AUDIENCE_LABEL[THREADS_TOPICS.find((t) => t.id === p.topic)?.audience ?? "shop"]}`);
+const label = (p: PostRow) => DEST_LABEL(p) + " ・ " + (p.source === "manual" ? (p.topic.startsWith("shop:") ? "店舗写真(定型文)" : "自分で書いた文章") : `AI・${AUDIENCE_LABEL[THREADS_TOPICS.find((t) => t.id === p.topic)?.audience ?? "shop"]}`);
 
 function PostCard({ p }: { p: PostRow }) {
   const scheduled = p.status === "scheduled";
