@@ -1,17 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { composeFlyerJpeg } from "@/lib/social/composeFlyer";
 import { imageToReelFile } from "@/lib/social/imageToReel";
 
 type Result = { ok: boolean; message: string };
-type MediaKind = "none" | "shop-photo" | "shop-video" | "ai-image" | "upload-photo" | "upload-video" | "reel-ai" | "reel-shop-photo" | "reel-upload-photo";
+type MediaKind = "none" | "upload" | "shop-photo" | "shop-video" | "ai-image" | "upload-photo" | "upload-video" | "reel-ai" | "reel-shop-photo" | "reel-upload-photo";
 
 const MEDIA_LABEL: Record<MediaKind, { title: string; hint: string; soon?: boolean }> = {
   "shop-photo": { title: "掲載店舗の写真(自動で選ぶ)", hint: "店名・リンク・お店のタグつきの定型文" },
   "shop-video": { title: "掲載店舗の動画(自動で選ぶ)", hint: "自前のサーバーにある動画だけ。店名・リンク・タグつき" },
   "ai-image": { title: "AIで画像を作る", hint: "街の雰囲気の画像を、AIが作ります" },
+  upload: { title: "自分の写真・動画をアップロード", hint: "写真はJPEG・PNG・WebP(3MBまで)、動画はMP4・MOV(200MBまで)。ドロップでもOK" },
   "upload-photo": { title: "自分の写真をアップロード", hint: "JPEG・PNG・WebP、3MBまで" },
   "upload-video": { title: "自分の動画をアップロード", hint: "MP4・MOV、200MBまで。縦長(9:16)が基本" },
   none: { title: "画像・動画なし(文章だけ)", hint: "Threadsにだけ出せます" },
@@ -21,7 +22,7 @@ const MEDIA_LABEL: Record<MediaKind, { title: string; hint: string; soon?: boole
 };
 
 /** 素材の選択肢。投稿先は、下書きができたあとにカードで選ぶ(写真→Instagramフィード+Threads / 動画→リール+Threads / なし→Threadsだけ)。 */
-const MEDIA_OPTIONS: MediaKind[] = ["shop-photo", "ai-image", "upload-photo", "shop-video", "upload-video", "none", "reel-ai", "reel-shop-photo", "reel-upload-photo"];
+const MEDIA_OPTIONS: MediaKind[] = ["shop-photo", "ai-image", "upload", "shop-video", "none", "reel-ai", "reel-shop-photo", "reel-upload-photo"];
 
 const chip = (selected: boolean, disabled = false) =>
   `rounded-lg border px-3 py-2 text-left text-sm ${disabled ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400" : selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-800 hover:border-slate-500"}`;
@@ -47,12 +48,35 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
   const [progress, setProgress] = useState<number | null>(null);
   const [stage, setStage] = useState("");
   const [notice, setNotice] = useState<Result | null>(null);
+  const [picked, setPicked] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const pickRef = useRef<HTMLInputElement>(null);
+  const pickedIsVideo = Boolean(picked && picked.type.startsWith("video/"));
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!picked) { setPreviewUrl(null); return; }
+    const url = URL.createObjectURL(picked);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [picked]);
+
+  /** ドロップ・選択されたファイルが、使える写真か動画か確認して受け取る。 */
+  const takeFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp", "video/mp4", "video/quicktime"].includes(file.type)) { setNotice({ ok: false, message: "写真(JPEG・PNG・WebP)か、動画(MP4・MOV)を選んでください" }); return; }
+    setNotice(null);
+    setPicked(file);
+  };
 
   const isShopMedia = media === "shop-photo" || media === "shop-video" || media === "reel-shop-photo";
 
   const submit = async () => {
     setNotice(null);
     if (textMode === "manual" && !body.trim()) { setNotice({ ok: false, message: "投稿の文章を入力してください" }); return; }
+    // 「自分の写真・動画」は、選んだファイルの種類で、写真か動画かを決める。
+    const kind: MediaKind = media === "upload" ? (pickedIsVideo ? "upload-video" : "upload-photo") : media;
+    if (media === "upload" && !picked) { setNotice({ ok: false, message: "写真か動画を選んでください(ここにドロップもできます)" }); return; }
+    if (media === "upload" && picked && !pickedIsVideo && picked.size > 3 * 1024 * 1024) { setNotice({ ok: false, message: `写真が大きすぎます(${(picked.size / 1024 / 1024).toFixed(1)}MB)。3MB以下にしてください` }); return; }
     const fd = new FormData();
     // 投稿先は、下書きができたあとに選ぶ。ここでは仮に Threads としておく(カードの投稿先チェックで確定する)。
     fd.set("dest", `threads:${account}`);
@@ -61,7 +85,7 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
     fd.set("audience", audience);
     fd.set("note", note);
     fd.set("body", body);
-    fd.set("mediaKind", media);
+    fd.set("mediaKind", kind);
     fd.set("style", style);
     fd.set("headline", headline);
     setBusy(true); setProgress(null);
@@ -104,13 +128,13 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
         fd.set("mediaKind", "upload-photo-url");
         fd.set("photoUrl", publicUrl);
       }
-      if (media === "upload-photo") {
-        const file = photoRef.current?.files?.[0];
+      if (kind === "upload-photo") {
+        const file = media === "upload" ? picked : photoRef.current?.files?.[0];
         if (!file) throw new Error("写真を選んでください");
         fd.set("photo", file);
       }
-      if (media === "upload-video") {
-        const file = videoRef.current?.files?.[0];
+      if (kind === "upload-video") {
+        const file = media === "upload" ? picked : videoRef.current?.files?.[0];
         if (!file) throw new Error("動画を選んでください");
         if (!["video/mp4", "video/quicktime"].includes(file.type)) throw new Error("MP4またはMOVの動画を選んでください");
         if (file.size > 200 * 1024 * 1024) throw new Error("動画は200MB以下にしてください");
@@ -131,7 +155,7 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
       }
       const result = await action(fd);
       setNotice(result);
-      if (result.ok) { setBody(""); setNote(""); }
+      if (result.ok) { setBody(""); setNote(""); setPicked(null); }
       router.refresh();
     } catch (e) {
       setNotice({ ok: false, message: e instanceof Error ? e.message : "失敗しました" });
@@ -207,8 +231,35 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
             )}
           </div>
         )}
-        {(media === "upload-photo" || media === "reel-upload-photo") && <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} className="text-xs text-slate-700" />}
-        {media === "upload-video" && <input ref={videoRef} type="file" accept="video/mp4,video/quicktime" disabled={busy} className="text-xs text-slate-700" />}
+        {media === "reel-upload-photo" && <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} className="text-xs text-slate-700" />}
+        {media === "upload" && (
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); if (!busy) takeFile(e.dataTransfer.files?.[0]); }}
+            onClick={() => { if (!busy) pickRef.current?.click(); }}
+            role="button" tabIndex={0}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!busy) pickRef.current?.click(); } }}
+            className={`flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-4 text-center text-sm ${dragOver ? "border-slate-900 bg-slate-100" : "border-slate-300 bg-white"}`}
+          >
+            <input ref={pickRef} type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" disabled={busy} className="hidden" onChange={(e) => { takeFile(e.target.files?.[0]); e.target.value = ""; }} />
+            {picked && previewUrl ? (
+              <>
+                {pickedIsVideo
+                  ? <video src={previewUrl} muted playsInline className="max-h-40 rounded border border-slate-200 bg-black" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  : <img src={previewUrl} alt="" className="max-h-40 rounded border border-slate-200" />}
+                <span className="text-xs text-slate-700">{picked.name}({pickedIsVideo ? "動画" : "写真"}・{(picked.size / 1024 / 1024).toFixed(1)}MB)</span>
+                <span className="text-[11px] text-slate-500">別のファイルを、ここにドロップするか、クリックして選び直せます</span>
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-slate-800">ここに写真か動画をドロップ</span>
+                <span className="text-xs text-slate-500">またはクリックして選ぶ ・ 写真はJPEG・PNG・WebP(3MBまで)、動画はMP4・MOV(200MBまで)</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className={step}>
