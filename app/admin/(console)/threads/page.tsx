@@ -1,14 +1,59 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
-import { listThreadsPosts, textModeFromEnv } from "@/lib/social/threadsPosts";
-import { attachDraftImage, createDraftNow, discardDraft, publishDraft, removeDraftImage } from "./actions";
-import { CreateDraftButton } from "./CreateDraftButton";
+import { listThreadsPosts, textModeFromEnv, type PostRow } from "@/lib/social/threadsPosts";
 import { AUDIENCE_LABEL, THREADS_TOPICS } from "@/lib/social/threadsTopics";
+import { attachDraftImage, createDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, schedulePost, unschedulePost } from "./actions";
+import { CreateDraftButton } from "./CreateDraftButton";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
 export const maxDuration = 120;
 
-const MODE_LABEL = { off: "停止中", draft: "下書きだけ作る(確認してから投稿)", auto: "完全自動(確認なしで投稿)" } as const;
-const STATUS_LABEL: Record<string, string> = { draft: "下書き", posted: "投稿済み", failed: "失敗", discarded: "破棄" };
+const MODE_LABEL = { off: "AIは何もしない", draft: "AIは下書きを作るだけ(確認してから予約・投稿)", auto: "AIが書いて、確認なしで自動投稿" } as const;
+const STATUS_LABEL: Record<string, string> = { draft: "下書き", scheduled: "予約中", posted: "投稿済み", failed: "失敗", discarded: "破棄" };
+const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900";
+const btn = "rounded-lg px-4 py-2 text-sm font-semibold";
+
+const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "");
+/** datetime-local 用(日本時間)。 */
+const jstInputValue = (iso: string | null) => (iso ? new Date(new Date(iso).getTime() + 9 * 3_600_000).toISOString().slice(0, 16) : "");
+const label = (p: PostRow) => (p.source === "manual" ? "自分で書いた文章" : `AI・${AUDIENCE_LABEL[THREADS_TOPICS.find((t) => t.id === p.topic)?.audience ?? "shop"]}`);
+
+function PostCard({ p }: { p: PostRow }) {
+  const scheduled = p.status === "scheduled";
+  return (
+    <article className={`space-y-3 rounded-xl border p-4 ${scheduled ? "border-sky-300 bg-sky-50" : "border-amber-300 bg-amber-50"}`}>
+      <p className="text-xs font-semibold text-slate-700">
+        {scheduled ? `予約中 ・ ${fmt(p.scheduled_at)} に自動で投稿` : "下書き"} ・ {label(p)} ・ {p.body.length}文字
+      </p>
+      <form action={editPostBody.bind(null, p.id)} className="space-y-2">
+        <textarea name="body" defaultValue={p.body} rows={Math.min(14, Math.max(5, Math.ceil(p.body.length / 28) + 2))} maxLength={500} className={input} />
+        <button className={`${btn} border border-slate-300 bg-white text-slate-700`}>文章を保存</button>
+      </form>
+      {p.image_url ? (
+        <div className="flex items-end gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={p.image_url} alt="" className="h-28 w-28 rounded-lg border border-slate-200 object-cover" />
+          <form action={removeDraftImage.bind(null, p.id)}><button className="text-xs font-semibold text-slate-600 underline">写真を外す</button></form>
+        </div>
+      ) : (
+        <form action={attachDraftImage.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
+          <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required className="text-xs text-slate-700" />
+          <button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>写真を付ける</button>
+          <span className="text-[11px] text-slate-500">付けると画像つきの投稿(3MBまで)</span>
+        </form>
+      )}
+      <form action={schedulePost.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
+        <input type="datetime-local" name="scheduled_at" required defaultValue={jstInputValue(p.scheduled_at)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
+        <button className={`${btn} bg-sky-700 py-1.5 text-white`}>{scheduled ? "日時を変える" : "この日時に予約"}</button>
+        <span className="text-[11px] text-slate-500">日本時間。30分おきに確認して、時間になると自動で投稿します</span>
+      </form>
+      <div className="flex flex-wrap gap-2">
+        <form action={publishDraft.bind(null, p.id)}><button className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</button></form>
+        {scheduled && <form action={unschedulePost.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>予約を取り消す</button></form>}
+        <form action={discardDraft.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>破棄</button></form>
+      </div>
+    </article>
+  );
+}
 
 export default async function AdminThreadsPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   await requireRootAdmin();
@@ -17,15 +62,16 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
   const hasToken = Boolean(process.env.THREADS_ACCESS_TOKEN?.trim());
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
   const posts = await listThreadsPosts().catch(() => []);
+  const scheduled = posts.filter((p) => p.status === "scheduled").sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
   const drafts = posts.filter((p) => p.status === "draft");
-  const others = posts.filter((p) => p.status !== "draft" && p.status !== "discarded");
+  const history = posts.filter((p) => p.status === "posted" || p.status === "failed");
 
   return (
     <div className="max-w-3xl space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Threads自動投稿(LOCAPASS公式)</h1>
         <p className="mt-1 text-sm text-slate-600">
-          AIが、一般の方向け(街のお店の探し方・LOCAPASSの使いどころ)と、店舗オーナー向け(集客ノウハウ)の投稿を、交互に書きます。いまは「下書きを作る」までが自動で、内容を確認して「Threadsに投稿」を押すと、公式アカウント(loca.pass)に公開されます。
+          自分で書いた文章を、日時を決めて予約すると、時間になったら自動で loca.pass に投稿されます。AIに、ユーザー獲得につながる文章の下書きを作らせることもできます。
         </p>
       </div>
 
@@ -33,50 +79,57 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
       {sp.error && <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900"><p className="font-bold">うまくいきませんでした</p><p className="mt-1">{sp.error}</p></div>}
 
       <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-5 text-sm">
-        <p><span className="font-semibold text-slate-700">動作モード:</span> {MODE_LABEL[mode]}<span className="ml-2 text-xs text-slate-500">(Vercelの環境変数 THREADS_TEXT_MODE で変更: off / draft / auto)</span></p>
+        <p><span className="font-semibold text-slate-700">予約投稿:</span> 動いています(30分おきに確認)</p>
+        <p><span className="font-semibold text-slate-700">AIの動作:</span> {MODE_LABEL[mode]}<span className="ml-2 text-xs text-slate-500">(Vercelの環境変数 THREADS_TEXT_MODE: off / draft / auto)</span></p>
         <p><span className="font-semibold text-slate-700">Threadsのトークン:</span> {hasToken ? "設定済み" : <span className="font-semibold text-red-700">未設定</span>}</p>
         <p><span className="font-semibold text-slate-700">AI(Gemini)のキー:</span> {hasGemini ? "設定済み" : <span className="font-semibold text-red-700">未設定</span>}</p>
-        <div className="flex flex-wrap gap-2 pt-2">
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">自分で書いて投稿する</h2>
+        <form action={createManualPost} className="space-y-3">
+          <textarea name="body" required rows={7} maxLength={500} placeholder="投稿する文章(500文字まで)" className={input} />
+          <div className="flex flex-wrap items-center gap-3">
+            <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-xs text-slate-700" />
+            <span className="text-[11px] text-slate-500">写真(任意・3MBまで)</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input type="datetime-local" name="scheduled_at" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
+            <button name="mode" value="schedule" className={`${btn} bg-sky-700 text-white`}>この日時に予約</button>
+            <button name="mode" value="now" className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿</button>
+            <button name="mode" value="draft" className={`${btn} border border-slate-300 bg-white text-slate-700`}>下書きに保存</button>
+          </div>
+          <p className="text-[11px] text-slate-500">日時は日本時間です。「予約」は日時が必要です。</p>
+        </form>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">AIに下書きを作らせる</h2>
+        <p className="text-xs text-slate-500">ユーザー獲得を狙う「一般向け」(街のお店の探し方・LOCAPASSの使いどころ)と、店舗オーナー向けの集客ノウハウ。毎日の自動作成は、2種類を交互に作ります。</p>
+        <div className="flex flex-wrap gap-2">
           <CreateDraftButton action={createDraftNow.bind(null, "public")} label="一般向けの下書きを作る" primary />
           <CreateDraftButton action={createDraftNow.bind(null, "shop")} label="店舗向けの下書きを作る" />
         </div>
-        <p className="text-xs text-slate-500">毎日の自動作成は、一般向けと店舗向けを交互に作ります。</p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-slate-900">予約中({scheduled.length})</h2>
+        {scheduled.length === 0 && <p className="text-sm text-slate-500">予約している投稿はありません。</p>}
+        {scheduled.map((p) => <PostCard key={p.id} p={p} />)}
       </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-slate-900">下書き({drafts.length})</h2>
-        {drafts.length === 0 && <p className="text-sm text-slate-500">下書きはありません。毎日1本ずつ、自動で増えます(最大3本まで)。</p>}
-        {drafts.map((p) => (
-          <article key={p.id} className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
-            <p className="text-xs text-amber-900">{AUDIENCE_LABEL[THREADS_TOPICS.find((t) => t.id === p.topic)?.audience ?? "shop"]} ・ テーマ: {p.topic} ・ {new Date(p.created_at).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })} ・ {p.body.length}文字</p>
-            <p className="whitespace-pre-wrap rounded-lg bg-white p-3 text-sm leading-6 text-slate-900">{p.body}</p>
-            {p.image_url ? (
-              <div className="flex items-end gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.image_url} alt="" className="h-28 w-28 rounded-lg border border-slate-200 object-cover" />
-                <form action={removeDraftImage.bind(null, p.id)}><button className="text-xs font-semibold text-slate-600 underline">写真を外す</button></form>
-              </div>
-            ) : (
-              <form action={attachDraftImage.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
-                <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required className="text-xs text-slate-700" />
-                <button className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">写真を付ける</button>
-                <span className="text-[11px] text-slate-500">付けると画像つきの投稿になります(3MBまで)</span>
-              </form>
-            )}
-            <div className="flex flex-wrap gap-2">
-              <form action={publishDraft.bind(null, p.id)}><button className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">Threadsに投稿(公開されます)</button></form>
-              <form action={discardDraft.bind(null, p.id)}><button className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700">破棄</button></form>
-            </div>
-          </article>
-        ))}
+        {drafts.length === 0 && <p className="text-sm text-slate-500">下書きはありません。</p>}
+        {drafts.map((p) => <PostCard key={p.id} p={p} />)}
       </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-slate-900">これまでの投稿</h2>
-        {others.length === 0 && <p className="text-sm text-slate-500">まだありません。</p>}
-        {others.map((p) => (
+        {history.length === 0 && <p className="text-sm text-slate-500">まだありません。</p>}
+        {history.map((p) => (
           <article key={p.id} className="space-y-1 rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-xs text-slate-500">{STATUS_LABEL[p.status] ?? p.status} ・ {new Date(p.posted_at ?? p.created_at).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })} ・ テーマ: {p.topic}</p>
+            <p className="text-xs text-slate-500">{STATUS_LABEL[p.status] ?? p.status} ・ {fmt(p.posted_at ?? p.created_at)} ・ {label(p)}</p>
             <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">{p.body}</p>
             {p.image_url && (/* eslint-disable-next-line @next/next/no-img-element */ <img src={p.image_url} alt="" className="h-20 w-20 rounded-lg border border-slate-200 object-cover" />)}
             {p.error && <p className="text-xs font-semibold text-red-700">{p.error}</p>}
