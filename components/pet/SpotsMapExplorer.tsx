@@ -14,8 +14,34 @@ import { VerifiedBadge } from "./VerifiedBadge";
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 const DEFAULT_CENTER = { lat: 35.658, lng: 139.7016, zoom: 11 }; // 渋谷
-/** 最初に現在地が取れたら、そこから半径この距離が収まるように表示する */
-const START_RADIUS_KM = 5;
+/** 最初に現在地が取れたら、そこから半径5kmで表示。ピンが少ない(田舎など)ときは順に広げる */
+const START_RADII_KM = [5, 10, 20, 40];
+const START_MIN_SPOTS = 3;
+
+/** 現在地から半径 km の中にあるお店・施設の数(地図を開いたときの範囲決め用) */
+async function countSpotsWithin(lat: number, lng: number, km: number): Promise<number> {
+  const dLat = km / 111;
+  const dLng = km / (111 * Math.cos((lat * Math.PI) / 180));
+  const q = new URLSearchParams({
+    minLat: (lat - dLat).toFixed(3),
+    maxLat: (lat + dLat).toFixed(3),
+    minLng: (lng - dLng).toFixed(3),
+    maxLng: (lng + dLng).toFixed(3),
+  });
+  try {
+    const res = await fetch(`/api/pet/spots?${q}`);
+    if (!res.ok) return 0;
+    const body = (await res.json()) as { spots: PetSpot[] };
+    return body.spots.filter((s) => s.lat != null && s.lng != null && km >= kmBetween({ lat, lng }, { lat: s.lat, lng: s.lng })).length;
+  } catch {
+    return 0;
+  }
+}
+function kmBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
 
 /** 中心から半径 km の範囲を、検索欄・絞り込み(上)と引き出し(下)に隠れないように地図に収める */
 function fitRadius(map: maplibregl.Map, lat: number, lng: number, km: number, duration = 0) {
@@ -159,12 +185,22 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
     map.on("dragstart", markMoved);
     map.on("zoomstart", markMoved);
     navigator.geolocation?.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         if (mapRef.current !== map) return;
         const { latitude: lat, longitude: lng } = pos.coords;
         hereRef.current?.remove();
         hereRef.current = hereMarker(lat, lng).addTo(map);
-        if (!userMoved) fitRadius(map, lat, lng, START_RADIUS_KM, 600);
+        // 5km → 10km → 20km → 40km と、ピンが3つ以上入る広さで開く(都会は5kmのまま)
+        for (const km of START_RADII_KM) {
+          const n = await countSpotsWithin(lat, lng, km);
+          if (userMoved || mapRef.current !== map) return;
+          const last = km === START_RADII_KM[START_RADII_KM.length - 1];
+          if (n >= START_MIN_SPOTS || last) {
+            fitRadius(map, lat, lng, km, 600);
+            if (n === 0) setNotice(`近く(${km}km以内)にはまだ登録がありません。地図を動かして探してください`);
+            return;
+          }
+        }
       },
       () => undefined,
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
