@@ -5,7 +5,7 @@ import { pickShopVideo } from "@/lib/social/socialVideos";
 import { resolveSocialToken } from "@/lib/social/tokens";
 import { THREADS_TOPICS, LUXELA_TOPICS, topicsFor, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { generateAiImage, pickShopPhoto } from "@/lib/social/socialImages";
-import { THREADS_MAX_CHARS, validateThreadsText, writeThreadsPost } from "@/lib/social/threadsWriter";
+import { THREADS_MAX_CHARS, validateThreadsText, writeShopFeaturePost, writeThreadsPost } from "@/lib/social/threadsWriter";
 
 /**
  * LOCAPASS公式Threadsの投稿の管理。
@@ -120,11 +120,14 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination, a
   let body: string;
   let imageUrl: string;
   let topic: string;
+  let generatedByAi = kind === "ai";
   if (kind === "shop") {
     const photo = await pickShopPhoto(rows.filter((r) => r.topic.startsWith("shop:")).map((r) => r.topic.slice(5)), dest.account);
     const site = dest.account === "luxela" ? { url: "https://luxela.jp", name: "LUXELA" } : { url: "https://locapass.net", name: "LOCAPASS" };
     const link = photo.shopCode ? `${site.url}/s/${photo.shopCode}` : site.url;
-    body = [`📍 ${photo.shopName}`, photo.description, `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${link}`, photo.instagramHandle ? `@${photo.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+    const written = await writeShopFeaturePost({ account: dest.account, shopName: photo.shopName, description: photo.description, link, media: "photo", recent: rows.map((r) => r.body) });
+    body = written.ok ? written.text : [`📍 ${photo.shopName}`, "写真でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。", `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${link}`].join("\n\n");
+    generatedByAi = written.ok;
     imageUrl = photo.imageUrl;
     topic = `shop:${photo.recentlyUsedKey}`;
   } else {
@@ -135,7 +138,7 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination, a
     imageUrl = await generateAiImage(t.title, dest.account);
     topic = t.id;
   }
-  const { data, error } = await admin.from("locapass_threads_posts").insert({ topic, body, image_url: imageUrl, source: kind === "shop" ? "manual" : "ai", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
+  const { data, error } = await admin.from("locapass_threads_posts").insert({ topic, body, image_url: imageUrl, source: generatedByAi ? "ai" : "manual", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
   if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
   return data.id as string;
 }
@@ -410,6 +413,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   let videoUrl: string | null = null;
   let shopKeyTopic: string | null = null;
   let template: string | null = null;
+  let shopFeature: { shopName: string; description: string; link: string; media: "photo" | "video" } | null = null;
   if (media.kind === "upload-photo" || media.kind === "reel-upload-photo") imageUrl = media.url;
   if (media.kind === "upload-video") videoUrl = media.url;
   if (media.kind === "shop-photo" || media.kind === "reel-shop-photo") {
@@ -418,6 +422,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
     shopKeyTopic = `shop:${photo.recentlyUsedKey}`;
     const link = photo.shopCode ? `${site.url}/s/${photo.shopCode}` : site.url;
     template = [`📍 ${photo.shopName}`, photo.description, `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${link}`, photo.instagramHandle ? `@${photo.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+    shopFeature = { shopName: photo.shopName, description: photo.description, link, media: "photo" };
   }
   if (media.kind === "shop-video") {
     const video = await pickShopVideo(rows.filter((r) => r.topic.startsWith("reel:")).map((r) => r.topic.slice(5)), dest.account);
@@ -425,6 +430,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
     shopKeyTopic = `reel:${video.key}`;
     const link = video.shopCode ? `${site.url}/s/${video.shopCode}` : site.url;
     template = [`🎬 ${video.shopName}`, `動画・詳細は${site.name}で\n${link}`, video.instagramHandle ? `@${video.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+    shopFeature = { shopName: video.shopName, description: "", link, media: "video" };
   }
 
   // 文章
@@ -434,8 +440,12 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   let theme = "街の雰囲気";
   if (text.mode === "manual") {
     body = checkManualText(text.body, dest.platform); // 手書きの文章は、画像のテーマに使わない(文字として描かれてしまうため)
+  } else if (shopFeature) {
+    const written = await writeShopFeaturePost({ account: dest.account, ...shopFeature, recent: rows.map((r) => r.body) });
+    body = written.ok ? written.text : [`${shopFeature.media === "video" ? "🎬" : "📍"} ${shopFeature.shopName}`, shopFeature.media === "video" ? "動画でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。" : "写真でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。", `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${shopFeature.link}`].join("\n\n");
+    source = written.ok ? "ai" : "manual";
   } else if (template) {
-    body = template; // 店舗の写真・動画のときは、店名・リンク・タグの定型文
+    body = template;
   } else {
     const t = pickTopic(rows, text.audience === "auto" ? undefined : text.audience, dest.account);
     const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account, text.note);

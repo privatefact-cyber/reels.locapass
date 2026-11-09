@@ -23,6 +23,19 @@ async function call<T>(path: string, method: "GET" | "POST", params: Record<stri
   return body;
 }
 
+/** 自分のInstagram投稿の成績を取得する。 */
+export async function getInstagramMediaInsights(token: string, mediaId: string, metrics: string[]): Promise<Record<string, number>> {
+  const body = await call<{ data?: Array<{ name?: string; values?: Array<{ value?: number }>; total_value?: { value?: number } }> }>(
+    `/${mediaId}/insights`, "GET", { metric: metrics.join(",") }, token,
+  );
+  const out: Record<string, number> = {};
+  for (const row of body.data ?? []) {
+    const value = row.total_value?.value ?? row.values?.[0]?.value;
+    if (row.name && typeof value === "number" && Number.isFinite(value)) out[row.name] = value;
+  }
+  return out;
+}
+
 /** 写真つきの投稿を公開し、投稿のidを返す。キャプションは2200文字まで。 */
 export async function publishInstagramImagePost(token: string, input: { caption: string; imageUrl: string }): Promise<string> {
   const container = await call<{ id: string }>("/me/media", "POST", { image_url: input.imageUrl, caption: input.caption }, token);

@@ -10,11 +10,32 @@ import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
 import { composeDraft, prepareCompose, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
 import { generateAiImage } from "@/lib/social/socialImages";
+import { saveAutomationSetting, type AutomationMode, type AutomationSource } from "@/lib/social/socialAutomation";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
   revalidatePath("/admin/social");
   redirect(`/admin/social?${kind}=${encodeURIComponent(message.slice(0, 700))}`);
+}
+
+/** 投稿先ごとの自動運転設定。チェックを外すか緊急停止を入れると、次の巡回から止まる。 */
+export async function saveAutomation(platform: "threads" | "instagram", account: "locapass" | "luxela", formData: FormData) {
+  await requireRootAdmin();
+  try {
+    await saveAutomationSetting({
+      platform, account,
+      enabled: formData.get("enabled") === "on",
+      mode: (formData.get("mode") === "auto" ? "auto" : "draft") as AutomationMode,
+      source: (formData.get("source") === "ai" ? "ai" : "shop") as AutomationSource,
+      run_hour_jst: Number(formData.get("run_hour_jst") ?? 12),
+      daily_max: Number(formData.get("daily_max") ?? 1),
+      emergency_stop: formData.get("emergency_stop") === "on",
+      last_run_on: null, last_error: null,
+    });
+  } catch (e) {
+    back("error", e instanceof Error ? e.message : "自動運転の設定を保存できませんでした");
+  }
+  back("ok", `${platform === "instagram" ? "Instagram" : "Threads"} ${account === "luxela" ? "LUXELA" : "LOCAPASS"}の自動運転設定を保存しました`);
 }
 
 /** 下書きを1本、いま作る(AIに書かせる)。audience=読者(店舗向け/一般向け)。 */

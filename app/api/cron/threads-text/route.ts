@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { runThreadsTextCron } from "@/lib/social/threadsPosts";
+import { runSocialAutomation } from "@/lib/social/socialAutomation";
+import { collectSocialInsights } from "@/lib/social/socialInsights";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -18,6 +20,12 @@ export async function GET(req: Request) {
   try {
     const dry = new URL(req.url).searchParams.get("dry") === "1";
     const result = await runThreadsTextCron({ dry });
+    if (!dry) {
+      const automation = await runSocialAutomation().catch((e) => [{ destination: "all", result: `failed: ${e instanceof Error ? e.message : "自動運転に失敗"}` }]);
+      (result as Record<string, unknown>).automation = automation;
+      const hourJst = new Date(Date.now() + 9 * 3_600_000).getUTCHours();
+      if (hourJst === 3) (result as Record<string, unknown>).insights = await collectSocialInsights(20).catch((e) => ({ error: e instanceof Error ? e.message : "成績取得に失敗" }));
+    }
     const r = result as { result?: { ok?: boolean }; scheduledError?: string };
     const failed = Boolean(r.scheduledError) || r.result?.ok === false;
     return NextResponse.json(result, { status: failed ? 502 : 200 });

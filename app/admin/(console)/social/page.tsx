@@ -4,7 +4,9 @@ import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/thre
 import { getTokenStatuses } from "@/lib/social/tokens";
 import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
-import { attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
+import { getAutomationSettings } from "@/lib/social/socialAutomation";
+import { listLatestInsights, type InsightRow } from "@/lib/social/socialInsights";
+import { attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
 import { PostComposer } from "./PostComposer";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
@@ -66,7 +68,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
   const sp = await searchParams;
   const mode = textModeFromEnv();
   const tokens = await getTokenStatuses();
-  const [settingsLocapass, settingsLuxela] = await Promise.all([getSocialSettings("locapass"), getSocialSettings("luxela")]);
+  const [settingsLocapass, settingsLuxela, automation, insights] = await Promise.all([getSocialSettings("locapass"), getSocialSettings("luxela"), getAutomationSettings(), listLatestInsights().catch((): Record<string, InsightRow> => ({}))]);
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
   const posts = await listThreadsPosts().catch(() => []);
   const scheduled = posts.filter((p) => p.status === "scheduled").sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
@@ -109,6 +111,38 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         <h2 className="text-lg font-bold text-slate-900">投稿をつくる</h2>
         <p className="text-xs text-slate-500">①どこに ②文章 ③画像・動画 の順に選んで、下書きを作ります。公開はまだされません。</p>
         <PostComposer action={composeDraftNow} flyerAction={generateFlyerBaseNow} reelPrepare={prepareReelNow} reelSave={saveReelDraftNow} />
+      </section>
+
+      <section className="space-y-4 rounded-xl border-2 border-emerald-700 bg-emerald-50 p-5">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">自動運転</h2>
+          <p className="mt-1 text-xs text-slate-600">投稿先ごとに毎日1回、店舗素材またはAI画像で投稿を作ります。最初は「下書きまで」で試してください。初期状態はすべて停止です。</p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {automation.map((a) => {
+            const name = `${a.platform === "instagram" ? "Instagram" : "Threads"} ${a.account === "luxela" ? "LUXELA" : "LOCAPASS"}`;
+            return (
+              <form key={`${a.platform}:${a.account}`} action={saveAutomation.bind(null, a.platform, a.account)} className="space-y-3 rounded-lg border border-emerald-200 bg-white p-4 text-sm">
+                <p className="font-bold text-slate-900">{name}</p>
+                <label className="flex items-center gap-2"><input type="checkbox" name="enabled" defaultChecked={a.enabled} />毎日動かす</label>
+                <label className="block text-xs font-semibold text-slate-700">動き方
+                  <select name="mode" defaultValue={a.mode} className={`${input} mt-1`}><option value="draft">下書きまで(確認してから公開)</option><option value="auto">確認なしで公開</option></select>
+                </label>
+                <label className="block text-xs font-semibold text-slate-700">素材
+                  <select name="source" defaultValue={a.source} className={`${input} mt-1`}><option value="shop">掲載店舗の素材</option><option value="ai">AI画像とAI文章</option></select>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-semibold text-slate-700">時刻(日本時間)<input name="run_hour_jst" type="number" min="0" max="23" defaultValue={a.run_hour_jst} className={`${input} mt-1`} /></label>
+                  <label className="text-xs font-semibold text-slate-700">1日の上限<input name="daily_max" type="number" min="1" max="3" defaultValue={a.daily_max} className={`${input} mt-1`} /></label>
+                </div>
+                <label className="flex items-center gap-2 font-semibold text-red-700"><input type="checkbox" name="emergency_stop" defaultChecked={a.emergency_stop} />緊急停止</label>
+                {a.last_run_on && <p className="text-[11px] text-slate-500">最終実行: {a.last_run_on}</p>}
+                {a.last_error && <p className="text-xs font-semibold text-red-700">前回の失敗: {a.last_error}</p>}
+                <button className={`${btn} bg-emerald-700 text-white`}>この設定を保存</button>
+              </form>
+            );
+          })}
+        </div>
       </section>
 
       <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
@@ -173,6 +207,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
             <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">{p.body}</p>
             {p.image_url && (/* eslint-disable-next-line @next/next/no-img-element */ <img src={p.image_url} alt="" className="h-20 w-20 rounded-lg border border-slate-200 object-cover" />)}
             {p.video_url && <p className="text-xs text-slate-500">🎬 動画つき</p>}
+            {insights[p.id] && <p className="text-xs font-semibold text-emerald-800">成績({insights[p.id].collected_on}): 表示 {insights[p.id].views} / 届いた人数 {insights[p.id].reach} / 反応 {insights[p.id].likes + insights[p.id].comments + insights[p.id].replies + insights[p.id].reposts + insights[p.id].quotes + insights[p.id].shares + insights[p.id].saves}</p>}
             {p.error && <p className="text-xs font-semibold text-red-700">{p.error}</p>}
           </article>
         ))}

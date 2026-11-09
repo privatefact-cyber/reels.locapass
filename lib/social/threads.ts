@@ -26,6 +26,21 @@ async function call<T>(path: string, init: { method: "GET" | "POST"; params: Rec
   return body;
 }
 
+/** 自分のThreads投稿の成績を取得する。 */
+export async function getThreadsMediaInsights(config: ThreadsConfig, mediaId: string): Promise<Record<string, number>> {
+  const body = await call<{ data?: Array<{ name?: string; values?: Array<{ value?: number }>; total_value?: { value?: number } }> }>(
+    `/${mediaId}/insights`,
+    { method: "GET", params: { metric: "views,likes,replies,reposts,quotes,shares" } },
+    config.accessToken,
+  );
+  const out: Record<string, number> = {};
+  for (const row of body.data ?? []) {
+    const value = row.total_value?.value ?? row.values?.[0]?.value;
+    if (row.name && typeof value === "number" && Number.isFinite(value)) out[row.name] = value;
+  }
+  return out;
+}
+
 /** コンテナを作り、処理が終わるのを待って公開する。公開した投稿のidを返す。 */
 async function createAndPublish(config: ThreadsConfig, params: Record<string, string>): Promise<string> {
   const userId = config.userId ?? (await call<{ id: string }>("/me", { method: "GET", params: { fields: "id" } }, config.accessToken)).id;
