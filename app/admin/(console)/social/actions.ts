@@ -281,6 +281,8 @@ export async function composeDraftNow(formData: FormData): Promise<DraftActionRe
       form: form === "reel" ? "reel" : form === "post" ? "post" : "feed",
       text: textMode === "manual" ? { mode: "manual", body: String(formData.get("body") ?? "") } : { mode: "auto", audience: audienceRaw === "shop" ? "shop" : audienceRaw === "auto" ? "auto" : "public", note: String(formData.get("note") ?? "").slice(0, 300) },
       media,
+      style: String(formData.get("style") ?? "photo") === "illustration" ? "illustration" : String(formData.get("style") ?? "photo") === "flyer" ? "flyer" : "photo",
+      headline: String(formData.get("headline") ?? "").slice(0, 20),
     };
     if (media.kind === "upload-video") {
       // 動画は、実際のファイルで形式・大きさを確認する(R2の social/ 以下だけ)。

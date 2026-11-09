@@ -380,23 +380,26 @@ export async function createUploadedVideoDraft(input: { dest: Destination; video
 
 export type ComposeForm = "feed" | "reel" | "post";
 export type ComposeText = { mode: "manual"; body: string } | { mode: "auto"; audience: ThreadsAudience | "auto"; note: string };
-export type ComposeMedia = { kind: "none" } | { kind: "upload-photo"; url: string } | { kind: "upload-video"; url: string } | { kind: "shop-photo" } | { kind: "shop-video" } | { kind: "ai-image" };
-export type ComposeInput = { dest: Destination; form: ComposeForm; text: ComposeText; media: ComposeMedia };
+export type ComposeMedia = { kind: "none" } | { kind: "upload-photo"; url: string } | { kind: "upload-video"; url: string } | { kind: "shop-photo" } | { kind: "shop-video" } | { kind: "ai-image" } | { kind: "reel-ai" } | { kind: "reel-shop-photo" } | { kind: "reel-upload-photo"; url: string };
+export type ComposeInput = { dest: Destination; form: ComposeForm; text: ComposeText; media: ComposeMedia; style?: "photo" | "illustration" | "flyer"; headline?: string };
+const REEL_FROM_IMAGE = ["reel-ai", "reel-shop-photo", "reel-upload-photo"];
 
 /** 形と素材の組み合わせが成り立つか確認する。 */
 function checkCompose(input: ComposeInput): void {
   const { dest, form, media } = input;
   if (dest.platform === "instagram") {
     if (form === "feed" && !["upload-photo", "shop-photo", "ai-image"].includes(media.kind)) throw new Error("Instagramのフィードは、写真(手動・店舗の写真・AI画像)が必要です");
-    if (form === "reel" && !["upload-video", "shop-video"].includes(media.kind)) throw new Error("Instagramのリールは、動画(手動・店舗の動画)が必要です。写真からリールを作る機能は、まだありません");
+    if (form === "reel" && !["upload-video", "shop-video", ...REEL_FROM_IMAGE].includes(media.kind)) throw new Error("Instagramのリールは、動画か、画像から作る動画が必要です");
     if (form === "post") throw new Error("Instagramでは、フィードかリールを選んでください");
   } else if (form !== "post") {
     throw new Error("Threadsは「投稿」を選んでください");
   }
 }
 
-/** 4つの質問(投稿先・形・文章・素材)の答えから、下書きを1件作る。公開はしない。 */
-export async function composeDraft(input: ComposeInput): Promise<string> {
+export type PreparedCompose = { topicId: string; body: string; source: "ai" | "manual"; imageUrl: string | null; videoUrl: string | null };
+
+/** 4つの質問の答えから、文章と素材を用意する(保存はしない)。 */
+export async function prepareCompose(input: ComposeInput): Promise<PreparedCompose> {
   checkCompose(input);
   const { dest, text, media } = input;
   const rows = (await recentRows()).filter((r) => r.account === dest.account);
@@ -407,9 +410,9 @@ export async function composeDraft(input: ComposeInput): Promise<string> {
   let videoUrl: string | null = null;
   let shopKeyTopic: string | null = null;
   let template: string | null = null;
-  if (media.kind === "upload-photo") imageUrl = media.url;
+  if (media.kind === "upload-photo" || media.kind === "reel-upload-photo") imageUrl = media.url;
   if (media.kind === "upload-video") videoUrl = media.url;
-  if (media.kind === "shop-photo") {
+  if (media.kind === "shop-photo" || media.kind === "reel-shop-photo") {
     const photo = await pickShopPhoto(rows.filter((r) => r.topic.startsWith("shop:")).map((r) => r.topic.slice(5)), dest.account);
     imageUrl = photo.imageUrl;
     shopKeyTopic = `shop:${photo.recentlyUsedKey}`;
@@ -444,9 +447,29 @@ export async function composeDraft(input: ComposeInput): Promise<string> {
     theme = t.title;
   }
 
-  if (media.kind === "ai-image") imageUrl = await generateAiImage(theme, dest.account);
+  if (media.kind === "ai-image") imageUrl = await generateAiImage(theme, dest.account, { style: input.style, headline: input.headline });
+  if (media.kind === "reel-ai") imageUrl = await generateAiImage(theme, dest.account, { style: input.style, aspect: "9:16" });
+  return { topicId, body, source, imageUrl, videoUrl };
+}
 
+/** 4つの質問の答えから、下書きを1件作る。公開はしない。(画像から作るリールは、ブラウザで動画にしてから saveReelDraft で保存する) */
+export async function composeDraft(input: ComposeInput): Promise<string> {
+  if (REEL_FROM_IMAGE.includes(input.media.kind)) throw new Error("画像から作るリールは、動画に変換してから保存します");
+  const { dest } = input;
+  const { topicId, body, source, imageUrl, videoUrl } = await prepareCompose(input);
   const { data, error } = await db().from("locapass_threads_posts").insert({ topic: topicId, body, image_url: imageUrl, video_url: videoUrl, source, status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
+  if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
+  return data.id as string;
+}
+
+
+/** ブラウザで作った動画(画像から作ったリール)を、下書きとして保存する。動画は R2 の social/ 以下だけ。 */
+export async function saveReelDraft(input: { dest: Destination; videoUrl: string; body: string; topicId: string; source: "ai" | "manual" }): Promise<string> {
+  const { R2_PUBLIC_BASE_URL } = await import("@/lib/storage/r2");
+  if (!input.videoUrl.startsWith(`${R2_PUBLIC_BASE_URL}/social/`)) throw new Error("動画のURLが正しくありません");
+  const head = await fetch(input.videoUrl, { method: "HEAD", signal: AbortSignal.timeout(15_000) }).catch(() => null);
+  if (!head?.ok || !/^video\/(mp4|quicktime)/i.test(head.headers.get("content-type") ?? "")) throw new Error("アップロードした動画を確認できませんでした");
+  const { data, error } = await db().from("locapass_threads_posts").insert({ topic: input.topicId, body: input.body, video_url: input.videoUrl, source: input.source, status: "draft", platform: input.dest.platform, account: input.dest.account }).select("id").single();
   if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
   return data.id as string;
 }

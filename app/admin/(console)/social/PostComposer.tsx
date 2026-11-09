@@ -48,6 +48,8 @@ export function PostComposer({ action }: { action: (formData: FormData) => Promi
   const [audience, setAudience] = useState("public");
   const [note, setNote] = useState("");
   const [body, setBody] = useState("");
+  const [style, setStyle] = useState<"photo" | "illustration" | "flyer">("photo");
+  const [headline, setHeadline] = useState("");
   const [media, setMedia] = useState<MediaKind>("shop-video");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
@@ -80,6 +82,8 @@ export function PostComposer({ action }: { action: (formData: FormData) => Promi
     fd.set("note", note);
     fd.set("body", body);
     fd.set("mediaKind", media);
+    fd.set("style", style);
+    fd.set("headline", headline);
     setBusy(true); setProgress(null);
     try {
       if (media === "upload-photo") {
@@ -172,6 +176,21 @@ export function PostComposer({ action }: { action: (formData: FormData) => Promi
                 <span className="block font-semibold">{MEDIA_LABEL[m].title}</span><span className="block text-xs opacity-80">{MEDIA_LABEL[m].hint}</span>
               </button>
             ))}
+          </div>
+        )}
+        {media === "ai-image" && (
+          <div className="space-y-2">
+            <label className="flex flex-wrap items-center gap-2 text-xs text-slate-600">画像の種類
+              <select value={style} onChange={(e) => setStyle(e.target.value as "photo" | "illustration" | "flyer")} disabled={busy} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900">
+                <option value="photo">写真風</option><option value="illustration">イラスト</option><option value="flyer">イラストのチラシ(見出しの文字入り)</option>
+              </select>
+            </label>
+            {style === "flyer" && (
+              <div className="space-y-1">
+                <input value={headline} onChange={(e) => setHeadline(e.target.value)} maxLength={20} disabled={busy} placeholder="チラシの見出しの文字(20文字まで・空なら、サービス名)" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
+                <p className="text-[11px] text-slate-500">AIが日本語の文字を描くため、まれに文字が崩れます。下書きのプレビューで確認してください(直らないときは作り直します)。</p>
+              </div>
+            )}
           </div>
         )}
         {media === "upload-photo" && <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} className="text-xs text-slate-700" />}
