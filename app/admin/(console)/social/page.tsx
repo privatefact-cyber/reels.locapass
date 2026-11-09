@@ -4,11 +4,8 @@ import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/thre
 import { getTokenStatuses } from "@/lib/social/tokens";
 import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
-import { attachDraftImage, createDraftNow, createImageDraftNow, composeDraftNow, createVideoDraftNow, createUploadedVideoDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
-import { TextDraftForm } from "./TextDraftForm";
-import { VideoUploadForm } from "./VideoUploadForm";
+import { attachDraftImage, composeDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
 import { PostComposer } from "./PostComposer";
-import { ImageDraftForm } from "./ImageDraftForm";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
 export const maxDuration = 120;
@@ -82,7 +79,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
       <div>
         <h1 className="text-3xl font-bold text-slate-900">SNS自動投稿(Instagram・Threads)</h1>
         <p className="mt-1 text-sm text-slate-600">
-          自分で書いた文章を、日時を決めて予約すると、時間になったら自動で投稿されます(LOCAPASS・LUXELA、Instagram・Threads)。AIに、ユーザー獲得につながる文章の下書きを作らせることもできます。
+          ①どこに ②文章 ③画像・動画 を選んで下書きを作り、確認してから、投稿か日時の予約をします。予約した投稿は、時間になると自動で出ます(LOCAPASS・LUXELA、Instagram・Threads)。
         </p>
       </div>
 
@@ -109,33 +106,9 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
       </section>
 
       <section className="space-y-3 rounded-xl border-2 border-slate-900 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">投稿をつくる(新)</h2>
+        <h2 className="text-lg font-bold text-slate-900">投稿をつくる</h2>
         <p className="text-xs text-slate-500">①どこに ②文章 ③画像・動画 の順に選んで、下書きを作ります。公開はまだされません。</p>
         <PostComposer action={composeDraftNow} />
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">自分で書いて投稿する</h2>
-        <form action={createManualPost} className="space-y-3">
-          <select name="dest" defaultValue="instagram:locapass" className={input}>
-            <option value="instagram:locapass">Instagram LOCAPASS(写真が必要)</option>
-            <option value="instagram:luxela">Instagram LUXELA(写真が必要)</option>
-            <option value="threads:locapass">Threads LOCAPASS</option>
-            <option value="threads:luxela">Threads LUXELA</option>
-          </select>
-          <textarea name="body" required rows={7} maxLength={2200} placeholder="投稿する文章(Instagramは2200文字、Threadsは500文字まで)" className={input} />
-          <div className="flex flex-wrap items-center gap-3">
-            <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-xs text-slate-700" />
-            <span className="text-[11px] text-slate-500">写真(任意・3MBまで)</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <input type="datetime-local" name="scheduled_at" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
-            <button name="mode" value="schedule" className={`${btn} bg-sky-700 text-white`}>この日時に予約</button>
-            <button name="mode" value="now" className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿</button>
-            <button name="mode" value="draft" className={`${btn} border border-slate-300 bg-white text-slate-700`}>下書きに保存</button>
-          </div>
-          <p className="text-[11px] text-slate-500">日時は日本時間です。「予約」は日時が必要です。</p>
-        </form>
       </section>
 
       <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
@@ -164,24 +137,6 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
             </form>
           </details>
         ))}
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">動画をアップロードして投稿する(リール・動画)</h2>
-        <p className="text-xs text-slate-500">手元の動画をそのまま、Instagramのリール/Threadsの動画として出せます。アップロード後は「下書き」に入るので、再生して確認してから、予約か投稿をします。</p>
-        <VideoUploadForm action={createUploadedVideoDraftNow} />
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">写真つきの下書きを自動で作る</h2>
-        <p className="text-xs text-slate-500">写真は自動で用意します。「掲載店舗の写真」は、店名・LOCAPASSのリンク・お店のInstagram(登録があれば)のタグ付けつき。Instagramはこちらが基本です。</p>
-        <ImageDraftForm action={createImageDraftNow} videoAction={createVideoDraftNow} />
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">AIに(文章だけの)下書きを作らせる</h2>
-        <p className="text-xs text-slate-500">ユーザー獲得を狙う「一般向け」(街のお店の探し方・LOCAPASSの使いどころ)と、店舗オーナー向けの集客ノウハウ。毎日の自動作成は、2種類を交互に作ります。</p>
-        <TextDraftForm action={createDraftNow} />
       </section>
 
       <section className="space-y-3">
