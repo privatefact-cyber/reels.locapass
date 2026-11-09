@@ -56,7 +56,7 @@ export async function pickShopVideo(recentKeys: string[], account: "locapass" | 
     ? await admin.from("shops").select("id, name, shop_code, sns_links, status, genre").in("id", shopIds)
     : await admin.from("locapass_shops").select("id, name, shop_code, sns_links, status").in("id", shopIds);
   if (shopError) throw new Error(`店舗の取得に失敗しました: ${shopError.message}`);
-  const shopById = new Map<string, any>(((shops ?? []) as any[]).filter((s) => s.status === "active" && s.shop_code && s.genre !== "運営" && !/\[?(サンプル|デモ)/.test(s.name)).map((s) => [s.id, s]));
+  const shopById = new Map<string, any>(((shops ?? []) as any[]).filter((s) => s.status === "active" && s.shop_code && !/\[?(サンプル|デモ)/.test(s.name)).map((s) => [s.id, s]));
 
   const usable = candidates.filter((c) => shopById.has(c.shopId));
   const fresh = usable.filter((c) => !recentKeys.includes(c.key));
