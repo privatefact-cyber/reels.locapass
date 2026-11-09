@@ -1,6 +1,15 @@
 import { geminiGenerateWithFallback } from "@/lib/gemini";
 import { THREADS_FACTS } from "@/lib/social/threadsFacts";
+import { LUXELA_FACTS } from "@/lib/social/luxelaFacts";
 import type { ThreadsTopic } from "@/lib/social/threadsTopics";
+
+export type BrandAccount = "locapass" | "luxela";
+/** 投稿先ごとの、ブランド名・URL・事実メモ。 */
+const BRANDS: Record<BrandAccount, { name: string; display: string; url: string; facts: string; other: RegExp; otherUrl: string }> = {
+  locapass: { name: "LOCAPASS", display: "LOCAPASS【ロカパス】", url: "https://locapass.net", facts: THREADS_FACTS, other: /LUXELA|ルクセラ|luxela/i, otherUrl: "LOCAPASS以外のURLがある" },
+  luxela: { name: "LUXELA", display: "LUXELA(ルクセラ)", url: "https://luxela.jp", facts: LUXELA_FACTS, other: /LOCAPASS|ロカパス|locapass/i, otherUrl: "LUXELA以外のURLがある" },
+};
+export const brandOf = (account: BrandAccount) => BRANDS[account];
 
 /** Threadsの文字数の上限は500。余裕をみて、これを超えたら採用しない。 */
 export const THREADS_MAX_CHARS = 480;
@@ -38,37 +47,49 @@ export function similarity(a: string, b: string): number {
 }
 
 /** 投稿してよい文章か確認する。問題があれば理由を、無ければnullを返す。 */
-export function validateThreadsText(text: string, recent: string[]): string | null {
+export function validateThreadsText(text: string, recent: string[], account: BrandAccount = "locapass"): string | null {
+  const brand = BRANDS[account];
   const t = text.trim();
   if (t.length < THREADS_MIN_CHARS) return `短すぎる(${t.length}文字)`;
   if (t.length > THREADS_MAX_CHARS) return `長すぎる(${t.length}文字)`;
   for (const rule of FORBIDDEN) if (rule.pattern.test(t)) return `使えない表現: ${rule.reason}`;
   const urls = t.match(/https?:\/\/[^\s]+/g) ?? [];
   if (urls.length > 1) return "URLが複数ある";
-  if (urls.some((u) => !u.startsWith(THREADS_SITE_URL))) return "LOCAPASS以外のURLがある";
+  if (urls.some((u) => !u.startsWith(brand.url))) return brand.otherUrl;
+  if (brand.other.test(t)) return "他ブランドの名前が入っている";
   for (const old of recent) if (similarity(t, old) >= 0.5) return "直近の投稿と似すぎている";
   return null;
 }
 
-function audienceBlock(topic: ThreadsTopic): { reader: string; style: string; closing: string } {
+function audienceBlock(topic: ThreadsTopic, account: BrandAccount): { reader: string; style: string; closing: string } {
+  const brand = BRANDS[account];
+  if (account === "luxela") {
+    const shop = topic.audience === "shop";
+    return {
+      reader: shop ? "キャバクラ・ラウンジ・クラブ・ガールズバー・コンカフェなど、夜のお店のオーナーや店長。" : "夜のお店(キャバクラ・ラウンジ・ガールズバー・コンカフェなど)を探している、20歳以上の大人。",
+      style: "- 落ち着いた、大人向けの話し言葉。です・ますを基本に、あおらない。\n- 1行目は、読み手が手を止める問いかけ・ひとことで始める。先頭に絵文字を1つ付けてよい。\n- 短い行で改行する。要点は「・」の箇条書きで3つまで。\n- 性的な表現・ほのめかし、お酒を勧める表現、容姿の評価は書かない。",
+      closing: `最後に、「${brand.name}で見てみてください」のような、押しつけがましくない一言を添え、次のURLを1つだけ入れる: ${brand.url}`,
+    };
+  }
   if (topic.audience === "public") {
     return {
       reader: "街のお店やスポットを探している一般の人(地元の人・観光客)。店舗側の事情や、集客・運営の話には触れない。",
       style: "- 親しみのある話し言葉。です・ますを基本に、堅くしない。発見のわくわくが伝わる、やわらかい言い方。\n- 1行目は、読み手が手を止める問いかけ・ひとことで始める。先頭に絵文字を1つ付けてよい。\n- 短い行で改行する。要点は「・」の箇条書きで3つまで。",
-      closing: `最後に、「LOCAPASSで見てみてください」のような、押しつけがましくない一言を添え、次のURLを1つだけ入れる: ${THREADS_SITE_URL}`,
+      closing: `最後に、「LOCAPASSで見てみてください」のような、押しつけがましくない一言を添え、次のURLを1つだけ入れる: ${brand.url}`,
     };
   }
   return {
     reader: "飲食店・美容室・ネイル・エステ・ペット関連・車屋・宿泊など、地域の小さなお店のオーナーや店長。SNSや集客に詳しくはない。",
     style: "- 親しみのある話し言葉。です・ますを基本に、堅くしない。\n- 1行目は、読み手が手を止める問いかけ・ひとことで始める。先頭に絵文字を1つ付けてよい。\n- 短い行で改行する。要点は「・」の箇条書きで3つまで。",
-    closing: `最後に、LOCAPASSをさりげなく一言で紹介し、次のURLを1つだけ添える: ${THREADS_SITE_URL}`,
+    closing: `最後に、LOCAPASSをさりげなく一言で紹介し、次のURLを1つだけ添える: ${brand.url}`,
   };
 }
 
-function buildPrompt(topic: ThreadsTopic, recent: string[]): string {
+function buildPrompt(topic: ThreadsTopic, recent: string[], account: BrandAccount): string {
+  const brand = BRANDS[account];
   const recentList = recent.length ? recent.slice(0, 12).map((r, i) => `${i + 1}. ${r.replace(/\s+/g, " ").slice(0, 60)}…`).join("\n") : "(まだありません)";
-  const { reader, style, closing } = audienceBlock(topic);
-  return `あなたは「LOCAPASS【ロカパス】」公式のThreads運営担当です。読み手に役立つ・楽しい短い投稿を1本書いてください。
+  const { reader, style, closing } = audienceBlock(topic, account);
+  return `あなたは「${brand.display}」公式のSNS運営担当です。読み手に役立つ・楽しい短い投稿を1本書いてください。
 
 # 読者
 ${reader}
@@ -84,7 +105,7 @@ ${style}
 - ハッシュタグ・メンション・URL(上記以外)は書かない。
 
 # 絶対に守ること(根拠のない主張をしない)
-- 下の「事実メモ」に書かれている機能だけを、LOCAPASSの機能として書く。書かれていないことを、できると書かない。
+- 下の「事実メモ」に書かれている機能だけを、${brand.name}の機能として書く。書かれていないことを、できると書かない。
 - ユーザー数・店舗数・実績・売上・満足度などの数字は書かない。
 - 「日本一」「No.1」「業界初」など最上級・比較の表現、「必ず」「絶対」など効果の保証は書かない。
 - 金額・料金・無料・割引には触れない。
@@ -96,8 +117,8 @@ ${style}
 # 直近の投稿(同じ言い回し・同じ切り口を避ける)
 ${recentList}
 
-# 事実メモ(LOCAPASSの機能の根拠)
-${THREADS_FACTS}
+# 事実メモ(${brand.name}の機能の根拠)
+${brand.facts}
 
 # 出力
 次のJSONだけを返す。説明や前置きは不要。
@@ -107,7 +128,7 @@ ${THREADS_FACTS}
 export type WriteResult = { ok: true; text: string } | { ok: false; error: string; lastText: string | null };
 
 /** テーマに沿った投稿文をAI(Gemini)に書かせる。確認(validateThreadsText)に通るまで、最大3回書き直す。 */
-export async function writeThreadsPost(topic: ThreadsTopic, recent: string[]): Promise<WriteResult> {
+export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], account: BrandAccount = "locapass"): Promise<WriteResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { ok: false, error: "GEMINI_API_KEY が未設定です", lastText: null };
   let lastReason = "文章を作れませんでした";
@@ -117,7 +138,7 @@ export async function writeThreadsPost(topic: ThreadsTopic, recent: string[]): P
     const response = await geminiGenerateWithFallback(
       apiKey,
       {
-        contents: [{ role: "user", parts: [{ text: buildPrompt(topic, recent) + feedback }] }],
+        contents: [{ role: "user", parts: [{ text: buildPrompt(topic, recent, account) + feedback }] }],
         generationConfig: { temperature: 0.9, responseMimeType: "application/json" },
       },
       "threads-writer",
@@ -132,7 +153,7 @@ export async function writeThreadsPost(topic: ThreadsTopic, recent: string[]): P
       const parsed = JSON.parse(raw.replace(/```json\s*|```/g, "")) as { text?: unknown };
       const text = typeof parsed.text === "string" ? parsed.text.trim() : "";
       if (text) lastText = text;
-      const problem = validateThreadsText(text, recent);
+      const problem = validateThreadsText(text, recent, account);
       if (!problem) return { ok: true, text };
       lastReason = problem;
       console.error(`threads-writer: 不採用(${attempt + 1}回目): ${problem}`);

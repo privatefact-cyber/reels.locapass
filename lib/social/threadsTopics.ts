@@ -61,4 +61,38 @@ export const THREADS_TOPICS: ThreadsTopic[] = [
   ...PUBLIC_TOPICS.map((t) => ({ ...t, audience: "public" as const })),
 ];
 
+/** LUXELA(夜のお店ポータル)。一般向け=夜のお店を探す人。店舗向け=夜のお店のオーナー・店長。 */
+const LUXELA_PUBLIC: TopicDef[] = [
+  { id: "lx-p-video", title: "お店の雰囲気を、行く前に動画で見る", angle: "夜のお店は、入る前に空気感が分からないと不安。縦動画で店内の雰囲気を先に見られる。" },
+  { id: "lx-p-map", title: "今いる場所の近くで、夜のお店を探す", angle: "現在地の近くのお店を地図で探せる。ピンを選ぶとそのお店の情報が出る。" },
+  { id: "lx-p-schedule", title: "出勤情報を見てから、行くお店を決める", angle: "お店ごとに、キャストの紹介や出勤の情報を見られる。行く前に確認できる安心感。" },
+  { id: "lx-p-shoppage", title: "営業時間・料金の目安・場所が一ページで分かる", angle: "気になったお店の基本情報を、あちこち探さずに一つの店舗ページで確認できる。" },
+  { id: "lx-p-genre", title: "キャバクラ・ラウンジ・ガールズバー…気分で選ぶ", angle: "ジャンルが違うと雰囲気も違う。比べながら、その夜の気分に合うお店を探せる。" },
+  { id: "lx-p-after", title: "飲んだあとの、深夜に開いているお店探し", angle: "アフター向けに、深夜に開いている飲食店をタグで絞って探せる。" },
+  { id: "lx-p-tourist", title: "訪日の友人にも見せられる、多言語の夜のお店ガイド", angle: "日本語のほか、英語・中国語・アラビア語で見られる。旅行者と一緒に夜の街を楽しむときに。" },
+  { id: "lx-p-concierge", title: "『今から行けるお店は?』をAIに聞いてみる", angle: "AIコンシェルジュが、お店の情報を根拠に答える。質問した言語で返事が来る。" },
+  { id: "lx-p-ranking", title: "ランキングで、人気のキャストをチェック", angle: "毎朝8時に集計。点数は出さず、順位だけを見せる。お店の中のTOP10などを見られる。" },
+  { id: "lx-p-noapp", title: "アプリなしで、ブラウザからさっと見られる", angle: "スマホのブラウザで開くだけ。ダウンロード不要で、気軽に試せる。" },
+];
+
+const LUXELA_SHOP: TopicDef[] = [
+  { id: "lx-s-reel", title: "お店の雰囲気は、縦動画がいちばん伝わる", angle: "夜のお店は入る前の不安が大きい。店内の空気感を短い動画で見せると、初めてのお客様が入りやすくなる。" },
+  { id: "lx-s-cast", title: "キャストの紹介と出勤情報を、見やすく", angle: "出勤やキャストの情報が整っているお店は、来店の判断をしてもらいやすい。" },
+  { id: "lx-s-info", title: "営業時間・料金の目安・場所を整える", angle: "基本情報がそろった店舗ページは、問い合わせの前に不安を減らせる。" },
+  { id: "lx-s-embed", title: "自分の公式サイトにも、出勤情報を載せられる", angle: "出勤・キャスト情報を、スクリプト1本で公式サイトに埋め込める。二重管理の手間が減る。" },
+  { id: "lx-s-multilang", title: "訪日のお客様にも見つけてもらう", angle: "LUXELAは英語・中国語・アラビア語にも対応。海外のお客様の目に触れる入口になる。" },
+  { id: "lx-s-map", title: "地図から、近くにいる人に見つけてもらう", angle: "現在地の近くのお店を探す人に、地図の上で見つけてもらえる。" },
+  { id: "lx-s-consistency", title: "動画は、週に1本でも続ける", angle: "量より継続。無理のない頻度で、お店の『いま』を見せ続ける。" },
+];
+
+export const LUXELA_TOPICS: ThreadsTopic[] = [
+  ...LUXELA_SHOP.map((t) => ({ ...t, audience: "shop" as const })),
+  ...LUXELA_PUBLIC.map((t) => ({ ...t, audience: "public" as const })),
+];
+
+/** 投稿先のアカウント(LOCAPASS / LUXELA)に合うテーマの一覧。 */
+export function topicsFor(account: "locapass" | "luxela"): ThreadsTopic[] {
+  return account === "luxela" ? LUXELA_TOPICS : THREADS_TOPICS;
+}
+
 export const AUDIENCE_LABEL: Record<ThreadsAudience, string> = { shop: "店舗向け", public: "一般向け" };

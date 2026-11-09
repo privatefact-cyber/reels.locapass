@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publishThreadsImagePost, publishThreadsTextPost, threadsConfigFromEnv } from "@/lib/social/threads";
 import { instagramTokenFor, publishInstagramImagePost, type SocialAccount } from "@/lib/social/instagram";
-import { THREADS_TOPICS, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
+import { THREADS_TOPICS, LUXELA_TOPICS, topicsFor, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { generateAiImage, pickShopPhoto } from "@/lib/social/socialImages";
 import { THREADS_MAX_CHARS, validateThreadsText, writeThreadsPost } from "@/lib/social/threadsWriter";
 
@@ -48,14 +48,14 @@ async function recentRows(limit = 40): Promise<PostRow[]> {
 
 /** 直近の投稿の読者(店舗向け/一般向け)。テーマIDから分かる。 */
 function audienceOf(topicId: string): ThreadsAudience | null {
-  return THREADS_TOPICS.find((t) => t.id === topicId)?.audience ?? null;
+  return [...THREADS_TOPICS, ...LUXELA_TOPICS].find((t) => t.id === topicId)?.audience ?? null;
 }
 
 /** 読者を指定しなければ、直近の投稿と逆の読者(店舗向けと一般向けを交互)にする。最近使っていないテーマを選ぶ。 */
-function pickTopic(rows: PostRow[], audience?: ThreadsAudience): ThreadsTopic {
+function pickTopic(rows: PostRow[], audience?: ThreadsAudience, account: SocialAccount = "locapass"): ThreadsTopic {
   const last = rows.filter((r) => r.source === "ai").map((r) => audienceOf(r.topic)).find((a): a is ThreadsAudience => a !== null);
   const wanted: ThreadsAudience = audience ?? (last === "public" ? "shop" : "public");
-  const pool = THREADS_TOPICS.filter((t) => t.audience === wanted);
+  const pool = topicsFor(account).filter((t) => t.audience === wanted);
   const lastUsed = new Map<string, number>();
   rows.forEach((r, index) => { if (!lastUsed.has(r.topic)) lastUsed.set(r.topic, index); });
   const unused = pool.filter((t) => !lastUsed.has(t.id));
@@ -112,22 +112,23 @@ export async function createManualThreadsPost(input: { text: string; imageUrl: s
  */
 export async function createImageDraft(kind: "shop" | "ai", dest: Destination, audience: ThreadsAudience | "auto" = "public"): Promise<string> {
   const admin = db();
-  const rows = await recentRows();
+  const rows = (await recentRows()).filter((r) => r.account === dest.account);
   let body: string;
   let imageUrl: string;
   let topic: string;
   if (kind === "shop") {
-    const photo = await pickShopPhoto(rows.filter((r) => r.topic.startsWith("shop:")).map((r) => r.topic.slice(5)));
-    const link = photo.shopCode ? `https://locapass.net/s/${photo.shopCode}` : "https://locapass.net";
-    body = [`📍 ${photo.shopName}`, photo.description, `動画・詳細はLOCAPASSで\n${link}`, photo.instagramHandle ? `@${photo.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+    const photo = await pickShopPhoto(rows.filter((r) => r.topic.startsWith("shop:")).map((r) => r.topic.slice(5)), dest.account);
+    const site = dest.account === "luxela" ? { url: "https://luxela.jp", name: "LUXELA" } : { url: "https://locapass.net", name: "LOCAPASS" };
+    const link = photo.shopCode ? `${site.url}/s/${photo.shopCode}` : site.url;
+    body = [`📍 ${photo.shopName}`, photo.description, `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${link}`, photo.instagramHandle ? `@${photo.instagramHandle}` : ""].filter(Boolean).join("\n\n");
     imageUrl = photo.imageUrl;
     topic = `shop:${photo.recentlyUsedKey}`;
   } else {
-    const t = pickTopic(rows, audience === "auto" ? undefined : audience);
-    const written = await writeThreadsPost(t, rows.map((r) => r.body));
+    const t = pickTopic(rows, audience === "auto" ? undefined : audience, dest.account);
+    const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account);
     if (!written.ok) throw new Error(written.error);
     body = written.text;
-    imageUrl = await generateAiImage(t.title);
+    imageUrl = await generateAiImage(t.title, dest.account);
     topic = t.id;
   }
   const { data, error } = await admin.from("locapass_threads_posts").insert({ topic, body, image_url: imageUrl, source: kind === "shop" ? "manual" : "ai", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
@@ -166,7 +167,7 @@ export async function publishThreadsDraft(id: string): Promise<void> {
   if (!isInstagram && !config) throw new Error(`Threads(${row.account})のトークンが未設定です`);
   // AIが書いた文章は、投稿の直前にもう一度、安全チェックをする。自分で書いた文章は、文字数だけ確認する。
   if (row.source === "ai") {
-    const problem = validateThreadsText(row.body, []);
+    const problem = validateThreadsText(row.body, [], row.account === "luxela" ? "luxela" : "locapass");
     if (problem) throw new Error(`投稿できない文章です: ${problem}`);
   } else if (row.body.length > (isInstagram ? 2200 : THREADS_MAX_CHARS + 20)) {
     throw new Error("文章が長すぎます");
