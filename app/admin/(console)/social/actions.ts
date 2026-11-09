@@ -174,7 +174,11 @@ async function uploadOptionalImage(file: FormDataEntryValue | null): Promise<str
   if (!(file instanceof File) || file.size === 0) return null;
   if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error("写真は JPEG・PNG・WebP のどれかにしてください");
   if (file.size > MAX_THUMB_BYTES) throw new Error("写真が大きすぎます(上限3MB)");
-  const url = await uploadThumb(createAdminClient(), await file.arrayBuffer(), file.type);
+  // Instagramは JPEG しか受け付けないので、PNG・WebP も JPEG にそろえる(透明な部分は白、向きも直す。長い辺は2048pxまで)。
+  const sharp = (await import("sharp")).default;
+  const jpeg = await sharp(Buffer.from(await file.arrayBuffer())).rotate().flatten({ background: "#ffffff" }).resize(2048, 2048, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 88 }).toBuffer();
+  const bytes = jpeg.buffer.slice(jpeg.byteOffset, jpeg.byteOffset + jpeg.byteLength) as ArrayBuffer;
+  const url = await uploadThumb(createAdminClient(), bytes, "image/jpeg");
   if (!url) throw new Error("写真のアップロードに失敗しました");
   return url;
 }

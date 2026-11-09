@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // サーバーアクションで受け取れる大きさ。標準は1MBで、写真(3MBまで)のアップロードが「Body exceeded 1 MB limit」で失敗していた。
+  // Vercelの関数の受け取り上限は約4.5MBなので、それを超えない4MBにする。
+  experimental: { serverActions: { bodySizeLimit: "4mb" } },
   // 募集LP(public/lp/*.html)を拡張子なしの短いURLで公開する。
   // 掲載店向けと代理店向けは意図的に別URL・相互リンクなし。
   // 地図は全国で1系統(/map)。旧ポータル地図 /{ポータル}/{エリア}/map は、そのポータルの初期設定で開く全国地図へ恒久的に転送する。
