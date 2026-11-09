@@ -50,22 +50,36 @@ export function validateThreadsText(text: string, recent: string[]): string | nu
   return null;
 }
 
+function audienceBlock(topic: ThreadsTopic): { reader: string; style: string; closing: string } {
+  if (topic.audience === "public") {
+    return {
+      reader: "街のお店やスポットを探している一般の人(地元の人・観光客)。店舗側の事情や、集客・運営の話には触れない。",
+      style: "- 親しみのある話し言葉。です・ますを基本に、堅くしない。発見のわくわくが伝わる、やわらかい言い方。\n- 1行目は、読み手が手を止める問いかけ・ひとことで始める。先頭に絵文字を1つ付けてよい。\n- 短い行で改行する。要点は「・」の箇条書きで3つまで。",
+      closing: `最後に、「LOCAPASSで見てみてください」のような、押しつけがましくない一言を添え、次のURLを1つだけ入れる: ${THREADS_SITE_URL}`,
+    };
+  }
+  return {
+    reader: "飲食店・美容室・ネイル・エステ・ペット関連・車屋・宿泊など、地域の小さなお店のオーナーや店長。SNSや集客に詳しくはない。",
+    style: "- 親しみのある話し言葉。です・ますを基本に、堅くしない。\n- 1行目は、読み手が手を止める問いかけ・ひとことで始める。先頭に絵文字を1つ付けてよい。\n- 短い行で改行する。要点は「・」の箇条書きで3つまで。",
+    closing: `最後に、LOCAPASSをさりげなく一言で紹介し、次のURLを1つだけ添える: ${THREADS_SITE_URL}`,
+  };
+}
+
 function buildPrompt(topic: ThreadsTopic, recent: string[]): string {
   const recentList = recent.length ? recent.slice(0, 12).map((r, i) => `${i + 1}. ${r.replace(/\s+/g, " ").slice(0, 60)}…`).join("\n") : "(まだありません)";
-  return `あなたは「LOCAPASS【ロカパス】」公式のThreads運営担当です。小さなお店のオーナー・店長に向けて、集客に役立つ短い投稿を1本書いてください。
+  const { reader, style, closing } = audienceBlock(topic);
+  return `あなたは「LOCAPASS【ロカパス】」公式のThreads運営担当です。読み手に役立つ・楽しい短い投稿を1本書いてください。
 
 # 読者
-飲食店・美容室・ネイル・エステ・ペット関連・車屋・宿泊など、地域の小さなお店のオーナーや店長。SNSや集客に詳しくはない。
+${reader}
 
 # 今日のテーマ
 ${topic.title}
 切り口: ${topic.angle}
 
 # 文体と構成
-- 親しみのある話し言葉。です・ますを基本に、堅くしない。
-- 1行目は、読み手が手を止める問いかけ・ひとことで始める。先頭に絵文字を1つ付けてよい。
-- 短い行で改行する。要点は「・」の箇条書きで3つまで。
-- 最後に、LOCAPASSをさりげなく一言で紹介し、次のURLを1つだけ添える: ${THREADS_SITE_URL}
+${style}
+- ${closing}
 - 全体で200〜420文字。
 - ハッシュタグ・メンション・URL(上記以外)は書かない。
 

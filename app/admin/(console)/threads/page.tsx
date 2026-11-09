@@ -2,6 +2,7 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { listThreadsPosts, textModeFromEnv } from "@/lib/social/threadsPosts";
 import { attachDraftImage, createDraftNow, discardDraft, publishDraft, removeDraftImage } from "./actions";
 import { CreateDraftButton } from "./CreateDraftButton";
+import { AUDIENCE_LABEL, THREADS_TOPICS } from "@/lib/social/threadsTopics";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
 export const maxDuration = 120;
@@ -24,7 +25,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Threads自動投稿(LOCAPASS公式)</h1>
         <p className="mt-1 text-sm text-slate-600">
-          AIが、店舗オーナー向けの集客ノウハウの投稿を書きます。いまは「下書きを作る」までが自動で、内容を確認して「Threadsに投稿」を押すと、公式アカウント(loca.pass)に公開されます。
+          AIが、一般の方向け(街のお店の探し方・LOCAPASSの使いどころ)と、店舗オーナー向け(集客ノウハウ)の投稿を、交互に書きます。いまは「下書きを作る」までが自動で、内容を確認して「Threadsに投稿」を押すと、公式アカウント(loca.pass)に公開されます。
         </p>
       </div>
 
@@ -35,9 +36,11 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         <p><span className="font-semibold text-slate-700">動作モード:</span> {MODE_LABEL[mode]}<span className="ml-2 text-xs text-slate-500">(Vercelの環境変数 THREADS_TEXT_MODE で変更: off / draft / auto)</span></p>
         <p><span className="font-semibold text-slate-700">Threadsのトークン:</span> {hasToken ? "設定済み" : <span className="font-semibold text-red-700">未設定</span>}</p>
         <p><span className="font-semibold text-slate-700">AI(Gemini)のキー:</span> {hasGemini ? "設定済み" : <span className="font-semibold text-red-700">未設定</span>}</p>
-        <div className="pt-2">
-          <CreateDraftButton action={createDraftNow} />
+        <div className="flex flex-wrap gap-2 pt-2">
+          <CreateDraftButton action={createDraftNow.bind(null, "public")} label="一般向けの下書きを作る" primary />
+          <CreateDraftButton action={createDraftNow.bind(null, "shop")} label="店舗向けの下書きを作る" />
         </div>
+        <p className="text-xs text-slate-500">毎日の自動作成は、一般向けと店舗向けを交互に作ります。</p>
       </section>
 
       <section className="space-y-3">
@@ -45,7 +48,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         {drafts.length === 0 && <p className="text-sm text-slate-500">下書きはありません。毎日1本ずつ、自動で増えます(最大3本まで)。</p>}
         {drafts.map((p) => (
           <article key={p.id} className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
-            <p className="text-xs text-amber-900">テーマ: {p.topic} ・ {new Date(p.created_at).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })} ・ {p.body.length}文字</p>
+            <p className="text-xs text-amber-900">{AUDIENCE_LABEL[THREADS_TOPICS.find((t) => t.id === p.topic)?.audience ?? "shop"]} ・ テーマ: {p.topic} ・ {new Date(p.created_at).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })} ・ {p.body.length}文字</p>
             <p className="whitespace-pre-wrap rounded-lg bg-white p-3 text-sm leading-6 text-slate-900">{p.body}</p>
             {p.image_url ? (
               <div className="flex items-end gap-3">

@@ -1,10 +1,13 @@
 /**
- * Threadsに書くテーマの一覧(店舗オーナー向けの集客ノウハウ)。
+ * Threadsに書くテーマの一覧。
+ * 店舗向け(shop): 店舗オーナー向けの集客ノウハウ。 一般向け(public): 街でお店を探す人(地元の人・観光客)向けの紹介。
  * LOCAPASSの機能([稼働])と結びつけやすいものだけにしている。使ったテーマは、しばらく使い回さない。
  */
-export type ThreadsTopic = { id: string; title: string; angle: string };
+export type ThreadsAudience = "shop" | "public";
+export type ThreadsTopic = { id: string; title: string; angle: string; audience: ThreadsAudience };
+type TopicDef = Omit<ThreadsTopic, "audience">;
 
-export const THREADS_TOPICS: ThreadsTopic[] = [
+const SHOP_TOPICS: TopicDef[] = [
   { id: "video-first3s", title: "ショート動画は最初の3秒で決まる", angle: "お店の動画で、最初の3秒に何を見せるとスワイプされにくいか。看板メニュー・湯気・手元など具体例を。" },
   { id: "video-no-staff", title: "撮影に慣れていなくても続けられる動画", angle: "30秒でいい、スマホ1台でいい。続けやすい撮り方と、ネタに困らないコツ。" },
   { id: "video-daily-scene", title: "日常の一コマが一番伝わる", angle: "仕込み、開店前、スタッフの掛け合いなど、飾らない場面がお店の雰囲気を伝える話。" },
@@ -35,3 +38,27 @@ export const THREADS_TOPICS: ThreadsTopic[] = [
   { id: "ai-time-saving", title: "運営の手間はAIに任せられるところから", angle: "翻訳・字幕・情報の下書き・混雑判定など、LOCAPASSで自動になる部分。人が確認する部分も残る。" },
   { id: "menu-hero", title: "看板メニューを一つ決める", angle: "何屋さんか一言で伝わる『主役』の見せ方。動画も写真もそれを軸に。" },
 ];
+
+/** 一般向け: 街のお店やスポットを探している人に、LOCAPASSの使いどころを伝える。店舗向けの話(集客・運営)は混ぜない。 */
+const PUBLIC_TOPICS: TopicDef[] = [
+  { id: "p-map-video", title: "行き先に迷ったら、地図から動画で選ぶ", angle: "地図のピンを選ぶと、そのお店の動画カードが出る。文字だけでなく、雰囲気を見てから決められる。" },
+  { id: "p-video-vibe", title: "文字や写真より、動画のほうが空気感が分かる", angle: "お店の『いま』の雰囲気が、30秒ほどの縦動画で伝わる。入りやすいかどうかの判断材料に。" },
+  { id: "p-tourist", title: "旅先で言葉が不安でも、字幕つきの動画でお店を選べる", angle: "声の入った動画には、英語・中国語の字幕が自動で付く(自動なので、投稿者が直せる)。訪日のお客様にも。" },
+  { id: "p-languages", title: "日本語・英語・中国語・アラビア語で見られる", angle: "画面の表示が4つの言語に対応。アラビア語は右から左の表示にも対応している。" },
+  { id: "p-concierge", title: "『今から行ける店は?』をAIに聞いてみる", angle: "AIコンシェルジュが、お店の情報を根拠に答えてくれる。質問した言語で返事が来る。" },
+  { id: "p-occupancy", title: "行く前に、混み具合が分かると安心", angle: "お店がフロアの写真を撮ると、AIが空席の状況(空席あり・残りわずか・満席)を判定して表示する機能がある。" },
+  { id: "p-no-app", title: "アプリを入れなくても、ブラウザで使える", angle: "スマホのブラウザで開くだけ。ダウンロード不要で、気軽に試せる。" },
+  { id: "p-swipe", title: "縦動画をスワイプして、街をぶらぶら眺める", angle: "TikTokやリールのように上下にスワイプして眺める。気になったお店をタップして詳細へ。" },
+  { id: "p-shop-page", title: "気になったら、そのまま店舗ページへ", angle: "動画を見て気になったお店は、営業時間・メニュー・地図まで一つのページで確認できる。" },
+  { id: "p-area", title: "エリアごとの、話題のお店とスポット", angle: "エリア(ポータル)ごとに、人気スポットや話題のお店を動画で眺められる。" },
+  { id: "p-small-shops", title: "ガイドに載りきらない、小さなお店との出会い", angle: "地域の小さなお店も、自分たちで動画を載せている。街歩きの寄り道に。" },
+  { id: "p-faces", title: "お店の『人』が見えると、入りやすい", angle: "お店のスタッフを紹介するページ(FACES)があり、顔の見える安心感がある。" },
+  { id: "p-weekend", title: "週末の予定を、動画でさくっと決める", angle: "いくつかの動画を見比べて、気分に合うお店を選べる。迷う時間が楽しい時間に。" },
+];
+
+export const THREADS_TOPICS: ThreadsTopic[] = [
+  ...SHOP_TOPICS.map((t) => ({ ...t, audience: "shop" as const })),
+  ...PUBLIC_TOPICS.map((t) => ({ ...t, audience: "public" as const })),
+];
+
+export const AUDIENCE_LABEL: Record<ThreadsAudience, string> = { shop: "店舗向け", public: "一般向け" };

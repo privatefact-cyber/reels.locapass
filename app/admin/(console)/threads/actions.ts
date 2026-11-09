@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
+import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { createThreadsDraft, discardThreadsDraft, publishThreadsDraft, setThreadsDraftImage } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
@@ -12,12 +13,12 @@ function back(kind: "ok" | "error", message: string): never {
   redirect(`/admin/threads?${kind}=${encodeURIComponent(message.slice(0, 300))}`);
 }
 
-/** 下書きを1本、いま作る(AIに書かせる)。 */
-export async function createDraftNow() {
+/** 下書きを1本、いま作る(AIに書かせる)。audience=読者(店舗向け/一般向け)。 */
+export async function createDraftNow(audience: ThreadsAudience) {
   await requireRootAdmin();
   let message: string | null = null;
   try {
-    const result = await createThreadsDraft();
+    const result = await createThreadsDraft({ audience: audience === "shop" ? "shop" : "public" });
     if (!result.ok) message = result.error;
   } catch (e) {
     message = e instanceof Error ? e.message : "下書きを作れませんでした";

@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { publishThreadsImagePost, publishThreadsTextPost, threadsConfigFromEnv } from "@/lib/social/threads";
-import { THREADS_TOPICS, type ThreadsTopic } from "@/lib/social/threadsTopics";
+import { THREADS_TOPICS, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { validateThreadsText, writeThreadsPost } from "@/lib/social/threadsWriter";
 
 /**
@@ -26,21 +26,29 @@ async function recentRows(limit = 40): Promise<Row[]> {
   return (data ?? []) as Row[];
 }
 
-/** 最近使っていないテーマを選ぶ(全部使っていたら、いちばん昔に使ったもの)。 */
-function pickTopic(rows: Row[]): ThreadsTopic {
+/** 直近の投稿の読者(店舗向け/一般向け)。テーマIDから分かる。 */
+function audienceOf(topicId: string): ThreadsAudience | null {
+  return THREADS_TOPICS.find((t) => t.id === topicId)?.audience ?? null;
+}
+
+/** 読者を指定しなければ、直近の投稿と逆の読者(店舗向けと一般向けを交互)にする。最近使っていないテーマを選ぶ。 */
+function pickTopic(rows: Row[], audience?: ThreadsAudience): ThreadsTopic {
+  const last = rows.map((r) => audienceOf(r.topic)).find((a): a is ThreadsAudience => a !== null);
+  const wanted: ThreadsAudience = audience ?? (last === "public" ? "shop" : "public");
+  const pool = THREADS_TOPICS.filter((t) => t.audience === wanted);
   const lastUsed = new Map<string, number>();
   rows.forEach((r, index) => { if (!lastUsed.has(r.topic)) lastUsed.set(r.topic, index); });
-  const unused = THREADS_TOPICS.filter((t) => !lastUsed.has(t.id));
+  const unused = pool.filter((t) => !lastUsed.has(t.id));
   if (unused.length > 0) return unused[Math.floor(Math.random() * unused.length)];
-  return [...THREADS_TOPICS].sort((a, b) => (lastUsed.get(b.id) ?? 0) - (lastUsed.get(a.id) ?? 0))[0];
+  return [...pool].sort((a, b) => (lastUsed.get(b.id) ?? 0) - (lastUsed.get(a.id) ?? 0))[0];
 }
 
 export type DraftResult = { ok: true; id: string; topic: string; text: string } | { ok: false; error: string };
 
 /** 下書きを1本作って保存する。dry=true なら、保存せずに文章だけ返す。 */
-export async function createThreadsDraft(options?: { dry?: boolean }): Promise<DraftResult> {
+export async function createThreadsDraft(options?: { dry?: boolean; audience?: ThreadsAudience }): Promise<DraftResult> {
   const rows = await recentRows();
-  const topic = pickTopic(rows);
+  const topic = pickTopic(rows, options?.audience);
   const written = await writeThreadsPost(topic, rows.map((r) => r.body));
   if (!written.ok) {
     // 不採用になった文章と理由を、失敗として記録する(管理画面の「これまでの投稿」で見える)。
