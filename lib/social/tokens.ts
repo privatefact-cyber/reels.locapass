@@ -112,3 +112,27 @@ export async function getTokenStatuses(): Promise<TokenStatus[]> {
   }
   return result;
 }
+
+export type TokenCheck = { label: string; ok: boolean; detail: string };
+
+/** トークンが本当に使えるか確認する(各APIに「持ち主は誰か」を問い合わせるだけ。投稿はしない)。中身は出さず、長さと形だけ見せる。 */
+export async function checkSocialTokens(): Promise<TokenCheck[]> {
+  const out: TokenCheck[] = [];
+  for (const t of TOKEN_TARGETS) {
+    const token = await resolveSocialToken(t.platform, t.account);
+    if (!token) { out.push({ label: t.label, ok: false, detail: "未設定" }); continue; }
+    const shape = `長さ${token.length}・先頭${token.slice(0, 4)}${/\s/.test(token) ? "・空白/改行あり" : ""}${/[^\x21-\x7e]/.test(token) ? "・全角/不可視の文字あり" : ""}`;
+    try {
+      const url = t.platform === "threads"
+        ? `https://graph.threads.net/v1.0/me?fields=username&access_token=${encodeURIComponent(token)}`
+        : `https://graph.instagram.com/v22.0/me?fields=username&access_token=${encodeURIComponent(token)}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+      const body = (await res.json().catch(() => ({}))) as { username?: string; error?: { message?: string } };
+      if (res.ok && body.username) out.push({ label: t.label, ok: true, detail: `@${body.username} で有効(${shape})` });
+      else out.push({ label: t.label, ok: false, detail: `${body.error?.message ?? `HTTP ${res.status}`}(${shape})` });
+    } catch (e) {
+      out.push({ label: t.label, ok: false, detail: `${e instanceof Error ? e.message : "確認に失敗"}(${shape})` });
+    }
+  }
+  return out;
+}

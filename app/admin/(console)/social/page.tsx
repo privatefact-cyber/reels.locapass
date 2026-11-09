@@ -4,7 +4,7 @@ import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/thre
 import { getTokenStatuses } from "@/lib/social/tokens";
 import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
-import { attachDraftImage, createDraftNow, createImageDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
+import { attachDraftImage, createDraftNow, createImageDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
 import { TextDraftForm } from "./TextDraftForm";
 import { ImageDraftForm } from "./ImageDraftForm";
 
@@ -99,6 +99,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         <p><span className="font-semibold text-slate-700">AIの動作:</span> {MODE_LABEL[mode]}<span className="ml-2 text-xs text-slate-500">(Vercelの環境変数 THREADS_TEXT_MODE: off / draft / auto)</span></p>
         <p><span className="font-semibold text-slate-700">投稿先のトークン:</span> {tokens.map((t) => <span key={t.label} className="mr-3 inline-block">{t.label} {!t.hasToken ? <span className="font-semibold text-red-700">未設定</span> : t.warn ? <span className="font-semibold text-red-700">⚠{t.warn}</span> : t.daysLeft !== null ? `✓(期限まで${t.daysLeft}日・自動で延長)` : "✓(自動延長の準備中)"}</span>)}</p>
         <p><span className="font-semibold text-slate-700">AI(Gemini)のキー:</span> {hasGemini ? "設定済み" : <span className="font-semibold text-red-700">未設定</span>}</p>
+        <form action={checkTokensNow} className="mb-2"><button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>トークンが使えるか確認</button><span className="ml-2 text-[11px] text-slate-500">投稿はしません。持ち主の名前を問い合わせるだけです</span></form>
         <form action={refreshTokensNow}><button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>トークンを今すぐ延長</button><span className="ml-2 text-[11px] text-slate-500">自動では毎日1回、残り期限が少ないものを延長します。発行から24時間たっていないものは延長できません</span></form>
       </section>
 

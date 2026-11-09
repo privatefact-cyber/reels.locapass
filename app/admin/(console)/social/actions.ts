@@ -7,12 +7,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
-import { refreshSocialTokens } from "@/lib/social/tokens";
+import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
 import { createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
   revalidatePath("/admin/social");
-  redirect(`/admin/social?${kind}=${encodeURIComponent(message.slice(0, 300))}`);
+  redirect(`/admin/social?${kind}=${encodeURIComponent(message.slice(0, 700))}`);
 }
 
 /** 下書きを1本、いま作る(AIに書かせる)。audience=読者(店舗向け/一般向け)。 */
@@ -216,4 +216,13 @@ export async function refreshTokensNow() {
   }
   if (message) back("error", message);
   back("ok", summary.slice(0, 280));
+}
+
+/** トークンが使えるか確認する(投稿はしない)。 */
+export async function checkTokensNow() {
+  await requireRootAdmin();
+  const results = await checkSocialTokens().catch(() => null);
+  if (!results) back("error", "確認に失敗しました");
+  const text = [...results].sort((a, b) => Number(a.ok) - Number(b.ok)).map((r) => `${r.ok ? "✓" : "✗"} ${r.label}: ${r.detail}`).join(" / ");
+  back(results.every((r) => r.ok) ? "ok" : "error", text.slice(0, 690));
 }
