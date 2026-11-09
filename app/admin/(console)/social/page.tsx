@@ -108,6 +108,12 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         <form action={refreshTokensNow}><button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>トークンを今すぐ延長</button><span className="ml-2 text-[11px] text-slate-500">自動では毎日1回、残り期限が少ないものを延長します。発行から24時間たっていないものは延長できません</span></form>
       </section>
 
+      <section className="space-y-3 rounded-xl border-2 border-slate-900 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">投稿をつくる(新)</h2>
+        <p className="text-xs text-slate-500">①どこに ②文章 ③画像・動画 の順に選んで、下書きを作ります。公開はまだされません。</p>
+        <PostComposer action={composeDraftNow} />
+      </section>
+
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-bold text-slate-900">自分で書いて投稿する</h2>
         <form action={createManualPost} className="space-y-3">
@@ -158,12 +164,6 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
             </form>
           </details>
         ))}
-      </section>
-
-      <section className="space-y-3 rounded-xl border-2 border-slate-900 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">投稿をつくる(新)</h2>
-        <p className="text-xs text-slate-500">①どこに ②文章 ③画像・動画 の順に選んで、下書きを作ります。公開はまだされません。</p>
-        <PostComposer action={composeDraftNow} />
       </section>
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
