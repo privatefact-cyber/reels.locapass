@@ -129,7 +129,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
                   <select name="mode" defaultValue={a.mode} className={`${input} mt-1`}><option value="draft">下書きまで(確認してから公開)</option><option value="auto">確認なしで公開</option></select>
                 </label>
                 <label className="block text-xs font-semibold text-slate-700">素材
-                  <select name="source" defaultValue={a.source} className={`${input} mt-1`}><option value="shop">掲載店舗の素材</option><option value="ai">AI画像とAI文章</option></select>
+                  <select name="source" defaultValue={a.source} className={`${input} mt-1`}><option value="research">Webで話題を調べて作る</option><option value="shop">掲載店舗の素材</option><option value="ai">固定テーマから作る</option></select>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <label className="text-xs font-semibold text-slate-700">時刻(日本時間)<input name="run_hour_jst" type="number" min="0" max="23" defaultValue={a.run_hour_jst} className={`${input} mt-1`} /></label>

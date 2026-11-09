@@ -26,7 +26,7 @@ export async function saveAutomation(platform: "threads" | "instagram", account:
       platform, account,
       enabled: formData.get("enabled") === "on",
       mode: (formData.get("mode") === "auto" ? "auto" : "draft") as AutomationMode,
-      source: (formData.get("source") === "ai" ? "ai" : "shop") as AutomationSource,
+      source: (formData.get("source") === "research" ? "research" : formData.get("source") === "ai" ? "ai" : "shop") as AutomationSource,
       run_hour_jst: Number(formData.get("run_hour_jst") ?? 12),
       daily_max: Number(formData.get("daily_max") ?? 1),
       emergency_stop: formData.get("emergency_stop") === "on",

@@ -1,10 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SocialAccount } from "@/lib/social/instagram";
 import { createImageDraft, publishThreadsDraft, type Destination } from "@/lib/social/threadsPosts";
+import { createResearchDraft } from "@/lib/social/socialResearch";
 
 const db = () => createAdminClient() as any;
 export type AutomationMode = "draft" | "auto";
-export type AutomationSource = "ai" | "shop";
+export type AutomationSource = "ai" | "shop" | "research";
 export type AutomationSetting = {
   platform: "threads" | "instagram"; account: SocialAccount; enabled: boolean; mode: AutomationMode;
   source: AutomationSource; run_hour_jst: number; daily_max: number; emergency_stop: boolean;
@@ -59,7 +60,7 @@ export async function runSocialAutomation(): Promise<Array<{ destination: string
     if (claimError?.code === "23505") { out.push({ destination, result: "already-ran" }); continue; }
     if (claimError) throw new Error(`自動運転の開始記録を作れませんでした: ${claimError.message}`);
     try {
-      const id = await createImageDraft(setting.source, { platform: setting.platform, account: setting.account }, "auto");
+      const id = setting.source === "research" ? await createResearchDraft({ platform: setting.platform, account: setting.account }) : await createImageDraft(setting.source, { platform: setting.platform, account: setting.account }, "auto");
       if (setting.mode === "auto") await publishThreadsDraft(id);
       await admin.from("locapass_social_automation_runs").update({ status: setting.mode === "auto" ? "posted" : "drafted", post_id: id, finished_at: new Date().toISOString() }).eq("platform", setting.platform).eq("account", setting.account).eq("run_on", now.date);
       await admin.from("locapass_social_automation").update({ last_run_on: now.date, last_error: null }).eq("platform", setting.platform).eq("account", setting.account);
