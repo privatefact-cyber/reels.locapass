@@ -90,13 +90,14 @@ ${THREADS_FACTS}
 {"text": "投稿本文"}`;
 }
 
-export type WriteResult = { ok: true; text: string } | { ok: false; error: string };
+export type WriteResult = { ok: true; text: string } | { ok: false; error: string; lastText: string | null };
 
 /** テーマに沿った投稿文をAI(Gemini)に書かせる。確認(validateThreadsText)に通るまで、最大3回書き直す。 */
 export async function writeThreadsPost(topic: ThreadsTopic, recent: string[]): Promise<WriteResult> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return { ok: false, error: "GEMINI_API_KEY が未設定です" };
+  if (!apiKey) return { ok: false, error: "GEMINI_API_KEY が未設定です", lastText: null };
   let lastReason = "文章を作れませんでした";
+  let lastText: string | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     const feedback = attempt > 0 ? `\n\n# 前回の不採用の理由\n${lastReason}。この点を直して書き直す。` : "";
     const response = await geminiGenerateWithFallback(
@@ -116,12 +117,14 @@ export async function writeThreadsPost(topic: ThreadsTopic, recent: string[]): P
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       const parsed = JSON.parse(raw.replace(/```json\s*|```/g, "")) as { text?: unknown };
       const text = typeof parsed.text === "string" ? parsed.text.trim() : "";
+      if (text) lastText = text;
       const problem = validateThreadsText(text, recent);
       if (!problem) return { ok: true, text };
       lastReason = problem;
+      console.error(`threads-writer: 不採用(${attempt + 1}回目): ${problem}`);
     } catch {
       lastReason = "AIの返事を読み取れなかった";
     }
   }
-  return { ok: false, error: `3回書き直しても基準を満たせませんでした(最後の理由: ${lastReason})` };
+  return { ok: false, error: `3回書き直しても基準を満たせませんでした(最後の理由: ${lastReason})`, lastText };
 }

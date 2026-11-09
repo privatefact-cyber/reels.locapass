@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { publishThreadsTextPost, threadsConfigFromEnv } from "@/lib/social/threads";
+import { publishThreadsImagePost, publishThreadsTextPost, threadsConfigFromEnv } from "@/lib/social/threads";
 import { THREADS_TOPICS, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { validateThreadsText, writeThreadsPost } from "@/lib/social/threadsWriter";
 
@@ -17,11 +17,11 @@ export function textModeFromEnv(): TextMode {
 const MAX_PENDING_DRAFTS = 3;
 const db = () => createAdminClient() as any;
 
-type Row = { id: string; topic: string; body: string; status: string; error: string | null; created_at: string; posted_at: string | null };
+type Row = { id: string; topic: string; body: string; image_url: string | null; status: string; error: string | null; created_at: string; posted_at: string | null };
 
 /** 直近の投稿(重複を避けるための材料)。下書き・投稿済み・失敗を含み、破棄したものは除く。 */
 async function recentRows(limit = 40): Promise<Row[]> {
-  const { data, error } = await db().from("locapass_threads_posts").select("id, topic, body, status, error, created_at, posted_at").neq("status", "discarded").order("created_at", { ascending: false }).limit(limit);
+  const { data, error } = await db().from("locapass_threads_posts").select("id, topic, body, image_url, status, error, created_at, posted_at").neq("status", "discarded").order("created_at", { ascending: false }).limit(limit);
   if (error) throw new Error(`直近の投稿の取得に失敗しました: ${error.message}`);
   return (data ?? []) as Row[];
 }
@@ -42,7 +42,11 @@ export async function createThreadsDraft(options?: { dry?: boolean }): Promise<D
   const rows = await recentRows();
   const topic = pickTopic(rows);
   const written = await writeThreadsPost(topic, rows.map((r) => r.body));
-  if (!written.ok) return { ok: false, error: written.error };
+  if (!written.ok) {
+    // 不採用になった文章と理由を、失敗として記録する(管理画面の「これまでの投稿」で見える)。
+    if (!options?.dry) await db().from("locapass_threads_posts").insert({ topic: topic.id, body: written.lastText ?? "(文章を作れませんでした)", status: "failed", error: written.error });
+    return { ok: false, error: written.error };
+  }
   if (options?.dry) return { ok: true, id: "dry-run", topic: topic.id, text: written.text };
   const { data, error } = await db().from("locapass_threads_posts").insert({ topic: topic.id, body: written.text, status: "draft" }).select("id").single();
   if (error || !data) return { ok: false, error: `下書きの保存に失敗しました: ${error?.message ?? "0件"}` };
@@ -52,7 +56,7 @@ export async function createThreadsDraft(options?: { dry?: boolean }): Promise<D
 /** 下書きをThreadsに投稿する。失敗しても、理由を記録に残す(同じ文章を勝手に再投稿しない)。 */
 export async function publishThreadsDraft(id: string): Promise<void> {
   const admin = db();
-  const { data: row, error } = await admin.from("locapass_threads_posts").select("id, body, status").eq("id", id).maybeSingle();
+  const { data: row, error } = await admin.from("locapass_threads_posts").select("id, body, image_url, status").eq("id", id).maybeSingle();
   if (error || !row) throw new Error(error?.message ?? "下書きが見つかりません");
   if (row.status !== "draft") throw new Error("この投稿は、すでに処理済みです");
   const config = threadsConfigFromEnv();
@@ -61,7 +65,10 @@ export async function publishThreadsDraft(id: string): Promise<void> {
   const problem = validateThreadsText(row.body, []);
   if (problem) throw new Error(`投稿できない文章です: ${problem}`);
   try {
-    const externalId = await publishThreadsTextPost(config, { text: row.body });
+    // 写真が付いていれば、画像つきの投稿にする(Threadsは、公開されたURLの画像を取り込む)。
+    const externalId = row.image_url
+      ? await publishThreadsImagePost(config, { text: row.body, imageUrl: row.image_url })
+      : await publishThreadsTextPost(config, { text: row.body });
     const { data: updated, error: updateError } = await admin.from("locapass_threads_posts").update({ status: "posted", external_id: externalId, posted_at: new Date().toISOString(), error: null }).eq("id", id).eq("status", "draft").select("id");
     if (updateError || !updated?.length) throw new Error("投稿はできましたが、記録の更新に失敗しました。Threadsで二重に投稿しないよう確認してください");
   } catch (e) {
@@ -69,6 +76,13 @@ export async function publishThreadsDraft(id: string): Promise<void> {
     await admin.from("locapass_threads_posts").update({ status: "failed", error: message }).eq("id", id).eq("status", "draft");
     throw new Error(message);
   }
+}
+
+/** 下書きに写真を1枚付ける(url=null なら外す)。 */
+export async function setThreadsDraftImage(id: string, url: string | null): Promise<void> {
+  const { data, error } = await db().from("locapass_threads_posts").update({ image_url: url }).eq("id", id).eq("status", "draft").select("id");
+  if (error) throw new Error(`写真の保存に失敗しました: ${error.message}`);
+  if (!data?.length) throw new Error("写真を付けられませんでした(対象が見つからないか、処理済みです)");
 }
 
 export async function discardThreadsDraft(id: string): Promise<void> {
@@ -105,7 +119,7 @@ export async function runThreadsTextCron(options: { dry: boolean }) {
 }
 
 export async function listThreadsPosts(): Promise<Row[]> {
-  const { data, error } = await db().from("locapass_threads_posts").select("id, topic, body, status, error, created_at, posted_at").order("created_at", { ascending: false }).limit(40);
+  const { data, error } = await db().from("locapass_threads_posts").select("id, topic, body, image_url, status, error, created_at, posted_at").order("created_at", { ascending: false }).limit(40);
   if (error) throw new Error(`一覧の取得に失敗しました: ${error.message}`);
   return (data ?? []) as Row[];
 }
