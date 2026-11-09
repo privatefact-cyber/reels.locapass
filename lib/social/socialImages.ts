@@ -61,13 +61,14 @@ export async function generateAiImage(theme: string, account: "locapass" | "luxe
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY が未設定です");
   const brand = account === "luxela" ? "LUXELA" : "LOCAPASS";
+  const noText = "画像の中には、テーマ名・説明文・日付・ウォーターマークなどの文字を、一切書かない。";
   const headline = (opts.headline ?? "").replace(/\s+/g, " ").trim().slice(0, 20) || brand;
   const look = style === "illustration" ? "おしゃれで上品な、手描き風のイラスト" : "写真風の画像";
   // チラシの文字は、AIに描かせると崩れるため、ここでは文字なしのイラストだけを作る(見出しは、管理画面のブラウザで正しいフォントで重ねる)。
-  const flyerPrompt = `SNSのチラシの背景にする、おしゃれな${account === "luxela" ? "夜の街(ネオン・落ち着いた大人の雰囲気)" : "街のお店(あたたかい雰囲気)"}のイラスト。中央に、あとで文字を重ねられる、すっきりした広めの余白を残す。文字・ロゴ・看板の文字は一切入れない。人物の顔は描かない。テーマ: ${theme}。`;
-  const prompt = style === "flyer" ? flyerPrompt : account === "luxela"
-    ? `日本の夜の繁華街の、大人っぽく落ち着いた雰囲気の${look}。ネオンや街灯、グラスや店先の明かりなど。テーマ: ${theme}。人物の顔・文字・ロゴ・看板の文字・露出の多い表現は入れない。`
-    : `日本の街の、あたたかい雰囲気の${look}。テーマ: ${theme}。${style === "photo" ? "自然光、スマホで撮ったような自然な構図。" : "やさしい色合いで、すっきりした構図。"}人物の顔・文字・ロゴ・看板の文字は入れない。`;
+  const flyerPrompt = `SNSのチラシの背景にする、おしゃれな${account === "luxela" ? "夜の街(ネオン・落ち着いた大人の雰囲気)" : "街のお店(あたたかい雰囲気)"}のイラスト。中央に、あとで文字を重ねられる、すっきりした広めの余白を残す。文字・ロゴ・看板の文字は一切入れない。人物の顔は描かない。題材(これは画像に書かない): ${theme}。`;
+  const prompt = (style === "flyer" ? flyerPrompt : account === "luxela"
+    ? `日本の夜の繁華街の、大人っぽく落ち着いた雰囲気の${look}。ネオンや街灯、グラスや店先の明かりなど。題材(これは画像に書かない): ${theme}。人物の顔・文字・ロゴ・看板の文字・露出の多い表現は入れない。`
+    : `日本の街の、あたたかい雰囲気の${look}。題材(これは画像に書かない): ${theme}。${style === "photo" ? "自然光、スマホで撮ったような自然な構図。" : "やさしい色合いで、すっきりした構図。"}人物の顔・文字・ロゴ・看板の文字は入れない。`) + noText;
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${key}`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { responseModalities: ["IMAGE"], ...(aspect === "9:16" ? { imageConfig: { aspectRatio: "9:16" } } : {}) } }),

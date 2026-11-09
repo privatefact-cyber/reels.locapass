@@ -433,8 +433,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   let source: "ai" | "manual" = "manual";
   let theme = "街の雰囲気";
   if (text.mode === "manual") {
-    body = checkManualText(text.body, dest.platform);
-    theme = body.replace(/\s+/g, " ").slice(0, 40) || theme;
+    body = checkManualText(text.body, dest.platform); // 手書きの文章は、画像のテーマに使わない(文字として描かれてしまうため)
   } else if (template) {
     body = template; // 店舗の写真・動画のときは、店名・リンク・タグの定型文
   } else {
