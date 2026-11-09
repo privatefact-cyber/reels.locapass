@@ -8,7 +8,7 @@ export default function Terms() {
     <article className="mx-auto max-w-2xl space-y-6 px-4 pb-28 pt-6 text-sm leading-7 text-muted md:pt-8">
       <Link href="/" className="text-xs text-muted hover:text-main">← トップへ</Link>
       <h1 className="text-2xl font-bold text-main">利用規約</h1>
-      <p className="text-xs">制定: 2026年10月</p>
+      <p className="text-xs">制定: 2026年10月 / 改定: 2026年11月(第7条:公式SNSでの動画の使用を明記)</p>
 
       <section><h2 className="mb-1 text-base font-bold text-main">第1条(title)</h2>
         <div className="space-y-2">
@@ -52,7 +52,7 @@ export default function Terms() {
       <section><h2 className="mb-1 text-base font-bold text-main">第7条(title)</h2>
         <div className="space-y-2">
           <p>投稿コンテンツの著作権その他の権利は、投稿した方に帰属します。</p>
-          <p>投稿した方は、運営に対し、投稿コンテンツを、本サービス内での表示・配信、本サービスの宣伝・広報(運営の公式SNS、広告、プレスリリース等への掲載を含みます)のために、無償で、国内外で、期間の定めなく、使用・複製・公衆送信・翻訳・編集(切り取り、サムネイル化、字幕・タグの付与など)することを、許諾します。この許諾は、非独占的なものです。</p>
+          <p>投稿した方は、運営に対し、投稿コンテンツを、本サービス内での表示・配信、本サービスの宣伝・広報(運営の公式SNS(Instagram、Threads等)への、画像・動画(リール、ストーリーズ等の短尺動画を含みます)としての投稿・再投稿、広告、プレスリリース等への掲載を含みます)のために、無償で、国内外で、期間の定めなく、使用・複製・公衆送信・翻訳・編集(切り取り、サムネイル化、字幕・タグの付与、動画の短縮・縦横比の調整・音声の調整など)することを、許諾します。この許諾は、非独占的なものです。</p>
           <p>投稿した方は、投稿コンテンツについて、自らが、投稿に必要な権利を有していること、第三者の権利(著作権、肖像権、プライバシー、パブリシティ権など)を侵害しないこと、写っている方や、関係する店舗の、必要な同意を得ていることを、保証します。</p>
           <p>投稿コンテンツに関して、第三者との間で紛争が生じた場合は、投稿した方が、自己の責任と費用で、解決するものとします。</p>
         </div></section>
