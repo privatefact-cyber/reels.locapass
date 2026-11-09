@@ -6,7 +6,8 @@ import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
 import { getAutomationSettings } from "@/lib/social/socialAutomation";
 import { listLatestInsights, type InsightRow } from "@/lib/social/socialInsights";
-import { attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
+import { latestAuditRows } from "@/lib/social/apiAudit";
+import { runApiAuditNow, attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
 import { PostComposer } from "./PostComposer";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
@@ -70,6 +71,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
   const tokens = await getTokenStatuses();
   const [settingsLocapass, settingsLuxela, automation, insights] = await Promise.all([getSocialSettings("locapass"), getSocialSettings("luxela"), getAutomationSettings(), listLatestInsights().catch((): Record<string, InsightRow> => ({}))]);
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+  const audit = await latestAuditRows().catch(() => ({ at: null as string | null, rows: [] }));
   const posts = await listThreadsPosts().catch(() => []);
   const scheduled = posts.filter((p) => p.status === "scheduled").sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
   const drafts = posts.filter((p) => p.status === "draft");
@@ -105,6 +107,25 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         <p><span className="font-semibold text-slate-700">AI(Gemini)のキー:</span> {hasGemini ? "設定済み" : <span className="font-semibold text-red-700">未設定</span>}</p>
         <form action={checkTokensNow} className="mb-2"><button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>トークンが使えるか確認</button><span className="ml-2 text-[11px] text-slate-500">投稿はしません。持ち主の名前を問い合わせるだけです</span></form>
         <form action={refreshTokensNow}><button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>トークンを今すぐ延長</button><span className="ml-2 text-[11px] text-slate-500">自動では毎日1回、残り期限が少ないものを延長します。発行から24時間たっていないものは延長できません</span></form>
+        <form action={runApiAuditNow}><button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>使える機能を調べる(API監査)</button><span className="ml-2 text-[11px] text-slate-500">読み取りだけ。投稿・返信・削除は一切しません。1分ほどかかります</span></form>
+        {audit.rows.length > 0 && (
+          <details className="rounded-lg border border-slate-200 p-3 text-xs">
+            <summary className="cursor-pointer font-semibold text-slate-700">前回の監査結果({fmt(audit.at)})</summary>
+            <table className="mt-2 w-full border-collapse text-left">
+              <thead><tr className="text-slate-500"><th className="py-1 pr-2">投稿先</th><th className="pr-2">機能</th><th className="pr-2">結果</th><th>理由</th></tr></thead>
+              <tbody>
+                {audit.rows.map((r, i) => (
+                  <tr key={i} className="border-t border-slate-100 align-top">
+                    <td className="py-1 pr-2">{r.platform === "instagram" ? "IG" : "Threads"} {r.account === "luxela" ? "LUXELA" : "LOCAPASS"}</td>
+                    <td className="pr-2">{r.label}</td>
+                    <td className={`pr-2 font-semibold ${r.status === "ok" ? "text-emerald-700" : r.status === "error" ? "text-red-700" : "text-slate-500"}`}>{r.status === "ok" ? "使えた" : r.status === "error" ? "使えない" : "試せない"}</td>
+                    <td className="text-slate-600">{r.status === "ok" ? (r.items !== null ? `${r.items}件` : "") : `${r.error_code ? `[${r.error_code}] ` : ""}${r.message ?? ""}`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
+        )}
       </section>
 
       <section className="space-y-3 rounded-xl border-2 border-slate-900 bg-white p-5">

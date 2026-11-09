@@ -8,6 +8,7 @@ import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
+import { runSocialApiAudit } from "@/lib/social/apiAudit";
 import { composeDraft, prepareCompose, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
 import { generateAiImage } from "@/lib/social/socialImages";
 import { saveAutomationSetting, type AutomationMode, type AutomationSource } from "@/lib/social/socialAutomation";
@@ -248,6 +249,20 @@ export async function checkTokensNow() {
   if (!results) back("error", "確認に失敗しました");
   const text = [...results].sort((a, b) => Number(a.ok) - Number(b.ok)).map((r) => `${r.ok ? "✓" : "✗"} ${r.label}: ${r.detail}`).join(" / ");
   back(results.every((r) => r.ok) ? "ok" : "error", text.slice(0, 690));
+}
+
+/** Meta APIの実機監査(読み取りだけ)。結果はDBに保存して、画面に表示する。 */
+export async function runApiAuditNow() {
+  await requireRootAdmin();
+  let summary = "";
+  try {
+    const { rows } = await runSocialApiAudit();
+    const count = (s: string) => rows.filter((r) => r.status === s).length;
+    summary = `監査しました: 使えた${count("ok")}件 / 使えない${count("error")}件 / 試せない${count("skipped")}件(下の表を見てください)`;
+  } catch (e) {
+    back("error", e instanceof Error ? e.message : "監査に失敗しました");
+  }
+  back("ok", summary);
 }
 
 /** 掲載店舗の動画(自前のサーバーにあるもの)で、リール/動画の下書きを作る。 */
