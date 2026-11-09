@@ -8,6 +8,7 @@ import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
+import { composeDraft, type ComposeInput } from "@/lib/social/threadsPosts";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
@@ -253,4 +254,45 @@ export async function createUploadedVideoDraftNow(dest: string, videoUrl: string
   }
   revalidatePath("/admin/social");
   return message ? { ok: false, message } : { ok: true, message: "動画の下書きを作りました。下の「下書き」で再生して確認し、予約か投稿をしてください" };
+}
+
+/** 統合の「投稿をつくる」。写真の手動アップロードは、ここでR2/Storageへ送ってからURLにする(動画はブラウザから直接送られている)。 */
+export async function composeDraftNow(formData: FormData): Promise<DraftActionResult> {
+  await requireRootAdmin();
+  let message: string | null = null;
+  try {
+    const [platform, account] = String(formData.get("dest") ?? "").split(":");
+    const form = String(formData.get("form") ?? "");
+    const textMode = String(formData.get("textMode") ?? "auto");
+    const mediaKind = String(formData.get("mediaKind") ?? "none");
+    let media: ComposeInput["media"];
+    if (mediaKind === "upload-photo") {
+      const url = await uploadOptionalImage(formData.get("photo"));
+      if (!url) throw new Error("写真を選んでください");
+      media = { kind: "upload-photo", url };
+    } else if (mediaKind === "upload-video") {
+      media = { kind: "upload-video", url: String(formData.get("videoUrl") ?? "") };
+      if (!media.url) throw new Error("動画を選んでください");
+    } else if (mediaKind === "shop-photo" || mediaKind === "shop-video" || mediaKind === "ai-image") media = { kind: mediaKind };
+    else media = { kind: "none" };
+    const audienceRaw = String(formData.get("audience") ?? "public");
+    const input: ComposeInput = {
+      dest: { platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" },
+      form: form === "reel" ? "reel" : form === "post" ? "post" : "feed",
+      text: textMode === "manual" ? { mode: "manual", body: String(formData.get("body") ?? "") } : { mode: "auto", audience: audienceRaw === "shop" ? "shop" : audienceRaw === "auto" ? "auto" : "public", note: String(formData.get("note") ?? "").slice(0, 300) },
+      media,
+    };
+    if (media.kind === "upload-video") {
+      // 動画は、実際のファイルで形式・大きさを確認する(R2の social/ 以下だけ)。
+      const { R2_PUBLIC_BASE_URL } = await import("@/lib/storage/r2");
+      if (!media.url.startsWith(`${R2_PUBLIC_BASE_URL}/social/`)) throw new Error("動画のURLが正しくありません");
+      const head = await fetch(media.url, { method: "HEAD" }).catch(() => null);
+      if (!head?.ok || !/^video\/(mp4|quicktime)/i.test(head.headers.get("content-type") ?? "")) throw new Error("アップロードした動画を確認できませんでした");
+    }
+    await composeDraft(input);
+  } catch (e) {
+    message = e instanceof Error ? e.message : "下書きを作れませんでした";
+  }
+  revalidatePath("/admin/social");
+  return message ? { ok: false, message } : { ok: true, message: "下書きを作りました。下の「下書き」で確認して、投稿か予約をしてください(まだ公開されていません)" };
 }

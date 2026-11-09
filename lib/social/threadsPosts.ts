@@ -375,3 +375,78 @@ export async function createUploadedVideoDraft(input: { dest: Destination; video
   if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
   return data.id as string;
 }
+
+// ───── 統合の「投稿をつくる」: 投稿先 → 形 → 文章(自動/手書き) → 素材(手動/自動/AI生成) ─────
+
+export type ComposeForm = "feed" | "reel" | "post";
+export type ComposeText = { mode: "manual"; body: string } | { mode: "auto"; audience: ThreadsAudience | "auto"; note: string };
+export type ComposeMedia = { kind: "none" } | { kind: "upload-photo"; url: string } | { kind: "upload-video"; url: string } | { kind: "shop-photo" } | { kind: "shop-video" } | { kind: "ai-image" };
+export type ComposeInput = { dest: Destination; form: ComposeForm; text: ComposeText; media: ComposeMedia };
+
+/** 形と素材の組み合わせが成り立つか確認する。 */
+function checkCompose(input: ComposeInput): void {
+  const { dest, form, media } = input;
+  if (dest.platform === "instagram") {
+    if (form === "feed" && !["upload-photo", "shop-photo", "ai-image"].includes(media.kind)) throw new Error("Instagramのフィードは、写真(手動・店舗の写真・AI画像)が必要です");
+    if (form === "reel" && !["upload-video", "shop-video"].includes(media.kind)) throw new Error("Instagramのリールは、動画(手動・店舗の動画)が必要です。写真からリールを作る機能は、まだありません");
+    if (form === "post") throw new Error("Instagramでは、フィードかリールを選んでください");
+  } else if (form !== "post") {
+    throw new Error("Threadsは「投稿」を選んでください");
+  }
+}
+
+/** 4つの質問(投稿先・形・文章・素材)の答えから、下書きを1件作る。公開はしない。 */
+export async function composeDraft(input: ComposeInput): Promise<string> {
+  checkCompose(input);
+  const { dest, text, media } = input;
+  const rows = (await recentRows()).filter((r) => r.account === dest.account);
+  const site = dest.account === "luxela" ? { url: "https://luxela.jp", name: "LUXELA" } : { url: "https://locapass.net", name: "LOCAPASS" };
+
+  // 素材(店舗のものは、先に選ぶ。店名・リンクを定型文に使うため)
+  let imageUrl: string | null = null;
+  let videoUrl: string | null = null;
+  let shopKeyTopic: string | null = null;
+  let template: string | null = null;
+  if (media.kind === "upload-photo") imageUrl = media.url;
+  if (media.kind === "upload-video") videoUrl = media.url;
+  if (media.kind === "shop-photo") {
+    const photo = await pickShopPhoto(rows.filter((r) => r.topic.startsWith("shop:")).map((r) => r.topic.slice(5)), dest.account);
+    imageUrl = photo.imageUrl;
+    shopKeyTopic = `shop:${photo.recentlyUsedKey}`;
+    const link = photo.shopCode ? `${site.url}/s/${photo.shopCode}` : site.url;
+    template = [`📍 ${photo.shopName}`, photo.description, `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${link}`, photo.instagramHandle ? `@${photo.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+  }
+  if (media.kind === "shop-video") {
+    const video = await pickShopVideo(rows.filter((r) => r.topic.startsWith("reel:")).map((r) => r.topic.slice(5)), dest.account);
+    videoUrl = video.videoUrl;
+    shopKeyTopic = `reel:${video.key}`;
+    const link = video.shopCode ? `${site.url}/s/${video.shopCode}` : site.url;
+    template = [`🎬 ${video.shopName}`, `動画・詳細は${site.name}で\n${link}`, video.instagramHandle ? `@${video.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+  }
+
+  // 文章
+  let body: string;
+  let topicId = shopKeyTopic ?? "manual";
+  let source: "ai" | "manual" = "manual";
+  let theme = "街の雰囲気";
+  if (text.mode === "manual") {
+    body = checkManualText(text.body, dest.platform);
+    theme = body.replace(/\s+/g, " ").slice(0, 40) || theme;
+  } else if (template) {
+    body = template; // 店舗の写真・動画のときは、店名・リンク・タグの定型文
+  } else {
+    const t = pickTopic(rows, text.audience === "auto" ? undefined : text.audience, dest.account);
+    const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account, text.note);
+    if (!written.ok) throw new Error(written.error);
+    body = written.text;
+    topicId = t.id;
+    source = "ai";
+    theme = t.title;
+  }
+
+  if (media.kind === "ai-image") imageUrl = await generateAiImage(theme, dest.account);
+
+  const { data, error } = await db().from("locapass_threads_posts").insert({ topic: topicId, body, image_url: imageUrl, video_url: videoUrl, source, status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
+  if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
+  return data.id as string;
+}

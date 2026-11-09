@@ -4,9 +4,10 @@ import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/thre
 import { getTokenStatuses } from "@/lib/social/tokens";
 import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
-import { attachDraftImage, createDraftNow, createImageDraftNow, createVideoDraftNow, createUploadedVideoDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
+import { attachDraftImage, createDraftNow, createImageDraftNow, composeDraftNow, createVideoDraftNow, createUploadedVideoDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
 import { TextDraftForm } from "./TextDraftForm";
 import { VideoUploadForm } from "./VideoUploadForm";
+import { PostComposer } from "./PostComposer";
 import { ImageDraftForm } from "./ImageDraftForm";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
@@ -157,6 +158,12 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
             </form>
           </details>
         ))}
+      </section>
+
+      <section className="space-y-3 rounded-xl border-2 border-slate-900 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">投稿をつくる(新)</h2>
+        <p className="text-xs text-slate-500">①どこに ②文章 ③画像・動画 の順に選んで、下書きを作ります。公開はまだされません。</p>
+        <PostComposer action={composeDraftNow} />
       </section>
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
