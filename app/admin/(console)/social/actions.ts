@@ -8,7 +8,7 @@ import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
-import { composeDraft, type ComposeInput } from "@/lib/social/threadsPosts";
+import { composeDraft, prepareCompose, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
 import { generateAiImage } from "@/lib/social/socialImages";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
@@ -321,4 +321,54 @@ export async function generateFlyerBaseNow(account: string, theme: string): Prom
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "チラシの背景を作れませんでした" };
   }
+}
+
+export type ReelPrepared = { ok: boolean; message: string; dataUrl?: string; body?: string; topicId?: string; source?: "ai" | "manual" };
+
+/** 画像から作るリールの準備: 文章と画像を用意して、ブラウザで動画にするため、画像データを返す(まだ保存しない)。 */
+export async function prepareReelNow(formData: FormData): Promise<ReelPrepared> {
+  await requireRootAdmin();
+  try {
+    const [, account] = String(formData.get("dest") ?? "").split(":");
+    const mediaKind = String(formData.get("mediaKind") ?? "");
+    const textMode = String(formData.get("textMode") ?? "auto");
+    const audienceRaw = String(formData.get("audience") ?? "public");
+    let media: ComposeInput["media"];
+    if (mediaKind === "reel-upload-photo") {
+      const url = await uploadOptionalImage(formData.get("photo"));
+      if (!url) throw new Error("写真を選んでください");
+      media = { kind: "reel-upload-photo", url };
+    } else if (mediaKind === "reel-ai" || mediaKind === "reel-shop-photo") media = { kind: mediaKind };
+    else throw new Error("素材を選んでください");
+    const style = String(formData.get("style") ?? "photo") === "illustration" ? "illustration" : "photo";
+    const input: ComposeInput = {
+      dest: { platform: "instagram", account: account === "luxela" ? "luxela" : "locapass" },
+      form: "reel",
+      text: textMode === "manual" ? { mode: "manual", body: String(formData.get("body") ?? "") } : { mode: "auto", audience: audienceRaw === "shop" ? "shop" : audienceRaw === "auto" ? "auto" : "public", note: String(formData.get("note") ?? "").slice(0, 300) },
+      media,
+      style,
+    };
+    const prepared = await prepareCompose(input);
+    if (!prepared.imageUrl) throw new Error("画像を用意できませんでした");
+    const res = await fetch(prepared.imageUrl, { signal: AbortSignal.timeout(20_000) });
+    if (!res.ok) throw new Error("画像を取得できませんでした");
+    const b64 = Buffer.from(await res.arrayBuffer()).toString("base64");
+    return { ok: true, message: "", dataUrl: `data:image/jpeg;base64,${b64}`, body: prepared.body, topicId: prepared.topicId, source: prepared.source };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "リールの準備に失敗しました" };
+  }
+}
+
+/** ブラウザで作った動画を、リールの下書きとして保存する。 */
+export async function saveReelDraftNow(input: { dest: string; videoUrl: string; body: string; topicId: string; source: "ai" | "manual" }): Promise<DraftActionResult> {
+  await requireRootAdmin();
+  let message: string | null = null;
+  try {
+    const [, account] = input.dest.split(":");
+    await saveReelDraft({ dest: { platform: "instagram", account: account === "luxela" ? "luxela" : "locapass" }, videoUrl: input.videoUrl, body: input.body, topicId: input.topicId.slice(0, 80), source: input.source === "ai" ? "ai" : "manual" });
+  } catch (e) {
+    message = e instanceof Error ? e.message : "下書きを作れませんでした";
+  }
+  revalidatePath("/admin/social");
+  return message ? { ok: false, message } : { ok: true, message: "リールの下書きを作りました。下の「下書き」で再生して確認してください(まだ公開されていません)" };
 }
