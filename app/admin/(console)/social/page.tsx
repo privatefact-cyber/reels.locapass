@@ -1,6 +1,7 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { listThreadsPosts, textModeFromEnv, type PostRow } from "@/lib/social/threadsPosts";
 import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/threadsTopics";
+import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
 import { attachDraftImage, createDraftNow, createImageDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, saveAiSettings, schedulePost, unschedulePost } from "./actions";
 import { TextDraftForm } from "./TextDraftForm";
@@ -124,6 +125,17 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         {([["locapass", "LOCAPASS", settingsLocapass], ["luxela", "LUXELA", settingsLuxela]] as const).map(([key, name, st]) => (
           <details key={key} className="rounded-lg border border-slate-200 p-3">
             <summary className="cursor-pointer text-sm font-semibold text-slate-800">{name}{st.instructions || st.examples ? "(設定あり)" : "(未設定)"}</summary>
+            <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+              <p className="font-semibold text-slate-700">いまの標準の書き方(指示欄が空のとき、AIはこれに従います)</p>
+              {defaultStyleFor(key).map((d) => (
+                <div key={d.label} className="mt-2">
+                  <p className="font-semibold">{d.label}</p>
+                  <p>読者: {d.reader}</p>
+                  <p className="whitespace-pre-wrap">{d.style}</p>
+                </div>
+              ))}
+              <p className="mt-2">共通: 全体で200〜420文字 / 最後にサイトのURLを1つだけ / 数字・料金・最上級・他社比較は書かない(指示では外せません)</p>
+            </div>
             <form action={saveAiSettings.bind(null, key)} className="mt-3 space-y-2">
               <label className="block text-xs font-semibold text-slate-700">指示(最大{MAX_INSTRUCTIONS}文字)</label>
               <textarea name="instructions" defaultValue={st.instructions} rows={6} maxLength={MAX_INSTRUCTIONS} placeholder="例: 親しい友達に話しかけるような口調で。1行目は必ず問いかけ。絵文字は1〜2個まで。専門用語は使わない。" className={input} />

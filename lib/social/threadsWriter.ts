@@ -86,6 +86,15 @@ function audienceBlock(topic: ThreadsTopic, account: BrandAccount): { reader: st
   };
 }
 
+/** 管理画面に見せる、いまの標準の書き方(指示欄が空のときに、AIが従っているもの)。 */
+export function defaultStyleFor(account: BrandAccount): { label: string; reader: string; style: string }[] {
+  const aud = (audience: "public" | "shop") => audienceBlock({ id: "", title: "", angle: "", audience }, account);
+  return (["public", "shop"] as const).map((a) => {
+    const b = aud(a);
+    return { label: a === "public" ? "一般向け" : "店舗向け", reader: b.reader, style: b.style };
+  });
+}
+
 function buildPrompt(topic: ThreadsTopic, recent: string[], account: BrandAccount, custom: { instructions: string; examples: string; note: string }): string {
   const brand = BRANDS[account];
   const recentList = recent.length ? recent.slice(0, 12).map((r, i) => `${i + 1}. ${r.replace(/\s+/g, " ").slice(0, 60)}…`).join("\n") : "(まだありません)";
