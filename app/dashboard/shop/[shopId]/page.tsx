@@ -12,6 +12,7 @@ import { ShopQuickActions } from "@/components/locapass-dashboard/ShopQuickActio
 import { FloorStatusDropzone } from "@/components/locapass-dashboard/FloorStatusDropzone";
 import { ShopGalleryUploader } from "@/components/locapass-dashboard/ShopGalleryUploader";
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
+import { ShopEmbedCard } from "@/components/locapass-dashboard/ShopEmbedCard";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { TodayScheduleBoard, type TodayScheduleRow } from "@/components/locapass-dashboard/TodayScheduleBoard";
 import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel";
@@ -317,6 +318,8 @@ export default async function LocapassShopSettingsPage({
           />
         </div>
       </section>
+
+      {shop.shop_code && <ShopEmbedCard shopCode={shop.shop_code} />}
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">混雑状況(AIコンシェルジュ連携)</h2>
