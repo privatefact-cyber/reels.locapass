@@ -259,7 +259,7 @@ export function PostComposer({ action, flyerAction, reelPrepare, reelSave }: {
           <button type="button" disabled={busy || unavailable} onClick={submit} className="rounded-lg bg-slate-900 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">下書きを作る</button>
           {busy && <span role="status" className="text-sm font-semibold text-amber-700">{stage ? `${stage}${progress !== null && progress > 0 && progress < 100 ? ` ${progress}%` : ""}` : progress !== null ? `アップロード中…${progress}%` : "作っています…(AIの画像は最大1分ほど)"}</span>}
         </div>
-        {notice && <p role="status" className={`text-sm font-semibold ${notice.ok ? "text-emerald-700" : "text-red-700"}`}>{notice.message}</p>}
+        {notice && <p role="status" className={`whitespace-pre-wrap text-sm font-semibold ${notice.ok ? "text-emerald-700" : "text-red-700"}`}>{notice.message}</p>}
       </div>
     </div>
   );

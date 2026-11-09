@@ -9,7 +9,7 @@ import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
 import { runSocialApiAudit } from "@/lib/social/apiAudit";
-import { composeDraft, prepareCompose, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
+import { composeDraftWithScene, prepareCompose, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
 import { generateAiImage } from "@/lib/social/socialImages";
 import { saveAutomationSetting, type AutomationMode, type AutomationSource } from "@/lib/social/socialAutomation";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
@@ -297,6 +297,7 @@ export async function createUploadedVideoDraftNow(dest: string, videoUrl: string
 export async function composeDraftNow(formData: FormData): Promise<DraftActionResult> {
   await requireRootAdmin();
   let message: string | null = null;
+  let scene: string | null = null;
   try {
     const [platform, account] = String(formData.get("dest") ?? "").split(":");
     const form = String(formData.get("form") ?? "");
@@ -336,12 +337,12 @@ export async function composeDraftNow(formData: FormData): Promise<DraftActionRe
       const head = await fetch(media.url, { method: "HEAD" }).catch(() => null);
       if (!head?.ok || !/^video\/(mp4|quicktime)/i.test(head.headers.get("content-type") ?? "")) throw new Error("アップロードした動画を確認できませんでした");
     }
-    await composeDraft(input);
+    scene = (await composeDraftWithScene(input)).imageScene;
   } catch (e) {
     message = e instanceof Error ? e.message : "下書きを作れませんでした";
   }
   revalidatePath("/admin/social");
-  return message ? { ok: false, message } : { ok: true, message: "下書きを作りました。下の「下書き」で確認して、投稿か予約をしてください(まだ公開されていません)" };
+  return message ? { ok: false, message } : { ok: true, message: `下書きを作りました。下の「下書き」で確認して、投稿か予約をしてください(まだ公開されていません)${scene === null ? "" : scene ? `\n画像の場面: ${scene}` : "\n画像の場面: 文章から決められなかったため、一般的な雰囲気の絵になっています(もう一度作ると直ることがあります)"}` };
 }
 
 /** チラシの背景(文字なしのイラスト)をAIで作り、ブラウザで文字を重ねられるよう、画像データを返す。 */

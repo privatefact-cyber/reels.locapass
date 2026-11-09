@@ -399,7 +399,7 @@ function checkCompose(input: ComposeInput): void {
   }
 }
 
-export type PreparedCompose = { topicId: string; body: string; source: "ai" | "manual"; imageUrl: string | null; videoUrl: string | null };
+export type PreparedCompose = { topicId: string; body: string; source: "ai" | "manual"; imageUrl: string | null; videoUrl: string | null; imageScene: string | null };
 
 /** 4つの質問の答えから、文章と素材を用意する(保存はしない)。 */
 export async function prepareCompose(input: ComposeInput): Promise<PreparedCompose> {
@@ -457,21 +457,28 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   }
 
   // 画像は、完成した文章を読んで決めた「場面」で作る(手書きの文章も、そのまま絵に書き写さず、場面だけを取り出す)。
+  let imageScene: string | null = null;
   if (media.kind === "ai-image" || media.kind === "reel-ai") {
     const scene = await imageSceneFromPost(body, dest.account);
+    imageScene = scene || "";
     imageUrl = await generateAiImage(theme, dest.account, media.kind === "ai-image" ? { style: input.style, headline: input.headline, scene } : { style: input.style, aspect: "9:16", scene });
   }
-  return { topicId, body, source, imageUrl, videoUrl };
+  return { topicId, body, source, imageUrl, videoUrl, imageScene };
 }
 
 /** 4つの質問の答えから、下書きを1件作る。公開はしない。(画像から作るリールは、ブラウザで動画にしてから saveReelDraft で保存する) */
 export async function composeDraft(input: ComposeInput): Promise<string> {
+  return (await composeDraftWithScene(input)).id;
+}
+
+/** composeDraft と同じ。画像の元にした「場面」(決められなかったときは空文字、AI画像でなければnull)も返す。 */
+export async function composeDraftWithScene(input: ComposeInput): Promise<{ id: string; imageScene: string | null }> {
   if (REEL_FROM_IMAGE.includes(input.media.kind)) throw new Error("画像から作るリールは、動画に変換してから保存します");
   const { dest } = input;
-  const { topicId, body, source, imageUrl, videoUrl } = await prepareCompose(input);
+  const { topicId, body, source, imageUrl, videoUrl, imageScene } = await prepareCompose(input);
   const { data, error } = await db().from("locapass_threads_posts").insert({ topic: topicId, body, image_url: imageUrl, video_url: videoUrl, source, status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
   if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
-  return data.id as string;
+  return { id: data.id as string, imageScene };
 }
 
 

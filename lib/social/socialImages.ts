@@ -107,13 +107,20 @@ ${body.slice(0, 700)}
 
 JSONだけを返す: {"scene": "場面の指示"}`;
   try {
-    const res = await geminiGenerateWithFallback(key, { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.5, responseMimeType: "application/json" } }, "social-image-scene", 25_000);
-    if (!res) return "";
+    const res = await geminiGenerateWithFallback(key, { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.5 } }, "social-image-scene", 30_000);
+    if (!res) { console.error("social-image-scene: no response"); return ""; }
     const json = (await res.json()) as any;
-    const text = String(json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "");
-    const scene = String((JSON.parse(text.replace(/```json\s*|```/g, "").trim()) as { scene?: string }).scene ?? "").replace(/\s+/g, " ").trim();
+    const text = String(json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "").trim();
+    // JSONで返らなくても(前置き・コードブロック付きでも)、scene の値を取り出す。
+    const match = text.match(/\{[\s\S]*\}/);
+    let scene = "";
+    if (match) { try { scene = String((JSON.parse(match[0]) as { scene?: string }).scene ?? ""); } catch { /* 下で本文から取る */ } }
+    if (!scene) scene = text.replace(/```[a-z]*|```|^\s*\{?\s*"?scene"?\s*:\s*"?|"?\s*\}?\s*$/gi, "");
+    scene = scene.replace(/\s+/g, " ").trim();
+    if (scene.length < 8) console.error(`social-image-scene: empty (${text.slice(0, 120)})`);
     return scene.length >= 8 ? scene.slice(0, 220) : "";
-  } catch {
+  } catch (e) {
+    console.error("social-image-scene: failed", e);
     return "";
   }
 }
