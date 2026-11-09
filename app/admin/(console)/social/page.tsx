@@ -1,0 +1,176 @@
+import { requireRootAdmin } from "@/lib/admin/require-admin";
+import { listThreadsPosts, textModeFromEnv, type PostRow } from "@/lib/social/threadsPosts";
+import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/threadsTopics";
+import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
+import { attachDraftImage, createDraftNow, createImageDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, saveAiSettings, schedulePost, unschedulePost } from "./actions";
+import { TextDraftForm } from "./TextDraftForm";
+import { ImageDraftForm } from "./ImageDraftForm";
+
+// AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
+export const maxDuration = 120;
+
+const MODE_LABEL = { off: "AIは何もしない", draft: "AIは下書きを作るだけ(確認してから予約・投稿)", auto: "AIが書いて、確認なしで自動投稿" } as const;
+const STATUS_LABEL: Record<string, string> = { draft: "下書き", scheduled: "予約中", posted: "投稿済み", failed: "失敗", discarded: "破棄" };
+const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900";
+const btn = "rounded-lg px-4 py-2 text-sm font-semibold";
+
+const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "");
+/** datetime-local 用(日本時間)。 */
+const jstInputValue = (iso: string | null) => (iso ? new Date(new Date(iso).getTime() + 9 * 3_600_000).toISOString().slice(0, 16) : "");
+const DEST_LABEL = (p: PostRow) => `${p.platform === "instagram" ? "Instagram" : "Threads"} ${p.account === "luxela" ? "LUXELA" : "LOCAPASS"}`;
+const label = (p: PostRow) => DEST_LABEL(p) + " ・ " + (p.source === "manual" ? (p.topic.startsWith("shop:") ? "店舗写真(定型文)" : "自分で書いた文章") : `AI・${AUDIENCE_LABEL[[...THREADS_TOPICS, ...LUXELA_TOPICS].find((t) => t.id === p.topic)?.audience ?? "shop"]}`);
+
+function PostCard({ p }: { p: PostRow }) {
+  const scheduled = p.status === "scheduled";
+  return (
+    <article className={`space-y-3 rounded-xl border p-4 ${scheduled ? "border-sky-300 bg-sky-50" : "border-amber-300 bg-amber-50"}`}>
+      <p className="text-xs font-semibold text-slate-700">
+        {scheduled ? `予約中 ・ ${fmt(p.scheduled_at)} に自動で投稿` : "下書き"} ・ {label(p)} ・ {p.body.length}文字
+      </p>
+      <form action={editPostBody.bind(null, p.id)} className="space-y-2">
+        <textarea name="body" defaultValue={p.body} rows={Math.min(14, Math.max(5, Math.ceil(p.body.length / 28) + 2))} maxLength={500} className={input} />
+        <button className={`${btn} border border-slate-300 bg-white text-slate-700`}>文章を保存</button>
+      </form>
+      {p.image_url ? (
+        <div className="flex items-end gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={p.image_url} alt="" className="h-28 w-28 rounded-lg border border-slate-200 object-cover" />
+          <form action={removeDraftImage.bind(null, p.id)}><button className="text-xs font-semibold text-slate-600 underline">写真を外す</button></form>
+        </div>
+      ) : (
+        <form action={attachDraftImage.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
+          <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required className="text-xs text-slate-700" />
+          <button className={`${btn} border border-slate-300 bg-white py-1.5 text-xs text-slate-700`}>写真を付ける</button>
+          <span className="text-[11px] text-slate-500">付けると画像つきの投稿(3MBまで)</span>
+        </form>
+      )}
+      <form action={schedulePost.bind(null, p.id)} className="flex flex-wrap items-center gap-2">
+        <input type="datetime-local" name="scheduled_at" required defaultValue={jstInputValue(p.scheduled_at)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
+        <button className={`${btn} bg-sky-700 py-1.5 text-white`}>{scheduled ? "日時を変える" : "この日時に予約"}</button>
+        <span className="text-[11px] text-slate-500">日本時間。30分おきに確認して、時間になると自動で投稿します</span>
+      </form>
+      <div className="flex flex-wrap gap-2">
+        <form action={publishDraft.bind(null, p.id)}><button className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</button></form>
+        {scheduled && <form action={unschedulePost.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>予約を取り消す</button></form>}
+        <form action={discardDraft.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>破棄</button></form>
+      </div>
+    </article>
+  );
+}
+
+export default async function AdminThreadsPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
+  await requireRootAdmin();
+  const sp = await searchParams;
+  const mode = textModeFromEnv();
+  const tokens = [
+    { label: "Instagram LOCAPASS", ok: Boolean(process.env.INSTAGRAM_ACCESS_TOKEN_LOCAPASS?.trim()) },
+    { label: "Instagram LUXELA", ok: Boolean(process.env.INSTAGRAM_ACCESS_TOKEN_LUXELA?.trim()) },
+    { label: "Threads LOCAPASS", ok: Boolean(process.env.THREADS_ACCESS_TOKEN?.trim()) },
+    { label: "Threads LUXELA", ok: Boolean(process.env.THREADS_ACCESS_TOKEN_LUXELA?.trim()) },
+  ];
+  const [settingsLocapass, settingsLuxela] = await Promise.all([getSocialSettings("locapass"), getSocialSettings("luxela")]);
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+  const posts = await listThreadsPosts().catch(() => []);
+  const scheduled = posts.filter((p) => p.status === "scheduled").sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
+  const drafts = posts.filter((p) => p.status === "draft");
+  const history = posts.filter((p) => p.status === "posted" || p.status === "failed");
+
+  return (
+    <div className="max-w-3xl space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">SNS自動投稿(Instagram・Threads)</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          自分で書いた文章を、日時を決めて予約すると、時間になったら自動で投稿されます(LOCAPASS・LUXELA、Instagram・Threads)。AIに、ユーザー獲得につながる文章の下書きを作らせることもできます。
+        </p>
+      </div>
+
+      {sp.ok && <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">{sp.ok}</div>}
+      {sp.error && <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900"><p className="font-bold">うまくいきませんでした</p><p className="mt-1">{sp.error}</p></div>}
+
+      <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-5 text-sm">
+        <p><span className="font-semibold text-slate-700">予約投稿:</span> 動いています(30分おきに確認)</p>
+        <p><span className="font-semibold text-slate-700">AIの動作:</span> {MODE_LABEL[mode]}<span className="ml-2 text-xs text-slate-500">(Vercelの環境変数 THREADS_TEXT_MODE: off / draft / auto)</span></p>
+        <p><span className="font-semibold text-slate-700">投稿先のトークン:</span> {tokens.map((t) => <span key={t.label} className="mr-3 inline-block">{t.label} {t.ok ? "✓" : <span className="font-semibold text-red-700">未設定</span>}</span>)}</p>
+        <p><span className="font-semibold text-slate-700">AI(Gemini)のキー:</span> {hasGemini ? "設定済み" : <span className="font-semibold text-red-700">未設定</span>}</p>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">自分で書いて投稿する</h2>
+        <form action={createManualPost} className="space-y-3">
+          <select name="dest" defaultValue="instagram:locapass" className={input}>
+            <option value="instagram:locapass">Instagram LOCAPASS(写真が必要)</option>
+            <option value="instagram:luxela">Instagram LUXELA(写真が必要)</option>
+            <option value="threads:locapass">Threads LOCAPASS</option>
+            <option value="threads:luxela">Threads LUXELA</option>
+          </select>
+          <textarea name="body" required rows={7} maxLength={2200} placeholder="投稿する文章(Instagramは2200文字、Threadsは500文字まで)" className={input} />
+          <div className="flex flex-wrap items-center gap-3">
+            <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-xs text-slate-700" />
+            <span className="text-[11px] text-slate-500">写真(任意・3MBまで)</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input type="datetime-local" name="scheduled_at" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
+            <button name="mode" value="schedule" className={`${btn} bg-sky-700 text-white`}>この日時に予約</button>
+            <button name="mode" value="now" className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿</button>
+            <button name="mode" value="draft" className={`${btn} border border-slate-300 bg-white text-slate-700`}>下書きに保存</button>
+          </div>
+          <p className="text-[11px] text-slate-500">日時は日本時間です。「予約」は日時が必要です。</p>
+        </form>
+      </section>
+
+      <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">AIへの指示(文体・書き方)</h2>
+        <p className="text-xs text-slate-500">ここに書いた指示を、AIが文章を書くたびに読みます。次に作る下書きから反映されます。「絶対に守ること」(数字・料金・比較・保証などの禁止)は、指示で外せません。お手本は、1本ずつ「---」だけの行で区切ってください(そのまま写した文章は自動で不採用になります)。</p>
+        {([["locapass", "LOCAPASS", settingsLocapass], ["luxela", "LUXELA", settingsLuxela]] as const).map(([key, name, st]) => (
+          <details key={key} className="rounded-lg border border-slate-200 p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-slate-800">{name}{st.instructions || st.examples ? "(設定あり)" : "(未設定)"}</summary>
+            <form action={saveAiSettings.bind(null, key)} className="mt-3 space-y-2">
+              <label className="block text-xs font-semibold text-slate-700">指示(最大{MAX_INSTRUCTIONS}文字)</label>
+              <textarea name="instructions" defaultValue={st.instructions} rows={6} maxLength={MAX_INSTRUCTIONS} placeholder="例: 親しい友達に話しかけるような口調で。1行目は必ず問いかけ。絵文字は1〜2個まで。専門用語は使わない。" className={input} />
+              <label className="block text-xs font-semibold text-slate-700">お手本の文章(任意・最大{MAX_EXAMPLES}文字)</label>
+              <textarea name="examples" defaultValue={st.examples} rows={6} maxLength={MAX_EXAMPLES} placeholder={"好みの投稿を貼る。複数なら、間に --- だけの行を入れる"} className={input} />
+              <button className={`${btn} bg-slate-900 text-white`}>{name}の指示を保存</button>
+            </form>
+          </details>
+        ))}
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">写真つきの下書きを自動で作る</h2>
+        <p className="text-xs text-slate-500">写真は自動で用意します。「掲載店舗の写真」は、店名・LOCAPASSのリンク・お店のInstagram(登録があれば)のタグ付けつき。Instagramはこちらが基本です。</p>
+        <ImageDraftForm action={createImageDraftNow} />
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">AIに(文章だけの)下書きを作らせる</h2>
+        <p className="text-xs text-slate-500">ユーザー獲得を狙う「一般向け」(街のお店の探し方・LOCAPASSの使いどころ)と、店舗オーナー向けの集客ノウハウ。毎日の自動作成は、2種類を交互に作ります。</p>
+        <TextDraftForm action={createDraftNow} />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-slate-900">予約中({scheduled.length})</h2>
+        {scheduled.length === 0 && <p className="text-sm text-slate-500">予約している投稿はありません。</p>}
+        {scheduled.map((p) => <PostCard key={p.id} p={p} />)}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-slate-900">下書き({drafts.length})</h2>
+        {drafts.length === 0 && <p className="text-sm text-slate-500">下書きはありません。</p>}
+        {drafts.map((p) => <PostCard key={p.id} p={p} />)}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-slate-900">これまでの投稿</h2>
+        {history.length === 0 && <p className="text-sm text-slate-500">まだありません。</p>}
+        {history.map((p) => (
+          <article key={p.id} className="space-y-1 rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs text-slate-500">{STATUS_LABEL[p.status] ?? p.status} ・ {fmt(p.posted_at ?? p.created_at)} ・ {label(p)}</p>
+            <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">{p.body}</p>
+            {p.image_url && (/* eslint-disable-next-line @next/next/no-img-element */ <img src={p.image_url} alt="" className="h-20 w-20 rounded-lg border border-slate-200 object-cover" />)}
+            {p.error && <p className="text-xs font-semibold text-red-700">{p.error}</p>}
+          </article>
+        ))}
+      </section>
+    </div>
+  );
+}

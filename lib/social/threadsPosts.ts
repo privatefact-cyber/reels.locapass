@@ -66,10 +66,10 @@ function pickTopic(rows: PostRow[], audience?: ThreadsAudience, account: SocialA
 export type DraftResult = { ok: true; id: string; topic: string; text: string } | { ok: false; error: string };
 
 /** AIの下書きを1本作って保存する。dry=true なら、保存せずに文章だけ返す。 */
-export async function createThreadsDraft(options?: { dry?: boolean; audience?: ThreadsAudience }): Promise<DraftResult> {
+export async function createThreadsDraft(options?: { dry?: boolean; audience?: ThreadsAudience; note?: string }): Promise<DraftResult> {
   const rows = await recentRows();
   const topic = pickTopic(rows, options?.audience);
-  const written = await writeThreadsPost(topic, rows.map((r) => r.body));
+  const written = await writeThreadsPost(topic, rows.map((r) => r.body), "locapass", options?.note ?? "");
   if (!written.ok) {
     // 不採用になった文章と理由を、失敗として記録する(管理画面の「これまでの投稿」で見える)。
     if (!options?.dry) await db().from("locapass_threads_posts").insert({ topic: topic.id, body: written.lastText ?? "(文章を作れませんでした)", status: "failed", error: written.error, source: "ai" });
@@ -110,7 +110,7 @@ export async function createManualThreadsPost(input: { text: string; imageUrl: s
  * 写真つきの下書きを自動で作る。kind="shop"=掲載店舗の写真+店名・リンク・(あれば)お店のInstagramのタグ付け / kind="ai"=AIの画像+AIの文章(一般向け)。
  * 投稿先は dest。Instagramは写真必須なので、どちらも写真つきで作る。
  */
-export async function createImageDraft(kind: "shop" | "ai", dest: Destination, audience: ThreadsAudience | "auto" = "public"): Promise<string> {
+export async function createImageDraft(kind: "shop" | "ai", dest: Destination, audience: ThreadsAudience | "auto" = "public", note = ""): Promise<string> {
   const admin = db();
   const rows = (await recentRows()).filter((r) => r.account === dest.account);
   let body: string;
@@ -125,7 +125,7 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination, a
     topic = `shop:${photo.recentlyUsedKey}`;
   } else {
     const t = pickTopic(rows, audience === "auto" ? undefined : audience, dest.account);
-    const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account);
+    const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account, note);
     if (!written.ok) throw new Error(written.error);
     body = written.text;
     imageUrl = await generateAiImage(t.title, dest.account);

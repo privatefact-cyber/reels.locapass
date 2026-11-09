@@ -29,7 +29,7 @@ const NAV_GROUPS: ShopNavGroup[] = [
   {
     title: "お知らせとサポート",
     items: [
-      { href: "/admin/threads", label: "Threads自動投稿", icon: "🧵", description: "AIが書いたThreadsの投稿の確認・公開" },
+      { href: "/admin/social", label: "SNS自動投稿", icon: "📣", description: "InstagramとThreadsの投稿(AIの下書き・予約・公開)" },
       { href: "/admin/messages", label: "お知らせ配信", icon: "📨", description: "全ユーザーへのお知らせ" },
       { href: "/admin/inquiries", label: "お問い合わせ", icon: "✉️", description: "LPからの掲載・代理店のお問い合わせの確認と返信" },
       { href: "/admin/support", label: "サポート質問", icon: "❓", description: "サポートAIに寄せられた質問の確認" },

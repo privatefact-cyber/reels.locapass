@@ -3,18 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
-type Action = (kind: "shop" | "ai", dest: string, audience: string) => Promise<{ ok: boolean; message: string }>;
+type Action = (kind: "shop" | "ai", dest: string, audience: string, note: string) => Promise<{ ok: boolean; message: string }>;
 
 /** 投稿先を選んで、写真つきの下書きを自動で作る。AIが作る間は「考え中…○秒」を出す。 */
 export function ImageDraftForm({ action }: { action: Action }) {
   const [dest, setDest] = useState("instagram:locapass");
   const [audience, setAudience] = useState("public");
+  const [note, setNote] = useState("");
   const router = useRouter();
   const [notice, setNotice] = useState<{ ok: boolean; message: string } | null>(null);
   const [pending, start] = useTransition();
   const run = (kind: "shop" | "ai") => start(async () => {
     setNotice(null);
-    try { setNotice(await action(kind, dest, audience)); } catch { setNotice({ ok: false, message: "通信に失敗しました。ページを開き直して確認してください" }); }
+    try { setNotice(await action(kind, dest, audience, note)); } catch { setNotice({ ok: false, message: "通信に失敗しました。ページを開き直して確認してください" }); }
     router.refresh();
   });
   const [seconds, setSeconds] = useState(0);
@@ -42,6 +43,7 @@ export function ImageDraftForm({ action }: { action: Action }) {
         </select>
         <span className="text-slate-400">※「AIの画像と文章」のときだけ使います</span>
       </label>
+      <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} disabled={pending} placeholder="今回だけの一言(任意)例: 雨の日の話にして / もっと短く" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" disabled={pending} onClick={() => run("shop")} className={`${btn} bg-slate-900 text-white`}>掲載店舗の写真で下書きを作る</button>
         <button type="button" disabled={pending} onClick={() => run("ai")} className={`${btn} border border-slate-300 bg-white text-slate-800`}>AIの画像と文章で下書きを作る</button>

@@ -6,26 +6,27 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
+import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
-  revalidatePath("/admin/threads");
-  redirect(`/admin/threads?${kind}=${encodeURIComponent(message.slice(0, 300))}`);
+  revalidatePath("/admin/social");
+  redirect(`/admin/social?${kind}=${encodeURIComponent(message.slice(0, 300))}`);
 }
 
 /** 下書きを1本、いま作る(AIに書かせる)。audience=読者(店舗向け/一般向け)。 */
 export type DraftActionResult = { ok: boolean; message: string };
 
-export async function createDraftNow(audience: ThreadsAudience): Promise<DraftActionResult> {
+export async function createDraftNow(audience: ThreadsAudience, note = ""): Promise<DraftActionResult> {
   await requireRootAdmin();
   let message: string | null = null;
   try {
-    const result = await createThreadsDraft({ audience: audience === "shop" ? "shop" : "public" });
+    const result = await createThreadsDraft({ audience: audience === "shop" ? "shop" : "public", note });
     if (!result.ok) message = result.error;
   } catch (e) {
     message = e instanceof Error ? e.message : "下書きを作れませんでした";
   }
-  revalidatePath("/admin/threads");
+  revalidatePath("/admin/social");
   return message ? { ok: false, message } : { ok: true, message: "下書きを作りました。下の「下書き」に出ています" };
 }
 
@@ -175,15 +176,28 @@ export async function unschedulePost(id: string) {
 }
 
 /** 写真つきの下書きを自動で作る(店舗の写真 / AIの画像)。 */
-export async function createImageDraftNow(kind: "shop" | "ai", dest: string, audience: string): Promise<DraftActionResult> {
+export async function createImageDraftNow(kind: "shop" | "ai", dest: string, audience: string, note = ""): Promise<DraftActionResult> {
   await requireRootAdmin();
   const [platform, account] = dest.split(":");
   let message: string | null = null;
   try {
-    await createImageDraft(kind === "ai" ? "ai" : "shop", { platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" }, audience === "shop" ? "shop" : audience === "auto" ? "auto" : "public");
+    await createImageDraft(kind === "ai" ? "ai" : "shop", { platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" }, audience === "shop" ? "shop" : audience === "auto" ? "auto" : "public", note);
   } catch (e) {
     message = e instanceof Error ? e.message : "下書きを作れませんでした";
   }
-  revalidatePath("/admin/threads");
+  revalidatePath("/admin/social");
   return message ? { ok: false, message } : { ok: true, message: "写真つきの下書きを作りました。下の「下書き」に出ています" };
+}
+
+/** AIへの指示とお手本を保存する(アカウントごと)。 */
+export async function saveAiSettings(account: "locapass" | "luxela", formData: FormData) {
+  await requireRootAdmin();
+  let message: string | null = null;
+  try {
+    await saveSocialSettings(account === "luxela" ? "luxela" : "locapass", { instructions: String(formData.get("instructions") ?? ""), examples: String(formData.get("examples") ?? "") });
+  } catch (e) {
+    message = e instanceof Error ? e.message : "保存に失敗しました";
+  }
+  if (message) back("error", message);
+  back("ok", `${account === "luxela" ? "LUXELA" : "LOCAPASS"}のAIへの指示を保存しました。次に作る下書きから反映されます`);
 }

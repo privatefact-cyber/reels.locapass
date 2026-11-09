@@ -2,6 +2,7 @@ import { geminiGenerateWithFallback } from "@/lib/gemini";
 import { THREADS_FACTS } from "@/lib/social/threadsFacts";
 import { LUXELA_FACTS } from "@/lib/social/luxelaFacts";
 import type { ThreadsTopic } from "@/lib/social/threadsTopics";
+import { getSocialSettings, splitExamples, MAX_NOTE } from "@/lib/social/socialSettings";
 
 export type BrandAccount = "locapass" | "luxela";
 /** 投稿先ごとの、ブランド名・URL・事実メモ。 */
@@ -85,7 +86,7 @@ function audienceBlock(topic: ThreadsTopic, account: BrandAccount): { reader: st
   };
 }
 
-function buildPrompt(topic: ThreadsTopic, recent: string[], account: BrandAccount): string {
+function buildPrompt(topic: ThreadsTopic, recent: string[], account: BrandAccount, custom: { instructions: string; examples: string; note: string }): string {
   const brand = BRANDS[account];
   const recentList = recent.length ? recent.slice(0, 12).map((r, i) => `${i + 1}. ${r.replace(/\s+/g, " ").slice(0, 60)}…`).join("\n") : "(まだありません)";
   const { reader, style, closing } = audienceBlock(topic, account);
@@ -114,7 +115,7 @@ ${style}
 - 翻訳・字幕は自動で、投稿者が直せる、と書く(完璧とは書かない)。
 - 「街の声」には触れない。
 
-# 直近の投稿(同じ言い回し・同じ切り口を避ける)
+${custom.instructions ? `# 運営からの指示(文体・書き方は、上の「文体と構成」よりこちらを優先する。ただし「絶対に守ること」は必ず守る)\n${custom.instructions}\n\n` : ""}${custom.examples ? `# お手本(文体・長さ・構成の参考。言い回しをそのまま写さない)\n${custom.examples}\n\n` : ""}${custom.note ? `# 今回だけの指示\n${custom.note}\n\n` : ""}# 直近の投稿(同じ言い回し・同じ切り口を避ける)
 ${recentList}
 
 # 事実メモ(${brand.name}の機能の根拠)
@@ -128,9 +129,12 @@ ${brand.facts}
 export type WriteResult = { ok: true; text: string } | { ok: false; error: string; lastText: string | null };
 
 /** テーマに沿った投稿文をAI(Gemini)に書かせる。確認(validateThreadsText)に通るまで、最大3回書き直す。 */
-export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], account: BrandAccount = "locapass"): Promise<WriteResult> {
+export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], account: BrandAccount = "locapass", note = ""): Promise<WriteResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { ok: false, error: "GEMINI_API_KEY が未設定です", lastText: null };
+  const settings = await getSocialSettings(account).catch(() => ({ instructions: "", examples: "", updated_at: null }));
+  const custom = { instructions: settings.instructions, examples: settings.examples, note: note.trim().slice(0, MAX_NOTE) };
+  const exampleTexts = splitExamples(settings.examples);
   let lastReason = "文章を作れませんでした";
   let lastText: string | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -138,7 +142,7 @@ export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], ac
     const response = await geminiGenerateWithFallback(
       apiKey,
       {
-        contents: [{ role: "user", parts: [{ text: buildPrompt(topic, recent, account) + feedback }] }],
+        contents: [{ role: "user", parts: [{ text: buildPrompt(topic, recent, account, custom) + feedback }] }],
         generationConfig: { temperature: 0.9, responseMimeType: "application/json" },
       },
       "threads-writer",
@@ -153,7 +157,7 @@ export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], ac
       const parsed = JSON.parse(raw.replace(/```json\s*|```/g, "")) as { text?: unknown };
       const text = typeof parsed.text === "string" ? parsed.text.trim() : "";
       if (text) lastText = text;
-      const problem = validateThreadsText(text, recent, account);
+      const problem = validateThreadsText(text, [...recent, ...exampleTexts], account);
       if (!problem) return { ok: true, text };
       lastReason = problem;
       console.error(`threads-writer: 不採用(${attempt + 1}回目): ${problem}`);
