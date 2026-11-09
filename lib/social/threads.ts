@@ -4,12 +4,13 @@
 
 const API = "https://graph.threads.net/v1.0";
 
-export type ThreadsConfig = { userId: string; accessToken: string };
+/** userId は任意。未設定なら、トークンの持ち主のidを Threads に問い合わせて使う(設定するのはトークンだけで足りる)。 */
+export type ThreadsConfig = { userId: string | null; accessToken: string };
 
 export function threadsConfigFromEnv(): ThreadsConfig | null {
-  const userId = process.env.THREADS_USER_ID?.trim();
   const accessToken = process.env.THREADS_ACCESS_TOKEN?.trim();
-  return userId && accessToken ? { userId, accessToken } : null;
+  if (!accessToken) return null;
+  return { userId: process.env.THREADS_USER_ID?.trim() || null, accessToken };
 }
 
 async function call<T>(path: string, init: { method: "GET" | "POST"; params: Record<string, string> }, accessToken: string): Promise<T> {
@@ -27,7 +28,8 @@ async function call<T>(path: string, init: { method: "GET" | "POST"; params: Rec
 
 /** 画像つきの投稿を公開し、投稿のidを返す。テキストは500文字まで(超えたら呼び出し側で切る)。 */
 export async function publishThreadsImagePost(config: ThreadsConfig, input: { text: string; imageUrl: string }): Promise<string> {
-  const container = await call<{ id: string }>(`/${config.userId}/threads`, {
+  const userId = config.userId ?? (await call<{ id: string }>("/me", { method: "GET", params: { fields: "id" } }, config.accessToken)).id;
+  const container = await call<{ id: string }>(`/${userId}/threads`, {
     method: "POST",
     params: { media_type: "IMAGE", image_url: input.imageUrl, text: input.text },
   }, config.accessToken);
@@ -40,7 +42,7 @@ export async function publishThreadsImagePost(config: ThreadsConfig, input: { te
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  const published = await call<{ id: string }>(`/${config.userId}/threads_publish`, {
+  const published = await call<{ id: string }>(`/${userId}/threads_publish`, {
     method: "POST",
     params: { creation_id: container.id },
   }, config.accessToken);
