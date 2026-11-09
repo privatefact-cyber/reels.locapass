@@ -14,6 +14,29 @@ import { VerifiedBadge } from "./VerifiedBadge";
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 const DEFAULT_CENTER = { lat: 35.658, lng: 139.7016, zoom: 11 }; // 渋谷
+/** 最初に現在地が取れたら、そこから半径この距離が収まるように表示する */
+const START_RADIUS_KM = 5;
+
+/** 中心から半径 km の範囲を、検索欄・絞り込み(上)と引き出し(下)に隠れないように地図に収める */
+function fitRadius(map: maplibregl.Map, lat: number, lng: number, km: number, duration = 0) {
+  const dLat = km / 111;
+  const dLng = km / (111 * Math.cos((lat * Math.PI) / 180));
+  map.fitBounds(
+    [
+      [lng - dLng, lat - dLat],
+      [lng + dLng, lat + dLat],
+    ],
+    { padding: { top: 120, bottom: 150, left: 12, right: 12 }, duration },
+  );
+}
+
+/** 現在地の青い点 */
+function hereMarker(lat: number, lng: number) {
+  const el = document.createElement("div");
+  el.style.cssText = "width:18px;height:18px;border-radius:9999px;background:#3B82F6;border:3px solid #fff;box-shadow:0 0 0 6px rgba(59,130,246,.22),0 2px 6px rgba(0,0,0,.25);";
+  el.title = "現在地";
+  return new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([lng, lat]);
+}
 /** LOCAPASS認証のお店を写真ピンで出す上限(取り込んだ施設は、いつも点+まとめピン) */
 const PHOTO_PIN_LIMIT = 60;
 /** 取り込んだ施設の点の色(種類ごと) */
@@ -59,6 +82,7 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
   const mapBox = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const hereRef = useRef<maplibregl.Marker | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const cardRefs = useRef(new Map<string, HTMLAnchorElement>());
 
@@ -126,6 +150,25 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     // 地図の出典表記(OpenStreetMap等。表示義務あり)。左上は検索欄、下は引き出しで隠れるので右上に置く
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "top-right");
+    // 最初の表示: 現在地が取れたら、そこから5km圏内。取れない・許可されないときは散歩エリア(なければ渋谷)のまま。
+    // 位置が届く前に利用者が地図を動かしていたら、勝手に動かさない。
+    let userMoved = false;
+    const markMoved = (e: { originalEvent?: unknown }) => {
+      if (e.originalEvent) userMoved = true;
+    };
+    map.on("dragstart", markMoved);
+    map.on("zoomstart", markMoved);
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        if (mapRef.current !== map) return;
+        const { latitude: lat, longitude: lng } = pos.coords;
+        hereRef.current?.remove();
+        hereRef.current = hereMarker(lat, lng).addTo(map);
+        if (!userMoved) fitRadius(map, lat, lng, START_RADIUS_KM, 600);
+      },
+      () => undefined,
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
+    );
     let timer: ReturnType<typeof setTimeout> | null = null;
     map.on("moveend", () => {
       if (timer) clearTimeout(timer);
@@ -251,7 +294,13 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
   function locate() {
     if (!navigator.geolocation) return setNotice("この端末では現在地を取れません");
     navigator.geolocation.getCurrentPosition(
-      (pos) => mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 14, duration: 900 }),
+      (pos) => {
+        const map = mapRef.current;
+        if (!map) return;
+        hereRef.current?.remove();
+        hereRef.current = hereMarker(pos.coords.latitude, pos.coords.longitude).addTo(map);
+        map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 14, duration: 900 });
+      },
       () => setNotice("現在地を取れませんでした"),
       { enableHighAccuracy: false, timeout: 10_000 },
     );
