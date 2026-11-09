@@ -5,7 +5,7 @@ import { pickShopVideo } from "@/lib/social/socialVideos";
 import { resolveSocialToken } from "@/lib/social/tokens";
 import { THREADS_TOPICS, LUXELA_TOPICS, topicsFor, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { generateAiImage, imageSceneFromPost, pickShopPhoto } from "@/lib/social/socialImages";
-import { THREADS_MAX_CHARS, validateThreadsText, writeShopFeaturePost, writeThreadsPost } from "@/lib/social/threadsWriter";
+import { THREADS_MAX_CHARS, validateThreadsText, writeShopFeaturePost, writeThreadsPost, type ImageHint } from "@/lib/social/threadsWriter";
 
 /**
  * LOCAPASS公式Threadsの投稿の管理。
@@ -418,7 +418,7 @@ export async function createUploadedVideoDraft(input: { dest: Destination; video
 export type ComposeForm = "feed" | "reel" | "post";
 export type ComposeText = { mode: "manual"; body: string } | { mode: "auto"; audience: ThreadsAudience | "auto"; note: string };
 export type ComposeMedia = { kind: "none" } | { kind: "upload-photo"; url: string } | { kind: "upload-video"; url: string } | { kind: "shop-photo" } | { kind: "shop-video" } | { kind: "ai-image" } | { kind: "reel-ai" } | { kind: "reel-shop-photo" } | { kind: "reel-upload-photo"; url: string };
-export type ComposeInput = { dest: Destination; form: ComposeForm; text: ComposeText; media: ComposeMedia; style?: "photo" | "illustration" | "flyer"; headline?: string };
+export type ComposeInput = { dest: Destination; form: ComposeForm; text: ComposeText; media: ComposeMedia; style?: "photo" | "illustration" | "flyer"; headline?: string; imageHint?: ImageHint | null };
 const REEL_FROM_IMAGE = ["reel-ai", "reel-shop-photo", "reel-upload-photo"];
 
 /** 形と素材の組み合わせが成り立つか確認する。 */
@@ -430,6 +430,19 @@ function checkCompose(input: ComposeInput): void {
     if (form === "post") throw new Error("Instagramでは、フィードかリールを選んでください");
   } else if (form !== "post") {
     throw new Error("Threadsは「投稿」を選んでください");
+  }
+}
+
+/** 公開されている画像のURLから、AIに見せる小さな画像(最大768px・JPEG)を作る。失敗したら null(画像なしで続ける)。 */
+async function imageHintFromUrl(url: string): Promise<ImageHint | null> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) return null;
+    const sharp = (await import("sharp")).default;
+    const jpeg = await sharp(Buffer.from(await res.arrayBuffer())).rotate().resize(768, 768, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 75 }).toBuffer();
+    return { mime: "image/jpeg", base64: jpeg.toString("base64") };
+  } catch {
+    return null;
   }
 }
 
@@ -448,6 +461,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   let shopKeyTopic: string | null = null;
   let template: string | null = null;
   let shopFeature: { shopName: string; description: string; link: string; media: "photo" | "video" } | null = null;
+  let shopImageHint: ImageHint | null = null;
   if (media.kind === "upload-photo" || media.kind === "reel-upload-photo") imageUrl = media.url;
   if (media.kind === "upload-video") videoUrl = media.url;
   if (media.kind === "shop-photo" || media.kind === "reel-shop-photo") {
@@ -457,6 +471,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
     const link = photo.shopCode ? `${site.url}/s/${photo.shopCode}` : site.url;
     template = [`📍 ${photo.shopName}`, photo.description, `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${link}`, photo.instagramHandle ? `@${photo.instagramHandle}` : ""].filter(Boolean).join("\n\n");
     shopFeature = { shopName: photo.shopName, description: photo.description, link, media: "photo" };
+    shopImageHint = await imageHintFromUrl(photo.imageUrl); // 選んだ店舗の写真も、AIに見せる
   }
   if (media.kind === "shop-video") {
     const video = await pickShopVideo(rows.filter((r) => r.topic.startsWith("reel:")).map((r) => r.topic.slice(5)), dest.account);
@@ -476,7 +491,7 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
     body = checkManualText(text.body, "instagram"); // 投稿先は書いたあとに選ぶので、ここでは長い方(2200文字)の上限だけ確認し、投稿先ごとの上限は投稿のときに確認する。手書きの文章は、そのままは画像のテーマに渡さない(文字として描かれるため)。場面だけを取り出して使う
   } else if (shopFeature) {
     const audience = text.audience === "shop" ? "shop" : "public";
-    const written = await writeShopFeaturePost({ account: dest.account, ...shopFeature, recent: rows.map((r) => r.body), audience, note: text.note });
+    const written = await writeShopFeaturePost({ account: dest.account, ...shopFeature, recent: rows.map((r) => r.body), audience, note: text.note, image: shopImageHint ?? undefined });
     // 店舗向け(営業)の文章は、失敗したときにお客さん向けの定型文へ置き換えない(読者が違うため)。
     if (audience === "shop" && !written.ok) throw new Error(`店舗向けの文章を作れませんでした: ${written.error}`);
     body = written.ok ? written.text : [`${shopFeature.media === "video" ? "🎬" : "📍"} ${shopFeature.shopName}`, shopFeature.media === "video" ? "動画でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。" : "写真でお店の様子を紹介します。気になる方は、詳しい情報もあわせてご覧ください。", `${dest.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${site.name}で\n${shopFeature.link}`].join("\n\n");
@@ -484,8 +499,12 @@ export async function prepareCompose(input: ComposeInput): Promise<PreparedCompo
   } else if (template) {
     body = template;
   } else {
-    const t = pickTopic(rows, text.audience === "auto" ? undefined : text.audience, dest.account);
-    const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account, text.note);
+    // 自分の写真・動画があるときは、固定の話題ではなく、画像に合わせて書く(読者と一言の指示は、これまでどおり効く)。
+    const hint = input.imageHint ?? null;
+    const t = hint
+      ? { id: "image", title: "添付の画像に合わせた投稿", angle: "画像に写っている物・場面から書き始め、読み手の困りごとと、サービスの仕様の解決につなげる", audience: text.audience === "shop" ? ("shop" as const) : ("public" as const) }
+      : pickTopic(rows, text.audience === "auto" ? undefined : text.audience, dest.account);
+    const written = await writeThreadsPost(t, rows.map((r) => r.body), dest.account, text.note, hint ?? undefined);
     if (!written.ok) throw new Error(written.error);
     body = written.text;
     topicId = t.id;

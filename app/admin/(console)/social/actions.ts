@@ -68,6 +68,13 @@ export async function publishDraft(id: string) {
   back("ok", "投稿しました(反映まで数分かかることがあります)");
 }
 
+/** 画面から届いた、AIに見せる小さな画像(JPEG・600KBまで)を読む。無ければ null。 */
+async function readImageHint(formData: FormData): Promise<{ mime: string; base64: string } | null> {
+  const file = formData.get("imageHint");
+  if (!(file instanceof File) || file.size === 0 || file.size > 600 * 1024 || file.type !== "image/jpeg") return null;
+  return { mime: "image/jpeg", base64: Buffer.from(await file.arrayBuffer()).toString("base64") };
+}
+
 const PLATFORM_LABEL = { threads: "Threads", instagram: "Instagram" } as const;
 
 /** カードの投稿先チェック(Instagram / Threads)を読む。 */
@@ -371,6 +378,7 @@ export async function composeDraftNow(formData: FormData): Promise<DraftActionRe
       media,
       style: String(formData.get("style") ?? "photo") === "illustration" ? "illustration" : String(formData.get("style") ?? "photo") === "flyer" ? "flyer" : "photo",
       headline: String(formData.get("headline") ?? "").slice(0, 20),
+      imageHint: await readImageHint(formData),
     };
     if (media.kind === "upload-video") {
       // 動画は、実際のファイルで形式・大きさを確認する(R2の social/ 以下だけ)。
@@ -426,6 +434,7 @@ export async function prepareReelNow(formData: FormData): Promise<ReelPrepared> 
       text: textMode === "manual" ? { mode: "manual", body: String(formData.get("body") ?? "") } : { mode: "auto", audience: audienceRaw === "shop" ? "shop" : audienceRaw === "auto" ? "auto" : "public", note: String(formData.get("note") ?? "").slice(0, 300) },
       media,
       style,
+      imageHint: await readImageHint(formData),
     };
     const prepared = await prepareCompose(input);
     if (!prepared.imageUrl) throw new Error("画像を用意できませんでした");

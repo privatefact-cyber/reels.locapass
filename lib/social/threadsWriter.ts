@@ -5,6 +5,13 @@ import type { ThreadsTopic } from "@/lib/social/threadsTopics";
 import { getSocialSettings, splitExamples, MAX_NOTE } from "@/lib/social/socialSettings";
 
 export type BrandAccount = "locapass" | "luxela";
+/** AIに見せる小さな画像(JPEG・base64)。写真、または動画の1コマ。 */
+export type ImageHint = { mime: string; base64: string };
+
+const IMAGE_RULES = `# 添付の画像
+- 画像(写真、または動画の1コマ)を添付している。写っている物・場面を、確認できる範囲で具体的に拾い、投稿の出だしの手がかりにする。
+- 写っていないこと・場所・店名・人物の素性を、決めつけて書かない。人物の顔や容姿には触れない。
+- 画像の話題を読み手の困りごとにつなげ、サービスのどの仕様がどう助けるかをセットで説明する。画像とサービスが無理なくつながらないときは、こじつけず、画像の話題を中心に書き、最後にサイトを案内する。`;
 /** 投稿先ごとの、ブランド名・URL・事実メモ。 */
 const BRANDS: Record<BrandAccount, { name: string; display: string; url: string; facts: string; other: RegExp; otherUrl: string }> = {
   locapass: { name: "LOCAPASS", display: "LOCAPASS【ロカパス】", url: "https://locapass.net", facts: THREADS_FACTS, other: /LUXELA|ルクセラ|luxela/i, otherUrl: "LOCAPASS以外のURLがある" },
@@ -142,7 +149,7 @@ function guardRules(name: string): string {
 - 「街の声」には触れない。`;
 }
 
-function buildPrompt(topic: ThreadsTopic, recent: string[], account: BrandAccount, custom: { instructions: string; examples: string; note: string }): string {
+function buildPrompt(topic: ThreadsTopic, recent: string[], account: BrandAccount, custom: { instructions: string; examples: string; note: string }, image?: ImageHint): string {
   const brand = BRANDS[account];
   const recentList = recent.length ? recent.slice(0, 12).map((r, i) => `${i + 1}. ${r.replace(/\s+/g, " ").slice(0, 60)}…`).join("\n") : "(まだありません)";
   const { reader, style, closing } = audienceBlock(topic, account);
@@ -154,7 +161,7 @@ ${reader}
 # 今日のテーマ
 ${topic.title}
 切り口: ${topic.angle}
-
+${image ? `\n${IMAGE_RULES}\n` : ""}
 # 文体と構成
 ${style}
 - ${closing}
@@ -183,7 +190,7 @@ export type WriteResult = { ok: true; text: string } | { ok: false; error: strin
  * 掲載店舗の写真・動画に添える文章を書く。
  * audience=public: その店を、お客さんに向けて紹介する。 / shop: その店を一例として、店舗オーナーに向けて仕様を説明する。
  */
-export async function writeShopFeaturePost(input: { account: BrandAccount; shopName: string; description: string; link: string; media: "photo" | "video"; recent: string[]; audience?: "public" | "shop"; note?: string }): Promise<WriteResult> {
+export async function writeShopFeaturePost(input: { account: BrandAccount; shopName: string; description: string; link: string; media: "photo" | "video"; recent: string[]; audience?: "public" | "shop"; note?: string; image?: ImageHint }): Promise<WriteResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { ok: false, error: "GEMINI_API_KEY が未設定です", lastText: null };
   const brand = BRANDS[input.account];
@@ -195,6 +202,7 @@ export async function writeShopFeaturePost(input: { account: BrandAccount; shopN
 店舗側の紹介文: ${source}
 素材: ${input.media === "video" ? "店舗の動画" : "店舗の写真"}
 詳細URL: ${input.link}`;
+  const imageRule = input.image ? `\n${IMAGE_RULES}\n` : "";
   const extra = `${settings.instructions ? `- 運営からの文体指示: ${settings.instructions.slice(0, 600)}\n` : ""}${input.note?.trim() ? `- 今回だけの指示: ${input.note.trim().slice(0, 200)}\n` : ""}`;
   const prompt = audience === "shop"
     ? `あなたは${brand.display}公式SNSの編集者です。地域の店舗オーナー・店長に向けて、${brand.name}の仕様を紹介する短い投稿を書いてください。掲載店舗の${input.media === "video" ? "動画" : "写真"}を添えます。
@@ -203,7 +211,7 @@ export async function writeShopFeaturePost(input: { account: BrandAccount; shopN
 ${audienceBlock({ id: "", title: "", angle: "", audience: "shop" }, input.account).reader}
 
 ${shopData}
-
+${imageRule}
 # 文体と構成
 ${audienceBlock({ id: "", title: "", angle: "", audience: "shop" }, input.account).style}
 - 添える店舗は、${brand.name}に掲載されている一例として、店名を1度だけ出してよい。その店の評判・人気・実績・客層など、店舗データに無いことは書かない。
@@ -221,7 +229,7 @@ ${brand.facts}
     : `あなたは${brand.display}公式SNSの編集者です。掲載店舗を紹介する短い投稿を書いてください。
 
 ${shopData}
-
+${imageRule}
 # 書き方
 - 店舗側の紹介文をコピー・言い換えするだけにしない。確認できる事実だけを拾う。
 - 読む人が写真や動画を見たくなる、具体的で自然な1文から始める。「〜していませんか?」のような紋切り型の問いかけから始めない。
@@ -238,7 +246,7 @@ ${extra}
   let lastReason = "文章を作れませんでした";
   for (let attempt = 0; attempt < 3; attempt++) {
     const response = await geminiGenerateWithFallback(apiKey, {
-      contents: [{ role: "user", parts: [{ text: prompt + (attempt ? `\n前回は「${lastReason}」で不採用。そこを直す。` : "") }] }],
+      contents: [{ role: "user", parts: [...(input.image ? [{ inlineData: { mimeType: input.image.mime, data: input.image.base64 } }] : []), { text: prompt + (attempt ? `\n前回は「${lastReason}」で不採用。そこを直す。` : "") }] }],
       generationConfig: { temperature: 0.75, responseMimeType: "application/json" },
     }, "shop-feature-writer");
     if (!response) { lastReason = "AIの呼び出しに失敗"; continue; }
@@ -257,7 +265,7 @@ ${extra}
 }
 
 /** テーマに沿った投稿文をAI(Gemini)に書かせる。確認(validateThreadsText)に通るまで、最大3回書き直す。 */
-export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], account: BrandAccount = "locapass", note = ""): Promise<WriteResult> {
+export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], account: BrandAccount = "locapass", note = "", image?: ImageHint): Promise<WriteResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { ok: false, error: "GEMINI_API_KEY が未設定です", lastText: null };
   const settings = await getSocialSettings(account).catch(() => ({ instructions: "", examples: "", updated_at: null }));
@@ -270,7 +278,7 @@ export async function writeThreadsPost(topic: ThreadsTopic, recent: string[], ac
     const response = await geminiGenerateWithFallback(
       apiKey,
       {
-        contents: [{ role: "user", parts: [{ text: buildPrompt(topic, recent, account, custom) + feedback }] }],
+        contents: [{ role: "user", parts: [...(image ? [{ inlineData: { mimeType: image.mime, data: image.base64 } }] : []), { text: buildPrompt(topic, recent, account, custom, image) + feedback }] }],
         generationConfig: { temperature: 0.75, responseMimeType: "application/json" },
       },
       "threads-writer",
