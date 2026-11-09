@@ -1,14 +1,22 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
-type Action = (kind: "shop" | "ai", dest: string, audience: string) => Promise<void>;
+type Action = (kind: "shop" | "ai", dest: string, audience: string) => Promise<{ ok: boolean; message: string }>;
 
 /** 投稿先を選んで、写真つきの下書きを自動で作る。AIが作る間は「考え中…○秒」を出す。 */
 export function ImageDraftForm({ action }: { action: Action }) {
   const [dest, setDest] = useState("instagram:locapass");
   const [audience, setAudience] = useState("public");
+  const router = useRouter();
+  const [notice, setNotice] = useState<{ ok: boolean; message: string } | null>(null);
   const [pending, start] = useTransition();
+  const run = (kind: "shop" | "ai") => start(async () => {
+    setNotice(null);
+    try { setNotice(await action(kind, dest, audience)); } catch { setNotice({ ok: false, message: "通信に失敗しました。ページを開き直して確認してください" }); }
+    router.refresh();
+  });
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
     if (!pending) return;
@@ -35,10 +43,11 @@ export function ImageDraftForm({ action }: { action: Action }) {
         <span className="text-slate-400">※「AIの画像と文章」のときだけ使います</span>
       </label>
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" disabled={pending} onClick={() => start(async () => { await action("shop", dest, audience); })} className={`${btn} bg-slate-900 text-white`}>掲載店舗の写真で下書きを作る</button>
-        <button type="button" disabled={pending} onClick={() => start(async () => { await action("ai", dest, audience); })} className={`${btn} border border-slate-300 bg-white text-slate-800`}>AIの画像と文章で下書きを作る</button>
+        <button type="button" disabled={pending} onClick={() => run("shop")} className={`${btn} bg-slate-900 text-white`}>掲載店舗の写真で下書きを作る</button>
+        <button type="button" disabled={pending} onClick={() => run("ai")} className={`${btn} border border-slate-300 bg-white text-slate-800`}>AIの画像と文章で下書きを作る</button>
         {pending && <span role="status" className="text-sm font-semibold text-amber-700">考え中…{seconds}秒(最大1分ほど)</span>}
       </div>
+      {notice && <p role="status" className={`text-sm font-semibold ${notice.ok ? "text-emerald-700" : "text-red-700"}`}>{notice.message}</p>}
     </div>
   );
 }

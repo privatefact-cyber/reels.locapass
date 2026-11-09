@@ -14,7 +14,9 @@ function back(kind: "ok" | "error", message: string): never {
 }
 
 /** 下書きを1本、いま作る(AIに書かせる)。audience=読者(店舗向け/一般向け)。 */
-export async function createDraftNow(audience: ThreadsAudience) {
+export type DraftActionResult = { ok: boolean; message: string };
+
+export async function createDraftNow(audience: ThreadsAudience): Promise<DraftActionResult> {
   await requireRootAdmin();
   let message: string | null = null;
   try {
@@ -23,8 +25,8 @@ export async function createDraftNow(audience: ThreadsAudience) {
   } catch (e) {
     message = e instanceof Error ? e.message : "下書きを作れませんでした";
   }
-  if (message) back("error", message);
-  back("ok", "下書きを作りました。内容を確認してください");
+  revalidatePath("/admin/threads");
+  return message ? { ok: false, message } : { ok: true, message: "下書きを作りました。下の「下書き」に出ています" };
 }
 
 /** 下書きをThreadsに投稿する(loca.pass に公開される)。 */
@@ -173,7 +175,7 @@ export async function unschedulePost(id: string) {
 }
 
 /** 写真つきの下書きを自動で作る(店舗の写真 / AIの画像)。 */
-export async function createImageDraftNow(kind: "shop" | "ai", dest: string, audience: string) {
+export async function createImageDraftNow(kind: "shop" | "ai", dest: string, audience: string): Promise<DraftActionResult> {
   await requireRootAdmin();
   const [platform, account] = dest.split(":");
   let message: string | null = null;
@@ -182,6 +184,6 @@ export async function createImageDraftNow(kind: "shop" | "ai", dest: string, aud
   } catch (e) {
     message = e instanceof Error ? e.message : "下書きを作れませんでした";
   }
-  if (message) back("error", message);
-  back("ok", "写真つきの下書きを作りました。内容を確認してください");
+  revalidatePath("/admin/threads");
+  return message ? { ok: false, message } : { ok: true, message: "写真つきの下書きを作りました。下の「下書き」に出ています" };
 }
