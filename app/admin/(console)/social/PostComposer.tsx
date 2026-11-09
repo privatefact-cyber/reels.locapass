@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { composeFlyerJpeg } from "@/lib/social/composeFlyer";
 
 type Result = { ok: boolean; message: string };
 type Sns = "instagram" | "threads";
@@ -37,7 +38,7 @@ function mediaOptionsFor(sns: Sns, form: Form): MediaKind[] {
 const chip = (selected: boolean, disabled = false) =>
   `rounded-lg border px-3 py-2 text-left text-sm ${disabled ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400" : selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-800 hover:border-slate-500"}`;
 
-export function PostComposer({ action }: { action: (formData: FormData) => Promise<Result> }) {
+export function PostComposer({ action, flyerAction }: { action: (formData: FormData) => Promise<Result>; flyerAction: (account: string, theme: string) => Promise<{ ok: boolean; message: string; dataUrl?: string }> }) {
   const router = useRouter();
   const photoRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
@@ -86,6 +87,19 @@ export function PostComposer({ action }: { action: (formData: FormData) => Promi
     fd.set("headline", headline);
     setBusy(true); setProgress(null);
     try {
+      if (media === "ai-image" && style === "flyer") {
+        // チラシ: AIが文字なしのイラストを作る → ブラウザで見出しを重ねる → R2へ送る → 下書きにする
+        const base = await flyerAction(account, headline || (textMode === "manual" ? body.slice(0, 30) : ""));
+        if (!base.ok || !base.dataUrl) throw new Error(base.message || "チラシの背景を作れませんでした");
+        const jpeg = await composeFlyerJpeg(base.dataUrl, headline, account === "luxela" ? "LUXELA" : "LOCAPASS");
+        const created = await fetch("/api/r2/presigned-upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ context: "social_admin", contentType: "image/jpeg", size: jpeg.size }) });
+        if (!created.ok) throw new Error(((await created.json().catch(() => ({}))) as { error?: string }).error ?? "アップロードの準備に失敗しました");
+        const { uploadURL, publicUrl } = (await created.json()) as { uploadURL: string; publicUrl: string };
+        const put = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: jpeg });
+        if (!put.ok) throw new Error(`アップロードに失敗しました(${put.status})`);
+        fd.set("mediaKind", "upload-photo-url");
+        fd.set("photoUrl", publicUrl);
+      }
       if (media === "upload-photo") {
         const file = photoRef.current?.files?.[0];
         if (!file) throw new Error("写真を選んでください");
@@ -188,7 +202,7 @@ export function PostComposer({ action }: { action: (formData: FormData) => Promi
             {style === "flyer" && (
               <div className="space-y-1">
                 <input value={headline} onChange={(e) => setHeadline(e.target.value)} maxLength={20} disabled={busy} placeholder="チラシの見出しの文字(20文字まで・空なら、サービス名)" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" />
-                <p className="text-[11px] text-slate-500">AIが日本語の文字を描くため、まれに文字が崩れます。下書きのプレビューで確認してください(直らないときは作り直します)。</p>
+                <p className="text-[11px] text-slate-500">AIは文字なしのイラストだけを作り、見出しは正しい日本語のフォントで重ねます(文字は崩れません)。長い見出しは、自動で2行になります。</p>
               </div>
             )}
           </div>

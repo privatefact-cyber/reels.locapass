@@ -63,7 +63,8 @@ export async function generateAiImage(theme: string, account: "locapass" | "luxe
   const brand = account === "luxela" ? "LUXELA" : "LOCAPASS";
   const headline = (opts.headline ?? "").replace(/\s+/g, " ").trim().slice(0, 20) || brand;
   const look = style === "illustration" ? "おしゃれで上品な、手描き風のイラスト" : "写真風の画像";
-  const flyerPrompt = `SNS向けの、おしゃれな${account === "luxela" ? "夜の街(ネオン・落ち着いた大人の雰囲気)" : "街のお店(あたたかい雰囲気)"}の、イラストのチラシ(ポスター風)。大きな見出しの文字「${headline}」だけを、中央に読みやすく、正しく入れる。ほかの文字・ロゴ・小さな文字は入れない。人物の顔は描かない。テーマ: ${theme}。`;
+  // チラシの文字は、AIに描かせると崩れるため、ここでは文字なしのイラストだけを作る(見出しは、管理画面のブラウザで正しいフォントで重ねる)。
+  const flyerPrompt = `SNSのチラシの背景にする、おしゃれな${account === "luxela" ? "夜の街(ネオン・落ち着いた大人の雰囲気)" : "街のお店(あたたかい雰囲気)"}のイラスト。中央に、あとで文字を重ねられる、すっきりした広めの余白を残す。文字・ロゴ・看板の文字は一切入れない。人物の顔は描かない。テーマ: ${theme}。`;
   const prompt = style === "flyer" ? flyerPrompt : account === "luxela"
     ? `日本の夜の繁華街の、大人っぽく落ち着いた雰囲気の${look}。ネオンや街灯、グラスや店先の明かりなど。テーマ: ${theme}。人物の顔・文字・ロゴ・看板の文字・露出の多い表現は入れない。`
     : `日本の街の、あたたかい雰囲気の${look}。テーマ: ${theme}。${style === "photo" ? "自然光、スマホで撮ったような自然な構図。" : "やさしい色合いで、すっきりした構図。"}人物の顔・文字・ロゴ・看板の文字は入れない。`;

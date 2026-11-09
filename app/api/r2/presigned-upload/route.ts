@@ -55,9 +55,9 @@ export async function POST(request: Request) {
     if (!rootAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     const size = Number(body?.size);
     const type = typeof contentType === "string" ? contentType : "";
-    const videoExt = type === "video/mp4" ? "mp4" : type === "video/quicktime" ? "mov" : null;
-    if (!videoExt) return NextResponse.json({ error: "MP4またはMOVの動画を選んでください" }, { status: 400 });
-    if (!Number.isFinite(size) || size <= 0 || size > 200 * 1024 * 1024) {
+    const videoExt = type === "video/mp4" ? "mp4" : type === "video/quicktime" ? "mov" : type === "image/jpeg" ? "jpg" : null;
+    if (!videoExt) return NextResponse.json({ error: "MP4・MOVの動画、またはJPEGの画像を選んでください" }, { status: 400 });
+    if (!Number.isFinite(size) || size <= 0 || size > (type === "image/jpeg" ? 8 * 1024 * 1024 : 200 * 1024 * 1024)) {
       return NextResponse.json({ error: "動画は200MB以下にしてください" }, { status: 400 });
     }
     const key = `social/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${videoExt}`;

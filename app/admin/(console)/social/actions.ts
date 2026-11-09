@@ -9,6 +9,7 @@ import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
 import { composeDraft, type ComposeInput } from "@/lib/social/threadsPosts";
+import { generateAiImage } from "@/lib/social/socialImages";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
@@ -266,7 +267,15 @@ export async function composeDraftNow(formData: FormData): Promise<DraftActionRe
     const textMode = String(formData.get("textMode") ?? "auto");
     const mediaKind = String(formData.get("mediaKind") ?? "none");
     let media: ComposeInput["media"];
-    if (mediaKind === "upload-photo") {
+    if (mediaKind === "upload-photo-url") {
+      // ブラウザで作ったチラシ画像(R2の social/ 以下のJPEG)
+      const { R2_PUBLIC_BASE_URL } = await import("@/lib/storage/r2");
+      const url = String(formData.get("photoUrl") ?? "");
+      if (!url.startsWith(`${R2_PUBLIC_BASE_URL}/social/`) || !url.endsWith(".jpg")) throw new Error("画像のURLが正しくありません");
+      const head = await fetch(url, { method: "HEAD" }).catch(() => null);
+      if (!head?.ok || !/^image\/jpeg/i.test(head.headers.get("content-type") ?? "")) throw new Error("アップロードした画像を確認できませんでした");
+      media = { kind: "upload-photo", url };
+    } else if (mediaKind === "upload-photo") {
       const url = await uploadOptionalImage(formData.get("photo"));
       if (!url) throw new Error("写真を選んでください");
       media = { kind: "upload-photo", url };
@@ -297,4 +306,19 @@ export async function composeDraftNow(formData: FormData): Promise<DraftActionRe
   }
   revalidatePath("/admin/social");
   return message ? { ok: false, message } : { ok: true, message: "下書きを作りました。下の「下書き」で確認して、投稿か予約をしてください(まだ公開されていません)" };
+}
+
+/** チラシの背景(文字なしのイラスト)をAIで作り、ブラウザで文字を重ねられるよう、画像データを返す。 */
+export async function generateFlyerBaseNow(account: string, theme: string): Promise<{ ok: boolean; message: string; dataUrl?: string }> {
+  await requireRootAdmin();
+  try {
+    const acc = account === "luxela" ? "luxela" : "locapass";
+    const url = await generateAiImage(theme.slice(0, 40) || "街のお店", acc, { style: "flyer" });
+    const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+    if (!res.ok) throw new Error("画像を取得できませんでした");
+    const b64 = Buffer.from(await res.arrayBuffer()).toString("base64");
+    return { ok: true, message: "", dataUrl: `data:image/jpeg;base64,${b64}` };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "チラシの背景を作れませんでした" };
+  }
 }
