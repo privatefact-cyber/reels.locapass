@@ -52,3 +52,29 @@ export async function publishThreadsTextPost(config: ThreadsConfig, input: { tex
 export async function publishThreadsImagePost(config: ThreadsConfig, input: { text: string; imageUrl: string }): Promise<string> {
   return createAndPublish(config, { media_type: "IMAGE", image_url: input.imageUrl, text: input.text });
 }
+
+export type ThreadsContainerState = { state: "finished" | "pending" | "error"; message?: string };
+
+async function userIdOf(config: ThreadsConfig): Promise<string> {
+  return config.userId ?? (await call<{ id: string }>("/me", { method: "GET", params: { fields: "id" } }, config.accessToken)).id;
+}
+
+/** 動画つき投稿のコンテナを作る。動画は公開されたURL。処理はMeta側で時間がかかる。 */
+export async function createThreadsVideoContainer(config: ThreadsConfig, input: { text: string; videoUrl: string }): Promise<string> {
+  const userId = await userIdOf(config);
+  const container = await call<{ id: string }>(`/${userId}/threads`, { method: "POST", params: { media_type: "VIDEO", video_url: input.videoUrl, text: input.text } }, config.accessToken);
+  return container.id;
+}
+
+export async function threadsContainerState(config: ThreadsConfig, containerId: string): Promise<ThreadsContainerState> {
+  const s = await call<{ status?: string; error_message?: string }>(`/${containerId}`, { method: "GET", params: { fields: "status,error_message" } }, config.accessToken);
+  if (s.status === "FINISHED") return { state: "finished" };
+  if (s.status === "ERROR" || s.status === "EXPIRED") return { state: "error", message: s.error_message ?? s.status };
+  return { state: "pending" };
+}
+
+export async function publishThreadsContainer(config: ThreadsConfig, containerId: string): Promise<string> {
+  const userId = await userIdOf(config);
+  const published = await call<{ id: string }>(`/${userId}/threads_publish`, { method: "POST", params: { creation_id: containerId } }, config.accessToken);
+  return published.id;
+}

@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { publishThreadsImagePost, publishThreadsTextPost } from "@/lib/social/threads";
-import { publishInstagramImagePost, type SocialAccount } from "@/lib/social/instagram";
+import { createThreadsVideoContainer, publishThreadsContainer, publishThreadsImagePost, publishThreadsTextPost, threadsContainerState } from "@/lib/social/threads";
+import { createInstagramReelContainer, instagramContainerState, publishInstagramContainer, publishInstagramImagePost, type SocialAccount } from "@/lib/social/instagram";
+import { pickShopVideo } from "@/lib/social/socialVideos";
 import { resolveSocialToken } from "@/lib/social/tokens";
 import { THREADS_TOPICS, LUXELA_TOPICS, topicsFor, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { generateAiImage, pickShopPhoto } from "@/lib/social/socialImages";
@@ -29,16 +30,18 @@ export type PostRow = {
   topic: string;
   body: string;
   image_url: string | null;
+  video_url: string | null;
+  container_id: string | null;
   source: "ai" | "manual";
   platform: "threads" | "instagram";
   account: SocialAccount;
-  status: "draft" | "scheduled" | "posted" | "failed" | "discarded";
+  status: "draft" | "scheduled" | "processing" | "posted" | "failed" | "discarded";
   error: string | null;
   created_at: string;
   posted_at: string | null;
   scheduled_at: string | null;
 };
-const COLUMNS = "id, topic, body, image_url, source, platform, account, status, error, created_at, posted_at, scheduled_at";
+const COLUMNS = "id, topic, body, image_url, video_url, container_id, source, platform, account, status, error, created_at, posted_at, scheduled_at";
 
 /** 直近のAIの投稿(重複を避けるための材料)。破棄したものは除く。 */
 async function recentRows(limit = 40): Promise<PostRow[]> {
@@ -157,7 +160,7 @@ export async function scheduleThreadsPost(id: string, when: Date | null): Promis
 /** 下書き・予約中の投稿を、Threadsに投稿する。失敗しても、理由を記録に残す(同じ文章を勝手に再投稿しない)。 */
 export async function publishThreadsDraft(id: string): Promise<void> {
   const admin = db();
-  const { data: row, error } = await admin.from("locapass_threads_posts").select("id, body, image_url, source, platform, account, status").eq("id", id).maybeSingle();
+  const { data: row, error } = await admin.from("locapass_threads_posts").select("id, body, image_url, video_url, source, platform, account, status").eq("id", id).maybeSingle();
   if (error || !row) throw new Error(error?.message ?? "下書きが見つかりません");
   if (row.status !== "draft" && row.status !== "scheduled") throw new Error("この投稿は、すでに処理済みです");
   const isInstagram = row.platform === "instagram";
@@ -165,7 +168,7 @@ export async function publishThreadsDraft(id: string): Promise<void> {
   const config = threadsToken ? { userId: process.env.THREADS_USER_ID?.trim() || null, accessToken: threadsToken } : null;
   const igToken = isInstagram ? await resolveSocialToken("instagram", row.account) : null;
   if (isInstagram && !igToken) throw new Error(`Instagram(${row.account})のトークンが未設定です`);
-  if (isInstagram && !row.image_url) throw new Error("Instagramは写真が必要です。写真を付けてください");
+  if (isInstagram && !row.image_url && !row.video_url) throw new Error("Instagramは写真か動画が必要です。付けてください");
   if (!isInstagram && !config) throw new Error(`Threads(${row.account})のトークンが未設定です`);
   // AIが書いた文章は、投稿の直前にもう一度、安全チェックをする。自分で書いた文章は、文字数だけ確認する。
   if (row.source === "ai") {
@@ -174,6 +177,7 @@ export async function publishThreadsDraft(id: string): Promise<void> {
   } else if (row.body.length > (isInstagram ? 2200 : THREADS_MAX_CHARS + 20)) {
     throw new Error("文章が長すぎます");
   }
+  if (row.video_url) return publishVideoDraft({ id, body: row.body, videoUrl: row.video_url, isInstagram, igToken, config, status: row.status });
   // 二重に投稿しないよう、先に「投稿中」の印として、同じ状態のときだけ予約を外す(同時に動いても、1回しか通らない)。
   const { data: claimed } = await admin.from("locapass_threads_posts").update({ scheduled_at: null }).eq("id", id).eq("status", row.status).select("id");
   if (!claimed?.length) throw new Error("この投稿は、いま別の処理で投稿中です");
@@ -226,6 +230,9 @@ export async function runThreadsTextCron(options: { dry: boolean }) {
   const admin = db();
   const out: Record<string, unknown> = { mode };
 
+  // 0) 動画の処理が終わったものを公開する
+  try { const finalized = await finalizeProcessingVideos(); if (finalized.length) out.finalized = finalized; } catch (e) { out.finalizeError = e instanceof Error ? e.message : "動画の確認に失敗"; }
+
   // 1) 予約の時間になったもの
   const { data: due } = await admin.from("locapass_threads_posts").select("id").eq("status", "scheduled").lte("scheduled_at", new Date().toISOString()).order("scheduled_at", { ascending: true }).limit(1);
   if (due?.length) {
@@ -264,4 +271,90 @@ export async function listThreadsPosts(): Promise<PostRow[]> {
   const { data, error } = await db().from("locapass_threads_posts").select(COLUMNS).order("created_at", { ascending: false }).limit(60);
   if (error) throw new Error(`一覧の取得に失敗しました: ${error.message}`);
   return (data ?? []) as PostRow[];
+}
+
+
+const VIDEO_WAIT_MS = 75_000;
+const VIDEO_GIVE_UP_MS = 40 * 60_000;
+type VideoCtx = { id: string; body: string; videoUrl: string; isInstagram: boolean; igToken: string | null; config: { userId: string | null; accessToken: string } | null; status: string };
+
+async function stateOf(ctx: Pick<VideoCtx, "isInstagram" | "igToken" | "config">, containerId: string) {
+  return ctx.isInstagram ? instagramContainerState(ctx.igToken!, containerId) : threadsContainerState(ctx.config!, containerId);
+}
+async function publishContainer(ctx: Pick<VideoCtx, "isInstagram" | "igToken" | "config">, containerId: string): Promise<string> {
+  return ctx.isInstagram ? publishInstagramContainer(ctx.igToken!, containerId) : publishThreadsContainer(ctx.config!, containerId);
+}
+async function markPosted(id: string, externalId: string) {
+  const { data, error } = await db().from("locapass_threads_posts").update({ status: "posted", external_id: externalId, posted_at: new Date().toISOString(), error: null }).eq("id", id).select("id");
+  if (error || !data?.length) throw new Error("投稿はできましたが、記録の更新に失敗しました。二重に投稿しないよう確認してください");
+}
+async function markFailed(id: string, message: string) {
+  await db().from("locapass_threads_posts").update({ status: "failed", error: message.slice(0, 400) }).eq("id", id);
+}
+
+/** 動画の投稿: コンテナを作る → Metaの処理を待つ(最大75秒) → 公開。間に合わなければ「処理中」にして、あとは定期処理(30分おき)が公開する。 */
+async function publishVideoDraft(ctx: VideoCtx): Promise<void> {
+  const admin = db();
+  // 二重に動かないよう、状態を「処理中」に変えられたものだけ進める。
+  const { data: claimed } = await admin.from("locapass_threads_posts").update({ status: "processing", processing_since: new Date().toISOString(), scheduled_at: null }).eq("id", ctx.id).eq("status", ctx.status).select("id");
+  if (!claimed?.length) throw new Error("この投稿は、いま別の処理で動いています");
+  try {
+    const containerId = ctx.isInstagram
+      ? await createInstagramReelContainer(ctx.igToken!, { caption: ctx.body, videoUrl: ctx.videoUrl })
+      : await createThreadsVideoContainer(ctx.config!, { text: ctx.body, videoUrl: ctx.videoUrl });
+    await admin.from("locapass_threads_posts").update({ container_id: containerId }).eq("id", ctx.id);
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < VIDEO_WAIT_MS) {
+      const st = await stateOf(ctx, containerId);
+      if (st.state === "finished") { await markPosted(ctx.id, await publishContainer(ctx, containerId)); return; }
+      if (st.state === "error") throw new Error(`動画の処理に失敗しました: ${st.message ?? "不明"}`);
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+    // 間に合わなかった: 「処理中」のまま残す(定期処理が続きを公開する)。
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "動画の投稿に失敗しました";
+    await markFailed(ctx.id, message);
+    throw new Error(message);
+  }
+}
+
+/** 「処理中」の動画を確認して、終わっていれば公開する(定期処理から呼ぶ)。 */
+export async function finalizeProcessingVideos(): Promise<{ id: string; result: string }[]> {
+  const admin = db();
+  const { data } = await admin.from("locapass_threads_posts").select("id, body, video_url, container_id, platform, account, processing_since").eq("status", "processing").lt("processing_since", new Date(Date.now() - 2 * 60_000).toISOString()).limit(5);
+  const out: { id: string; result: string }[] = [];
+  for (const row of (data ?? []) as any[]) {
+    const isInstagram = row.platform === "instagram";
+    try {
+      if (!row.container_id) { await markFailed(row.id, "動画の処理が途中で止まりました(コンテナなし)"); out.push({ id: row.id, result: "failed" }); continue; }
+      if (Date.now() - new Date(row.processing_since).getTime() > VIDEO_GIVE_UP_MS) { await markFailed(row.id, "動画の処理が40分たっても終わりませんでした"); out.push({ id: row.id, result: "timeout" }); continue; }
+      const threadsToken = isInstagram ? null : await resolveSocialToken("threads", row.account);
+      const ctx = { isInstagram, igToken: isInstagram ? await resolveSocialToken("instagram", row.account) : null, config: threadsToken ? { userId: process.env.THREADS_USER_ID?.trim() || null, accessToken: threadsToken } : null };
+      const st = await stateOf(ctx, row.container_id);
+      if (st.state === "finished") {
+        // 公開の直前に、もう一度「処理中」の印を取り直して、二重に公開しない。
+        const { data: claimed } = await admin.from("locapass_threads_posts").update({ processing_since: new Date().toISOString() }).eq("id", row.id).eq("status", "processing").eq("processing_since", row.processing_since).select("id");
+        if (!claimed?.length) { out.push({ id: row.id, result: "busy" }); continue; }
+        await markPosted(row.id, await publishContainer(ctx, row.container_id));
+        out.push({ id: row.id, result: "posted" });
+      } else if (st.state === "error") { await markFailed(row.id, `動画の処理に失敗しました: ${st.message ?? "不明"}`); out.push({ id: row.id, result: "failed" }); }
+      else out.push({ id: row.id, result: "pending" });
+    } catch (e) {
+      await markFailed(row.id, e instanceof Error ? e.message : "動画の公開に失敗しました");
+      out.push({ id: row.id, result: "failed" });
+    }
+  }
+  return out;
+}
+
+/** 掲載店舗の動画(自前のサーバーにあるもの)で、リール/動画の下書きを作る。 */
+export async function createVideoDraft(dest: Destination): Promise<string> {
+  const rows = (await recentRows()).filter((r) => r.account === dest.account);
+  const video = await pickShopVideo(rows.filter((r) => r.topic.startsWith("reel:")).map((r) => r.topic.slice(5)), dest.account);
+  const site = dest.account === "luxela" ? { url: "https://luxela.jp", name: "LUXELA" } : { url: "https://locapass.net", name: "LOCAPASS" };
+  const link = video.shopCode ? `${site.url}/s/${video.shopCode}` : site.url;
+  const body = [`🎬 ${video.shopName}`, `動画・詳細は${site.name}で\n${link}`, video.instagramHandle ? `@${video.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+  const { data, error } = await db().from("locapass_threads_posts").insert({ topic: `reel:${video.key}`, body, video_url: video.videoUrl, source: "manual", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
+  if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
+  return data.id as string;
 }

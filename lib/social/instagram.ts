@@ -35,3 +35,23 @@ export async function publishInstagramImagePost(token: string, input: { caption:
   const published = await call<{ id: string }>("/me/media_publish", "POST", { creation_id: container.id }, token);
   return published.id;
 }
+
+export type ContainerState = { state: "finished" | "pending" | "error"; message?: string };
+
+/** リール(縦動画)のコンテナを作る。動画は公開されたURLのMP4/MOV。処理はMeta側で数十秒〜数分かかる。 */
+export async function createInstagramReelContainer(token: string, input: { caption: string; videoUrl: string }): Promise<string> {
+  const container = await call<{ id: string }>("/me/media", "POST", { media_type: "REELS", video_url: input.videoUrl, caption: input.caption, share_to_feed: "true" }, token);
+  return container.id;
+}
+
+export async function instagramContainerState(token: string, containerId: string): Promise<ContainerState> {
+  const s = await call<{ status_code?: string; status?: string }>(`/${containerId}`, "GET", { fields: "status_code,status" }, token);
+  if (s.status_code === "FINISHED") return { state: "finished" };
+  if (s.status_code === "ERROR" || s.status_code === "EXPIRED") return { state: "error", message: s.status ?? s.status_code };
+  return { state: "pending" };
+}
+
+export async function publishInstagramContainer(token: string, containerId: string): Promise<string> {
+  const published = await call<{ id: string }>("/me/media_publish", "POST", { creation_id: containerId }, token);
+  return published.id;
+}

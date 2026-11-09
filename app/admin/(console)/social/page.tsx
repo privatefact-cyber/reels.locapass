@@ -4,7 +4,7 @@ import { AUDIENCE_LABEL, LUXELA_TOPICS, THREADS_TOPICS } from "@/lib/social/thre
 import { getTokenStatuses } from "@/lib/social/tokens";
 import { defaultStyleFor } from "@/lib/social/threadsWriter";
 import { getSocialSettings, MAX_EXAMPLES, MAX_INSTRUCTIONS } from "@/lib/social/socialSettings";
-import { attachDraftImage, createDraftNow, createImageDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
+import { attachDraftImage, createDraftNow, createImageDraftNow, createVideoDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, schedulePost, unschedulePost } from "./actions";
 import { TextDraftForm } from "./TextDraftForm";
 import { ImageDraftForm } from "./ImageDraftForm";
 
@@ -12,7 +12,7 @@ import { ImageDraftForm } from "./ImageDraftForm";
 export const maxDuration = 120;
 
 const MODE_LABEL = { off: "AIは何もしない", draft: "AIは下書きを作るだけ(確認してから予約・投稿)", auto: "AIが書いて、確認なしで自動投稿" } as const;
-const STATUS_LABEL: Record<string, string> = { draft: "下書き", scheduled: "予約中", posted: "投稿済み", failed: "失敗", discarded: "破棄" };
+const STATUS_LABEL: Record<string, string> = { draft: "下書き", scheduled: "予約中", processing: "動画を処理中", posted: "投稿済み", failed: "失敗", discarded: "破棄" };
 const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900";
 const btn = "rounded-lg px-4 py-2 text-sm font-semibold";
 
@@ -33,7 +33,9 @@ function PostCard({ p }: { p: PostRow }) {
         <textarea name="body" defaultValue={p.body} rows={Math.min(14, Math.max(5, Math.ceil(p.body.length / 28) + 2))} maxLength={500} className={input} />
         <button className={`${btn} border border-slate-300 bg-white text-slate-700`}>文章を保存</button>
       </form>
-      {p.image_url ? (
+      {p.video_url ? (
+        <video src={p.video_url} controls preload="metadata" playsInline className="h-56 rounded-lg border border-slate-200 bg-black" />
+      ) : p.image_url ? (
         <div className="flex items-end gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={p.image_url} alt="" className="h-28 w-28 rounded-lg border border-slate-200 object-cover" />
@@ -70,6 +72,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
   const posts = await listThreadsPosts().catch(() => []);
   const scheduled = posts.filter((p) => p.status === "scheduled").sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
   const drafts = posts.filter((p) => p.status === "draft");
+  const processing = posts.filter((p) => p.status === "processing");
   const history = posts.filter((p) => p.status === "posted" || p.status === "failed");
 
   return (
@@ -158,7 +161,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-bold text-slate-900">写真つきの下書きを自動で作る</h2>
         <p className="text-xs text-slate-500">写真は自動で用意します。「掲載店舗の写真」は、店名・LOCAPASSのリンク・お店のInstagram(登録があれば)のタグ付けつき。Instagramはこちらが基本です。</p>
-        <ImageDraftForm action={createImageDraftNow} />
+        <ImageDraftForm action={createImageDraftNow} videoAction={createVideoDraftNow} />
       </section>
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
@@ -172,6 +175,19 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
         {scheduled.length === 0 && <p className="text-sm text-slate-500">予約している投稿はありません。</p>}
         {scheduled.map((p) => <PostCard key={p.id} p={p} />)}
       </section>
+
+      {processing.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-bold text-slate-900">動画を処理中({processing.length})</h2>
+          <p className="text-xs text-slate-500">InstagramやThreads側で動画を処理しています。終わると、自動で公開されます(30分おきに確認)。</p>
+          {processing.map((p) => (
+            <article key={p.id} className="space-y-1 rounded-xl border border-violet-300 bg-violet-50 p-4">
+              <p className="text-xs font-semibold text-slate-700">{DEST_LABEL(p)} ・ 処理中</p>
+              <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">{p.body}</p>
+            </article>
+          ))}
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-slate-900">下書き({drafts.length})</h2>
@@ -187,6 +203,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
             <p className="text-xs text-slate-500">{STATUS_LABEL[p.status] ?? p.status} ・ {fmt(p.posted_at ?? p.created_at)} ・ {label(p)}</p>
             <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">{p.body}</p>
             {p.image_url && (/* eslint-disable-next-line @next/next/no-img-element */ <img src={p.image_url} alt="" className="h-20 w-20 rounded-lg border border-slate-200 object-cover" />)}
+            {p.video_url && <p className="text-xs text-slate-500">🎬 動画つき</p>}
             {p.error && <p className="text-xs font-semibold text-red-700">{p.error}</p>}
           </article>
         ))}

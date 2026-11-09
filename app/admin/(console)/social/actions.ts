@@ -8,7 +8,7 @@ import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
 import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
-import { createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
+import { createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
   revalidatePath("/admin/social");
@@ -225,4 +225,18 @@ export async function checkTokensNow() {
   if (!results) back("error", "確認に失敗しました");
   const text = [...results].sort((a, b) => Number(a.ok) - Number(b.ok)).map((r) => `${r.ok ? "✓" : "✗"} ${r.label}: ${r.detail}`).join(" / ");
   back(results.every((r) => r.ok) ? "ok" : "error", text.slice(0, 690));
+}
+
+/** 掲載店舗の動画(自前のサーバーにあるもの)で、リール/動画の下書きを作る。 */
+export async function createVideoDraftNow(dest: string): Promise<DraftActionResult> {
+  await requireRootAdmin();
+  const [platform, account] = dest.split(":");
+  let message: string | null = null;
+  try {
+    await createVideoDraft({ platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" });
+  } catch (e) {
+    message = e instanceof Error ? e.message : "下書きを作れませんでした";
+  }
+  revalidatePath("/admin/social");
+  return message ? { ok: false, message } : { ok: true, message: "動画の下書きを作りました。下の「下書き」に出ています(再生して確認できます)" };
 }
