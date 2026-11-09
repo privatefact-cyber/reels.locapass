@@ -11,7 +11,7 @@ export type ShopVideo = { videoUrl: string; shopName: string; shopCode: string |
 const MAX_BYTES = 200 * 1024 * 1024;
 
 /** 自前のサーバー: LOCAPASSのR2 / Supabase Storage / LUXELAのR2(media.luxela.jp)。 */
-const ownHost = (url: string) => isDownloadableUrl(url) || url.startsWith("https://media.luxela.jp/");
+const ownHost = (url: string): boolean => url.startsWith("https://media.luxela.jp/") || Boolean(isDownloadableUrl(url));
 const usableVideoUrl = (url: unknown): url is string => typeof url === "string" && ownHost(url) && !/\.m3u8(\?|$)/i.test(url) && !/\/placeholders\//.test(url);
 
 function handleOf(sns: any): string | null {
