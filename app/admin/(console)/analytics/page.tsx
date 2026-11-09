@@ -107,7 +107,7 @@ export default async function AnalyticsPage({
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           [s.pv.toLocaleString(), "ページビュー"],
-          [s.uv.toLocaleString(), "訪問者数(日別ユニーク合計)"],
+          [s.uv.toLocaleString(), "訪問者数(日別・延べ。同じ人が別の日に来ると、その日数分)"],
           [`${s.prefs.length} / 47`, "アクセスのあった都道府県"],
           [s.prefs[0] ? PREFECTURES[s.prefs[0].pref_code] : "—", "最多の都道府県"],
         ].map(([v, l]) => (
@@ -242,7 +242,7 @@ export default async function AnalyticsPage({
         </div>
         <p className="text-xs text-slate-400">流入元は、タブを開いて最初に見たページにだけ記録されます。1訪問は「同じ日・同じ訪問者」で、日をまたぐ訪問は別に数えます。</p>
       </div>
-      <p className="text-xs text-slate-400">IPアドレスは保存しません。訪問者は日替わりの匿名ハッシュで数えます。運営ログイン中のアクセスとボットは除外。IPベースのため、携帯回線やVPNでは実際の居住地とずれることがあります。</p>
+      <p className="text-xs text-slate-400">IPアドレスは保存しません。訪問者は日替わりの匿名ハッシュで数えます。運営ログイン中のアクセス、ボット、店舗側の画面(ログイン・ダッシュボード・マイページ)は除外。IPベースのため、携帯回線やVPNでは実際の居住地とずれることがあります。</p>
     </div>
   );
 }

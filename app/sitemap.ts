@@ -12,6 +12,8 @@ import { petAdmin } from "@/lib/pet/db";
 import { fetchAllRows } from "@/lib/supabase/fetchAll";
 import { isDemoShop } from "@/lib/seo/demo";
 import { MIN_SHOPS_FOR_GUIDE, getPortalStats } from "@/lib/seo/areaStats";
+import { ATTRIBUTE_KEYS } from "@/lib/verticals/attributes";
+import { MIN_SHOPS_FOR_ATTRIBUTE_PAGE } from "@/lib/seo/attributePages";
 
 const BASE_URL = "https://locapass.net";
 
@@ -51,6 +53,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
   // デモ(営業・動作確認用)の店舗は、検索エンジンに見せない。
   const shops = allShops.filter((s) => !isDemoShop(s.name, s.slug));
+
+  // リール1本ごとの共有ページ(/reel/[id])と、属性ページ(/tag/[attr])。どちらも公開中の店舗のものだけ。
+  type ReelRow = { id: string; shop_id: string; published_at: string | null; updated_at: string | null };
+  type AttrRow = { shop_id: string; attribute_key: string };
+  const shopById = new Map(shops.map((s) => [s.id, s]));
+  const [reelRows, attrRows] = await Promise.all([
+    fetchAllRows<ReelRow>((from, to) =>
+      supabase
+        .from("locapass_reels")
+        .select("id, shop_id, published_at, updated_at")
+        .eq("status", "publish")
+        .or("expires_at.is.null,expires_at.gt.now()")
+        .order("id")
+        .range(from, to) as unknown as PromiseLike<{ data: ReelRow[] | null; error: { message: string } | null }>,
+    ).catch((e) => { console.error("[sitemap] reels failed", e); return [] as ReelRow[]; }),
+    fetchAllRows<AttrRow>((from, to) =>
+      (supabase as unknown as { from: (t: string) => { select: (c: string) => { order: (c: string) => { range: (a: number, b: number) => PromiseLike<{ data: AttrRow[] | null; error: { message: string } | null }> } } } })
+        .from("locapass_shop_attributes").select("shop_id, attribute_key").order("shop_id").range(from, to),
+    ).catch((e) => { console.error("[sitemap] attributes failed", e); return [] as AttrRow[]; }),
+  ]);
   const portalStats = await getPortalStats(supabase);
   const areaGuideSlugs = portalStats.filter((p) => p.total >= MIN_SHOPS_FOR_GUIDE && !isLowProfilePortal(p.slug)).map((p) => p.slug);
 
@@ -106,6 +128,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
+  const reelEntries: MetadataRoute.Sitemap = reelRows.flatMap((r) => {
+    const shop = shopById.get(r.shop_id);
+    const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
+    if (!shop || !portal) return [];
+    const modified = r.published_at ?? r.updated_at;
+    return [{
+      url: `${BASE_URL}/reel/${r.id}`,
+      lastModified: modified ? new Date(modified) : undefined,
+      changeFrequency: "monthly" as const,
+      priority: isLowProfilePortal(portal.slug) ? 0.2 : 0.5,
+    }];
+  });
+
+  // 店舗数が少ない属性のページは中身が薄いので載せない(ページ側も noindex)。
+  const attributeShopCount = new Map<string, Set<string>>();
+  for (const row of attrRows) {
+    if (!shopById.has(row.shop_id)) continue;
+    (attributeShopCount.get(row.attribute_key) ?? attributeShopCount.set(row.attribute_key, new Set()).get(row.attribute_key)!).add(row.shop_id);
+  }
+  const attributeEntries: MetadataRoute.Sitemap = ATTRIBUTE_KEYS
+    .filter((key) => (attributeShopCount.get(key)?.size ?? 0) >= MIN_SHOPS_FOR_ATTRIBUTE_PAGE)
+    .map((key) => ({ url: `${BASE_URL}/tag/${key}`, changeFrequency: "weekly" as const, priority: 0.7 }));
+
   const areaCategoryEntries: MetadataRoute.Sitemap = listAreaCategorySlugs(shops, genreToSlug).map(
     ({ city, category }) => ({
       url: `${BASE_URL}/${PREFECTURE_SLUG}/${city}/${category}`,
@@ -136,5 +181,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...areaGuideSlugs.map((slug) => ({ url: `${BASE_URL}/areas/${slug}`, changeFrequency: "weekly" as const, priority: 0.8 })),
   ];
 
-  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...shopEntries, ...castEntries]), ...areaGuideEntries, ...petEntries];
+  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...attributeEntries, ...shopEntries, ...reelEntries, ...castEntries]), ...areaGuideEntries, ...petEntries];
 }
