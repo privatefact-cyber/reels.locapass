@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { YoutubeStockCard } from "./YoutubeStockCard";
+import { YoutubeStockCard, type RowAction } from "./YoutubeStockCard";
 import { setYoutubeStockRejected, blockChannelsAndReject, unblockChannel, deleteRejectedStock } from "../youtube-intake/actions";
 
 type Row = Parameters<typeof YoutubeStockCard>[0]["row"];
 type Status = "all" | "pending" | "matched_existing" | "ready_to_create" | "rejected";
 type Publication = "all" | "unpublished" | "published";
-type Action = (formData: FormData) => void | Promise<void>;
+type Action = RowAction;
 type RowActions = {
   findOfficialSite: Action;
   review: Action;

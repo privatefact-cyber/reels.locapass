@@ -4,6 +4,7 @@ import { geocodeAddress, normalizeAddress } from "@/lib/map/addressGeocode";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
 import { previewShopImport, type ImportPreview } from "@/lib/shop/importFromWebsite";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
+import { addressKey, filterSameShop, hasStreetNumber, safeSearchTerm, searchTerms, type ShopRow } from "@/lib/youtube/shopMatch";
 import { randomBytes } from "node:crypto";
 import { getBlockedChannelTitles } from "./stockHygiene";
 
@@ -352,11 +353,15 @@ export async function matchOrCreateAndPublish(ingestionId: string, input: {
   ignoreOption?: boolean;
 }): Promise<"published" | "held"> {
   const admin = createAdminClient();
-  const existing = await findExistingShop(input.portalId, input.name, input.address);
+  // 全ポータルから探す。複数ヒットしても、候補のポータル内で1件に絞れるならその店に紐づける。
+  let existing = await findExistingShop(input.portalId, input.name, input.address, input.officialUrl);
+  const inPortal = existing.filter((shop) => shop.portal_id === input.portalId);
+  if (existing.length > 1 && inPortal.length === 1) existing = inPortal;
   if (existing.length > 1) {
+    const list = existing.slice(0, 4).map((shop) => `${shop.name}(ポータル${shop.portal_id}・${shop.id})`).join(" / ");
     await (admin as any).from("locapass_youtube_ingestions").update({
       candidate_name: input.name, candidate_address: input.address, official_url: input.officialUrl ?? null,
-      match_reason: input.reason.slice(0, 500), error_message: `既存店舗が${existing.length}件一致したため、重複登録を避けて保留(既存店舗IDを手動で紐づけてください)`,
+      match_reason: input.reason.slice(0, 500), error_message: `既存店舗が${existing.length}件一致したため、重複登録を避けて保留(既存店舗IDを手動で紐づけてください): ${list}`.slice(0, 500),
     }).eq("id", ingestionId);
     return "held";
   }
@@ -376,13 +381,15 @@ export async function matchOrCreateAndPublish(ingestionId: string, input: {
     }
   }
   if (existing.length === 1) {
+    // リールは店舗のポータルに作られるので、候補のポータルも既存店舗のものに合わせる。
     const { error } = await (admin as any).from("locapass_youtube_ingestions").update({
-      portal_id: input.portalId, candidate_name: input.name, candidate_address: input.address,
+      portal_id: existing[0].portal_id, candidate_name: input.name, candidate_address: input.address,
       official_url: input.officialUrl ?? existing[0].url, official_url_verified: Boolean(input.officialUrl ?? existing[0].url),
       matched_shop_id: existing[0].id, match_status: "matched_existing",
       match_reason: `店名・住所が既存店舗に一意一致: ${input.reason}`.slice(0, 500),
       reviewed_at: new Date().toISOString(), reviewed_by: input.userId, error_message: null,
     }).eq("id", ingestionId);
+    if (error?.code === "23505") throw new Error(`既存店舗(ポータル${existing[0].portal_id})に紐づけようとしましたが、そのポータルには同じ動画がすでにあります`);
     if (error) throw new Error(`候補の更新に失敗しました: ${error.message}`);
   } else {
     await createShopForIngestion(ingestionId, { ...input, publish: true });
@@ -497,16 +504,28 @@ export async function resolveShopFromOfficialSite(input: { officialUrl: string; 
   return { name, address, category, preview, note };
 }
 
-/** 店名・住所・公式URLに基づく既存店舗の候補。完全一致以外は確認画面で承認する。 */
-export async function findExistingShop(portalId: number, name: string, address?: string | null) {
+/**
+ * 店名・住所・公式URLに基づく、登録済みの同じ店の候補。
+ * 全ポータルを対象に探す(同じ店がポータルをまたいで二重登録されるのを防ぐ)。同じポータルの店を先に並べる。
+ * 住所は番地まで・表記ゆれを無視して比べ、住所が一致して店名が似ている(または公式サイトのドメインが同じ)ものだけを返す。
+ * 判定の中身は shopMatch.ts。
+ */
+export async function findExistingShop(portalId: number, name: string, address?: string | null, officialUrl?: string | null): Promise<ShopRow[]> {
   const admin = createAdminClient();
-  const term = name.replace(/[%_,()\\]/g, " ").trim();
-  if (!term) return [] as { id: string; name: string; address: string | null; url: string | null; status: string }[];
-  let query = admin.from("locapass_shops").select("id, name, address, url, status").eq("portal_id", portalId).ilike("name", `%${term}%`).limit(10);
-  if (address?.trim()) query = query.ilike("address", `%${address.trim().slice(0, 20)}%`);
-  const { data, error } = await query;
+  const conditions = searchTerms(name).map((term) => `name.ilike."%${term}%"`);
+  // 店名の表記が大きく違っても住所で拾えるように、番地までの住所でも探す(最終判定は filterSameShop)。
+  const street = addressKey(address);
+  if (hasStreetNumber(street)) {
+    const term = safeSearchTerm(street);
+    if (term) conditions.push(`address.ilike."%${term}%"`);
+  }
+  if (conditions.length === 0) return [];
+  const { data, error } = await admin.from("locapass_shops").select("id, name, address, url, status, portal_id").or(conditions.join(",")).limit(300);
   if (error) throw new Error(`既存店舗の検索に失敗しました: ${error.message}`);
-  return data ?? [];
+  let matched = filterSameShop((data ?? []) as ShopRow[], { name, address, officialUrl });
+  // 重複の整理で下書きにした店などは、公開中の一致があれば無視する(公開中が無いときだけ下書きも候補にする)。
+  if (matched.some((shop) => shop.status === "active")) matched = matched.filter((shop) => shop.status === "active");
+  return matched.sort((a, b) => Number(b.portal_id === portalId) - Number(a.portal_id === portalId)).slice(0, 10);
 }
 
 export type ShopIdentification = {
@@ -682,10 +701,15 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   const ref = provider === "tiktok" ? row.source_id : row.youtube_id;
   if (!ref) throw new Error("動画IDが取得できていません");
 
+  // リールは店舗のポータルに作られる(createEmbedPostForShop)。候補のポータルと店舗のポータルが違っても探せるよう、店舗側で調べる。
+  const { data: shopRow } = await admin.from("locapass_shops").select("portal_id").eq("id", row.matched_shop_id).maybeSingle();
+  if (!shopRow) throw new Error("紐づけた店舗が見つかりません(店舗IDを確認してください)");
+  const reelPortalId = shopRow.portal_id as number;
+
   const { data: duplicate } = await (admin as any)
     .from("locapass_reels")
     .select("id")
-    .eq("portal_id", row.portal_id)
+    .eq("portal_id", reelPortalId)
     .eq("embed_provider", provider)
     .eq("embed_ref", ref)
     .maybeSingle();
@@ -699,7 +723,7 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   form.set("video_url", row.video_url);
   form.set("text", `${provider === "tiktok" ? "TikTok" : "YouTube"}で紹介された ${row.title}`.slice(0, 500));
   await createEmbedPostForShop(admin as any, row.matched_shop_id, form);
-  const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", row.portal_id).eq("embed_provider", provider).eq("embed_ref", ref).order("published_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", reelPortalId).eq("embed_provider", provider).eq("embed_ref", ref).order("published_at", { ascending: false }).limit(1).maybeSingle();
   if (reelError || !reel?.id) throw new Error(reelError?.message ?? "リールIDを取得できませんでした");
   // 管理者が切り取って設定したサムネイル(自前のストレージ)があれば、リールのサムネイルにする。
   // TikTokの旧oEmbedの画像URLは期限切れになるため、自前のストレージのものだけを使う。

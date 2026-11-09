@@ -349,8 +349,29 @@ export async function setYoutubeStockRejected(ids: string[], rejected: boolean) 
   return { updated: (data ?? []).length };
 }
 
-export async function reviewYoutubeIngestion(ingestionId: string, formData: FormData) {
+/**
+ * 動画カードの操作の結果。サーバーで例外を投げると、本番ではメッセージが伏せられて汎用エラー画面になるため、
+ * 入力ミスや保存失敗は値として返し、カード上に理由を表示する(youtube-stock/YoutubeStockCard.tsx)。
+ */
+type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+
+async function guarded(run: () => Promise<string | void>): Promise<ActionResult> {
+  try {
+    const message = await run();
+    return message ? { ok: true, message } : { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message.slice(0, 400) : "処理に失敗しました" };
+  }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function reviewYoutubeIngestion(ingestionId: string, formData: FormData): Promise<ActionResult> {
   const user = await requireRootAdmin();
+  return guarded(() => reviewYoutubeIngestionInner(user.id, ingestionId, formData));
+}
+
+async function reviewYoutubeIngestionInner(userId: string, ingestionId: string, formData: FormData): Promise<string | void> {
   const admin = createAdminClient();
   const { data: current, error: currentError } = await (admin as any)
     .from("locapass_youtube_ingestions")
@@ -360,19 +381,26 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
   if (currentError || !current) throw new Error(currentError?.message ?? "候補が見つかりません");
   let candidateName = String(formData.get("candidate_name") ?? "").trim().slice(0, 120) || null;
   let candidateAddress = String(formData.get("candidate_address") ?? "").trim().slice(0, 300) || null;
-  const officialUrl = String(formData.get("official_url") ?? "").trim() || null;
+  let officialUrl = String(formData.get("official_url") ?? "").trim() || null;
   const shopId = String(formData.get("shop_id") ?? "").trim() || null;
   const decision = String(formData.get("decision") ?? "pending");
   const reason = String(formData.get("match_reason") ?? "").trim().slice(0, 500) || null;
-  const portalId = Number(formData.get("portal_id") ?? current.portal_id ?? DEFAULT_INTAKE_PORTAL_ID);
+  let portalId = Number(formData.get("portal_id") ?? current.portal_id ?? DEFAULT_INTAKE_PORTAL_ID);
   if (officialUrl && !/^https:\/\/[^\s]+$/i.test(officialUrl)) throw new Error("公式サイトは https:// から始まるURLを入力してください");
   if (!["pending", "matched_existing", "ready_to_create", "rejected"].includes(decision)) throw new Error("不正な判定です");
-  if (decision === "matched_existing" && (!shopId || !officialUrl)) throw new Error("既存店舗への紐づけには店舗IDと公式サイトが必要です");
+  // 掲載基準は「店名と住所」。公式サイトは任意なので、既存店舗への紐づけでも必須にしない。
+  if (decision === "matched_existing" && !shopId) throw new Error("既存店舗へ紐づけるには、既存店舗IDを入力してください");
+  if (shopId && !UUID_RE.test(shopId)) throw new Error("既存店舗IDの形式が正しくありません(店舗管理画面のURLや詳細に出る、ハイフン入りの長いIDを貼ってください)");
   const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
   if (!portal) throw new Error("有効なポータルを選択してください");
   if (shopId) {
-    const { data: shop } = await admin.from("locapass_shops").select("id").eq("id", shopId).eq("portal_id", portalId).maybeSingle();
-    if (!shop) throw new Error("選択したポータルの店舗IDを入力してください");
+    // リールは店舗のポータルに作られるので、紐づけ先の店舗が別のポータルにあるときは、候補のポータルも店舗に合わせる。
+    const { data: shop, error: shopError } = await admin.from("locapass_shops").select("id, portal_id, url").eq("id", shopId).maybeSingle();
+    if (shopError) throw new Error(`店舗の確認に失敗しました: ${shopError.message}`);
+    if (!shop) throw new Error("その店舗IDの店舗が見つかりません。IDを確認してください");
+    portalId = shop.portal_id;
+    // 公式サイト欄が空なら、既存店舗に登録済みのURLを使う。
+    if (!officialUrl && shop.url && /^https:\/\/[^\s]+$/i.test(shop.url)) officialUrl = shop.url;
   }
 
   // 公式サイトのURLが新しく貼られた、または店名・住所が空のままなら、サイトから店名・住所・業種を自動で埋める。
@@ -396,10 +424,11 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
     match_status: decision,
     match_reason: reason,
     reviewed_at: new Date().toISOString(),
-    reviewed_by: user.id,
+    reviewed_by: userId,
     portal_id: portalId,
     error_message: note,
   }).eq("id", ingestionId);
+  if (error?.code === "23505") throw new Error(`保存できませんでした: 移動先のポータル(ID ${portalId})には、同じ動画がすでにあります`);
   if (error) throw new Error(`判定の保存に失敗しました: ${error.message}`);
 
   // 公式サイトの手がかりで店名・住所がそろったら、既存店へ紐づけ or 新規登録してそのままリール公開まで進める。
@@ -408,7 +437,7 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
       await matchOrCreateAndPublish(ingestionId, {
         portalId, name: candidateName, address: candidateAddress, officialUrl,
         category: resolved.category ?? defaultCategoryForPortal(portalId),
-        reason: reason ?? "公式サイトのURLから店名・住所を自動取得して掲載", userId: user.id, preview: resolved.preview, ignoreOption: true,
+        reason: reason ?? "公式サイトのURLから店名・住所を自動取得して掲載", userId, preview: resolved.preview, ignoreOption: true,
       });
     } catch (publishError) {
       const message = publishError instanceof Error ? publishError.message.slice(0, 500) : "自動掲載に失敗しました";
@@ -416,6 +445,9 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
     }
   }
   refresh();
+  if (decision === "matched_existing" && shopId && !current.reel_id) {
+    return "既存店舗への紐づけを保存しました。リールとして公開するには、下の「この店舗IDでリールを投稿」を押してください";
+  }
 }
 
 /**
@@ -423,8 +455,12 @@ export async function reviewYoutubeIngestion(ingestionId: string, formData: Form
  * 公式サイトは任意(あれば保存し、空欄の店舗詳細を公式サイトから補完する)。
  * 住所から座標を求めて地図に出せる状態にし、publish=1 のときは公開(active)にする。
  */
-export async function createDraftShopFromIngestion(ingestionId: string, formData: FormData) {
+export async function createDraftShopFromIngestion(ingestionId: string, formData: FormData): Promise<ActionResult> {
   await requireRootAdmin();
+  return guarded(() => createDraftShopFromIngestionInner(ingestionId, formData));
+}
+
+async function createDraftShopFromIngestionInner(ingestionId: string, formData: FormData): Promise<string | void> {
   const admin = createAdminClient();
   const { data: currentIngestion, error: currentIngestionError } = await (admin as any)
     .from("locapass_youtube_ingestions")
@@ -443,6 +479,12 @@ export async function createDraftShopFromIngestion(ingestionId: string, formData
   if (officialUrl && !/^https:\/\/[^\s]+$/i.test(officialUrl)) throw new Error("公式サイトは https:// から始まるURLを入力してください");
   const { data: portal } = await admin.from("locapass_portals").select("id").eq("id", portalId).eq("status", "active").maybeSingle();
   if (!portal) throw new Error("有効なポータルを選択してください");
+  // 他のポータルも含めて、同じ店がすでに登録されていないか確認する(二重登録の防止)。
+  const duplicates = await findExistingShop(portalId, name, address, officialUrl);
+  if (duplicates.length > 0) {
+    const list = duplicates.slice(0, 3).map((shop) => `${shop.name}(ポータル${shop.portal_id}・ID ${shop.id})`).join(" / ");
+    throw new Error(`同じ店がすでに登録されています: ${list}。「判定を編集」の既存店舗IDに入れて、既存店舗へ紐づけてください`);
+  }
   await createShopForIngestion(ingestionId, { portalId, name, address, officialUrl, category, publish, reason });
   refresh();
 }
@@ -467,9 +509,11 @@ export async function enrichIntakeShops() {
   refresh();
 }
 
-export async function publishReviewedYoutubeIngestion(ingestionId: string) {
+export async function publishReviewedYoutubeIngestion(ingestionId: string): Promise<ActionResult> {
   const user = await requireRootAdmin();
-  await publishYoutubeIngestion(ingestionId, user.id);
-  refresh();
+  return guarded(async () => {
+    await publishYoutubeIngestion(ingestionId, user.id);
+    refresh();
+  });
 }
 

@@ -30,7 +30,10 @@ type Row = {
   auto_hidden_at?: string | null;
 };
 
-type Action = (formData: FormData) => void | Promise<void>;
+/** サーバー側の操作の結果。失敗の理由は値として返ってくる(例外にすると本番では内容が伏せられ、エラー画面になるため)。 */
+export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+export type RowAction = (formData: FormData) => void | ActionResult | Promise<void | ActionResult>;
+type Action = RowAction;
 
 const labels: Record<string, string> = {
   pending: "保留",
@@ -105,9 +108,21 @@ export function YoutubeStockCard({
   };
   // 公式サイトの読み取り・店舗登録は数十秒かかるので、保存中だと分かるようにする。
   const [saving, setSaving] = useState(false);
+  // 操作の結果(成功メッセージ・失敗の理由)をカード上に出す。想定外の例外でもエラー画面に飛ばさない。
+  const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const withNotice = (action: Action) => async (formData: FormData) => {
+    setNotice(null);
+    try {
+      const result = await action(formData);
+      if (result && result.ok === false) setNotice({ kind: "error", text: result.error });
+      else if (result && result.ok && result.message) setNotice({ kind: "ok", text: result.message });
+    } catch {
+      setNotice({ kind: "error", text: "処理に失敗しました。通信状況を確認して、もう一度お試しください(続く場合は画面を再読み込みしてください)" });
+    }
+  };
   const saveReview = async (formData: FormData) => {
     setSaving(true);
-    try { await review(formData); } finally { setSaving(false); }
+    try { await withNotice(review)(formData); } finally { setSaving(false); }
   };
   const status = labels[row.match_status] ?? row.match_status;
   const isTikTok = row.source_provider === "tiktok";
@@ -157,8 +172,9 @@ export function YoutubeStockCard({
           </div>
         )}
         {row.error_message && <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800"><p className="font-semibold">自動処理で確認が必要</p><p className="mt-1 whitespace-pre-wrap leading-5">{row.error_message}</p></div>}
+        {notice && <div role={notice.kind === "error" ? "alert" : "status"} className={`rounded-lg border px-3 py-2 text-xs ${notice.kind === "error" ? "border-red-300 bg-red-50 text-red-900" : "border-emerald-300 bg-emerald-50 text-emerald-900"}`}><p className="font-semibold">{notice.kind === "error" ? "保存できませんでした" : "完了"}</p><p className="mt-1 whitespace-pre-wrap leading-5">{notice.text}</p></div>}
 
-        <form action={findOfficialSite}><button className="text-sm font-semibold text-blue-700 hover:underline">AIで店名・住所を特定</button></form>
+        <form action={withNotice(findOfficialSite)}><button className="text-sm font-semibold text-blue-700 hover:underline">AIで店名・住所を特定</button></form>
         <details className="rounded-lg border border-slate-200 bg-slate-50">
           <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-slate-700">判定を編集</summary>
         <form action={saveReview} className="grid gap-3 border-t border-slate-200 px-3 pb-3 pt-3">
@@ -173,8 +189,8 @@ export function YoutubeStockCard({
         </form>
         </details>
         {shopLabel && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">対象店舗: {shopLabel}</p>}
-        {row.match_status === "ready_to_create" && !row.matched_shop_id && <form action={createDraft} className="grid gap-3 rounded-lg bg-amber-50 p-4"><p className="text-sm font-semibold text-amber-900">店名と住所が分かれば店舗を登録(公式HPは任意)</p><input type="hidden" name="portal_id" value={row.portal_id} /><input name="name" defaultValue={row.candidate_name ?? ""} placeholder="店名" required className={input}/><input name="address" defaultValue={row.candidate_address ?? ""} placeholder="住所" required className={input}/><input name="official_url" type="url" defaultValue={row.official_url ?? ""} placeholder="https:// 公式サイト(任意)" className={input}/><select name="category" defaultValue={row.portal_id === 408 ? "美容・暮らし" : "カフェ・スイーツ"} className={input}>{["カフェ・スイーツ", "レストラン・食事", "居酒屋・バー", "ショッピング", "観光・体験", "宿泊", "ペット", "美容・暮らし", "その他"].map((category) => <option key={category}>{category}</option>)}</select><label className="flex items-center gap-2 text-sm text-amber-900"><input type="checkbox" name="publish" value="1" defaultChecked />すぐ公開する(地図・リールに表示)</label><button className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white">店舗を登録</button></form>}
-        {row.matched_shop_id && !row.reel_id && <form action={publish}><button className="w-full rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">この店舗IDでリールを投稿</button></form>}
+        {row.match_status === "ready_to_create" && !row.matched_shop_id && <form action={withNotice(createDraft)} className="grid gap-3 rounded-lg bg-amber-50 p-4"><p className="text-sm font-semibold text-amber-900">店名と住所が分かれば店舗を登録(公式HPは任意)</p><input type="hidden" name="portal_id" value={row.portal_id} /><input name="name" defaultValue={row.candidate_name ?? ""} placeholder="店名" required className={input}/><input name="address" defaultValue={row.candidate_address ?? ""} placeholder="住所" required className={input}/><input name="official_url" type="url" defaultValue={row.official_url ?? ""} placeholder="https:// 公式サイト(任意)" className={input}/><select name="category" defaultValue={row.portal_id === 408 ? "美容・暮らし" : "カフェ・スイーツ"} className={input}>{["カフェ・スイーツ", "レストラン・食事", "居酒屋・バー", "ショッピング", "観光・体験", "宿泊", "ペット", "美容・暮らし", "その他"].map((category) => <option key={category}>{category}</option>)}</select><label className="flex items-center gap-2 text-sm text-amber-900"><input type="checkbox" name="publish" value="1" defaultChecked />すぐ公開する(地図・リールに表示)</label><button className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white">店舗を登録</button></form>}
+        {row.matched_shop_id && !row.reel_id && <form action={withNotice(publish)}><button className="w-full rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">この店舗IDでリールを投稿</button></form>}
         {row.reel_id && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800">公開済み（リール投稿済み）</p>}
       </div>
     </article>
