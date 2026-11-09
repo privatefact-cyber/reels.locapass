@@ -10,6 +10,6 @@
     { "path": "/api/cron/video-liveness", "schedule": "45 17 * * *" },
     { "path": "/api/cron/stock-auto-reject", "schedule": "55 17 * * *" },
     { "path": "/api/cron/storage-cleanup", "schedule": "30 19 * * *" },
-    { "path": "/api/cron/threads-autopost", "schedule": "10 */4 * * *" }
+    { "path": "/api/cron/threads-text", "schedule": "0 3 * * *" }
   ]
 }

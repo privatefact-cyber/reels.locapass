@@ -13,7 +13,6 @@ import { FloorStatusDropzone } from "@/components/locapass-dashboard/FloorStatus
 import { ShopGalleryUploader } from "@/components/locapass-dashboard/ShopGalleryUploader";
 import { CopyButton } from "@/components/locapass-dashboard/CopyButton";
 import { ShopEmbedCard } from "@/components/locapass-dashboard/ShopEmbedCard";
-import { SocialRepostOption } from "@/components/locapass-dashboard/SocialRepostOption";
 import { QrCodeIconButton } from "@/components/QrCodeIconButton";
 import { TodayScheduleBoard, type TodayScheduleRow } from "@/components/locapass-dashboard/TodayScheduleBoard";
 import { ShopImportPanel } from "@/components/locapass-dashboard/ShopImportPanel";
@@ -98,7 +97,7 @@ export default async function LocapassShopSettingsPage({
 
   // 本家shopsの列名に揃える(category→genre, tel→phone, url→website_url, cover_url→cover_image_url)。
   // YouTube動画ID(型に列が無いため別クエリ)。
-  const { data: spotNoticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled, social_repost_ok").eq("id", currentShop.id).maybeSingle();
+  const { data: spotNoticeRow } = await (supabase as any).from("locapass_shops").select("spot_notice_enabled").eq("id", currentShop.id).maybeSingle();
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", currentShop.id).maybeSingle();
   const storedVideo = resolveStoredVideo(ytRow);
   // 業態(00177で追加。生成済みの型に列が無いため別クエリ)。変更できるのはルート管理者だけ。
@@ -321,7 +320,6 @@ export default async function LocapassShopSettingsPage({
       </section>
 
       {shop.shop_code && <ShopEmbedCard shopCode={shop.shop_code} />}
-      <SocialRepostOption shopId={currentShop.id} initialEnabled={Boolean(spotNoticeRow?.social_repost_ok)} />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">混雑状況(AIコンシェルジュ連携)</h2>

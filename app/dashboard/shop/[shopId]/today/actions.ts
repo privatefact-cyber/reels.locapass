@@ -124,15 +124,6 @@ function revalidateAll(shopId: string) {
   revalidatePath("/map");
 }
 
-/** 「LOCAPASS公式SNSでの紹介」を許可する/やめる。店舗の管理者だけが変えられる。0件更新でもエラーにならないので、更新された行が返るかで成否を確かめる。 */
-export async function updateShopSocialRepost(shopId: string, enabled: boolean) {
-  const supabase = await requireShopAccess(shopId);
-  const { data, error } = await supabase.from("locapass_shops").update({ social_repost_ok: enabled }).eq("id", shopId).select("id");
-  if (error) throw new Error("保存に失敗しました");
-  if (!data || data.length === 0) throw new Error("この操作をする権限がありません");
-  revalidatePath(`/dashboard/shop/${shopId}`);
-}
-
 /**
  * 店舗オプション「開催場所のお知らせ」(譲渡会・イベントなど)のオン/オフ。オーナー・ポータル管理者・システム管理者が切り替えられる
  * (権限は requireShopAccess と同じ)。0件更新でもエラーにならないので、更新された行が返るかで成否を確かめる。
