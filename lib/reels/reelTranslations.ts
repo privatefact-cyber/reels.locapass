@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/types/supabase";
-import { needsTranslation, translateFields } from "@/lib/i18n/contentTranslation";
+import { asStoredTranslations, needsTranslation, preserveManualTranslations, translateFields, translationSourceHash } from "@/lib/i18n/contentTranslation";
 import { shopInputLang } from "@/lib/shop/inputLang";
 
 /**
@@ -18,6 +18,10 @@ export async function refreshReelTranslation(db: SupabaseClient, reelId: string)
   let translations = null;
   try {
     translations = await translateFields(fields, inputLang);
+    // 投稿文が変わっていない(言語指定の変更・足りない言語の作り足し)ときは、手直しした訳を残す。文が変わったら手直しは捨てる。
+    if (asStoredTranslations(data.translations).source_hash === translationSourceHash(fields)) {
+      translations = preserveManualTranslations(translations, data.translations);
+    }
   } catch (e) {
     console.error("リール投稿文の翻訳に失敗しました:", e);
   }

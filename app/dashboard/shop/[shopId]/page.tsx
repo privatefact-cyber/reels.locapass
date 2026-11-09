@@ -20,7 +20,7 @@ import { ContactTapStatsCard } from "@/components/locapass-dashboard/ContactTapS
 import { PriceListSection } from "@/components/locapass-dashboard/PriceListSection";
 import { ShopAccountSettingsSection } from "@/components/locapass-dashboard/ShopAccountSettingsSection";
 import { SpotNoticeOption } from "@/components/locapass-dashboard/SpotNoticeOption";
-import { ShopTranslationEditor, type TranslationEditorField } from "@/components/locapass-dashboard/ShopTranslationEditor";
+import { ShopTranslationEditor, type TranslationEditorField, type TranslationEditorGroup } from "@/components/locapass-dashboard/ShopTranslationEditor";
 import { asStoredTranslations, TRANSLATION_TARGETS } from "@/lib/i18n/contentTranslation";
 import { LANGUAGES } from "@/lib/i18n/languages";
 import { ShopCompletenessCard } from "@/components/locapass-dashboard/ShopCompletenessCard";
@@ -79,7 +79,7 @@ export default async function LocapassShopSettingsPage({
         .eq("reel_type", "permanent"),
       supabase
         .from("locapass_shop_price_items")
-        .select("id, name, duration_minutes, price, display_order")
+        .select("id, name, duration_minutes, price, display_order, name_translations")
         .eq("shop_id", currentShop.id)
         .order("display_order", { ascending: true }),
       supabase
@@ -118,7 +118,6 @@ export default async function LocapassShopSettingsPage({
 
   // 自動翻訳の確認・修正欄。原文が入っている項目だけ、原文と別の言語ぶんを出す。
   const storedTranslations = asStoredTranslations(shopRow.translations);
-  const translationLanguages = TRANSLATION_TARGETS.filter((l) => l !== (storedTranslations.source_lang ?? "ja") && storedTranslations[l]);
   const translationFields: TranslationEditorField[] = (
     [
       { key: "description", label: "お店紹介文", original: shopRow.description },
@@ -128,6 +127,45 @@ export default async function LocapassShopSettingsPage({
       { key: "price_info", label: "料金情報", original: shopRow.price_info },
     ] as { key: string; label: string; original: string | null }[]
   ).filter((f): f is TranslationEditorField => !!f.original?.trim());
+
+  // メニュー・イベント・リール投稿文の訳も、同じ欄で確認・修正できる(出すのは、翻訳が入っているものだけ)。
+  const [{ data: eventTrRows }, { data: reelTrRows }] = await Promise.all([
+    supabase
+      .from("locapass_shop_events")
+      .select("id, title, body, translations")
+      .eq("shop_id", currentShop.id)
+      .or("ends_at.is.null,ends_at.gte.now()")
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("locapass_reels")
+      .select("id, caption, translations")
+      .eq("shop_id", currentShop.id)
+      .eq("status", "publish")
+      .not("caption", "is", null)
+      .order("published_at", { ascending: false })
+      .limit(30),
+  ]);
+  const clip = (text: string) => (text.length > 24 ? `${text.slice(0, 24)}…` : text);
+  const translationGroups: TranslationEditorGroup[] = [];
+  if (translationFields.length > 0) {
+    translationGroups.push({ id: "shop", kind: "shop", heading: "店舗情報", fields: translationFields, stored: storedTranslations as never });
+  }
+  for (const p of (priceItemRows ?? []) as { id: string; name: string; name_translations: unknown }[]) {
+    if (!p.name?.trim()) continue;
+    translationGroups.push({ id: `price:${p.id}`, kind: "price", rowId: p.id, heading: `メニュー: ${clip(p.name)}`, fields: [{ key: "name", label: "品名", original: p.name }], stored: asStoredTranslations(p.name_translations) as never });
+  }
+  for (const e of (eventTrRows ?? []) as { id: string; title: string; body: string | null; translations: unknown }[]) {
+    const fields: TranslationEditorField[] = [{ key: "title", label: "タイトル", original: e.title }];
+    if (e.body?.trim()) fields.push({ key: "body", label: "本文", original: e.body });
+    translationGroups.push({ id: `event:${e.id}`, kind: "event", rowId: e.id, heading: `イベント: ${clip(e.title)}`, fields, stored: asStoredTranslations(e.translations) as never });
+  }
+  for (const r of (reelTrRows ?? []) as { id: string; caption: string | null; translations: unknown }[]) {
+    if (!r.caption?.trim()) continue;
+    translationGroups.push({ id: `reel:${r.id}`, kind: "reel", rowId: r.id, heading: `リール投稿文: ${clip(r.caption)}`, fields: [{ key: "caption", label: "投稿文", original: r.caption }], stored: asStoredTranslations(r.translations) as never });
+  }
+  // 言語タブは、どれかの文章に訳が入っている言語だけ(その文章の原文と同じ言語は除く)。
+  const editorLanguages = TRANSLATION_TARGETS.filter((l) => translationGroups.some((g) => (g.stored.source_lang ?? "ja") !== l && !!g.stored[l] && Object.keys(g.stored[l] ?? {}).length > 0));
 
   const shop = {
     name: shopRow.name,
@@ -597,18 +635,13 @@ export default async function LocapassShopSettingsPage({
         <ShopAttributesEditor shopId={currentShop.id} keys={attributeKeys} initial={shopAttributes} />
       </section>
 
-      {translationFields.length > 0 && translationLanguages.length > 0 && (
+      {translationGroups.length > 0 && editorLanguages.length > 0 && (
         <section id="shop-translations" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="mb-1 text-sm font-semibold text-slate-900">各言語の表示を確認・修正</h2>
           <p className="-mt-1 mb-4 text-xs text-slate-500">
-            店舗情報の文章は、保存すると他の言語へ自動で翻訳されます。不自然な訳はここで直せます。直した訳が正になり、あとで原文を変えても上書きされません。
+            店舗情報・メニュー・イベント・リール投稿文は、保存すると他の言語へ自動で翻訳されます。不自然な訳はここで直せます。直した訳が正になり、あとで原文を変えても上書きされません(原文を書き換えた項目だけは、新しい原文で訳し直します)。
           </p>
-          <ShopTranslationEditor
-            shopId={currentShop.id}
-            fields={translationFields}
-            languages={translationLanguages}
-            stored={storedTranslations as never}
-          />
+          <ShopTranslationEditor shopId={currentShop.id} groups={translationGroups} languages={editorLanguages} />
         </section>
       )}
 

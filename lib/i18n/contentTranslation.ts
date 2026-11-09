@@ -129,6 +129,21 @@ export function preserveManualTranslations(next: StoredTranslations | null, prev
   return merged;
 }
 
+/**
+ * 手直しした訳のうち、原文が変わった項目の分を外した保存形式を返す(訳し直す前に preserveManualTranslations へ渡す)。
+ * 原文を書き換えたのに古い手直しが残ると、新しい原文に合わない訳が出続けるため。
+ */
+export function dropManualForChangedFields(previous: unknown, previousFields: SourceFields, nextFields: SourceFields): StoredTranslations {
+  const st = asStoredTranslations(previous);
+  if (!st.manual) return st;
+  const manual: NonNullable<StoredTranslations["manual"]> = {};
+  for (const lang of TRANSLATION_TARGETS) {
+    const keys = (st.manual[lang] ?? []).filter((k) => (previousFields[k] ?? "").trim() === (nextFields[k] ?? "").trim());
+    if (keys.length) manual[lang] = keys;
+  }
+  return { ...st, manual };
+}
+
 /** 保存済みの翻訳のうち、まだ無い言語だけを返す(その言語だけ作り足すバックフィル用)。 */
 export function missingTargets(stored: unknown): TranslationTarget[] {
   const st = asStoredTranslations(stored);

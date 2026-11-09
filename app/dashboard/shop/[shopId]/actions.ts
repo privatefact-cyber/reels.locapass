@@ -7,7 +7,7 @@ import { sanitizeWeekly, type WeeklyHours } from "@/lib/shop/businessHours";
 import { saveSchedule } from "@/lib/schedules/saveSchedule";
 import { createClient } from "@/lib/supabase/server";
 import { translateAddressToEnglish } from "@/lib/map/translateAddress";
-import { asStoredTranslations, needsTranslation, preserveManualTranslations, translateFields, TRANSLATION_TARGETS, type StoredTranslations, type TranslationTarget } from "@/lib/i18n/contentTranslation";
+import { asStoredTranslations, dropManualForChangedFields, needsTranslation, preserveManualTranslations, translateFields, TRANSLATION_TARGETS, type StoredTranslations, type TranslationTarget } from "@/lib/i18n/contentTranslation";
 import type { Json } from "@/types/supabase";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { OFFICIAL_CATEGORY } from "@/lib/shop/genres";
@@ -222,6 +222,51 @@ export async function saveShopTranslationEdits(shopId: string, lang: Translation
     .select("id");
   if (error || !saved?.length) throw new Error("翻訳の保存に失敗しました");
   revalidateShop(shopId);
+}
+
+/** 手直しできる、店舗情報以外の文章。表と、訳を入れる列と、手直しできる項目(translations のキー)。 */
+const ROW_TRANSLATION_KINDS = {
+  price: { table: "locapass_shop_price_items", column: "name_translations", keys: ["name"] },
+  event: { table: "locapass_shop_events", column: "translations", keys: ["title", "body"] },
+  reel: { table: "locapass_reels", column: "translations", keys: ["caption"] },
+} as const;
+export type RowTranslationKind = keyof typeof ROW_TRANSLATION_KINDS;
+
+/**
+ * メニュー(料金項目)・イベント・リール投稿文の訳を、人が直して保存する(店舗情報は saveShopTranslationEdits)。
+ * 直した訳が正になり、原文を変えて訳し直すときも、変えていない項目の手直しは上書きしない。
+ */
+export async function saveRowTranslationEdits(shopId: string, kind: RowTranslationKind, rowId: string, lang: TranslationTarget, edits: Record<string, string>) {
+  const supabase = await requireShopAccess(shopId);
+  const def = ROW_TRANSLATION_KINDS[kind];
+  if (!def) throw new Error("種類が正しくありません");
+  if (!TRANSLATION_TARGETS.includes(lang)) throw new Error("言語が正しくありません");
+
+  // 行がこの店舗のものか確認してから読む(他店舗の行IDを指定されても書き換えない)。
+  const { data: row } = await (supabase as any).from(def.table).select(def.column).eq("id", rowId).eq("shop_id", shopId).maybeSingle();
+  if (!row) throw new Error("対象が見つかりません");
+  const stored = asStoredTranslations(row[def.column]);
+  if (lang === (stored.source_lang ?? "ja")) throw new Error("原文と同じ言語の文章は、原文の入力欄で編集してください");
+
+  const texts: Record<string, string> = { ...(stored[lang] ?? {}) };
+  const manualKeys = new Set(stored.manual?.[lang] ?? []);
+  for (const [key, value] of Object.entries(edits)) {
+    const text = String(value ?? "").trim().slice(0, 5000);
+    if (!(def.keys as readonly string[]).includes(key) || !text || text === texts[key]) continue;
+    texts[key] = text;
+    manualKeys.add(key);
+  }
+
+  const next: StoredTranslations = { ...stored, [lang]: texts, manual: { ...(stored.manual ?? {}), [lang]: [...manualKeys] } };
+  const { data: saved, error } = await (supabase as any)
+    .from(def.table)
+    .update({ [def.column]: next as unknown as Json })
+    .eq("id", rowId)
+    .eq("shop_id", shopId)
+    .select("id");
+  if (error || !saved?.length) throw new Error("翻訳の保存に失敗しました");
+  revalidateShop(shopId);
+  revalidatePath("/events");
 }
 
 /** マップのピン位置を保存する(locapass_shopsのlat/lng)。 */
@@ -443,7 +488,16 @@ export async function updatePriceItem(shopId: string, itemId: string, formData: 
   const priceRaw = String(formData.get("price") ?? "").trim();
   if (!name || !priceRaw) throw new Error("コース名と料金は必須です");
 
-  const [nameTranslations] = await translatePriceItemNames([name], await shopInputLang(supabase, shopId));
+  // 品名が変わっていなければ訳し直さない(手直しした訳をそのまま残す)。変わったら、変わった項目の手直しは外して訳し直す。
+  const inputLang = await shopInputLang(supabase, shopId);
+  const { data: prevItem } = await supabase.from("locapass_shop_price_items").select("name, name_translations").eq("id", itemId).eq("shop_id", shopId).maybeSingle();
+  let nameTranslations: Json | undefined;
+  if (prevItem && !needsTranslation({ name }, prevItem.name_translations, undefined, inputLang)) {
+    nameTranslations = prevItem.name_translations;
+  } else {
+    const [translated] = await translatePriceItemNames([name], inputLang);
+    nameTranslations = (preserveManualTranslations(translated as unknown as StoredTranslations, dropManualForChangedFields(prevItem?.name_translations, { name: prevItem?.name }, { name })) ?? translated) as unknown as Json;
+  }
   const { data, error } = await supabase
     .from("locapass_shop_price_items")
     .update({
@@ -581,7 +635,16 @@ export async function updateEvent(shopId: string, eventId: string, formData: For
     }
   }
 
-  const translations = await translateEventText(title, body || null, await shopInputLang(supabase, shopId));
+  // タイトル・本文が変わっていなければ訳し直さない(手直しした訳をそのまま残す)。変わったら、変わった項目の手直しは外して訳し直す。
+  const inputLang = await shopInputLang(supabase, shopId);
+  const { data: prevEvent } = await supabase.from("locapass_shop_events").select("title, body, translations").eq("id", eventId).eq("shop_id", shopId).maybeSingle();
+  let translations: Json;
+  if (prevEvent && !needsTranslation({ title, body: body || null }, prevEvent.translations, undefined, inputLang)) {
+    translations = prevEvent.translations;
+  } else {
+    const translated = await translateEventText(title, body || null, inputLang);
+    translations = (preserveManualTranslations(translated as unknown as StoredTranslations, dropManualForChangedFields(prevEvent?.translations, { title: prevEvent?.title, body: prevEvent?.body }, { title, body: body || null })) ?? translated) as unknown as Json;
+  }
   const { data, error } = await supabase
     .from("locapass_shop_events")
     .update({
