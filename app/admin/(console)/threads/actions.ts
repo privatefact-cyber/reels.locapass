@@ -6,7 +6,7 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
-import { createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
+import { createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
   revalidatePath("/admin/threads");
@@ -170,4 +170,18 @@ export async function unschedulePost(id: string) {
   }
   if (message) back("error", message);
   back("ok", "予約を取り消しました(下書きに戻しました)");
+}
+
+/** 写真つきの下書きを自動で作る(店舗の写真 / AIの画像)。 */
+export async function createImageDraftNow(kind: "shop" | "ai", dest: string) {
+  await requireRootAdmin();
+  const [platform, account] = dest.split(":");
+  let message: string | null = null;
+  try {
+    await createImageDraft(kind === "ai" ? "ai" : "shop", { platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" });
+  } catch (e) {
+    message = e instanceof Error ? e.message : "下書きを作れませんでした";
+  }
+  if (message) back("error", message);
+  back("ok", "写真つきの下書きを作りました。内容を確認してください");
 }

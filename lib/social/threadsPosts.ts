@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { publishThreadsImagePost, publishThreadsTextPost, threadsConfigFromEnv } from "@/lib/social/threads";
 import { instagramTokenFor, publishInstagramImagePost, type SocialAccount } from "@/lib/social/instagram";
 import { THREADS_TOPICS, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
+import { generateAiImage, pickShopPhoto } from "@/lib/social/socialImages";
 import { THREADS_MAX_CHARS, validateThreadsText, writeThreadsPost } from "@/lib/social/threadsWriter";
 
 /**
@@ -102,6 +103,35 @@ export async function createManualThreadsPost(input: { text: string; imageUrl: s
     scheduled_at: input.scheduledAt ? input.scheduledAt.toISOString() : null,
   }).select("id").single();
   if (error || !data) throw new Error(`保存に失敗しました: ${error?.message ?? "0件"}`);
+  return data.id as string;
+}
+
+/**
+ * 写真つきの下書きを自動で作る。kind="shop"=掲載店舗の写真+店名・リンク・(あれば)お店のInstagramのタグ付け / kind="ai"=AIの画像+AIの文章(一般向け)。
+ * 投稿先は dest。Instagramは写真必須なので、どちらも写真つきで作る。
+ */
+export async function createImageDraft(kind: "shop" | "ai", dest: Destination): Promise<string> {
+  const admin = db();
+  const rows = await recentRows();
+  let body: string;
+  let imageUrl: string;
+  let topic: string;
+  if (kind === "shop") {
+    const photo = await pickShopPhoto(rows.filter((r) => r.topic.startsWith("shop:")).map((r) => r.topic.slice(5)));
+    const link = photo.shopCode ? `https://locapass.net/s/${photo.shopCode}` : "https://locapass.net";
+    body = [`📍 ${photo.shopName}`, photo.description, `動画・詳細はLOCAPASSで\n${link}`, photo.instagramHandle ? `@${photo.instagramHandle}` : ""].filter(Boolean).join("\n\n");
+    imageUrl = photo.imageUrl;
+    topic = `shop:${photo.recentlyUsedKey}`;
+  } else {
+    const t = pickTopic(rows, "public");
+    const written = await writeThreadsPost(t, rows.map((r) => r.body));
+    if (!written.ok) throw new Error(written.error);
+    body = written.text;
+    imageUrl = await generateAiImage(t.title);
+    topic = t.id;
+  }
+  const { data, error } = await admin.from("locapass_threads_posts").insert({ topic, body, image_url: imageUrl, source: "ai", status: "draft", platform: dest.platform, account: dest.account }).select("id").single();
+  if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
   return data.id as string;
 }
 

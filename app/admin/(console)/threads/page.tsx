@@ -1,8 +1,9 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { listThreadsPosts, textModeFromEnv, type PostRow } from "@/lib/social/threadsPosts";
 import { AUDIENCE_LABEL, THREADS_TOPICS } from "@/lib/social/threadsTopics";
-import { attachDraftImage, createDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, schedulePost, unschedulePost } from "./actions";
+import { attachDraftImage, createDraftNow, createImageDraftNow, createManualPost, discardDraft, editPostBody, publishDraft, removeDraftImage, schedulePost, unschedulePost } from "./actions";
 import { CreateDraftButton } from "./CreateDraftButton";
+import { ImageDraftForm } from "./ImageDraftForm";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
 export const maxDuration = 120;
@@ -111,7 +112,13 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
       </section>
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">AIに下書きを作らせる</h2>
+        <h2 className="text-lg font-bold text-slate-900">写真つきの下書きを自動で作る</h2>
+        <p className="text-xs text-slate-500">写真は自動で用意します。「掲載店舗の写真」は、店名・LOCAPASSのリンク・お店のInstagram(登録があれば)のタグ付けつき。Instagramはこちらが基本です。</p>
+        <ImageDraftForm action={createImageDraftNow} />
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold text-slate-900">AIに(文章だけの)下書きを作らせる</h2>
         <p className="text-xs text-slate-500">ユーザー獲得を狙う「一般向け」(街のお店の探し方・LOCAPASSの使いどころ)と、店舗オーナー向けの集客ノウハウ。毎日の自動作成は、2種類を交互に作ります。</p>
         <div className="flex flex-wrap gap-2">
           <CreateDraftButton action={createDraftNow.bind(null, "public")} label="一般向けの下書きを作る" primary />
