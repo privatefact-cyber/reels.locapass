@@ -110,7 +110,7 @@ export async function createManualThreadsPost(input: { text: string; imageUrl: s
  * 写真つきの下書きを自動で作る。kind="shop"=掲載店舗の写真+店名・リンク・(あれば)お店のInstagramのタグ付け / kind="ai"=AIの画像+AIの文章(一般向け)。
  * 投稿先は dest。Instagramは写真必須なので、どちらも写真つきで作る。
  */
-export async function createImageDraft(kind: "shop" | "ai", dest: Destination): Promise<string> {
+export async function createImageDraft(kind: "shop" | "ai", dest: Destination, audience: ThreadsAudience | "auto" = "public"): Promise<string> {
   const admin = db();
   const rows = await recentRows();
   let body: string;
@@ -123,7 +123,7 @@ export async function createImageDraft(kind: "shop" | "ai", dest: Destination): 
     imageUrl = photo.imageUrl;
     topic = `shop:${photo.recentlyUsedKey}`;
   } else {
-    const t = pickTopic(rows, "public");
+    const t = pickTopic(rows, audience === "auto" ? undefined : audience);
     const written = await writeThreadsPost(t, rows.map((r) => r.body));
     if (!written.ok) throw new Error(written.error);
     body = written.text;

@@ -173,12 +173,12 @@ export async function unschedulePost(id: string) {
 }
 
 /** 写真つきの下書きを自動で作る(店舗の写真 / AIの画像)。 */
-export async function createImageDraftNow(kind: "shop" | "ai", dest: string) {
+export async function createImageDraftNow(kind: "shop" | "ai", dest: string, audience: string) {
   await requireRootAdmin();
   const [platform, account] = dest.split(":");
   let message: string | null = null;
   try {
-    await createImageDraft(kind === "ai" ? "ai" : "shop", { platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" });
+    await createImageDraft(kind === "ai" ? "ai" : "shop", { platform: platform === "threads" ? "threads" : "instagram", account: account === "luxela" ? "luxela" : "locapass" }, audience === "shop" ? "shop" : audience === "auto" ? "auto" : "public");
   } catch (e) {
     message = e instanceof Error ? e.message : "下書きを作れませんでした";
   }
