@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { publishThreadsImagePost, publishThreadsTextPost, threadsConfigFromEnv } from "@/lib/social/threads";
-import { instagramTokenFor, publishInstagramImagePost, type SocialAccount } from "@/lib/social/instagram";
+import { publishThreadsImagePost, publishThreadsTextPost } from "@/lib/social/threads";
+import { publishInstagramImagePost, type SocialAccount } from "@/lib/social/instagram";
+import { resolveSocialToken } from "@/lib/social/tokens";
 import { THREADS_TOPICS, LUXELA_TOPICS, topicsFor, type ThreadsAudience, type ThreadsTopic } from "@/lib/social/threadsTopics";
 import { generateAiImage, pickShopPhoto } from "@/lib/social/socialImages";
 import { THREADS_MAX_CHARS, validateThreadsText, writeThreadsPost } from "@/lib/social/threadsWriter";
@@ -160,8 +161,9 @@ export async function publishThreadsDraft(id: string): Promise<void> {
   if (error || !row) throw new Error(error?.message ?? "下書きが見つかりません");
   if (row.status !== "draft" && row.status !== "scheduled") throw new Error("この投稿は、すでに処理済みです");
   const isInstagram = row.platform === "instagram";
-  const config = isInstagram ? null : threadsConfigFromEnv(row.account);
-  const igToken = isInstagram ? instagramTokenFor(row.account) : null;
+  const threadsToken = isInstagram ? null : await resolveSocialToken("threads", row.account);
+  const config = threadsToken ? { userId: process.env.THREADS_USER_ID?.trim() || null, accessToken: threadsToken } : null;
+  const igToken = isInstagram ? await resolveSocialToken("instagram", row.account) : null;
   if (isInstagram && !igToken) throw new Error(`Instagram(${row.account})のトークンが未設定です`);
   if (isInstagram && !row.image_url) throw new Error("Instagramは写真が必要です。写真を付けてください");
   if (!isInstagram && !config) throw new Error(`Threads(${row.account})のトークンが未設定です`);

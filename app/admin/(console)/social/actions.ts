@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 import type { ThreadsAudience } from "@/lib/social/threadsTopics";
 import { saveSocialSettings } from "@/lib/social/socialSettings";
+import { refreshSocialTokens } from "@/lib/social/tokens";
 import { createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string): never {
@@ -200,4 +201,19 @@ export async function saveAiSettings(account: "locapass" | "luxela", formData: F
   }
   if (message) back("error", message);
   back("ok", `${account === "luxela" ? "LUXELA" : "LOCAPASS"}のAIへの指示を保存しました。次に作る下書きから反映されます`);
+}
+
+/** トークンを今すぐ延長する(発行から24時間以内のものは、まだ延長できない)。 */
+export async function refreshTokensNow() {
+  await requireRootAdmin();
+  let message: string | null = null;
+  let summary = "";
+  try {
+    const results = await refreshSocialTokens({ force: true });
+    summary = results.map((r) => `${r.label}: ${r.status === "refreshed" ? "延長しました" : r.status === "no_token" ? "未設定" : r.status === "failed" ? `失敗(${r.detail ?? ""})` : "不要"}`).join(" / ");
+  } catch (e) {
+    message = e instanceof Error ? e.message : "延長に失敗しました";
+  }
+  if (message) back("error", message);
+  back("ok", summary.slice(0, 280));
 }
