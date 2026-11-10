@@ -24,7 +24,6 @@ export function ArticleView({ post, linkCategory = true, locale = "ja", shareUrl
           )}
           <span aria-hidden>·</span>
           <time dateTime={post.date}>{formatJournalDateFor(post.date, locale)}</time>
-          {shareUrl ? <ShareButton url={shareUrl} title={post.title} className="ml-auto" /> : null}
         </div>
         <h1 className="text-2xl font-bold leading-snug text-main">{post.title || t.untitled}</h1>
         {post.lead ? <p className="text-base leading-8 text-tone-200">{post.lead}</p> : null}
@@ -52,7 +51,7 @@ export function ArticleView({ post, linkCategory = true, locale = "ja", shareUrl
         </div>
       ) : null}
       {shareUrl ? (
-        <div className="flex justify-center border-t border-main/10 pt-6">
+        <div className="flex justify-end border-t border-main/10 pt-6">
           <ShareButton url={shareUrl} title={post.title} className="px-5 py-2 text-sm" />
         </div>
       ) : null}
