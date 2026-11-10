@@ -8,8 +8,15 @@ import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { shopPath } from "@/lib/locapass/publicUrls";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
 import { JsonLd } from "@/components/JsonLd";
+import { composeIntro, stripTagLine } from "@/lib/reels/seoCaption";
+import type { ReelItem } from "@/lib/reels/types";
 
 export const revalidate = 60;
+
+/** 検索結果の説明文。文末のタグの行は外し、本文が無い(タグだけ)ときは、店の情報から作った紹介文を使う。 */
+function reelDescription(reel: ReelItem, id: string, locale: string = "ja"): string {
+  return stripTagLine(reel.caption) || (locale !== "ja" ? "" : composeIntro({ shopName: reel.shopName, address: reel.address, category: reel.genre, seed: id }) ?? "");
+}
 
 /** リール1本の共有ページ(/reel/[id])。SNSに貼ったときに、その動画のサムネイルと店名がカードで出る。 */
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -17,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const reel = await getReelById(id);
   if (!reel) return {};
   const title = `${reel.shopName} | LOCAPASS`;
-  const description = reel.caption?.trim() || `${reel.castName} | LOCAPASS`;
+  const description = reelDescription(reel, id) || `${reel.castName} | LOCAPASS`;
   const { url, alternates } = await localizedPageUrls(`/reel/${id}`);
   return {
     title,
@@ -45,7 +52,7 @@ export default async function ReelSharePage({ params }: { params: Promise<{ id: 
     "@context": "https://schema.org",
     "@type": "VideoObject",
     name: `${reel.shopName} | LOCAPASS`,
-    description: reel.caption?.trim() || `${reel.shopName} | LOCAPASS`,
+    description: reelDescription(reel, id, locale) || `${reel.shopName} | LOCAPASS`,
     thumbnailUrl: [thumbnail],
     uploadDate: reel.createdAt,
     ...(embedUrl ? { embedUrl } : first?.type === "video" ? { contentUrl: first.url } : {}),

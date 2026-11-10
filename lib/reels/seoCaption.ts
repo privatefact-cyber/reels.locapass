@@ -64,6 +64,24 @@ export function areaFromAddress(address: string | null | undefined): string | nu
   return area.length >= 2 && area.length <= 18 ? area : null;
 }
 
+/** 住所から、市区町村(「大田区」)と町名(「蒲田」)を別々に取り出す。取れなければnull。 */
+export function areaPartsFromAddress(address: string | null | undefined): { city: string | null; town: string | null } {
+  if (!address) return { city: null, town: null };
+  const cleaned = address
+    .replace(/〒?\s*\d{3}-?\d{4}\s*/u, "")
+    .replace(/^日本[、,\s]*/u, "")
+    .replace(/[０-９]/gu, (d) => String.fromCharCode(d.charCodeAt(0) - 0xfee0))
+    .trim();
+  const m = cleaned.match(/^(?:.*?[都道府県])?(.*?[市区町村郡])(.*?)(?=[0-9\-ー－丁番号\s]|$)/u);
+  if (!m) return { city: null, town: null };
+  const city = m[1].trim();
+  const town = (m[2] ?? "").trim();
+  return {
+    city: city.length >= 2 && city.length <= 8 ? city : null,
+    town: town.length >= 2 && town.length <= 8 ? town : null,
+  };
+}
+
 type Flavor = { noun: string; spot: string; thing: string };
 
 /** 店舗の業種(カテゴリ)ごとの言い回し。 */
@@ -225,4 +243,65 @@ export function reelCaptionFor(input: ReelCaptionInput): string | null {
   const hints = [...(input.menuHints ?? []), ...menuHintsFromText(junk)];
   // 動画のタイトルをそのまま出しても紹介文にならないので、店の情報から組み立てる。店名が分からないときだけ整えたタイトルを使う。
   return composeIntro({ ...input, menuHints: hints }) ?? (cleanAutoCaption(junk) || null);
+}
+
+export type TagInput = {
+  /** 店名(スナップ写真ではスポット名) */
+  shopName?: string | null;
+  address?: string | null;
+  /** 店舗の業種(「カフェ・スイーツ」など) */
+  category?: string | null;
+  /** 店舗が選んだ料理(「ラーメン・つけ麺」など)。あれば業種より優先 */
+  cuisines?: readonly string[];
+};
+
+/** 店名からタグにする語を作る(かっこの中身・記号・空白を外す)。長すぎる・短すぎるときはnull。 */
+function shopNameTag(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const base = name
+    .replace(/[（(][^）)]*[）)]/gu, "")
+    .replace(/[\s　|｜/／・,、。!！?？#＃"'「」『』【】[\]<>]+/gu, "")
+    .trim();
+  return base.length >= 2 && base.length <= 16 ? base : null;
+}
+
+/** 文末に付けるタグ(店名・市区町村・町名・料理/業種)。#は付けない。最大5つ。 */
+export function composeTags(input: TagInput): string[] {
+  const out: string[] = [];
+  const add = (w: string | null | undefined) => {
+    const t = w?.trim();
+    if (!t || t.length < 2) return;
+    if (!out.some((o) => o.toLowerCase() === t.toLowerCase())) out.push(t);
+  };
+  add(shopNameTag(input.shopName));
+  const { city, town } = areaPartsFromAddress(input.address);
+  add(city);
+  add(town);
+  const cuisine = input.cuisines?.find((c) => c.trim());
+  if (cuisine) {
+    for (const part of cuisine.split("・").slice(0, 2)) add(part);
+  } else {
+    const noun = flavorForCategory(input.category).noun;
+    if (noun !== "お店") add(noun);
+  }
+  return out.slice(0, 5);
+}
+
+/** 文の末尾に「#店名 #エリア #料理」を足す。文に既に同じタグがあれば足さない。文が空ならタグだけを返す。 */
+export function appendTags(text: string | null | undefined, input: TagInput): string | null {
+  const body = text?.trim() ?? "";
+  const tagSet = new Set((body.match(/[#＃][^\s#＃]+/gu) ?? []).map((t) => t.slice(1).toLowerCase()));
+  const tags = composeTags(input).filter((t) => !tagSet.has(t.toLowerCase()));
+  if (tags.length === 0) return body || null;
+  const line = tags.map((t) => `#${t}`).join(" ");
+  return body ? `${body}\n${line}` : line;
+}
+
+/** 文末のタグの行(#で始まる行)を外した本文。検索結果の説明文など、タグを入れたくないところで使う。 */
+export function stripTagLine(text: string | null | undefined): string {
+  return (text ?? "")
+    .split("\n")
+    .filter((line) => !/^\s*[#＃]/u.test(line))
+    .join("\n")
+    .trim();
 }

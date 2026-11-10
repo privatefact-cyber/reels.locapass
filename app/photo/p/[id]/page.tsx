@@ -6,7 +6,7 @@ import { PhotoFeed } from "@/components/photo/PhotoFeed";
 import { getPhotoPostById } from "@/lib/photo/getPhotoPosts";
 import { photoText } from "@/lib/photo/serverText";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
-import { composePhotoIntro } from "@/lib/reels/seoCaption";
+import { composePhotoIntro, stripTagLine } from "@/lib/reels/seoCaption";
 
 export const revalidate = 60;
 
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!post) return {};
   const title = `${post.spotName} | LOCAPASS`;
   // 投稿者のコメントがあればそのまま。無いときは、スポット名と住所から紹介文を作る(検索結果の説明文が空にならないように)。
-  const description = post.comment ?? composePhotoIntro({ spotName: post.spotName, address: post.address, seed: id }) ?? post.address ?? "LOCA SNAP | LOCAPASS";
+  const description = stripTagLine(post.comment) || (composePhotoIntro({ spotName: post.spotName, address: post.address, seed: id }) ?? post.address ?? "LOCA SNAP | LOCAPASS");
   const { url, alternates } = await localizedPageUrls(`/photo/p/${id}`);
   return {
     title,

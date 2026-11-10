@@ -1,3 +1,4 @@
+import { appendTags } from "@/lib/reels/seoCaption";
 import { resolvePostShopList, type PostShop } from "@/lib/photo/resolvePostShops";
 import { createStaticClient } from "@/lib/supabase/static";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
@@ -102,7 +103,8 @@ export async function toPosts(supabase: Supabase, rows: PostRow[]): Promise<Phot
     longitude: r.longitude,
     address: tr(r, r.address, "address"),
     spotName: tr(r, r.spot_name, "spot_name") ?? r.spot_name,
-    comment: tr(r, r.comment, "comment"),
+    // 投稿者の一言の文末に、「#スポット名 #エリア」のタグだけを足す(要約文は足さない。書かれた文章は変えない)。タグは原文の住所・スポット名から作る。
+    comment: appendTags(tr(r, r.comment, "comment"), { shopName: r.spot_name, address: r.address }),
     tags: Array.isArray(r.tags) ? (r.tags as unknown[]).filter((t): t is string => typeof t === "string") : [],
     createdAt: r.created_at,
     site: r.site,

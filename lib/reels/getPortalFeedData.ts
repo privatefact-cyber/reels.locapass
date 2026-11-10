@@ -10,7 +10,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { toEmbedRef } from "@/lib/embed";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { FEED_REELS_INITIAL } from "@/lib/reels/feedPaging";
-import { reelCaptionFor } from "@/lib/reels/seoCaption";
+import { appendTags, isAutoCaption, reelCaptionFor } from "@/lib/reels/seoCaption";
 import { EMPTY_REEL_FILTER, type ReelFeedFilter } from "@/lib/reels/feedFilter";
 
 export type ReelRow = {
@@ -68,17 +68,21 @@ export function toReelItem(row: ReelRow, locale: Locale = "ja", options?: { cuis
         : [];
 
   const fields = captionFields(locale, row);
-  // 日本語の画面では、自動収集の生ログ(「YouTubeで紹介された…」+ハッシュタグ)を外し、投稿文が空のときは店の情報から紹介文を補う。
-  // 店舗が自分で書いた文章は、そのまま出す(lib/reels/seoCaption.ts)。他の言語は、翻訳済みの文章をそのまま使う。
-  if (locale === "ja") {
-    fields.caption = reelCaptionFor({
-      raw: row.caption,
-      shopName: shop.name,
-      address: shop.address,
-      category: shop.category,
-      cuisines: options?.cuisines,
-      seed: row.id,
-    });
+  if (isAutoCaption(row.caption)) {
+    // 自動収集の生ログ(「YouTubeで紹介された…」+ハッシュタグ)は、日本語の画面では自然な紹介文にする(lib/reels/seoCaption.ts)。
+    if (locale === "ja") {
+      fields.caption = reelCaptionFor({
+        raw: row.caption,
+        shopName: shop.name,
+        address: shop.address,
+        category: shop.category,
+        cuisines: options?.cuisines,
+        seed: row.id,
+      });
+    }
+  } else {
+    // 店舗が書いた文章・空の投稿には、文末に「#店名 #エリア #料理」のタグだけを足す(要約文は足さない。書かれた文章は変えない)。
+    fields.caption = appendTags(fields.caption, { shopName: shop.name, address: shop.address, category: shop.category, cuisines: options?.cuisines });
   }
 
   return {
