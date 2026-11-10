@@ -10,6 +10,10 @@ type Field =
   | { key: string; kind: "number"; label: string; unit: string };
 
 const ATTRS: Record<string, { label: string; fields: Field[] }> = {
+  cuisine: {
+    label: "料理",
+    fields: [{ key: "genres", kind: "multi", label: "料理ジャンル", options: { ramen: "ラーメン・つけ麺", sushi: "寿司", tempura: "天ぷら", soba_udon: "そば・うどん", tonkatsu: "とんかつ", unagi: "うなぎ", yakiniku: "焼肉・ステーキ", yakitori: "焼き鳥・串焼き", washoku: "和食・定食", kaiseki: "懐石・会席", seafood: "海鮮・魚料理", nabe: "鍋・しゃぶしゃぶ", okonomiyaki: "お好み焼き・もんじゃ", donburi: "丼もの", curry: "カレー", chinese: "中華", korean: "韓国料理", italian: "イタリアン", french: "フレンチ", western: "洋食", burger: "ハンバーガー", asian: "アジア・エスニック", cafe_sweets: "カフェ・スイーツ", bakery: "パン・ベーカリー", bar: "お酒・バー", other: "その他" } }],
+  },
   pet_ok: {
     label: "ペット同伴可",
     fields: [

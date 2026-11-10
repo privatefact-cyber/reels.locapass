@@ -25,6 +25,8 @@ export type AttributeField =
   | { key: string; kind: "number"; label: L10n; unit: L10n; max: number };
 
 export type AttributeDef = {
+  /** true なら、店舗管理画面では選択肢をモーダルのチェックボックスで選ぶ(選択肢が多い属性用)。 */
+  modal?: boolean;
   label: L10n;
   /** 公開ページ・管理画面のチップに出す絵文字。 */
   icon: string;
@@ -35,6 +37,46 @@ const opt = (value: string, ja: string, en: string, zh: string, ar: string): Att
 const l = (ja: string, en: string, zh: string, ar: string): L10n => ({ ja, en, zh, ar });
 
 export const ATTRIBUTES = {
+  cuisine: {
+    modal: true,
+    label: l("料理", "Cuisine", "料理", "المطبخ"),
+    icon: "🍜",
+    fields: [
+      {
+        key: "genres",
+        kind: "multi",
+        label: l("料理ジャンル", "Cuisine", "料理类型", "نوع المطبخ"),
+        options: [
+          opt("ramen", "ラーメン・つけ麺", "Ramen & tsukemen", "拉面・蘸面", "رامن وتسوكيمن"),
+          opt("sushi", "寿司", "Sushi", "寿司", "سوشي"),
+          opt("tempura", "天ぷら", "Tempura", "天妇罗", "تمبورا"),
+          opt("soba_udon", "そば・うどん", "Soba & udon", "荞麦面・乌冬面", "سوبا وأودون"),
+          opt("tonkatsu", "とんかつ", "Tonkatsu", "炸猪排", "تونكاتسو"),
+          opt("unagi", "うなぎ", "Eel (unagi)", "鳗鱼", "أنقليس (أوناغي)"),
+          opt("yakiniku", "焼肉・ステーキ", "Yakiniku & steak", "烤肉・牛排", "ياكينيكو وستيك"),
+          opt("yakitori", "焼き鳥・串焼き", "Yakitori & skewers", "烤鸡肉串", "ياكيتوري وأسياخ"),
+          opt("washoku", "和食・定食", "Japanese set meals", "日式料理・定食", "مأكولات يابانية"),
+          opt("kaiseki", "懐石・会席", "Kaiseki", "怀石料理", "كايسيكي"),
+          opt("seafood", "海鮮・魚料理", "Seafood", "海鲜", "مأكولات بحرية"),
+          opt("nabe", "鍋・しゃぶしゃぶ", "Hot pot & shabu-shabu", "火锅・涮涮锅", "هوت بوت وشابو شابو"),
+          opt("okonomiyaki", "お好み焼き・もんじゃ", "Okonomiyaki & monja", "大阪烧・文字烧", "أوكونوميياكي ومونجا"),
+          opt("donburi", "丼もの", "Rice bowls", "盖饭", "أطباق الأرز (دونبوري)"),
+          opt("curry", "カレー", "Curry", "咖喱", "كاري"),
+          opt("chinese", "中華", "Chinese", "中餐", "مطبخ صيني"),
+          opt("korean", "韓国料理", "Korean", "韩餐", "مطبخ كوري"),
+          opt("italian", "イタリアン", "Italian", "意大利菜", "مطبخ إيطالي"),
+          opt("french", "フレンチ", "French", "法餐", "مطبخ فرنسي"),
+          opt("western", "洋食", "Western-style", "西餐", "مأكولات غربية"),
+          opt("burger", "ハンバーガー", "Burgers", "汉堡", "برجر"),
+          opt("asian", "アジア・エスニック", "Asian & ethnic", "亚洲・异国料理", "آسيوي وعرقي"),
+          opt("cafe_sweets", "カフェ・スイーツ", "Cafe & sweets", "咖啡・甜点", "مقهى وحلويات"),
+          opt("bakery", "パン・ベーカリー", "Bakery", "面包", "مخبوزات"),
+          opt("bar", "お酒・バー", "Drinks & bar", "酒吧", "مشروبات وبار"),
+          opt("other", "その他", "Others", "其他", "أخرى"),
+        ],
+      },
+    ],
+  },
   pet_ok: {
     label: l("ペット同伴可", "Pets welcome", "可携带宠物", "يُسمح بالحيوانات الأليفة"),
     icon: "🐾",

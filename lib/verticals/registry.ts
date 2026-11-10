@@ -31,7 +31,7 @@ export const VERTICALS: Record<BusinessType, BusinessTypeDef> = {
   food: {
     label: { ja: "飲食", en: "Food & Drink", zh: "餐饮", ar: "طعام وشراب" },
     category: "レストラン・食事",
-    attributes: ["pet_ok", "kids", "barrier_free", "halal_veg", "languages", "cashless", "wifi", "smoking", "parking"],
+    attributes: ["cuisine", "pet_ok", "kids", "barrier_free", "halal_veg", "languages", "cashless", "wifi", "smoking", "parking"],
     icon: "🍽️",
     description: "カフェ・レストラン・居酒屋・バーなど",
   },

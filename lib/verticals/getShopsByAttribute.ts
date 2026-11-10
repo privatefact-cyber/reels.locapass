@@ -27,15 +27,21 @@ type ShopRow = {
 /**
  * ある属性(ペット同伴可・子連れ歓迎など)がオンの、公開中の店舗をトップのグリッドと同じ形で返す。
  * 店舗ページの属性チップと同じく、その店の業態で出す属性に絞る(業態を変えて出さなくなった属性の行は数えない)。
- * 取得に失敗したら空配列。
+ * filter を渡すと、詳細のその項目(例: 料理=ラーメン)を選んだ店だけにする。取得に失敗したら空配列。
  */
-export async function getShopsByAttribute(key: AttributeKey): Promise<ShopGridItem[]> {
+export async function getShopsByAttribute(key: AttributeKey, filter?: { field: string; value: string }): Promise<ShopGridItem[]> {
   const supabase = await createClient();
   const db = supabase as unknown as Loose;
 
-  const { data: attrRows, error } = await db.from("locapass_shop_attributes").select("shop_id").eq("attribute_key", key).limit(5000);
+  const { data: attrRows, error } = await db.from("locapass_shop_attributes").select("shop_id, detail").eq("attribute_key", key).limit(5000);
   if (error || !attrRows?.length) return [];
-  const shopIds = [...new Set((attrRows as { shop_id: string }[]).map((r) => r.shop_id))];
+  // 料理など「この項目を選んだ店だけ」にしたいときは、詳細の中の選択に含まれる店に絞る。
+  const matched = (attrRows as { shop_id: string; detail: Record<string, unknown> | null }[]).filter((r) => {
+    if (!filter) return true;
+    const v = r.detail?.[filter.field];
+    return Array.isArray(v) ? v.includes(filter.value) : v === filter.value;
+  });
+  const shopIds = [...new Set(matched.map((r) => r.shop_id))];
 
   // URLが長くなりすぎないよう、IDは分けて引く。
   const chunks: string[][] = [];
