@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { journalNeedsTranslation, translateJournalPost } from "@/lib/journal/translate";
 import { getJournalAccess } from "@/lib/journal/access";
+import { autoDescription, autoSlug, todayJst } from "@/lib/journal/autofill";
 import {
   JOURNAL_RESERVED_SLUGS,
   JOURNAL_SLUG_PATTERN,
@@ -31,7 +32,7 @@ export type SaveJournalInput = {
   linkLabel: string;
 };
 
-export type SaveJournalResult = { ok: true; slug: string; status: "draft" | "published" } | { ok: false; error: string };
+export type SaveJournalResult = { ok: true; id: string; slug: string; status: "draft" | "published" } | { ok: false; error: string };
 
 const NO_PERMISSION = "この操作をする権限がありません。ログインし直してお試しください。";
 
@@ -49,9 +50,10 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
   const { supabase, user, isEditor } = await getJournalAccess();
   if (!user || !isEditor) return { ok: false, error: NO_PERMISSION };
 
-  const slug = input.slug.trim();
+  // 書く人が入れなくてよい項目(公開日・URL名・要約)は、空なら自動で埋める。
+  const publishedOn = /^\d{4}-\d{2}-\d{2}$/.test(input.publishedOn) ? input.publishedOn : todayJst();
+  const slug = input.slug.trim() || autoSlug(publishedOn);
   const title = input.title.trim();
-  const description = input.description.trim();
   const lead = input.lead.trim();
   const coverUrl = input.coverUrl.trim();
   const linkUrl = input.linkUrl.trim();
@@ -61,8 +63,7 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
     return { ok: false, error: "URL名は、半角の英小文字・数字・ハイフンで、3〜80文字にしてください(new、editors は使えません)。" };
   }
   if (input.category !== "topics" && input.category !== "tips") return { ok: false, error: "カテゴリを選んでください。" };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.publishedOn)) return { ok: false, error: "公開日を入力してください。" };
-  if (description.length > 400 || lead.length > 400) return { ok: false, error: "要約と導入文は、400文字以内にしてください。" };
+  if (input.description.length > 400 || lead.length > 400) return { ok: false, error: "要約と導入文は、400文字以内にしてください。" };
   if (coverUrl && !isSafeImageSrc(coverUrl)) return { ok: false, error: "表紙の写真のURLが正しくありません。" };
   if (linkUrl && !isSafeLinkUrl(linkUrl)) return { ok: false, error: "下のリンクのURLは、https:// か http:// で始まるもの、または / で始まるサイト内のパスにしてください(空白は入れられません)。" };
   if (linkLabel.length > 60) return { ok: false, error: "リンクのボタンの文字は、60文字以内にしてください。" };
@@ -70,7 +71,7 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
 
   const body = parseJournalBody(input.bodyText);
   if (input.status === "published" && body.length === 0) return { ok: false, error: "本文が空のままでは公開できません。" };
-  if (input.status === "published" && !description) return { ok: false, error: "公開するには、要約(一覧や検索結果に出る文)を入力してください。" };
+  const description = input.description.trim() || (await autoDescription(title, body));
 
   const row = {
     slug,
@@ -79,10 +80,10 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
     description,
     lead: lead || null,
     cover_url: coverUrl || null,
-    cover_alt: coverUrl ? input.coverAlt.trim().slice(0, 300) || "写真" : null,
+    cover_alt: coverUrl ? input.coverAlt.trim().slice(0, 300) || title.slice(0, 300) : null,
     body,
     status: input.status,
-    published_on: input.publishedOn,
+    published_on: publishedOn,
     link_url: linkUrl || null,
     link_label: linkUrl && linkLabel ? linkLabel : null,
   };
@@ -122,7 +123,7 @@ export async function saveJournalPost(input: SaveJournalInput): Promise<SaveJour
       }
     });
   }
-  return { ok: true, slug, status: input.status };
+  return { ok: true, id: result.data.id as string, slug, status: input.status };
 }
 
 export async function deleteJournalPost(id: string): Promise<{ ok: boolean; error?: string }> {

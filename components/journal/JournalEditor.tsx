@@ -92,7 +92,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
   const router = useLocaleRouter();
   const isNew = !initial.id;
   const [initialBody] = useState(() => toEditorText(initial.bodyText));
-  const [f, setF] = useState({ ...initial, bodyText: initialBody.text });
+  const [f, setF] = useState({ ...initial, bodyText: isNew || !initial.title ? initialBody.text : `${initial.title}\n\n${initialBody.text}` });
   const [photos, setPhotos] = useState<Photo[]>(initialBody.photos);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState<"draft" | "published" | "delete" | "upload" | null>(null);
@@ -112,15 +112,18 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
 
   const set = <K extends keyof JournalEditorInitial>(k: K, v: JournalEditorInitial[K]) => setF((p) => ({ ...p, [k]: v }));
 
-  /** タイトル欄が空なら、本文の一番上の行をタイトルにする(その行は本文から外す)。 */
+  /** 本文の1行目がタイトル。それ以降が本文。1行目が使えない(写真・箇条書き・長すぎ)ときは、元のタイトルを使う。 */
   function withDerivedTitle() {
-    if (f.title.trim()) return { title: f.title, bodyText: f.bodyText, derived: false };
     const { title, body } = splitTitleFromBody(f.bodyText);
-    return title ? { title, bodyText: body, derived: true } : { title: f.title, bodyText: f.bodyText, derived: false };
+    return title ? { title, bodyText: body } : { title: f.title.trim(), bodyText: f.bodyText };
   }
 
   async function save(status: "draft" | "published") {
     const d = withDerivedTitle();
+    if (!d.title) {
+      setMessage({ kind: "error", text: "1行目にタイトルを書いてください(写真や箇条書きではなく、文章で)。" });
+      return;
+    }
     const { md, unknown } = toMarkdown(d.bodyText, photos);
     if (unknown.length > 0) {
       setMessage({ kind: "error", text: `本文の「【写真${unknown[0]}】」に対応する写真がありません。消すか、写真をドラッグして入れ直してください。` });
@@ -140,7 +143,8 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
       return;
     }
     setMessage({ kind: "ok", text: "下書きを保存しました。" });
-    setF((p) => ({ ...p, status: "draft", ...(d.derived ? { title: d.title, bodyText: d.bodyText } : {}) }));
+    // 下書きの2回目以降の保存で、別の記事を作らないよう、記事のIDとURL名を覚えておく。
+    setF((p) => ({ ...p, id: res.id, slug: res.slug, status: "draft" }));
     if (isNew) router.replace(`/journal/${res.slug}/edit`);
   }
 
@@ -193,6 +197,8 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
       const base = photos.reduce((m, p) => Math.max(m, p.n), 0);
       const added: Photo[] = uploaded.map((url, i) => ({ n: base + i + 1, url, caption: "" }));
       setPhotos((p) => [...p, ...added]);
+      // 表紙が未設定なら、入れた最初の写真を表紙にする(別に選ぶ手間をなくす)。
+      setF((p) => (p.coverUrl ? p : { ...p, coverUrl: added[0].url, coverAlt: p.coverAlt }));
       setF((p) => {
         const at = Math.min(pos, p.bodyText.length);
         const before = p.bodyText.slice(0, at);
@@ -282,89 +288,9 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
         </p>
       ) : null}
 
-      <label className={label}>
-        <span className={labelText}>タイトル(必須)</span>
-        <input value={f.title} onChange={(e) => set("title", e.target.value)} maxLength={200} className={input} placeholder="例: おいしかった一皿を、そのお店のページに" />
-      </label>
-
-      <div className="grid grid-cols-2 gap-3">
-        <label className={label}>
-          <span className={labelText}>カテゴリ</span>
-          <select value={f.category} onChange={(e) => set("category", e.target.value as JournalCategory)} className={input}>
-            {(Object.keys(JOURNAL_CATEGORY_LABELS) as JournalCategory[]).map((c) => (
-              <option key={c} value={c}>
-                {JOURNAL_CATEGORY_LABELS[c]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={label}>
-          <span className={labelText}>公開日</span>
-          <input type="date" value={f.publishedOn} onChange={(e) => set("publishedOn", e.target.value)} className={input} />
-        </label>
-      </div>
-
-      <label className={label}>
-        <span className={labelText}>URL名(半角の英小文字・数字・ハイフン)</span>
-        <input value={f.slug} onChange={(e) => set("slug", e.target.value.toLowerCase())} className={input} placeholder="例: post-photo-to-shop" />
-        <span className="text-[11px] text-tone-600">https://locapass.net/journal/{f.slug || "…"}</span>
-      </label>
-
-      <label className={label}>
-        <span className={labelText}>要約(一覧と検索結果に出る、1〜2文)</span>
-        <textarea value={f.description} onChange={(e) => set("description", e.target.value)} maxLength={400} rows={2} className={input} />
-      </label>
-
-      <label className={label}>
-        <span className={labelText}>導入の一文(記事の冒頭に大きく出る。空でもOK)</span>
-        <textarea value={f.lead} onChange={(e) => set("lead", e.target.value)} maxLength={400} rows={2} className={input} />
-      </label>
-
-      <div className="space-y-2">
-        <span className={labelText}>表紙の写真</span>
-        {f.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={f.coverUrl} alt={f.coverAlt} className="aspect-[16/10] w-full rounded-2xl object-cover" />
-        ) : (
-          <div className="flex aspect-[16/10] w-full items-center justify-center rounded-2xl border border-dashed border-main/25 text-xs text-tone-500">
-            まだ選んでいません(写真なしでも飾りの表紙になります)
-          </div>
-        )}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            disabled={working}
-            onClick={() => coverFileRef.current?.click()}
-            className="inline-flex items-center gap-1.5 rounded-full border border-main/15 px-3 py-1.5 text-xs text-tone-300 hover:text-main disabled:opacity-50"
-          >
-            {busy === "upload" ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
-            写真を選ぶ
-          </button>
-          {f.coverUrl ? (
-            <button type="button" onClick={() => set("coverUrl", "")} className="text-xs text-tone-400 underline">
-              表紙を外す
-            </button>
-          ) : null}
-        </div>
-        {f.coverUrl ? (
-          <input value={f.coverAlt} onChange={(e) => set("coverAlt", e.target.value)} maxLength={300} className={input} placeholder="写真の説明(読み上げ用。例: 和食の定食)" />
-        ) : null}
-        <input
-          ref={coverFileRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (file) void pickCover(file);
-          }}
-        />
-      </div>
-
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className={labelText}>本文</span>
+          <span className={labelText}>記事(1行目がタイトルになります)</span>
           <div className="flex flex-wrap justify-end gap-2">
           <button
             type="button"
@@ -373,7 +299,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
             className="inline-flex items-center gap-1.5 rounded-full border border-main/15 px-3 py-1.5 text-xs text-tone-300 hover:text-main disabled:opacity-50"
           >
             <LinkIcon size={14} />
-            選んだ文字にリンクをつける
+            文字にリンク
           </button>
           <button
             type="button"
@@ -382,7 +308,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
             className="inline-flex items-center gap-1.5 rounded-full border border-main/15 px-3 py-1.5 text-xs text-tone-300 hover:text-main disabled:opacity-50"
           >
             {busy === "upload" ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
-            カーソルの位置に写真を入れる
+            写真を入れる
           </button>
           </div>
         </div>
@@ -452,9 +378,9 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
               e.preventDefault();
               void insertImages(files);
             }}
-            rows={18}
+            rows={20}
             className={`${input} font-mono leading-7 ${dragging ? "border-hl-400 ring-2 ring-hl-400/40" : ""}`}
-            placeholder={"## 見出し\n\nここに文章を書きます。空行で段落が分かれます。\n\n- 箇条書きは、行の先頭に「- 」\n- 続けて書くと1つのリストになります\n\n写真は、この欄にドラッグ&ドロップ(貼り付けもOK)"}
+            placeholder={"1行目にタイトルを書く\n\nここから文章を書きます。空行で段落が分かれます。\n\n写真は、この欄にドラッグ&ドロップ(貼り付けもOK)"}
           />
           {dragging ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/60 text-sm font-bold text-hl-200">
@@ -499,7 +425,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
           </div>
         ) : null}
         <p className="text-[11px] leading-5 text-tone-600">
-          書き方: 「## 」で見出し、「- 」で箇条書き、空行で段落。リンクは「[表示する文字](リンク先)」で、上のボタンでも入れられます。写真は、本文の欄にドラッグ&ドロップ(貼り付けや、上のボタンもOK)。「【写真1】」の行が写真になります。行ごと切り取って動かすと、場所を変えられます。
+          1行目がタイトルです。写真は、この欄にドラッグ&ドロップ(貼り付けや上のボタンもOK)。最初の写真が表紙になります。要約・URL名・公開日は自動で入ります。
         </p>
         <input
           ref={bodyFileRef}
@@ -511,6 +437,85 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
             const files = Array.from(e.target.files ?? []);
             e.target.value = "";
             if (files.length > 0) void insertImages(files);
+          }}
+        />
+      </div>
+
+
+      <details className="rounded-2xl border border-main/10 p-3">
+        <summary className="cursor-pointer text-xs text-tone-400">詳細設定(ふだんは触らなくてOK)</summary>
+        <div className="mt-4 space-y-5">
+      <div className="grid grid-cols-2 gap-3">
+        <label className={label}>
+          <span className={labelText}>カテゴリ</span>
+          <select value={f.category} onChange={(e) => set("category", e.target.value as JournalCategory)} className={input}>
+            {(Object.keys(JOURNAL_CATEGORY_LABELS) as JournalCategory[]).map((c) => (
+              <option key={c} value={c}>
+                {JOURNAL_CATEGORY_LABELS[c]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={label}>
+          <span className={labelText}>公開日</span>
+          <input type="date" value={f.publishedOn} onChange={(e) => set("publishedOn", e.target.value)} className={input} />
+        </label>
+      </div>
+
+      <label className={label}>
+        <span className={labelText}>URL名(半角の英小文字・数字・ハイフン)</span>
+        <input value={f.slug} onChange={(e) => set("slug", e.target.value.toLowerCase())} className={input} placeholder="空なら自動で付きます" />
+        <span className="text-[11px] text-tone-600">https://locapass.net/journal/{f.slug || "…"}</span>
+      </label>
+
+      <label className={label}>
+        <span className={labelText}>要約(空なら、記事からAIが自動で作ります)</span>
+        <textarea value={f.description} onChange={(e) => set("description", e.target.value)} maxLength={400} rows={2} className={input} />
+      </label>
+
+      <label className={label}>
+        <span className={labelText}>導入の一文(記事の冒頭に大きく出る。空でもOK)</span>
+        <textarea value={f.lead} onChange={(e) => set("lead", e.target.value)} maxLength={400} rows={2} className={input} />
+      </label>
+
+      <div className="space-y-2">
+        <span className={labelText}>表紙の写真</span>
+        {f.coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={f.coverUrl} alt={f.coverAlt} className="aspect-[16/10] w-full rounded-2xl object-cover" />
+        ) : (
+          <div className="flex aspect-[16/10] w-full items-center justify-center rounded-2xl border border-dashed border-main/25 text-xs text-tone-500">
+            まだ選んでいません(写真なしでも飾りの表紙になります)
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={working}
+            onClick={() => coverFileRef.current?.click()}
+            className="inline-flex items-center gap-1.5 rounded-full border border-main/15 px-3 py-1.5 text-xs text-tone-300 hover:text-main disabled:opacity-50"
+          >
+            {busy === "upload" ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+            写真を選ぶ
+          </button>
+          {f.coverUrl ? (
+            <button type="button" onClick={() => set("coverUrl", "")} className="text-xs text-tone-400 underline">
+              表紙を外す
+            </button>
+          ) : null}
+        </div>
+        {f.coverUrl ? (
+          <input value={f.coverAlt} onChange={(e) => set("coverAlt", e.target.value)} maxLength={300} className={input} placeholder="写真の説明(読み上げ用。例: 和食の定食)" />
+        ) : null}
+        <input
+          ref={coverFileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) void pickCover(file);
           }}
         />
       </div>
@@ -531,6 +536,9 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
           placeholder={`ボタンの文字(空なら「${JOURNAL_DEFAULT_LINK_LABEL}」)`}
         />
       </div>
+
+        </div>
+      </details>
 
       <div>
         <button type="button" onClick={() => setPreview((v) => !v)} className="text-xs text-hl-200 underline">
