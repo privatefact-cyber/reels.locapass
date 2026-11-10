@@ -6,6 +6,8 @@ import { previewShopImport, type ImportPreview } from "@/lib/shop/importFromWebs
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import { addressKey, filterSameShop, hasStreetNumber, safeSearchTerm, searchTerms, type ShopRow } from "@/lib/youtube/shopMatch";
 import { randomBytes } from "node:crypto";
+import { cleanAutoCaption, composeIntro, menuHintsFromText } from "@/lib/reels/seoCaption";
+import { getShopCuisineLabels } from "@/lib/verticals/shopCuisine";
 import { getBlockedChannelTitles } from "./stockHygiene";
 
 export type YoutubeCandidate = {
@@ -793,7 +795,7 @@ async function publishYoutubeIngestionImpl(ingestionId: string, userId: string |
   const form = new FormData();
   form.set("kind", "reel");
   form.set("video_url", row.video_url);
-  const { data: shopInfo } = await admin.from("locapass_shops").select("name, address").eq("id", row.matched_shop_id).maybeSingle();
+  const { data: shopInfo } = await admin.from("locapass_shops").select("name, address, category").eq("id", row.matched_shop_id).maybeSingle();
   // 手動追加などで説明欄が空のまま保存されている動画は、投稿の直前に取り直して保存する(次回以降の店舗特定にも使える)。
   let description = row.description;
   if (!description?.trim() && provider === "youtube" && row.youtube_id) {
@@ -801,8 +803,17 @@ async function publishYoutubeIngestionImpl(ingestionId: string, userId: string |
     if (description) await (admin as any).from("locapass_youtube_ingestions").update({ description }).eq("id", row.id);
   }
   const caption = await composeReelCaption({ title: row.title, description, shopName: shopInfo?.name ?? null, address: shopInfo?.address ?? null });
-  const fallback = `${provider === "tiktok" ? "TikTok" : "YouTube"}で紹介された ${row.title}`;
-  form.set("text", (caption ? `${caption}\n${fallback}` : fallback).slice(0, 500));
+  // 説明欄からAIがまとめた紹介文があればそれを使い、無ければ店の情報(店名・エリア・料理・タイトルのハッシュタグ)から紹介文を組み立てる。
+  // 以前の「YouTubeで紹介された+タイトル(ハッシュタグ入り)」の行は付けない(検索結果にも出るため、生ログのままにしない)。
+  const intro = caption ?? composeIntro({
+    shopName: shopInfo?.name,
+    address: shopInfo?.address,
+    category: shopInfo?.category,
+    cuisines: await getShopCuisineLabels(admin, row.matched_shop_id),
+    menuHints: menuHintsFromText(`${row.title} ${(description ?? "").slice(0, 600)}`),
+    seed: ref,
+  });
+  form.set("text", (intro ?? cleanAutoCaption(row.title) ?? "").slice(0, 500));
   await createEmbedPostForShop(admin as any, row.matched_shop_id, form);
   const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", reelPortalId).eq("embed_provider", provider).eq("embed_ref", ref).order("published_at", { ascending: false }).limit(1).maybeSingle();
   if (reelError || !reel?.id) throw new Error(reelError?.message ?? "リールIDを取得できませんでした");

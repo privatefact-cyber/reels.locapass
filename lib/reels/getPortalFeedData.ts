@@ -10,6 +10,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { toEmbedRef } from "@/lib/embed";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { FEED_REELS_INITIAL } from "@/lib/reels/feedPaging";
+import { reelCaptionFor } from "@/lib/reels/seoCaption";
 import { EMPTY_REEL_FILTER, type ReelFeedFilter } from "@/lib/reels/feedFilter";
 
 export type ReelRow = {
@@ -41,7 +42,7 @@ export type ReelRow = {
   locapass_shop_staff_members: { name: string; avatar_url: string | null; issue_no: number } | { name: string; avatar_url: string | null; issue_no: number }[] | null;
 };
 
-export function toReelItem(row: ReelRow, locale: Locale = "ja"): ReelItem | null {
+export function toReelItem(row: ReelRow, locale: Locale = "ja", options?: { cuisines?: readonly string[] }): ReelItem | null {
   const shop = Array.isArray(row.locapass_shops) ? row.locapass_shops[0] : row.locapass_shops;
   const cast = Array.isArray(row.locapass_cast_members) ? row.locapass_cast_members[0] : row.locapass_cast_members;
   const staff = Array.isArray(row.locapass_shop_staff_members)
@@ -66,9 +67,23 @@ export function toReelItem(row: ReelRow, locale: Locale = "ja"): ReelItem | null
         ? [{ type: "image", url: posterUrl }]
         : [];
 
+  const fields = captionFields(locale, row);
+  // 日本語の画面では、自動収集の生ログ(「YouTubeで紹介された…」+ハッシュタグ)を外し、投稿文が空のときは店の情報から紹介文を補う。
+  // 店舗が自分で書いた文章は、そのまま出す(lib/reels/seoCaption.ts)。他の言語は、翻訳済みの文章をそのまま使う。
+  if (locale === "ja") {
+    fields.caption = reelCaptionFor({
+      raw: row.caption,
+      shopName: shop.name,
+      address: shop.address,
+      category: shop.category,
+      cuisines: options?.cuisines,
+      seed: row.id,
+    });
+  }
+
   return {
     id: row.id,
-    ...captionFields(locale, row),
+    ...fields,
     media,
     likesCount: row.like_count,
     castId: row.cast_id,

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { REEL_SELECT, toReelItem, type ReelRow } from "@/lib/reels/getPortalFeedData";
 import type { Locale } from "@/lib/i18n/locale";
 import type { ReelItem } from "@/lib/reels/types";
+import { getShopCuisineLabels } from "@/lib/verticals/shopCuisine";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -16,5 +17,8 @@ export async function getReelById(id: string, locale: Locale = "ja"): Promise<Re
     .eq("status", "publish")
     .or("expires_at.is.null,expires_at.gt.now()")
     .maybeSingle();
-  return data ? toReelItem(data as unknown as ReelRow, locale) : null;
+  if (!data) return null;
+  // 共有ページ(/reel/[id])は、紹介文に店舗が選んだ料理(ラーメン等)も使う。
+  const cuisines = await getShopCuisineLabels(supabase, (data as unknown as ReelRow).shop_id ?? "");
+  return toReelItem(data as unknown as ReelRow, locale, { cuisines });
 }
