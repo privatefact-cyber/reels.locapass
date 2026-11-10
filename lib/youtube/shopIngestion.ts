@@ -690,6 +690,59 @@ export async function importOfficialProfileIfMissing(shopId: string, officialUrl
 
 /** 確定済みの既存店舗に、同じYouTube動画を二重投稿せずリールとして紐づける。 */
 export async function publishYoutubeIngestion(ingestionId: string, userId: string | null) {
+  return publishYoutubeIngestionImpl(ingestionId, userId);
+}
+
+/**
+ * 元動画のタイトル・説明欄から、リール用の短い紹介文(日本語)を作る。
+ * 説明欄の丸写しではなく、書かれている事実(おすすめメニュー・雰囲気など)だけを要約する。
+ * 説明欄が空・AIの失敗・結果が不自然なときは null を返し、呼び出し側が従来の固定文に戻す。
+ */
+export async function composeReelCaption(input: { title: string; description: string | null; shopName: string | null; address: string | null }): Promise<string | null> {
+  const key = process.env.GEMINI_API_KEY;
+  const description = (input.description ?? "").trim();
+  if (!key || description.length < 10) return null;
+  const prompt = [
+    "YouTube/TikTokの紹介動画を、お店のリール投稿として載せるための短い紹介文を日本語で書いてください。",
+    "",
+    `店名: ${input.shopName ?? "不明"}`,
+    `住所: ${input.address ?? "不明"}`,
+    `動画タイトル: ${input.title}`,
+    `説明欄: ${description.slice(0, 2500)}`,
+    "",
+    "ルール:",
+    "- 説明欄・タイトルに書かれている事実だけを使う。書かれていないメニュー・価格・営業時間・感想を付け足さない。",
+    "- 説明欄の文章をそのまま写さず、自分の言葉で短くまとめる。",
+    "- おすすめのメニュー、雰囲気、場所の特徴など、見る人の役に立つ情報を優先する。",
+    "- ハッシュタグ、URL、メール、電話番号、チャンネル登録・高評価のお願い、タイアップ・PR表記、他SNSへの誘導は入れない。",
+    "- 1〜3文、120文字以内。絵文字は使わない。文頭に「YouTubeで紹介された」などの決まり文句を付けない。",
+    "- 店の情報が読み取れない(説明欄が宣伝・定型文だけ等)場合は空文字を返す。",
+    "",
+    '出力は次のJSONだけにしてください。{"caption":string}',
+  ].join("\n");
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 512, responseMimeType: "application/json", thinkingConfig: { thinkingBudget: 0 } },
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!response.ok) return null;
+    const json = await response.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+    const raw = json.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
+    const caption = parseJsonObject(raw).caption;
+    if (typeof caption !== "string") return null;
+    const text = caption.replace(/https?:\/\/\S+/g, "").replace(/[#＃]\S+/g, "").replace(/\s+/g, " ").trim();
+    return text.length >= 8 && text.length <= 200 ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+async function publishYoutubeIngestionImpl(ingestionId: string, userId: string | null) {
   const admin = createAdminClient();
   const { data, error } = await (admin as any).from("locapass_youtube_ingestions").select("*").eq("id", ingestionId).maybeSingle();
   const row = data as IngestionRow | null;
@@ -721,7 +774,10 @@ export async function publishYoutubeIngestion(ingestionId: string, userId: strin
   const form = new FormData();
   form.set("kind", "reel");
   form.set("video_url", row.video_url);
-  form.set("text", `${provider === "tiktok" ? "TikTok" : "YouTube"}で紹介された ${row.title}`.slice(0, 500));
+  const { data: shopInfo } = await admin.from("locapass_shops").select("name, address").eq("id", row.matched_shop_id).maybeSingle();
+  const caption = await composeReelCaption({ title: row.title, description: row.description, shopName: shopInfo?.name ?? null, address: shopInfo?.address ?? null });
+  const fallback = `${provider === "tiktok" ? "TikTok" : "YouTube"}で紹介された ${row.title}`;
+  form.set("text", (caption ? `${caption}\n${fallback}` : fallback).slice(0, 500));
   await createEmbedPostForShop(admin as any, row.matched_shop_id, form);
   const { data: reel, error: reelError } = await (admin as any).from("locapass_reels").select("id").eq("portal_id", reelPortalId).eq("embed_provider", provider).eq("embed_ref", ref).order("published_at", { ascending: false }).limit(1).maybeSingle();
   if (reelError || !reel?.id) throw new Error(reelError?.message ?? "リールIDを取得できませんでした");
