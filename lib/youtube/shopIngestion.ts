@@ -111,6 +111,19 @@ async function youtubeJson<T>(path: string, params: Record<string, string>) {
   return response.json() as Promise<T>;
 }
 
+/**
+ * 動画1本の説明欄をYouTube Data APIで取る(手動のURL追加はoEmbedでタイトルしか取れないため)。
+ * 取れなかった・説明欄が空・APIキー未設定のときは空文字を返し、呼び出し側を止めない。
+ */
+export async function fetchYoutubeDescription(youtubeId: string): Promise<string> {
+  try {
+    const details = await youtubeJson<YoutubeVideoResponse>("videos", { part: "snippet", id: youtubeId, maxResults: "1" });
+    return cleanText(details.items?.[0]?.snippet?.description ?? "");
+  } catch {
+    return "";
+  }
+}
+
 /** 検索と動画詳細を分離し、候補の長さ・埋め込み可否で絞る。 */
 export async function collectYoutubeCandidates(query: string, maxResults = 50, publishedAfter?: string): Promise<YoutubeCandidate[]> {
   const search = await youtubeJson<YoutubeSearchResponse>("search", {
@@ -775,7 +788,13 @@ async function publishYoutubeIngestionImpl(ingestionId: string, userId: string |
   form.set("kind", "reel");
   form.set("video_url", row.video_url);
   const { data: shopInfo } = await admin.from("locapass_shops").select("name, address").eq("id", row.matched_shop_id).maybeSingle();
-  const caption = await composeReelCaption({ title: row.title, description: row.description, shopName: shopInfo?.name ?? null, address: shopInfo?.address ?? null });
+  // 手動追加などで説明欄が空のまま保存されている動画は、投稿の直前に取り直して保存する(次回以降の店舗特定にも使える)。
+  let description = row.description;
+  if (!description?.trim() && provider === "youtube" && row.youtube_id) {
+    description = await fetchYoutubeDescription(row.youtube_id) || null;
+    if (description) await (admin as any).from("locapass_youtube_ingestions").update({ description }).eq("id", row.id);
+  }
+  const caption = await composeReelCaption({ title: row.title, description, shopName: shopInfo?.name ?? null, address: shopInfo?.address ?? null });
   const fallback = `${provider === "tiktok" ? "TikTok" : "YouTube"}で紹介された ${row.title}`;
   form.set("text", (caption ? `${caption}\n${fallback}` : fallback).slice(0, 500));
   await createEmbedPostForShop(admin as any, row.matched_shop_id, form);

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { collectYoutubeCandidates, createShopForIngestion, defaultCategoryForPortal, findExistingShop, identifyShopFromVideo, intakePortalForAddress, matchOrCreateAndPublish, processPendingIngestions, publishYoutubeIngestion, resolveShopFromOfficialSite, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { collectYoutubeCandidates, fetchYoutubeDescription, createShopForIngestion, defaultCategoryForPortal, findExistingShop, identifyShopFromVideo, intakePortalForAddress, matchOrCreateAndPublish, processPendingIngestions, publishYoutubeIngestion, resolveShopFromOfficialSite, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import { parseVideoUrl } from "@/lib/video";
@@ -130,6 +130,8 @@ async function addOneYoutube(admin: ReturnType<typeof createAdminClient>, rawUrl
       thumbnailUrl = data.thumbnail_url?.trim() || thumbnailUrl;
     }
   } catch { /* メタデータ取得に失敗してもURLはストックする */ }
+  // oEmbedはタイトルしか返さないので、説明欄はYouTube Data APIで取る(失敗しても空のまま追加する)。
+  const description = (await fetchYoutubeDescription(youtubeId)) || null;
 
   const { error } = await (admin as any).from("locapass_youtube_ingestions").insert({
     portal_id: portalId,
@@ -138,7 +140,7 @@ async function addOneYoutube(admin: ReturnType<typeof createAdminClient>, rawUrl
     source_id: youtubeId,
     video_url: canonicalUrl,
     title,
-    description: null,
+    description,
     channel_title: channelTitle,
     thumbnail_url: thumbnailUrl,
     source_query: "manual:youtube-url",
