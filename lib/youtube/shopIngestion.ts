@@ -727,8 +727,11 @@ export async function composeReelCaption(input: { title: string; description: st
     "- 説明欄・タイトルに書かれている事実だけを使う。書かれていないメニュー・価格・営業時間・感想を付け足さない。",
     "- 説明欄の文章をそのまま写さず、自分の言葉で短くまとめる。",
     "- おすすめのメニュー、雰囲気、場所の特徴など、見る人の役に立つ情報を優先する。",
+    "- 一番の魅力(景色、名物メニュー、居心地など、説明欄で一番推されていること)を出だしに置く。",
+    "- 見た人が「また行きたい」「行ってみたい」と感じる、やわらかく温かい口調にする。友達におすすめを教える感じで、堅い説明調・箇条書き調にしない。",
+    "- やわらかい口調にしても、説明欄にない事実(味の評価、混み具合、価格など)は足さない。誇張や「絶対」「最高」などの言い切りもしない。",
     "- ハッシュタグ、URL、メール、電話番号、チャンネル登録・高評価のお願い、タイアップ・PR表記、他SNSへの誘導は入れない。",
-    "- 1〜3文、120文字以内。絵文字は使わない。文頭に「YouTubeで紹介された」などの決まり文句を付けない。",
+    "- 2〜3文、140文字以内。絵文字は使わない。文頭に「YouTubeで紹介された」などの決まり文句を付けない。",
     "- 店の情報が読み取れない(説明欄が宣伝・定型文だけ等)場合は空文字を返す。",
     "",
     '出力は次のJSONだけにしてください。{"caption":string}',
@@ -739,7 +742,7 @@ export async function composeReelCaption(input: { title: string; description: st
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 512, responseMimeType: "application/json", thinkingConfig: { thinkingBudget: 0 } },
+        generationConfig: { temperature: 0.5, maxOutputTokens: 512, responseMimeType: "application/json", thinkingConfig: { thinkingBudget: 0 } },
       }),
       signal: AbortSignal.timeout(20_000),
     });
