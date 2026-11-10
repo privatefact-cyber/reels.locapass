@@ -5,7 +5,7 @@ import Link from "@/components/i18n/LocaleLink";
 import { X, Send, RotateCcw, ExternalLink, Mic, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAiSelectedContext } from "@/lib/aiContext";
-import { detectListAction, listActionMessage } from "@/lib/aiActions";
+import { cuisineButtonLabel, detectCuisineAction } from "@/lib/aiActions";
 import { LOCALES, LOCALE_SHORT_LABEL, type Locale } from "@/lib/i18n/locale";
 import { useLocale, useLocaleRouter, usePublicPathname } from "@/components/i18n/LocaleProvider";
 
@@ -132,6 +132,12 @@ function toPath(url: string): string {
   } catch {
     return url;
   }
+}
+
+// AIが返した店舗リンクの最後に、料理の一覧ページへのボタンを足す(料理名が質問に出てきたときだけ)。
+function withCuisineLink(links: ChatLink[] | undefined, action: ReturnType<typeof detectCuisineAction>, locale: Locale): ChatLink[] | undefined {
+  if (!action) return links;
+  return [...(links ?? []), { title: cuisineButtonLabel(action.label[locale], locale), url: action.href }];
 }
 
 function newSessionId(mode: Mode): string {
@@ -401,15 +407,10 @@ export function AiInquiryWidget({
     appendMessage(sendMode, { role: "user", text });
     setInput("");
 
-    // 「ラーメンの一覧にして」のように料理の一覧を求められたら、AIの回答を待たずにその一覧ページへ移動する
-    // (AIが動かせるのは、この「料理で絞った一覧ページへの移動」だけ)。街の声(噂)モードでは使わない。
-    const listAction = sendMode === "machi" ? null : detectListAction(text);
-    if (listAction) {
-      const msg = listActionMessage(listAction.label[locale], locale);
-      appendMessage(sendMode, { role: "ai", text: msg.text, links: [{ title: msg.button, url: listAction.href }] });
-      router.push(listAction.href);
-      return;
-    }
+    // 質問に料理名が1つ出てきたら、AIの回答の下にその料理の一覧ボタンを付ける。「一覧にして」「だけ見せて」のような
+    // 言葉も入っていれば、画面も先にその一覧へ移動する(AIの提案は、どちらの場合も普通に出す)。街の声(噂)モードでは使わない。
+    const cuisineAction = sendMode === "machi" ? null : detectCuisineAction(text);
+    if (cuisineAction?.explicit) router.push(cuisineAction.href);
     setLoading(true);
 
     const selected = getAiSelectedContext();
@@ -441,7 +442,7 @@ export function AiInquiryWidget({
       appendMessage(sendMode, {
         role: "ai",
         text: data?.reply ?? t.ai.genericError,
-        links: Array.isArray(data?.links) ? data.links : undefined,
+        links: withCuisineLink(Array.isArray(data?.links) ? data.links : undefined, cuisineAction, locale),
         whisperShops:
           Array.isArray(data?.whisper_shops) && data.whisper_shops.length > 0 ? data.whisper_shops : undefined,
       });

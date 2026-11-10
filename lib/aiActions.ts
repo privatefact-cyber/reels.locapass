@@ -2,10 +2,10 @@ import { ATTRIBUTES, type AttributeField } from "@/lib/verticals/attributes";
 import type { Locale } from "@/lib/i18n/locale";
 
 /**
- * コンシェルジュAIの「画面操作」。質問文から「〇〇(料理)の一覧を見たい」という意図をその場で見分け、
- * AIの回答を待たずに、その料理の店舗一覧(/tag/cuisine?v=…)へ移動する。
+ * コンシェルジュAIの「画面操作」。質問文に料理名が1つだけ出てきたら、その料理の店舗一覧(/tag/cuisine?v=…)への
+ * 案内ボタンをAIの回答の下に付ける。さらに「一覧にして・だけ見せて」のような言葉も入っていれば、
+ * 回答を出しつつ、画面も先にその一覧へ移動する(AIの提案は必ず出す)。
  * AI(LLM)に画面を自由に触らせない: 動かせるのは「料理で絞った一覧ページへの移動」だけ。
- * 料理名と「一覧にして」系の言葉の両方が入っているときだけ動き、どちらか片方なら今までどおりAIが答える。
  */
 
 /** 料理の値 → 質問文に出てくる言い方(日本語・英語・中国語)。選択肢の表示名は別に自動で拾う。 */
@@ -35,29 +35,29 @@ const CUISINE_SYNONYMS: Record<string, string[]> = {
 /** 「一覧にして・だけ見せて」を表す言い方。「おすすめは?」「探して」のような相談は含めない(AIが答える)。 */
 const LIST_INTENT = /(一覧|リスト|だけ|のみ|全部|全て|すべて|まとめて|表示|絞|見せて|見たい|list|show|only|all |列表|全部|只|显示)/iu;
 
-type Result = { href: string; label: Record<Locale, string> };
+/** explicit: 「一覧にして」系の言葉が入っている(=画面も先に移動する)。false なら案内ボタンだけ付ける。 */
+type Result = { href: string; label: Record<Locale, string>; explicit: boolean };
 
-export function detectListAction(text: string): Result | null {
+export function detectCuisineAction(text: string): Result | null {
   const lower = text.toLowerCase();
-  if (!LIST_INTENT.test(lower)) return null;
   const field = (ATTRIBUTES.cuisine.fields as readonly AttributeField[]).find((f) => f.kind === "multi");
   if (!field || field.kind !== "multi") return null;
   const hits = field.options.filter((o) => (CUISINE_SYNONYMS[o.value] ?? []).some((w) => lower.includes(w.toLowerCase())));
-  // 2つ以上の料理が混ざる質問(「ラーメンと寿司」など)は一覧にできないので、AIに任せる。
+  // 2つ以上の料理が混ざる質問(「ラーメンと寿司」など)は一覧を1つに決められないので、AIの回答だけにする。
   if (hits.length !== 1) return null;
-  return { href: `/tag/cuisine?v=${hits[0].value}`, label: hits[0].label };
+  return { href: `/tag/cuisine?v=${hits[0].value}`, label: hits[0].label, explicit: LIST_INTENT.test(lower) };
 }
 
-/** チャットに出す、一覧を開いたことの案内。 */
-export function listActionMessage(label: string, locale: Locale): { text: string; button: string } {
+/** AIの回答の下に出す、料理の一覧ページへのボタンの文言。 */
+export function cuisineButtonLabel(label: string, locale: Locale): string {
   switch (locale) {
     case "en":
-      return { text: `Opening the list of "${label}" places. Tap the button below if it doesn't open.`, button: `${label} list` };
+      return `See all "${label}" places`;
     case "zh":
-      return { text: `正在打开“${label}”店铺列表。如果没有打开，请点击下方按钮。`, button: `${label}店铺列表` };
+      return `查看全部“${label}”店铺`;
     case "ar":
-      return { text: `جارٍ فتح قائمة "${label}". إذا لم تفتح، اضغط على الزر أدناه.`, button: label };
+      return `عرض كل أماكن "${label}"`;
     default:
-      return { text: `「${label}」のお店だけの一覧を開きます。開かないときは下のボタンを押してください。`, button: `${label}のお店一覧を見る` };
+      return `${label}のお店を一覧で見る`;
   }
 }
