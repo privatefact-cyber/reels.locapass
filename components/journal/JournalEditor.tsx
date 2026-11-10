@@ -324,56 +324,60 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
 
       <div className="space-y-2">
         <span className={labelText}>写真(最初の1枚が表紙になります)</span>
+        {f.coverUrl || photos.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {f.coverUrl ? (
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={f.coverUrl} alt="" className="aspect-square w-full rounded-xl object-cover" />
+                <span className="absolute left-1 top-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] text-hl-200">表紙</span>
+                <button type="button" onClick={() => set("coverUrl", "")} aria-label="表紙を外す" className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-tone-200 hover:text-red-300">
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ) : null}
+            {photos.map((ph) => (
+              <div key={ph.n} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={ph.url} alt="" className="aspect-square w-full rounded-xl object-cover" />
+                <button type="button" onClick={() => removePhoto(ph.n)} aria-label={`写真${ph.n}を削除`} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-tone-200 hover:text-red-300">
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {/* 枠そのものが、ドラッグ&ドロップの受け皿であり、タップして選ぶボタン。(ボタンの中身へのドロップを受けないブラウザがあるので、buttonは使わない) */}
         <div
-          onDragOver={(e) => {
-            if (Array.from(e.dataTransfer.types).includes("Files")) {
+          role="button"
+          tabIndex={0}
+          onClick={() => {
+            if (!working) topFileRef.current?.click();
+          }}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && !working) {
               e.preventDefault();
-              setTopDragging(true);
+              topFileRef.current?.click();
             }
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setTopDragging(true);
           }}
           onDragLeave={() => setTopDragging(false)}
           onDrop={(e) => {
+            e.preventDefault();
             setTopDragging(false);
             const files = Array.from(e.dataTransfer.files);
-            if (files.length === 0) return;
-            e.preventDefault();
-            void addTopPhotos(files);
+            if (files.length > 0) void addTopPhotos(files);
           }}
-          className={`rounded-2xl border border-dashed p-4 transition ${topDragging ? "border-hl-400 bg-hl-400/10" : "border-main/25"}`}
+          className={`flex min-h-[150px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-6 text-center transition ${
+            topDragging ? "border-hl-400 bg-hl-400/10 text-hl-200" : "border-main/30 text-tone-300 hover:border-main/60 hover:text-main"
+          } ${working ? "opacity-60" : ""}`}
         >
-          {f.coverUrl || photos.length > 0 ? (
-            <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {f.coverUrl ? (
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={f.coverUrl} alt="" className="aspect-square w-full rounded-xl object-cover" />
-                  <span className="absolute left-1 top-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] text-hl-200">表紙</span>
-                  <button type="button" onClick={() => set("coverUrl", "")} aria-label="表紙を外す" className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-tone-200 hover:text-red-300">
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ) : null}
-              {photos.map((ph) => (
-                <div key={ph.n} className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={ph.url} alt="" className="aspect-square w-full rounded-xl object-cover" />
-                  <button type="button" onClick={() => removePhoto(ph.n)} aria-label={`写真${ph.n}を削除`} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-tone-200 hover:text-red-300">
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          <button
-            type="button"
-            disabled={working}
-            onClick={() => topFileRef.current?.click()}
-            className="flex w-full flex-col items-center gap-1 rounded-xl py-3 text-xs text-tone-300 hover:text-main disabled:opacity-50"
-          >
-            {busy === "upload" ? <Loader2 size={20} className="animate-spin" /> : <ImagePlus size={20} />}
-            <span className="text-sm font-bold">写真を選ぶ(タップ)</span>
-            <span className="text-[11px] text-tone-500">何枚でも選べます。2枚目からは、記事の最後に並びます。パソコンはここにドラッグ&ドロップでもOK</span>
-          </button>
+          {busy === "upload" ? <Loader2 size={28} className="animate-spin" /> : <ImagePlus size={28} />}
+          <span className="text-sm font-bold">{busy === "upload" ? "アップロード中…" : "ここに写真をドラッグ&ドロップ"}</span>
+          <span className="text-xs text-tone-500">またはここをタップして選ぶ(何枚でもOK)</span>
         </div>
         <input
           ref={topFileRef}
