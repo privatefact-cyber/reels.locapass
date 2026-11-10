@@ -163,7 +163,7 @@ export async function collectYoutubeCandidates(query: string, maxResults = 50, p
 /** Health & Beauty ポータル。美容系の動画はここに入れる。 */
 export const BEAUTY_PORTAL_ID = 408;
 
-const TOKYO_BEAUTY_QUERIES = [
+export const TOKYO_BEAUTY_QUERIES = [
   "東京 美容室",
   "東京 ヘアサロン",
   "東京 ネイルサロン",
@@ -179,14 +179,16 @@ export async function collectTokyoBeautyStock(options?: {
   portalId?: number;
   perQuery?: number;
   publishedAfter?: string;
+  queries?: readonly string[];
 }) {
+  const queries = options?.queries?.length ? options.queries : TOKYO_BEAUTY_QUERIES;
   const portalId = options?.portalId ?? BEAUTY_PORTAL_ID;
   const perQuery = Math.min(Math.max(options?.perQuery ?? 25, 1), 50);
   const publishedAfter = options?.publishedAfter ?? new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString();
   let fetched = 0;
   let saved = 0;
   const errors: string[] = [];
-  for (const query of TOKYO_BEAUTY_QUERIES) {
+  for (const query of queries) {
     // 1つの検索語が失敗(クォータ・一時的なエラー)しても、残りの検索語と後段の公開処理は続ける。
     try {
       const candidates = await collectYoutubeCandidates(query, perQuery, publishedAfter);
@@ -196,7 +198,7 @@ export async function collectTokyoBeautyStock(options?: {
       errors.push(`${query}: ${error instanceof Error ? error.message.slice(0, 160) : "収集に失敗"}`);
     }
   }
-  return { portalId, queries: TOKYO_BEAUTY_QUERIES.length, fetched, saved, publishedAfter, errors };
+  return { portalId, queries: queries.length, fetched, saved, publishedAfter, errors };
 }
 
 /** 東京のカフェ・グルメ系の検索語。定期収集(/api/cron/youtube-gourmet)が使う。 */
@@ -215,14 +217,15 @@ export const TOKYO_GOURMET_QUERIES = [
  * 東京のカフェ・グルメ系を新着順で収集し、ロカパス(ハブ)ポータルへストックする(手動収集の初期ポータルと同じ)。
  * 店舗特定・公開は processPendingIngestions が行う(定期実行では、この収集で入れた分だけを処理する)。
  */
-export async function collectTokyoGourmetStock(options?: { portalId?: number; perQuery?: number; publishedAfter?: string }) {
+export async function collectTokyoGourmetStock(options?: { portalId?: number; perQuery?: number; publishedAfter?: string; queries?: readonly string[] }) {
+  const queries = options?.queries?.length ? options.queries : TOKYO_GOURMET_QUERIES;
   const portalId = options?.portalId ?? LOCAPASS_HUB_PORTAL_ID;
   const perQuery = Math.min(Math.max(options?.perQuery ?? 25, 1), 50);
   const publishedAfter = options?.publishedAfter ?? new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString();
   let fetched = 0;
   let saved = 0;
   const errors: string[] = [];
-  for (const query of TOKYO_GOURMET_QUERIES) {
+  for (const query of queries) {
     // 1つの検索語が失敗(クォータ・一時的なエラー)しても、残りの検索語と後段の公開処理は続ける。
     try {
       const candidates = await collectYoutubeCandidates(query, perQuery, publishedAfter);
@@ -232,7 +235,7 @@ export async function collectTokyoGourmetStock(options?: { portalId?: number; pe
       errors.push(`${query}: ${error instanceof Error ? error.message.slice(0, 160) : "収集に失敗"}`);
     }
   }
-  return { portalId, queries: TOKYO_GOURMET_QUERIES.length, fetched, saved, publishedAfter, errors };
+  return { portalId, queries: queries.length, fetched, saved, publishedAfter, errors };
 }
 
 /** 管理画面から同一動画を何度集めても候補を増やさない。 */
@@ -814,3 +817,22 @@ async function publishYoutubeIngestionImpl(ingestionId: string, userId: string |
 }
 
 
+
+/** 定期収集の種類。管理画面の「定期収集の検索語」と1対1。 */
+export type CollectJob = "gourmet" | "beauty";
+export const COLLECT_JOB_DEFAULTS: Record<CollectJob, readonly string[]> = { gourmet: TOKYO_GOURMET_QUERIES, beauty: TOKYO_BEAUTY_QUERIES };
+/** YouTube検索は1回100クォータ(1日1万)。入れすぎて枯渇しないよう、1種類あたりの語数に上限を置く。 */
+export const MAX_COLLECT_QUERIES = 12;
+
+/** 保存済みの検索語を返す。未設定・テーブル未作成・読み込み失敗のときは、コードの初期値を使う(収集を止めない)。 */
+export async function getCollectQueries(job: CollectJob): Promise<{ queries: readonly string[]; isCustom: boolean }> {
+  try {
+    const { data, error } = await (createAdminClient() as any).from("locapass_youtube_collect_queries").select("queries").eq("job", job).maybeSingle();
+    if (error) throw error;
+    const saved = ((data?.queries ?? []) as string[]).map((q) => q.trim()).filter(Boolean);
+    if (saved.length > 0) return { queries: saved, isCustom: true };
+  } catch (error) {
+    console.error(`定期収集の検索語を読めなかったので初期値を使います(${job})`, error);
+  }
+  return { queries: COLLECT_JOB_DEFAULTS[job], isCustom: false };
+}

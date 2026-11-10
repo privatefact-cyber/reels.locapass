@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { BEAUTY_PORTAL_ID, collectTokyoBeautyStock, processPendingIngestions } from "@/lib/youtube/shopIngestion";
+import { BEAUTY_PORTAL_ID, collectTokyoBeautyStock, getCollectQueries, processPendingIngestions } from "@/lib/youtube/shopIngestion";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -19,7 +19,8 @@ export async function GET(req: Request) {
   }
   const started = Date.now();
   try {
-    const collected = await collectTokyoBeautyStock();
+    const { queries } = await getCollectQueries("beauty");
+    const collected = await collectTokyoBeautyStock({ queries });
     // 収集に時間がかかった分だけ公開処理の持ち時間を減らし、maxDurationを超えないようにする。
     const budgetMs = Math.max(0, 240_000 - (Date.now() - started));
     const processed = process.env.GEMINI_API_KEY

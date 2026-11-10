@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { LOCAPASS_HUB_PORTAL_ID, TOKYO_GOURMET_QUERIES, collectTokyoGourmetStock, processPendingIngestions } from "@/lib/youtube/shopIngestion";
+import { LOCAPASS_HUB_PORTAL_ID, collectTokyoGourmetStock, getCollectQueries, processPendingIngestions } from "@/lib/youtube/shopIngestion";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -21,7 +21,9 @@ export async function GET(req: Request) {
   }
   const started = Date.now();
   try {
-    const collected = await collectTokyoGourmetStock();
+    // 検索語は管理画面(動画ストック)で変更できる。未設定ならコードの初期値。
+    const { queries } = await getCollectQueries("gourmet");
+    const collected = await collectTokyoGourmetStock({ queries });
     // 収集に時間がかかった分だけ公開処理の持ち時間を減らし、maxDurationを超えないようにする。
     const budgetMs = Math.max(0, 240_000 - (Date.now() - started));
     const processed = process.env.GEMINI_API_KEY
@@ -30,7 +32,7 @@ export async function GET(req: Request) {
           limit: 15,
           userId: null,
           budgetMs,
-          sourceQueries: TOKYO_GOURMET_QUERIES,
+          sourceQueries: queries,
           createdAfter: new Date(started - 36 * 60 * 60 * 1000).toISOString(),
         })
       : { skipped: "GEMINI_API_KEY not set" };

@@ -1,8 +1,9 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addTikTokUrl, addYoutubeUrl, autoProcessPendingYoutube, collectShibuyaShorts, createDraftShopFromIngestion, enrichIntakeShops, findOfficialSiteForIngestion, publishReviewedYoutubeIngestion, reviewYoutubeIngestion, setYoutubeStockThumbnail } from "../youtube-intake/actions";
+import { resetCollectQueries, saveCollectQueries, addTikTokUrl, addYoutubeUrl, autoProcessPendingYoutube, collectShibuyaShorts, createDraftShopFromIngestion, enrichIntakeShops, findOfficialSiteForIngestion, publishReviewedYoutubeIngestion, reviewYoutubeIngestion, setYoutubeStockThumbnail } from "../youtube-intake/actions";
 import { YoutubeStockGrid } from "./YoutubeStockGrid";
 import { getBlockedChannelTitles } from "@/lib/youtube/stockHygiene";
+import { COLLECT_JOB_DEFAULTS, MAX_COLLECT_QUERIES, getCollectQueries, type CollectJob } from "@/lib/youtube/shopIngestion";
 
 type Row = {
   id: string; portal_id: number; source_provider: "youtube" | "tiktok"; source_id: string | null; thumbnail_url: string | null; youtube_id: string | null; video_url: string; title: string; description: string | null; channel_title: string | null;
@@ -13,7 +14,7 @@ type Row = {
 // 「保留を自動処理」「不足項目を補完」は外部API(Gemini)を続けて呼ぶので長めにとる。
 export const maxDuration = 300;
 
-export default async function YoutubeStockPage({ searchParams }: { searchParams: Promise<{ collection?: string; label?: string; query?: string; fetched?: string; saved?: string; message?: string; total?: string; added?: string; exists?: string; failed?: string; fails?: string }> }) {
+export default async function YoutubeStockPage({ searchParams }: { searchParams: Promise<{ collection?: string; label?: string; query?: string; fetched?: string; saved?: string; message?: string; total?: string; added?: string; exists?: string; failed?: string; fails?: string; queries?: string; job?: string }> }) {
   await requireRootAdmin();
   const collectionResult = await searchParams;
   const admin = createAdminClient();
@@ -30,6 +31,11 @@ export default async function YoutubeStockPage({ searchParams }: { searchParams:
   const shopName = new Map((shops ?? []).map((shop) => [shop.id, `${shop.name}${shop.address ? ` (${shop.address})` : ""}`]));
   const portalOptions = (portals ?? []).map((portal) => ({ id: portal.id, label: `${portal.name} (${portal.slug})` }));
   const blockedChannels = await getBlockedChannelTitles();
+  const collectJobs: { job: CollectJob; label: string; time: string }[] = [
+    { job: "gourmet", label: "グルメ・カフェ系", time: "毎日 02:30" },
+    { job: "beauty", label: "ビューティー系", time: "毎日 02:15" },
+  ];
+  const collectSettings = await Promise.all(collectJobs.map(async (item) => ({ ...item, ...(await getCollectQueries(item.job)) })));
   const actions = Object.fromEntries(rows.map((row) => [row.id, {
     findOfficialSite: findOfficialSiteForIngestion.bind(null, row.id),
     review: reviewYoutubeIngestion.bind(null, row.id),
@@ -62,6 +68,28 @@ export default async function YoutubeStockPage({ searchParams }: { searchParams:
     })()}
     {collectionResult.collection === "error" && <div className="rounded-2xl border border-red-300 bg-red-50 px-5 py-4 text-sm text-red-900"><p className="font-bold">動画の追加・収集に失敗しました</p><p className="mt-1">{collectionResult.message || "時間をおいて再度お試しください。"}</p></div>}
     <div className="grid gap-4 md:grid-cols-2"><form action={collectShibuyaShorts} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-[1fr_110px_1fr_auto]"><label className="text-sm font-semibold text-slate-700">YouTube検索語<input name="query" defaultValue={collectionResult.query || "東京 グルメ カフェ"} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" /></label><label className="text-sm font-semibold text-slate-700">上限<input name="limit" type="number" min="1" max="50" defaultValue="50" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" /></label><label className="text-sm font-semibold text-slate-700">登録ポータル<select name="portal_id" defaultValue="55" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">{portalOptions.map((portal) => <option key={portal.id} value={portal.id}>{portal.label}</option>)}</select></label><button className="self-end rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">YouTube収集</button></form><form action={autoProcessPendingYoutube} className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5"><label className="flex-1 text-sm font-semibold text-amber-900">保留候補の自動処理<select name="portal_id" defaultValue="" className="mt-1 w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"><option value="">全ポータル</option>{portalOptions.map((portal) => <option key={portal.id} value={portal.id}>{portal.label}</option>)}</select><span className="mt-1 block text-xs font-normal text-amber-800">新しく収集した未判定の保留を最大5件AIで判定し、店名と住所が分かれば店舗登録(公開)・座標登録・リール投稿まで行います。失敗理由は動画カードに表示します。</span></label><button className="self-end rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white">新しい保留を5件処理</button></form><form action={addYoutubeUrl} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-5"><label className="flex-1 text-sm font-semibold text-slate-700">YouTube共有URLを追加(まとめて貼れます)<textarea name="youtube_url" required rows={4} placeholder={"1行に1本ずつ貼り付け(最大30本)\nhttps://youtu.be/...\nhttps://youtube.com/shorts/..."} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" /><select name="portal_id" defaultValue="55" className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">{portalOptions.map((portal) => <option key={portal.id} value={portal.id}>{portal.label}</option>)}</select></label><button className="self-end rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">YouTubeを追加</button></form><form action={enrichIntakeShops} className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-5"><div className="flex-1 text-sm font-semibold text-emerald-900">登録店舗の不足項目を補完<span className="mt-1 block text-xs font-normal text-emerald-800">公開中の取り込み店舗 {activeShops.length}件のうち、英語の住所なし {missingAddressEn}件。住所の英語表記と紹介文の翻訳を最大15店ずつ埋めます(写真は使いません。写真の無い店は最新リールの画像が出ます)。</span></div><button className="self-end rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">補完する</button></form><form action={addTikTokUrl} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-5"><label className="flex-1 text-sm font-semibold text-slate-700">TikTok URLを追加(共有リンクも可・まとめて貼れます)<textarea name="tiktok_url" required rows={4} placeholder={"1行に1本ずつ貼り付け(最大30本)\nhttps://vt.tiktok.com/...\nhttps://www.tiktok.com/@.../video/..."} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" /><select name="portal_id" defaultValue="55" className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">{portalOptions.map((portal) => <option key={portal.id} value={portal.id}>{portal.label}</option>)}</select></label><button className="self-end rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white">TikTokを追加</button></form></div>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5">
+      <h2 className="text-base font-bold text-slate-900">定期収集の検索語</h2>
+      <p className="mt-1 text-xs text-slate-600">毎日の自動収集がYouTubeで検索する語です(1行に1語・最大{MAX_COLLECT_QUERIES}個)。保存した内容は次回の収集から使われます。「デフォルトに戻す」で、最初から入っている語に戻せます。上の「YouTube検索語」は、その場で1回だけ好きな語で集める用です。</p>
+      {collectionResult.queries === "saved" && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">検索語を保存しました(次回の収集から反映されます)</p>}
+      {collectionResult.queries === "reset" && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">デフォルトの検索語に戻しました</p>}
+      {collectionResult.queries === "error" && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-900">{collectionResult.message || "保存できませんでした"}</p>}
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {collectSettings.map((item) => <div key={item.job} className="rounded-xl border border-slate-200 p-4">
+          <p className="text-sm font-bold text-slate-900">{item.label}<span className="ml-2 text-xs font-normal text-slate-500">{item.time}(日本時間)に実行 ／ {item.isCustom ? "変更済み" : "デフォルト"}</span></p>
+          <form action={saveCollectQueries} className="mt-2">
+            <input type="hidden" name="job" value={item.job} />
+            <textarea name="queries" rows={9} defaultValue={item.queries.join("\n")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            <button className="mt-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">保存</button>
+          </form>
+          <form action={resetCollectQueries} className="mt-2">
+            <input type="hidden" name="job" value={item.job} />
+            <button disabled={!item.isCustom} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-40">デフォルトに戻す</button>
+            <span className="ml-2 text-xs text-slate-500">初期値: {COLLECT_JOB_DEFAULTS[item.job].join(" / ")}</span>
+          </form>
+        </div>)}
+      </div>
+    </section>
     <YoutubeStockGrid rows={rows} shopName={Object.fromEntries(shopName)} portalOptions={portalOptions} actions={actions} blockedChannels={blockedChannels} />
     {rows.length === 0 && <p className="text-sm text-slate-500">まだ動画はありません。</p>}
   </div>;

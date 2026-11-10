@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { collectYoutubeCandidates, fetchYoutubeDescription, createShopForIngestion, defaultCategoryForPortal, findExistingShop, identifyShopFromVideo, intakePortalForAddress, matchOrCreateAndPublish, processPendingIngestions, publishYoutubeIngestion, resolveShopFromOfficialSite, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
+import { type CollectJob, collectYoutubeCandidates, fetchYoutubeDescription, createShopForIngestion, defaultCategoryForPortal, findExistingShop, identifyShopFromVideo, intakePortalForAddress, matchOrCreateAndPublish, MAX_COLLECT_QUERIES, processPendingIngestions, publishYoutubeIngestion, resolveShopFromOfficialSite, saveYoutubeCandidates } from "@/lib/youtube/shopIngestion";
 import { normalizeCategory } from "@/lib/shop/locapassCategories";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import { parseVideoUrl } from "@/lib/video";
@@ -519,3 +519,31 @@ export async function publishReviewedYoutubeIngestion(ingestionId: string): Prom
   });
 }
 
+
+function parseCollectJob(value: FormDataEntryValue | null): CollectJob {
+  if (value === "gourmet" || value === "beauty") return value;
+  throw new Error("収集の種類を確認してください");
+}
+
+/** 定期収集の検索語を保存する(1行に1語)。空にはできない(空なら「デフォルトに戻す」を使う)。 */
+export async function saveCollectQueries(formData: FormData) {
+  await requireRootAdmin();
+  const job = parseCollectJob(formData.get("job"));
+  const queries = [...new Set(String(formData.get("queries") ?? "").split(/\r?\n/).map((q) => q.trim().replace(/\s+/g, " ").slice(0, 100)).filter(Boolean))];
+  if (queries.length === 0) redirect(`/admin/youtube-stock?queries=error&job=${job}&message=${encodeURIComponent("検索語が空です。戻したい場合は「デフォルトに戻す」を押してください")}`);
+  if (queries.length > MAX_COLLECT_QUERIES) redirect(`/admin/youtube-stock?queries=error&job=${job}&message=${encodeURIComponent(`検索語は最大${MAX_COLLECT_QUERIES}個までです(YouTubeの1日の利用枠を使い切らないため)`)}`);
+  const { error } = await (createAdminClient() as any).from("locapass_youtube_collect_queries").upsert({ job, queries, updated_at: new Date().toISOString() }, { onConflict: "job" });
+  if (error) redirect(`/admin/youtube-stock?queries=error&job=${job}&message=${encodeURIComponent(`保存に失敗しました: ${String(error.message).slice(0, 120)}`)}`);
+  revalidatePath("/admin/youtube-stock");
+  redirect(`/admin/youtube-stock?queries=saved&job=${job}`);
+}
+
+/** 検索語をコードに書かれた初期値に戻す(保存済みの語を消す)。 */
+export async function resetCollectQueries(formData: FormData) {
+  await requireRootAdmin();
+  const job = parseCollectJob(formData.get("job"));
+  const { error } = await (createAdminClient() as any).from("locapass_youtube_collect_queries").upsert({ job, queries: null, updated_at: new Date().toISOString() }, { onConflict: "job" });
+  if (error) redirect(`/admin/youtube-stock?queries=error&job=${job}&message=${encodeURIComponent(`戻せませんでした: ${String(error.message).slice(0, 120)}`)}`);
+  revalidatePath("/admin/youtube-stock");
+  redirect(`/admin/youtube-stock?queries=reset&job=${job}`);
+}
