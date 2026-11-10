@@ -10,7 +10,7 @@ import {
   JOURNAL_CATEGORY_LABELS,
   JOURNAL_DEFAULT_LINK_LABEL,
   isSafeLinkUrl,
-  parseJournalBody,
+  parseJournalBody, splitTitleFromBody,
   type JournalCategory,
   type JournalPost,
 } from "@/lib/journal/posts";
@@ -112,15 +112,23 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
 
   const set = <K extends keyof JournalEditorInitial>(k: K, v: JournalEditorInitial[K]) => setF((p) => ({ ...p, [k]: v }));
 
+  /** タイトル欄が空なら、本文の一番上の行をタイトルにする(その行は本文から外す)。 */
+  function withDerivedTitle() {
+    if (f.title.trim()) return { title: f.title, bodyText: f.bodyText, derived: false };
+    const { title, body } = splitTitleFromBody(f.bodyText);
+    return title ? { title, bodyText: body, derived: true } : { title: f.title, bodyText: f.bodyText, derived: false };
+  }
+
   async function save(status: "draft" | "published") {
-    const { md, unknown } = toMarkdown(f.bodyText, photos);
+    const d = withDerivedTitle();
+    const { md, unknown } = toMarkdown(d.bodyText, photos);
     if (unknown.length > 0) {
       setMessage({ kind: "error", text: `本文の「【写真${unknown[0]}】」に対応する写真がありません。消すか、写真をドラッグして入れ直してください。` });
       return;
     }
     setBusy(status);
     setMessage(null);
-    const res = await saveJournalPost({ ...f, bodyText: md, status });
+    const res = await saveJournalPost({ ...f, title: d.title, bodyText: md, status });
     setBusy(null);
     if (!res.ok) {
       setMessage({ kind: "error", text: res.error });
@@ -132,7 +140,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
       return;
     }
     setMessage({ kind: "ok", text: "下書きを保存しました。" });
-    setF((p) => ({ ...p, status: "draft" }));
+    setF((p) => ({ ...p, status: "draft", ...(d.derived ? { title: d.title, bodyText: d.bodyText } : {}) }));
     if (isNew) router.replace(`/journal/${res.slug}/edit`);
   }
 
@@ -224,15 +232,16 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
     });
   }
 
+  const previewDerived = withDerivedTitle();
   const draftPost: JournalPost = {
     slug: f.slug,
     category: f.category,
     date: f.publishedOn,
-    title: f.title,
+    title: previewDerived.title || "(タイトル未入力)",
     description: f.description,
     ...(f.lead ? { lead: f.lead } : {}),
     ...(f.coverUrl ? { cover: { src: f.coverUrl, alt: f.coverAlt } } : {}),
-    body: parseJournalBody(toMarkdown(f.bodyText, photos).md),
+    body: parseJournalBody(toMarkdown(previewDerived.bodyText, photos).md),
     ...(f.linkUrl.trim() && isSafeLinkUrl(f.linkUrl.trim())
       ? { link: { url: f.linkUrl.trim(), label: f.linkLabel.trim() || JOURNAL_DEFAULT_LINK_LABEL } }
       : {}),

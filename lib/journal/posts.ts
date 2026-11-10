@@ -62,6 +62,28 @@ export function isSafeImageSrc(src: string): boolean {
   return /^\/[^/\s]/.test(src) || /^https:\/\/[^\s]+$/.test(src);
 }
 
+/** 貼り付けた文章に残りがちな太字の記号(**)を外す。太字としては出さない(読み込むときに記号だけ消す)。 */
+function stripBoldMarks(text: string): string {
+  return text.replace(/\*\*/g, "");
+}
+
+/**
+ * タイトル欄が空のとき、本文の一番上の行をタイトルとして取り出す(その行は本文から外す)。
+ * 「## 」「#」などの見出しの記号や太字の「**」は外す。一番上が箇条書き・写真・長すぎる行のときは、取り出さない。
+ */
+export function splitTitleFromBody(bodyText: string): { title: string; body: string } {
+  const lines = bodyText.replace(/\r\n/g, "\n").split("\n");
+  const first = lines.findIndex((l) => l.trim() !== "");
+  if (first < 0) return { title: "", body: bodyText };
+  const raw = lines[first].trim();
+  if (/^【写真\d+】/.test(raw) || /^!\[/.test(raw) || /^-\s/.test(raw)) return { title: "", body: bodyText };
+  const title = stripBoldMarks(raw).replace(/^#{1,3}\s*/, "").trim();
+  if (!title || title.length > 200) return { title: "", body: bodyText };
+  let next = first + 1;
+  while (next < lines.length && lines[next].trim() === "") next++;
+  return { title, body: lines.slice(next).join("\n") };
+}
+
 /**
  * 本文の書き方(編集画面のテキスト)  →  ブロックの配列。
  *   ## 見出し       … 見出し
@@ -82,13 +104,13 @@ export function parseJournalBody(text: string): JournalBlock[] {
     list = [];
   };
   for (const raw of text.replace(/\r\n/g, "\n").split("\n")) {
-    const line = raw.trim();
+    const line = stripBoldMarks(raw.trim());
     if (!line) {
       flushPara();
       flushList();
       continue;
     }
-    const h2 = /^##\s+(.+)$/.exec(line);
+    const h2 = /^(?:#{2,3}\s*|#\s+)(.+)$/.exec(line);
     if (h2) {
       flushPara();
       flushList();
