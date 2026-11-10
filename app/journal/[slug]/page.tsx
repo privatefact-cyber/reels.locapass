@@ -76,7 +76,7 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
         <EditorBar editSlug={post.slug} />
       </div>
       <ArticleView post={post} locale={locale} shareUrl={shareUrl} />
-      <PostAdminButtons id={post.id} slug={post.slug} afterDeleteHref="/journal" className="justify-center" />
+      <PostAdminButtons id={post.id} slug={post.slug} afterDeleteHref="/journal" className="justify-end" />
 
       {more.length > 0 ? (
         <section className="space-y-4 border-t border-main/10 pt-8">
