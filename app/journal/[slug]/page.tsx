@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArticleView } from "@/components/journal/ArticleView";
 import { Cover } from "@/components/journal/Cover";
 import { EditorBar } from "@/components/journal/EditorBar";
+import { PostAdminButtons } from "@/components/journal/PostAdminButtons";
 import { getPublishedJournalPost, listPublishedJournalPosts } from "@/lib/journal/queries";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
 import { journalText } from "@/lib/journal/text";
@@ -75,6 +76,7 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
         <EditorBar editSlug={post.slug} />
       </div>
       <ArticleView post={post} locale={locale} shareUrl={shareUrl} />
+      <PostAdminButtons id={post.id} slug={post.slug} afterDeleteHref="/journal" className="justify-center" />
 
       {more.length > 0 ? (
         <section className="space-y-4 border-t border-main/10 pt-8">

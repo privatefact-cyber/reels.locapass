@@ -682,7 +682,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
           {f.status === "published" ? "非公開(下書き)に戻す" : "下書きを保存"}
         </button>
         {!isNew ? (
-          <button type="button" disabled={working} onClick={remove} className="ml-auto text-xs text-red-300 underline disabled:opacity-50">
+          <button type="button" disabled={working} onClick={remove} className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-red-400/50 px-4 py-2 text-sm text-red-300 transition hover:bg-red-400/10 disabled:opacity-50">
             削除
           </button>
         ) : null}

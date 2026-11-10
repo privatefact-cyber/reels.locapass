@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/i18n/LocaleLink";
 import { Cover } from "@/components/journal/Cover";
 import { EditorBar } from "@/components/journal/EditorBar";
+import { PostAdminButtons } from "@/components/journal/PostAdminButtons";
 import { listPublishedJournalPosts } from "@/lib/journal/queries";
 import type { JournalCategory } from "@/lib/journal/posts";
 import { getServerLocale } from "@/lib/i18n/getServerLocale";
@@ -134,6 +135,7 @@ export default async function JournalIndexPage({
                         <p className="line-clamp-2 text-xs leading-6 text-muted">{p.description}</p>
                       </div>
                     </Link>
+                    <PostAdminButtons id={p.id} slug={p.slug} className="px-1 pt-2" />
                   </li>
                 ))}
               </ul>
