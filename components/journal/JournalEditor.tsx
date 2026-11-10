@@ -101,6 +101,8 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
   const coverFileRef = useRef<HTMLInputElement | null>(null);
   const bodyFileRef = useRef<HTMLInputElement | null>(null);
+  const topFileRef = useRef<HTMLInputElement | null>(null);
+  const [topDragging, setTopDragging] = useState(false);
   // 本文に入れるリンク: 選んでいる文字を、ほかの記事や好きなURLへのリンクにする。
   const [linkPanel, setLinkPanel] = useState<{ open: boolean; selStart: number; selEnd: number; articleSlug: string; url: string }>({
     open: false,
@@ -197,8 +199,6 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
       const base = photos.reduce((m, p) => Math.max(m, p.n), 0);
       const added: Photo[] = uploaded.map((url, i) => ({ n: base + i + 1, url, caption: "" }));
       setPhotos((p) => [...p, ...added]);
-      // 表紙が未設定なら、入れた最初の写真を表紙にする(別に選ぶ手間をなくす)。
-      setF((p) => (p.coverUrl ? p : { ...p, coverUrl: added[0].url, coverAlt: p.coverAlt }));
       setF((p) => {
         const at = Math.min(pos, p.bodyText.length);
         const before = p.bodyText.slice(0, at);
@@ -210,6 +210,40 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
       });
     }
     if (failed) setMessage({ kind: "error", text: uploaded.length > 0 ? `${uploaded.length}枚は入りましたが、残りは失敗しました: ${failed}` : failed });
+    setBusy(null);
+  }
+
+  // 上の「写真」欄から入れる。最初の1枚が表紙、2枚目からは記事の最後に並べる(場所は、あとから記事の欄で動かせる)。
+  async function addTopPhotos(files: File[]) {
+    const images = files.filter((file) => /^image\/(jpeg|png|webp)$/.test(file.type));
+    if (images.length === 0) {
+      if (files.length > 0) setMessage({ kind: "error", text: "写真は、JPEG・PNG・WebP の形式を入れてください。" });
+      return;
+    }
+    setBusy("upload");
+    setMessage(null);
+    const urls: string[] = [];
+    let failed: string | null = null;
+    for (const file of images) {
+      try {
+        urls.push(await uploadJournalImage(file));
+      } catch (e) {
+        failed = e instanceof Error ? e.message : "アップロードに失敗しました。";
+        break;
+      }
+    }
+    if (urls.length > 0) {
+      const rest = f.coverUrl ? urls : urls.slice(1);
+      const base = photos.reduce((m, p) => Math.max(m, p.n), 0);
+      const added: Photo[] = rest.map((url, i) => ({ n: base + i + 1, url, caption: "" }));
+      if (added.length > 0) setPhotos((p) => [...p, ...added]);
+      setF((p) => ({
+        ...p,
+        coverUrl: p.coverUrl || urls[0],
+        bodyText: added.length > 0 ? `${p.bodyText.replace(/\s+$/, "")}\n\n${added.map((a) => `【写真${a.n}】`).join("\n\n")}` : p.bodyText,
+      }));
+    }
+    if (failed) setMessage({ kind: "error", text: urls.length > 0 ? `${urls.length}枚は入りましたが、残りは失敗しました: ${failed}` : failed });
     setBusy(null);
   }
 
@@ -287,6 +321,73 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
           <span className={f.status === "published" ? "text-emerald-400" : "text-amber-300"}>{f.status === "published" ? "公開中" : "下書き"}</span>
         </p>
       ) : null}
+
+      <div className="space-y-2">
+        <span className={labelText}>写真(最初の1枚が表紙になります)</span>
+        <div
+          onDragOver={(e) => {
+            if (Array.from(e.dataTransfer.types).includes("Files")) {
+              e.preventDefault();
+              setTopDragging(true);
+            }
+          }}
+          onDragLeave={() => setTopDragging(false)}
+          onDrop={(e) => {
+            setTopDragging(false);
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length === 0) return;
+            e.preventDefault();
+            void addTopPhotos(files);
+          }}
+          className={`rounded-2xl border border-dashed p-4 transition ${topDragging ? "border-hl-400 bg-hl-400/10" : "border-main/25"}`}
+        >
+          {f.coverUrl || photos.length > 0 ? (
+            <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {f.coverUrl ? (
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.coverUrl} alt="" className="aspect-square w-full rounded-xl object-cover" />
+                  <span className="absolute left-1 top-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] text-hl-200">表紙</span>
+                  <button type="button" onClick={() => set("coverUrl", "")} aria-label="表紙を外す" className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-tone-200 hover:text-red-300">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ) : null}
+              {photos.map((ph) => (
+                <div key={ph.n} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ph.url} alt="" className="aspect-square w-full rounded-xl object-cover" />
+                  <button type="button" onClick={() => removePhoto(ph.n)} aria-label={`写真${ph.n}を削除`} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-tone-200 hover:text-red-300">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <button
+            type="button"
+            disabled={working}
+            onClick={() => topFileRef.current?.click()}
+            className="flex w-full flex-col items-center gap-1 rounded-xl py-3 text-xs text-tone-300 hover:text-main disabled:opacity-50"
+          >
+            {busy === "upload" ? <Loader2 size={20} className="animate-spin" /> : <ImagePlus size={20} />}
+            <span className="text-sm font-bold">写真を選ぶ(タップ)</span>
+            <span className="text-[11px] text-tone-500">何枚でも選べます。2枚目からは、記事の最後に並びます。パソコンはここにドラッグ&ドロップでもOK</span>
+          </button>
+        </div>
+        <input
+          ref={topFileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            e.target.value = "";
+            if (files.length > 0) void addTopPhotos(files);
+          }}
+        />
+      </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
@@ -425,7 +526,7 @@ export function JournalEditor({ initial, articles = [] }: { initial: JournalEdit
           </div>
         ) : null}
         <p className="text-[11px] leading-5 text-tone-600">
-          1行目がタイトルです。写真は、この欄にドラッグ&ドロップ(貼り付けや上のボタンもOK)。最初の写真が表紙になります。要約・URL名・公開日は自動で入ります。
+          1行目がタイトルです。写真は、上の「写真」欄の「写真を選ぶ」から入れます(パソコンでは、この欄に直接ドロップ・貼り付けすると、その位置に入ります)。要約・URL名・公開日は自動で入ります。
         </p>
         <input
           ref={bodyFileRef}
