@@ -631,6 +631,62 @@ export function VenueMapExplorer({
     [fetchForCurrentView],
   );
 
+  // 位置情報が許可済みの端末では、開き直し・再読み込みのたびに1回だけ位置を取ってピンを置く。
+  // 許可ダイアログは新たに出さない(未許可・拒否・失敗なら何もしない)。地図は動かさず、店舗の取り直しもしない。
+  useEffect(() => {
+    let alive = true;
+    try {
+      navigator.permissions
+        ?.query({ name: "geolocation" as PermissionName })
+        .then((s) => {
+          if (!alive || s.state !== "granted" || !navigator.geolocation) return;
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              if (alive) setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            },
+            () => {},
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 60_000 },
+          );
+        })
+        .catch(() => {});
+    } catch {
+      /* 非対応環境では何もしない */
+    }
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // 現在地ピン(追従なし)。位置が取れたとき(自動取得・現在地ボタン)に、その地点へ青い点を一度だけ置く。
+  // 移動に合わせた更新(watchPosition)は費用方針により保留中。ここでは新たな位置情報の取得もしない。
+  // 今の表示範囲の外にいるときはピンを外す(パン・ズームのたびに判定し直す)。拒否・失敗時は何も出さない。
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !userPos) return;
+    let marker: maplibregl.Marker | null = null;
+    const here: [number, number] = [userPos.lng, userPos.lat];
+    const sync = () => {
+      if (map.getBounds().contains(here)) {
+        if (!marker) {
+          const el = document.createElement("div");
+          el.setAttribute("aria-label", "現在地");
+          el.style.cssText =
+            "width:18px;height:18px;border-radius:50%;background:#2f80ff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(47,128,255,.28),0 1px 6px rgba(0,0,0,.5);pointer-events:none;";
+          marker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat(here).addTo(map);
+        }
+      } else if (marker) {
+        marker.remove();
+        marker = null;
+      }
+    };
+    sync();
+    map.on("moveend", sync);
+    return () => {
+      map.off("moveend", sync);
+      marker?.remove();
+    };
+  }, [mapReady, userPos]);
+
   const goToMyLocation = useCallback(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
