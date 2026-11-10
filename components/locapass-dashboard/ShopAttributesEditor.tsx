@@ -82,6 +82,9 @@ export function ShopAttributesEditor({
           <span aria-hidden>{ATTRIBUTES[key].icon}</span> {ATTRIBUTES[key].label.ja}:{" "}
           <span className="font-semibold">{attributeDetailSummary(key, values[key], "ja").join(" / ") || "未選択"}</span>
           <button type="button" onClick={() => setModalKey(key)} className="ml-2 text-xs font-semibold text-indigo-600 underline">変更する</button>
+          {values[key]?.auto === true && (
+            <span className="mt-1 block text-xs text-amber-700">店名や紹介文から自動で付けました。違う場合は「変更する」から直して「決定」を押してください(押すと確認済みになります)。</span>
+          )}
         </p>
       ))}
 

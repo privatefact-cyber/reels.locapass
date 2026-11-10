@@ -227,6 +227,8 @@ export type AttributeDetail = Record<string, string | string[] | number | true>;
 export function sanitizeAttributeDetail(key: AttributeKey, raw: unknown): AttributeDetail {
   const src = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
   const out: AttributeDetail = {};
+  // 運営(ルール判定)が自動で付けた印。店舗が管理画面で保存すると外れる(=店舗が確認した)。表示や検索には影響しない。
+  if (src.auto === true) out.auto = true;
   for (const f of ATTRIBUTES[key].fields as readonly AttributeField[]) {
     const v = src[f.key];
     if (f.kind === "multi") {

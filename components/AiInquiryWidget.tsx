@@ -5,8 +5,9 @@ import Link from "@/components/i18n/LocaleLink";
 import { X, Send, RotateCcw, ExternalLink, Mic, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAiSelectedContext } from "@/lib/aiContext";
+import { detectListAction, listActionMessage } from "@/lib/aiActions";
 import { LOCALES, LOCALE_SHORT_LABEL, type Locale } from "@/lib/i18n/locale";
-import { useLocale, usePublicPathname } from "@/components/i18n/LocaleProvider";
+import { useLocale, useLocaleRouter, usePublicPathname } from "@/components/i18n/LocaleProvider";
 
 // app/配下の静的トップレベルルート一覧。/[prefecture]は実体がlocapass_portals.slug
 // (例: "mito", "oarai")を受け取る動的ルートだが、Next.jsは静的ルートを優先するため、
@@ -125,7 +126,9 @@ function isOwnUrl(url: string): boolean {
 
 function toPath(url: string): string {
   try {
-    return new URL(url, "https://locapass.net").pathname;
+    // 料理の一覧(/tag/cuisine?v=ramen)のように、?以降が大事なリンクがあるので、パスだけでなく検索部分も残す。
+    const u = new URL(url, "https://locapass.net");
+    return `${u.pathname}${u.search}`;
   } catch {
     return url;
   }
@@ -182,6 +185,7 @@ export function AiInquiryWidget({
   const isMap = placement === "map";
   const { t, locale } = useLocale();
   const pathname = usePublicPathname();
+  const router = useLocaleRouter();
   const currentAreaSlug = guessCurrentAreaSlug(pathname);
   const [open, setOpen] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -396,6 +400,16 @@ export function AiInquiryWidget({
     const sendMode = mode;
     appendMessage(sendMode, { role: "user", text });
     setInput("");
+
+    // 「ラーメンの一覧にして」のように料理の一覧を求められたら、AIの回答を待たずにその一覧ページへ移動する
+    // (AIが動かせるのは、この「料理で絞った一覧ページへの移動」だけ)。街の声(噂)モードでは使わない。
+    const listAction = sendMode === "machi" ? null : detectListAction(text);
+    if (listAction) {
+      const msg = listActionMessage(listAction.label[locale], locale);
+      appendMessage(sendMode, { role: "ai", text: msg.text, links: [{ title: msg.button, url: listAction.href }] });
+      router.push(listAction.href);
+      return;
+    }
     setLoading(true);
 
     const selected = getAiSelectedContext();
