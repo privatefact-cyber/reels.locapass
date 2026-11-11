@@ -226,6 +226,7 @@ export async function fanOutDraft(id: string, targets: PostTarget[]): Promise<{ 
   if (!wanted.length) throw new Error("投稿先を1つ以上選んでください");
   const { data: row, error } = await db().from("locapass_threads_posts").select("id, topic, body, image_url, video_url, source, platform, account, status").eq("id", id).maybeSingle();
   if (error || !row) throw new Error("下書きが見つかりません");
+  if (row.status === "processing" || row.status === "posted") throw new Error("この投稿は、もう投稿を始めています(進み具合は画面上部のバーを見てください)。押し直す必要はありません");
   if (row.status !== "draft") throw new Error("下書きだけ、投稿先を選んで出せます");
   for (const target of wanted) {
     if (target === "instagram" && !row.image_url && !row.video_url) throw new Error("Instagramは写真か動画が必要です。この下書きには付いていません(Instagramのチェックを外してください)");

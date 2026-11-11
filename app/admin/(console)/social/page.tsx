@@ -102,8 +102,10 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
   const audit = await latestAuditRows().catch(() => ({ at: null as string | null, rows: [] }));
   const posts = await listThreadsPosts().catch(() => []);
-  const scheduled = posts.filter((p) => p.status === "scheduled").sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
-  const drafts = posts.filter((p) => p.status === "draft");
+  // 投稿を始めたばかりの下書きは、裏の処理が状態を変えるまで一覧に残るので、押し直せないよう隠す(進み具合は上のバーに出る)。
+  const startedIds = new Set((sp.posting ?? "").split(","));
+  const scheduled = posts.filter((p) => p.status === "scheduled" && !startedIds.has(p.id)).sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
+  const drafts = posts.filter((p) => p.status === "draft" && !startedIds.has(p.id));
   const processing = posts.filter((p) => p.status === "processing");
   const history = posts.filter((p) => p.status === "posted" || p.status === "failed");
 
