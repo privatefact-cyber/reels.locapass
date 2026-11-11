@@ -6,7 +6,7 @@ import Link from "@/components/i18n/LocaleLink";
 import * as maplibregl from "maplibre-gl";
 import { MapReelOverlay, type CardRect } from "@/components/map/MapReelOverlay";
 import { DemoTruckLayer } from "@/components/map/DemoTruckLayer";
-import { CheckCircle2, Globe2, Navigation, Play, Search, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Globe2, Navigation, Play, Search, X } from "lucide-react";
 import { AFTER_GENRE } from "@/lib/shop/genres";
 import { genreLabel } from "@/lib/i18n/genreLabels";
 import { setAiSelectedContext } from "@/lib/aiContext";
@@ -204,6 +204,8 @@ export function VenueMapExplorer({
   // 全画面リールを開いている店舗(開いた起点)。nullなら閉じている。
   const [reelOverlayVenueId, setReelOverlayVenueId] = useState<string | null>(null);
   const [genre, setGenre] = useState<NightlifeGenre>("all");
+  // 店舗カードは初期状態では画面下に収納し、ピンを選んだときだけドロワーとしてせり上げる。
+  const [drawerOpen, setDrawerOpen] = useState(false);
   // 選択中のジャンルをコンシェルジュAIに渡す。
   useEffect(() => {
     setAiSelectedContext({ keyword: "", genres: genre === "all" ? [] : [genre] });
@@ -934,6 +936,7 @@ export function VenueMapExplorer({
 
   const focusVenue = useCallback(
     (id: string, opts?: { fromMap?: boolean }) => {
+      setDrawerOpen(true);
       const venue = venueById.get(id);
       if (!venue) {
         // カード未取得のピン(表示範囲は広いがカードは中心付近30件しか持っていない場合)。
@@ -1243,7 +1246,30 @@ export function VenueMapExplorer({
           ナビ+セーフエリアぶんの余白を下に確保する。
 
           カルーセルの高さは固定し、地図の表示範囲をカード内容で変動させない。 */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/95 to-transparent pt-6 pb-[calc(env(safe-area-inset-bottom)+60px)] md:pb-4">
+      {!drawerOpen && visibleVenues.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          aria-label={t.map.details}
+          className="absolute bottom-[calc(env(safe-area-inset-bottom)+68px)] left-1/2 z-20 flex h-9 w-16 -translate-x-1/2 items-center justify-center rounded-t-2xl border border-b-0 border-hl-400/40 bg-black/85 text-hl-300 shadow-lg backdrop-blur transition hover:bg-black md:bottom-4"
+        >
+          <ChevronUp className="h-5 w-5" />
+        </button>
+      ) : null}
+
+      <div
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/95 to-transparent pt-8 pb-[calc(env(safe-area-inset-bottom)+60px)] transition-transform duration-300 ease-out md:pb-4 ${
+          drawerOpen ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(false)}
+          aria-label={t.common.close}
+          className="pointer-events-auto absolute left-1/2 top-0 flex h-8 w-16 -translate-x-1/2 items-center justify-center rounded-t-2xl border border-b-0 border-hl-400/40 bg-black/85 text-hl-300 backdrop-blur transition hover:bg-black"
+        >
+          <ChevronDown className="h-5 w-5" />
+        </button>
         {visibleVenues.length === 0 ? (
           <div className={`${CAROUSEL_HEIGHT} flex gap-3 px-4`}>
             {loading ? (
