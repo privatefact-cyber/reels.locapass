@@ -180,7 +180,14 @@ export function DashboardTranslator({ locale, catalog, children }: { locale: str
 
   // display: contents なので、レイアウトには影響しない(隠すためだけの入れ物)。
   return (
-    <div ref={setRoot} dir={locale === "ar" ? "rtl" : "ltr"} className="contents" style={ready ? undefined : { visibility: "hidden" }}>
+    <div
+      ref={setRoot}
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      lang={locale === "my" ? "my" : undefined}
+      className="contents"
+      // ミャンマー語は単語の途中(例: ပေါ်|တယ်)で折り返されやすいので、禁則を厳しめにする。
+      style={{ ...(locale === "my" ? { wordBreak: "keep-all", lineBreak: "strict" } : null), ...(ready ? null : { visibility: "hidden" }) }}
+    >
       {children}
     </div>
   );
