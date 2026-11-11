@@ -100,16 +100,18 @@ export async function postToChecked(id: string, formData: FormData) {
     if (intent === "schedule" && !when) throw new Error("予約する日時を入力してください");
     if (when && when.getTime() < Date.now() - 60_000) throw new Error("予約の日時が、過去になっています");
     const posts = await fanOutDraft(id, targetsFrom(formData));
-    for (const post of posts) {
+    // 動画はMetaの処理待ちが長いので、投稿先ごとに順番ではなく同時に出す(待ち時間が足し算にならない)。
+    const results = await Promise.all(posts.map(async (post) => {
       try {
         if (when) await scheduleThreadsPost(post.id, when);
         else await publishThreadsDraft(post.id);
-        lines.push(`${PLATFORM_LABEL[post.platform]}: ${when ? "予約しました" : "投稿しました"}`);
+        return `${PLATFORM_LABEL[post.platform]}: ${when ? "予約しました" : "投稿しました"}`;
       } catch (e) {
         allOk = false;
-        lines.push(`${PLATFORM_LABEL[post.platform]}: 失敗(${e instanceof Error ? e.message : "失敗しました"})`);
+        return `${PLATFORM_LABEL[post.platform]}: 失敗(${e instanceof Error ? e.message : "失敗しました"})`;
       }
-    }
+    }));
+    lines.push(...results);
     if (when) lines.push(`(${when.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })})`);
   } catch (e) {
     back("error", e instanceof Error ? e.message : "投稿できませんでした(何も公開していません)");
