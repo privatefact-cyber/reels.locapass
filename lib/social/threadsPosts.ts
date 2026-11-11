@@ -175,7 +175,7 @@ export async function publishThreadsDraft(id: string): Promise<void> {
   if (!isInstagram && !config) throw new Error(`Threads(${row.account})のトークンが未設定です`);
   // AIが書いた文章は、投稿の直前にもう一度、安全チェックをする。自分で書いた文章は、文字数だけ確認する。
   if (row.source === "ai") {
-    const problem = validateThreadsText(row.body, [], row.account === "luxela" ? "luxela" : "locapass");
+    const problem = validateThreadsText(row.body, [], row.account === "luxela" ? "luxela" : "locapass", false);
     if (problem) throw new Error(`投稿できない文章です: ${problem}`);
   } else if (row.body.length > (isInstagram ? 2200 : THREADS_MAX_CHARS + 20)) {
     throw new Error("文章が長すぎます");

@@ -31,7 +31,6 @@ export const THREADS_SITE_URL = "https://locapass.net";
 const FORBIDDEN: { pattern: RegExp; reason: string }[] = [
   { pattern: /日本一|日本最大|業界初|No\.?\s?1|ナンバーワン/i, reason: "確認できない最上級・比較の表現" },
   { pattern: /100\s?%|確実に(儲|稼|売れ|集客)|間違いなく(儲|稼|売れ|集客)|誰でも簡単に/, reason: "効果の保証" },
-  { pattern: /ユーザー数|店舗数|導入実績|満足度|導入店|掲載数/, reason: "実績・数字の主張" },
   { pattern: /ベータ|β版|ローンチ|公開済み|全国展開|リリース/, reason: "公開状況への言及" },
   { pattern: /街の声/, reason: "噂レベルの機能への言及" },
   { pattern: /月額|\d+\s?円|割引|キャンペーン/, reason: "金額・料金の言及(事実メモに無い)" },
@@ -58,13 +57,15 @@ export function similarity(a: string, b: string): number {
 }
 
 /** 投稿してよい文章か確認する。問題があれば理由を、無ければnullを返す。 */
-export function validateThreadsText(text: string, recent: string[], account: BrandAccount = "locapass"): string | null {
+export function validateThreadsText(text: string, recent: string[], account: BrandAccount = "locapass", requireTags = true): string | null {
   const brand = BRANDS[account];
   const t = text.trim();
   if (t.length < THREADS_MIN_CHARS) return `短すぎる(${t.length}文字)`;
   if (t.length > THREADS_MAX_CHARS) return `長すぎる(${t.length}文字)`;
   for (const rule of FORBIDDEN) if (rule.pattern.test(t)) return `使えない表現: ${rule.reason}`;
-  if ((t.match(/[#＃]/g) ?? []).length > 3) return "ハッシュタグが多すぎる(3個まで)";
+  const tagCount = (t.match(/[#＃]/g) ?? []).length;
+  if (requireTags && tagCount === 0) return "文末のハッシュタグが無い";
+  if (tagCount > 3) return "ハッシュタグが多すぎる(3個まで)";
   const urls = t.match(/https?:\/\/[^\s]+/g) ?? [];
   if (urls.length > 1) return "URLが複数ある";
   if (urls.some((u) => !u.startsWith(brand.url))) return brand.otherUrl;
@@ -104,9 +105,10 @@ function styleLines(name: string, voice: string, lead: string, examples: string[
     `- 毎回${name}を褒める必要はない。読者にとって面白い話なら、${name}の名前が本文に出なくてもよい。サービスの説明が必要なときは丁寧に、直感的なものは短く。`,
     "- 「困りごと→解決します」の型を毎回使わない。",
     "- 一人称・個人的な感想・体験談は、確認できる情報がある場合だけ。架空の体験談・口コミ・利用者の声・人気ランキングは作らない。",
-    "- 数字・料金・他社比較は、事実メモで確認できるものだけ使ってよい。無ければ書かない。",
+    "- 数字(投稿数・件数・伸び・実績など)は積極的に使ってよい。今回の指示・店舗データ・事実メモにある数字を優先し、勢いや順調さを伝える材料にする。学術論文ではないので、数字の厳密な整合性より、読んで伝わることを優先する。",
     "- SEOを意識し、店名・地域名・料理名・サービス名などの固有名詞を自然に含める(キーワードの羅列はしない)。",
-    "- 絵文字は自然に使う。不要なら使わない。ハッシュタグは内容に関連するものを0〜3個まで。",
+    "- 絵文字は自然に使う。不要なら使わない。",
+    "- 文末は必ず「URL → ハッシュタグ」の順にする。本文の最後にURLを1つ、その次の行に関連するハッシュタグを1〜3個(例: #店名 #エリア #料理)。ハッシュタグは本文中には入れない。",
     `- 例(雰囲気の参考。そのまま写さない):\n${examples.map((e) => `  「${e}」`).join("\n")}`,
     ...(luxela ? [LUXELA_SAFETY] : []),
   ].join("\n");
@@ -121,20 +123,20 @@ function audienceBlock(topic: ThreadsTopic, account: BrandAccount): { reader: st
       style: shop
         ? styleLines(brand.name, "技術は先進的に、説明は簡単に、表現は大胆に。「AI」「API」などの技術用語は必要なときだけ使い、技術そのものより、店側の作業がどう変わるかを中心に書く。", "店舗の情報発信・キャスト紹介・SNS更新・出勤管理・ホームページ維持・宣伝費など、現場の実際の課題から入ってよい。機能が従来の作業をどう変えるのかを具体的に書く。", ["キャストが増えるたびに、ホームページの修正を依頼する。そんな運用、そろそろ変えませんか。", "お店の情報がSNSごとにバラバラ。ひとつにまとめられたら、管理はもっと簡単になる。"], true)
         : styleLines(brand.name, "お店選びの楽しさ、キャストの個性、動画や写真から伝わる雰囲気、新しいお店との出会いを中心に。従来のお店探しと何が変わるのかを、具体的な場面で描く。毎回LUXELAを宣伝しなくてよい。夜の街やお店選びの興味深い話題も取り上げてよい。", "「そんなことまでできるの?」「それは便利だ」と思える、利用場面が目に浮かぶ文章にする。", ["店名を知らなくても、気になるキャストからお店を探せる。", "写真だけじゃ分からない。動画なら、お店の雰囲気まで見えてくる。", "今夜どこに行く? まずは街のキャストを眺めてみる。"], true),
-      closing: `新機能・機能改善の情報(事実メモ・今回の指示)があれば、それを主題にする。何ができるようになったか・以前と何が違うか・何が便利か・実際どう使うかのうち、一番伝わるものを選ぶ。最後に、関連するURLを1つだけ入れる: ${brand.url}`,
+      closing: `新機能・機能改善の情報(事実メモ・今回の指示)があれば、それを主題にする。何ができるようになったか・以前と何が違うか・何が便利か・実際どう使うかのうち、一番伝わるものを選ぶ。文末にURLを1つだけ入れ、その次の行にハッシュタグを1〜3個入れる: ${brand.url}`,
     };
   }
   if (!shop) {
     return {
       reader: "街のお店やスポットを探している一般の人(地元の人・観光客)。店舗側の事情や、集客・運営の話には触れない。",
       style: styleLines(brand.name, "料理の話、街の変化、知らなかった店、意外な発見、動画で見つけた面白いものなど、自由に取り上げてよい。店舗検索の機能説明ばかりにしない。", "読者が情景を想像できる文章にする。", ["ラーメンって、写真を見た瞬間に食べたくなることがある。", "渋谷って、こんなにラーメン屋があったのか。", "口コミを何件も読むより、湯気の立つ動画を10秒見た方が早いこともある。"], false),
-      closing: `最後に、関連する${brand.name}のURLを1つだけ入れる: ${brand.url}`,
+      closing: `文末に${brand.name}のURLを1つだけ入れ、その次の行にハッシュタグを1〜3個入れる: ${brand.url}`,
     };
   }
   return {
     reader: "飲食店・美容室・ネイル・エステ・ペット関連・車屋・宿泊など、地域の小さなお店のオーナーや店長。SNSや集客に詳しくはない。",
     style: styleLines(brand.name, "現場の忙しさ、SNS更新の面倒さ、ホームページの維持費、集客の悩み、広告費への疑問など、経営者が感じている不満や無駄から話を始めてよい。機能一覧の説明にしない。専門用語は使わない。", "問題提起から入り、それを実際に解決できること(事実メモの範囲)につなげる。", ["Instagramを更新したのに、ホームページは去年のまま。これ、いつまで続けるんだろう。", "ホームページを少し直すだけで、また制作費。そろそろ別の方法があってもいい。", "お店の仕事は料理を作ること。SNSを何種類も管理することじゃない。"], false),
-    closing: `最後に、関連する${brand.name}のURLを1つだけ入れる: ${brand.url}`,
+    closing: `文末に${brand.name}のURLを1つだけ入れ、その次の行にハッシュタグを1〜3個入れる: ${brand.url}`,
   };
 }
 
@@ -158,7 +160,7 @@ export function defaultStyleFor(account: BrandAccount): { label: string; reader:
 function guardRules(name: string): string {
   return `# 絶対に守ること(根拠のない主張をしない)
 - 下の「事実メモ」に書かれている機能だけを、${name}の機能として書く。書かれていないことを、できると書かない。
-- ユーザー数・店舗数・実績・売上・満足度などの数字は書かない。
+- 数字(投稿数・件数・伸びなど)は使ってよい。今回の指示や店舗データの数字を優先する。
 - 「日本一」「No.1」「業界初」など最上級・比較の表現、「必ず」「絶対」など効果の保証は書かない。
 - 金額・料金・無料・割引には触れない。
 - サービスの公開状況(ベータ・ローンチ・リリースなど)には触れない。
@@ -242,7 +244,7 @@ ${audienceBlock({ id: "", title: "", angle: "", audience: "shop" }, input.accoun
 - 添える店舗は、${brand.name}に掲載されている一例として、店名を1度だけ出してよい。その店の評判・人気・実績・客層など、店舗データに無いことは書かない。
 - 全体で${lengthFor("shop", input.account)}。伝えることを1つに絞る。
 - 今回の切り口の型: ${pick(ANGLES[input.account].shop)}
-- 最後は、この店の掲載ページのURLを1つだけ入れる: ${input.link}
+- 文末は、この店の掲載ページのURLを1つ入れ、その次の行にハッシュタグを1〜3個(店名・エリア・料理など)入れる: ${input.link}
 - メンション・URL(上記以外)は書かない。
 ${extra}
 ${guardRules(brand.name)}
@@ -262,9 +264,9 @@ ${imageRule}
 - 雰囲気・客層・サービス・価格など、店舗データに無いことは作らない。情報が少なければ、店名と写真・動画を中心に短く書く。
 - 「魅力を発信」「新しい体験をお届け」のような、具体性のない広告表現は使わない。
 - 敬語と話し言葉は混ぜてよい。です・ます調に固定しない。箇条書きは必要なときだけ。
-- 全体で100〜300文字。絵文字は自然に(不要なら使わない)。ハッシュタグは店名・エリア・料理など関連するものを0〜3個まで。メンションは不要。
+- 全体で100〜300文字。絵文字は自然に(不要なら使わない)。メンションは不要。
 - SEOを意識し、店名・エリア名・料理名などの固有名詞を自然に含める。
-- 最後は「${input.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${brand.name}で」に続け、URLを1つだけ入れる。
+- 文末は「${input.account === "luxela" ? "出勤・詳細" : "動画・詳細"}は${brand.name}で」に続けてURLを1つだけ入れ、その次の行に店名・エリア・料理など関連するハッシュタグを1〜3個入れる。
 ${input.account === "luxela" ? LUXELA_SAFETY + "\n" : ""}${extra}
 # 出力
 次のJSONだけを返す。{"text":"投稿本文"}`;
