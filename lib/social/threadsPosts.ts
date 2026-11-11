@@ -311,7 +311,7 @@ export async function listThreadsPosts(): Promise<PostRow[]> {
 }
 
 
-const VIDEO_WAIT_MS = 75_000;
+export const VIDEO_WAIT_MS = 75_000;
 const VIDEO_GIVE_UP_MS = 40 * 60_000;
 type VideoCtx = { id: string; body: string; videoUrl: string; isInstagram: boolean; igToken: string | null; config: { userId: string | null; accessToken: string } | null; status: string };
 
@@ -356,9 +356,12 @@ async function publishVideoDraft(ctx: VideoCtx): Promise<void> {
 }
 
 /** 「処理中」の動画を確認して、終わっていれば公開する(定期処理から呼ぶ)。 */
-export async function finalizeProcessingVideos(): Promise<{ id: string; result: string }[]> {
+export async function finalizeProcessingVideos(opts?: { ids?: string[]; minAgeMs?: number }): Promise<{ id: string; result: string }[]> {
   const admin = db();
-  const { data } = await admin.from("locapass_threads_posts").select("id, body, video_url, container_id, platform, account, processing_since").eq("status", "processing").lt("processing_since", new Date(Date.now() - 2 * 60_000).toISOString()).limit(5);
+  // 投稿の処理が自分で待っている間(VIDEO_WAIT_MS)は触らない。二重に公開しないため、それより後から確認する。
+  let query = admin.from("locapass_threads_posts").select("id, body, video_url, container_id, platform, account, processing_since").eq("status", "processing").lt("processing_since", new Date(Date.now() - (opts?.minAgeMs ?? 2 * 60_000)).toISOString());
+  if (opts?.ids) query = query.in("id", opts.ids);
+  const { data } = await query.limit(5);
   const out: { id: string; result: string }[] = [];
   for (const row of (data ?? []) as any[]) {
     const isInstagram = row.platform === "instagram";
@@ -547,4 +550,13 @@ export async function saveReelDraft(input: { dest: Destination; videoUrl: string
   const { data, error } = await db().from("locapass_threads_posts").insert({ topic: input.topicId, body: input.body, video_url: input.videoUrl, source: input.source, status: "draft", platform: input.dest.platform, account: input.dest.account }).select("id").single();
   if (error || !data) throw new Error(`下書きの保存に失敗しました: ${error?.message ?? "0件"}`);
   return data.id as string;
+}
+
+/** 投稿の進み具合(画面の進捗バー用)。経過時間はサーバーの時計で数える。 */
+export type PostProgress = { id: string; platform: "threads" | "instagram"; account: SocialAccount; status: PostRow["status"]; error: string | null; hasVideo: boolean; hasContainer: boolean; elapsedMs: number | null };
+export async function getPostProgress(ids: string[]): Promise<PostProgress[]> {
+  if (!ids.length) return [];
+  const { data, error } = await db().from("locapass_threads_posts").select("id, platform, account, status, error, video_url, container_id, processing_since").in("id", ids.slice(0, 10));
+  if (error) throw new Error(`進み具合の取得に失敗しました: ${error.message}`);
+  return ((data ?? []) as any[]).map((r) => ({ id: r.id, platform: r.platform, account: r.account, status: r.status, error: r.error, hasVideo: Boolean(r.video_url), hasContainer: Boolean(r.container_id), elapsedMs: r.processing_since ? Date.now() - new Date(r.processing_since).getTime() : null }));
 }

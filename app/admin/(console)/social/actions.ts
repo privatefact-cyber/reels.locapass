@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_THUMB_BYTES, uploadThumb } from "@/lib/embed-post/createEmbedPost";
@@ -14,9 +15,27 @@ import { generateAiImage } from "@/lib/social/socialImages";
 import { saveAutomationSetting, type AutomationMode, type AutomationSource } from "@/lib/social/socialAutomation";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
-function back(kind: "ok" | "error", message: string): never {
+function back(kind: "ok" | "error", message: string, posting?: string[]): never {
   revalidatePath("/admin/social");
-  redirect(`/admin/social?${kind}=${encodeURIComponent(message.slice(0, 700))}`);
+  redirect(`/admin/social?${kind}=${encodeURIComponent(message.slice(0, 700))}${posting?.length ? `&posting=${posting.join(",")}` : ""}`);
+}
+
+/**
+ * 投稿を始めて、すぐ画面に戻す。実際の投稿は裏で進み、画面は進み具合(%)を見に行く。
+ * 動画はInstagram・Threads側の処理待ちが長いので、ボタンを押したまま待たせない。
+ * 失敗した理由は、投稿の「error」に残す(画面の進捗に出る)。
+ */
+function startPublishing(ids: string[]) {
+  after(async () => {
+    await Promise.all(ids.map(async (id) => {
+      try {
+        await publishThreadsDraft(id);
+      } catch (e) {
+        const message = (e instanceof Error ? e.message : "投稿に失敗しました").slice(0, 400);
+        await (createAdminClient() as any).from("locapass_threads_posts").update({ error: message }).eq("id", id).in("status", ["draft", "scheduled"]);
+      }
+    }));
+  });
 }
 
 /** 投稿先ごとの自動運転設定。チェックを外すか緊急停止を入れると、次の巡回から止まる。 */
@@ -58,14 +77,8 @@ export async function createDraftNow(audience: ThreadsAudience, note = ""): Prom
 /** 下書きをThreadsに投稿する(loca.pass に公開される)。 */
 export async function publishDraft(id: string) {
   await requireRootAdmin();
-  let message: string | null = null;
-  try {
-    await publishThreadsDraft(id);
-  } catch (e) {
-    message = e instanceof Error ? e.message : "投稿に失敗しました";
-  }
-  if (message) back("error", message);
-  back("ok", "投稿しました(反映まで数分かかることがあります)");
+  startPublishing([id]);
+  back("ok", "投稿を始めました。下の進み具合を見てください", [id]);
 }
 
 /** 画面から届いた、AIに見せる小さな画像(JPEG・600KBまで)を読む。無ければ null。 */
@@ -93,30 +106,30 @@ function targetsFrom(formData: FormData): ("threads" | "instagram")[] {
 export async function postToChecked(id: string, formData: FormData) {
   await requireRootAdmin();
   const intent = formData.get("intent") === "schedule" ? "schedule" : "now";
-  const lines: string[] = [];
-  let allOk = true;
   try {
     const when = intent === "schedule" ? parseJstDateTime(formData.get("scheduled_at")) : null;
     if (intent === "schedule" && !when) throw new Error("予約する日時を入力してください");
     if (when && when.getTime() < Date.now() - 60_000) throw new Error("予約の日時が、過去になっています");
     const posts = await fanOutDraft(id, targetsFrom(formData));
-    // 動画はMetaの処理待ちが長いので、投稿先ごとに順番ではなく同時に出す(待ち時間が足し算にならない)。
-    const results = await Promise.all(posts.map(async (post) => {
-      try {
-        if (when) await scheduleThreadsPost(post.id, when);
-        else await publishThreadsDraft(post.id);
-        return `${PLATFORM_LABEL[post.platform]}: ${when ? "予約しました" : "投稿しました"}`;
-      } catch (e) {
-        allOk = false;
-        return `${PLATFORM_LABEL[post.platform]}: 失敗(${e instanceof Error ? e.message : "失敗しました"})`;
+    if (!when) {
+      // 今すぐ: 投稿を裏で始めて、すぐ戻る。進み具合は画面のバーに出る。
+      startPublishing(posts.map((p) => p.id));
+    } else {
+      const lines: string[] = [];
+      let allOk = true;
+      for (const post of posts) {
+        try { await scheduleThreadsPost(post.id, when); lines.push(`${PLATFORM_LABEL[post.platform]}: 予約しました`); }
+        catch (e) { allOk = false; lines.push(`${PLATFORM_LABEL[post.platform]}: 失敗(${e instanceof Error ? e.message : "失敗しました"})`); }
       }
-    }));
-    lines.push(...results);
-    if (when) lines.push(`(${when.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })})`);
+      lines.push(`(${when.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })})`);
+      back(allOk ? "ok" : "error", lines.join(" / "));
+    }
+    back("ok", "投稿を始めました。下の進み具合を見てください", posts.map((p) => p.id));
   } catch (e) {
+    // redirect() は例外として投げられるので、そのまま通す
+    if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_REDIRECT")) throw e;
     back("error", e instanceof Error ? e.message : "投稿できませんでした(何も公開していません)");
   }
-  back(allOk ? "ok" : "error", lines.join(" / "));
 }
 
 export async function discardDraft(id: string) {

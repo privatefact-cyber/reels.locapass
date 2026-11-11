@@ -10,6 +10,7 @@ import { latestAuditRows } from "@/lib/social/apiAudit";
 import { postToChecked, runApiAuditNow, attachDraftImage, composeDraftNow, generateFlyerBaseNow, prepareReelNow, saveReelDraftNow, discardDraft, editPostBody, publishDraft, removeDraftImage, checkTokensNow, refreshTokensNow, saveAiSettings, saveAutomation, schedulePost, unschedulePost } from "./actions";
 import { PostComposer } from "./PostComposer";
 import { SubmitButton } from "./SubmitButton";
+import { PublishProgress } from "./PublishProgress";
 
 // AIが文章を書くので、時間がかかる(最大3回まで書き直す)。
 export const maxDuration = 300;
@@ -62,7 +63,7 @@ function PostCard({ p }: { p: PostRow }) {
             <span className="text-[11px] text-slate-500">日本時間。30分おきに確認して、時間になると自動で投稿します</span>
           </form>
           <div className="flex flex-wrap gap-2">
-            <form action={publishDraft.bind(null, p.id)} className="flex flex-wrap items-center gap-2"><SubmitButton pendingText="投稿中…" slow={p.video_url ? "動画の投稿は、Instagram・Threadsの処理待ちで1〜2分かかります。動いています。このページを閉じず、そのままお待ちください。" : undefined} className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</SubmitButton></form>
+            <form action={publishDraft.bind(null, p.id)} className="flex flex-wrap items-center gap-2"><SubmitButton pendingText="開始しています…" className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</SubmitButton></form>
             <form action={unschedulePost.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>予約を取り消す</button></form>
             <form action={discardDraft.bind(null, p.id)}><button className={`${btn} border border-slate-300 bg-white text-slate-700`}>破棄</button></form>
           </div>
@@ -79,7 +80,7 @@ function PostCard({ p }: { p: PostRow }) {
               <label className="flex items-center gap-1"><input type="checkbox" name="to_threads" defaultChecked /> Threads</label>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <SubmitButton name="intent" value="now" pendingText="投稿中…" slow={p.video_url ? "動画の投稿は、Instagram・Threadsの処理待ちで1〜2分かかります。動いています。このページを閉じず、そのままお待ちください。" : "投稿しています。少しお待ちください。"} className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</SubmitButton>
+              <SubmitButton name="intent" value="now" pendingText="開始しています…" className={`${btn} bg-emerald-700 text-white`}>今すぐ投稿(公開されます)</SubmitButton>
               <input type="datetime-local" name="scheduled_at" defaultValue={jstInputValue(p.scheduled_at)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900" />
               <button name="intent" value="schedule" className={`${btn} bg-sky-700 py-1.5 text-white`}>この日時に予約</button>
               <span className="text-[11px] text-slate-500">日本時間。予約は30分おきに確認して、時間になると自動で投稿します</span>
@@ -92,7 +93,7 @@ function PostCard({ p }: { p: PostRow }) {
   );
 }
 
-export default async function AdminThreadsPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
+export default async function AdminThreadsPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string; posting?: string }> }) {
   await requireRootAdmin();
   const sp = await searchParams;
   const mode = textModeFromEnv();
@@ -114,6 +115,8 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
           ①どこに ②文章 ③画像・動画 を選んで下書きを作り、確認してから、投稿か日時の予約をします。予約した投稿は、時間になると自動で出ます(LOCAPASS・LUXELA、Instagram・Threads)。
         </p>
       </div>
+
+      <PublishProgress ids={[...new Set([...(sp.posting ?? "").split(",").filter((x) => /^[0-9a-f-]{36}$/.test(x)), ...processing.map((p) => p.id)])]} />
 
       {sp.ok && <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">{sp.ok}</div>}
       {sp.error && <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900"><p className="font-bold">うまくいきませんでした</p><p className="mt-1">{sp.error}</p></div>}
