@@ -1120,8 +1120,8 @@ export function VenueMapExplorer({
   }, []);
 
   return (
-    <div data-surface="media" className="flex h-[100dvh] flex-col bg-page">
-      <div className="relative flex-1">
+    <div data-surface="media" className="relative h-[100dvh] overflow-hidden bg-page">
+      <div className="absolute inset-0">
         {/*
           maplibre-gl.css は自身が挿入するコンテナに `.maplibregl-map { position: relative }` を
           あてる。Tailwindの`absolute`ユーティリティと詳細度が同じ単一クラスのため、
@@ -1238,14 +1238,12 @@ export function VenueMapExplorer({
         </div>
       </div>
 
-      {/* モバイルではボトムナビ(SiteChrome、fixed bottom-0)がこの下に重なるので、
-          カードが隠れないようナビ+セーフエリアぶんの余白を下に確保する。
+      {/* /photo のマップ表示と同じく、カードを全面地図の下端に重ねる。
+          モバイルではボトムナビ(SiteChrome、fixed bottom-0)に隠れないよう、
+          ナビ+セーフエリアぶんの余白を下に確保する。
 
-          カルーセルの高さは固定する。カードの中身(パートナーの有無、同一ビル表記の有無、
-          そもそも0件かどうか)で高さが変わると、地図(flex-1)の高さが動く
-          → resize → 表示範囲が変わる → 取り直す → カードが入れ替わる → また高さが動く、
-          という再描画ループになる(PCの広い画面で発生)。 */}
-      <div className="relative z-10 shrink-0 bg-gradient-to-t from-black via-black/95 to-transparent pt-6 pb-[calc(env(safe-area-inset-bottom)+60px)] md:pb-4">
+          カルーセルの高さは固定し、地図の表示範囲をカード内容で変動させない。 */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/95 to-transparent pt-6 pb-[calc(env(safe-area-inset-bottom)+60px)] md:pb-4">
         {visibleVenues.length === 0 ? (
           <div className={`${CAROUSEL_HEIGHT} flex gap-3 px-4`}>
             {loading ? (
@@ -1266,7 +1264,7 @@ export function VenueMapExplorer({
             ref={carouselRef}
             // 両端の余白は「カード幅の半分を引いた画面中央まで」。これが無いと最初・最後のカードは中央に来られない
             // (カード幅: スマホ82vw → 余白9vw、sm以上20rem → 余白は50%-10rem)。
-            className={`${CAROUSEL_HEIGHT} flex snap-x snap-mandatory gap-3 overflow-x-auto px-[9vw] sm:px-[calc(50%-10rem)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
+            className={`${CAROUSEL_HEIGHT} pointer-events-auto flex snap-x snap-mandatory gap-3 overflow-x-auto px-[9vw] sm:px-[calc(50%-10rem)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
           >
             {visibleVenues.map((venue) => {
               const mates = buildingMates(venue);
