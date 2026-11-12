@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getViewerId } from "@/lib/reels/viewer-id";
@@ -58,8 +59,10 @@ export function InquiryButton({ shopId, shopName }: { shopId: string; shopName: 
         {t.shop.inquiryButton}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-2xl border border-line/20 bg-panel-950 p-5 sm:rounded-2xl">
             <h2 className="text-sm font-bold text-tone-100">
               {t.shop.inquiryModalTitlePrefix}
@@ -107,8 +110,9 @@ export function InquiryButton({ shopId, shopName }: { shopId: string; shopName: 
               </div>
             </form>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
