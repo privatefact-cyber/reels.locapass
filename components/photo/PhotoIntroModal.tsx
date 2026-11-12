@@ -36,7 +36,7 @@ export function PhotoIntroModal() {
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className={`relative flex w-[86vw] max-w-sm transform-gpu flex-col items-center gap-7 overflow-hidden rounded-[2.5rem] border border-main/25 bg-main/[0.04] px-8 py-12 text-center shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-[250ms] ease-out will-change-transform ${
+        className={`relative flex w-[88vw] max-w-md transform-gpu flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border border-main/25 bg-main/[0.04] px-7 py-10 text-center shadow-2xl shadow-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-[250ms] ease-out will-change-transform sm:px-10 sm:py-12 ${
           closing ? "scale-90 opacity-0" : "scale-100 opacity-100"
         }`}
       >
@@ -46,9 +46,13 @@ export function PhotoIntroModal() {
           LOCA SNAP
         </span>
 
-        <p className="relative text-xl font-light leading-relaxed tracking-[0.12em] text-main">{t.photo.introLead}</p>
+        <p className="relative whitespace-pre-line text-balance text-lg font-light leading-[1.8] tracking-[0.08em] text-main sm:text-xl">
+          {t.photo.introLead}
+        </p>
 
-        <p className="relative text-[13px] font-light leading-loose tracking-[0.08em] text-main/75">{t.photo.introBody}</p>
+        <p className="relative max-w-sm whitespace-pre-line text-balance text-[13px] font-light leading-[2] tracking-[0.04em] text-main/75 sm:text-sm">
+          {t.photo.introBody}
+        </p>
 
         <button
           type="button"
