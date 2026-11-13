@@ -71,6 +71,19 @@ export async function createEmbedPostForShop(admin: Admin, shopId: string, formD
 
   // 自動で取れない(Instagramなど)ときは、店舗の表紙画像で代用する。Google Places写真は撮影者クレジットの表示が必要なので使わない。
   const shopImage = [shop.cover_url, shop.icon_url].find((u): u is string => !!u && !isPlacePhotoUrl(u)) ?? null;
+  // キャスト・スタッフを指定したときは、その店舗の人か確認する(リールのみ。値は「cast:ID」「staff:ID」)。
+  let castId: string | null = null;
+  let staffId: string | null = null;
+  const member = kind === "event" ? "" : String(formData.get("member") ?? "").trim();
+  if (member) {
+    const [type, id] = member.split(":");
+    const table = type === "cast" ? "locapass_cast_members" : type === "staff" ? "locapass_shop_staff_members" : null;
+    if (!table || !id) throw new Error("選んだ人を判別できません");
+    const { data: m } = await (admin as any).from(table).select("id").eq("id", id).eq("shop_id", shop.id).is("deleted_at", null).maybeSingle();
+    if (!m) throw new Error("選んだ人が、この店舗に見つかりません");
+    if (type === "cast") castId = id;
+    else staffId = id;
+  }
   const thumb = (await resolveThumb(admin, video, rawUrl, formData.get("thumb"))) ?? shopImage;
 
   if (kind === "event") {
@@ -107,6 +120,8 @@ export async function createEmbedPostForShop(admin: Admin, shopId: string, formD
       images: [],
       poster_url: thumb,
       reel_type: "permanent",
+      cast_id: castId,
+      posted_by_staff_id: staffId,
       status: "publish",
       published_at: new Date().toISOString(),
       embed_provider: video.provider,

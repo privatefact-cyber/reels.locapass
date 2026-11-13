@@ -66,3 +66,18 @@ export async function searchShopsForEmbed(q: string) {
     return { id: s.id, name: s.name, sub: portal?.name ?? null, embedEnabled: Boolean(s.embed_enabled) };
   });
 }
+
+/** 店舗のキャスト・スタッフ一覧(退会していない人)。運営者の画面の選択用。値は「cast:ID」「staff:ID」。 */
+export async function listMembersForEmbed(shopId: string) {
+  await requireRootAdmin();
+  if (!shopId) return [];
+  const db = createAdminClient() as any;
+  const [casts, staff] = await Promise.all([
+    db.from("locapass_cast_members").select("id, name").eq("shop_id", shopId).is("deleted_at", null).order("name").limit(200),
+    db.from("locapass_shop_staff_members").select("id, name").eq("shop_id", shopId).is("deleted_at", null).order("name").limit(200),
+  ]);
+  return [
+    ...((casts.data ?? []) as { id: string; name: string | null }[]).map((c) => ({ id: `cast:${c.id}`, name: `[キャスト] ${c.name || "(名前なし)"}` })),
+    ...((staff.data ?? []) as { id: string; name: string | null }[]).map((c) => ({ id: `staff:${c.id}`, name: `[スタッフ] ${c.name || "(名前なし)"}` })),
+  ];
+}

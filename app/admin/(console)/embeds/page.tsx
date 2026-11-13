@@ -1,8 +1,8 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
-import { ShopSearchPicker } from "@/components/admin/ShopSearchPicker";
-import { searchShopsForEmbed, createEmbedPost, deleteEmbedPost, updateEmbedThumb } from "./actions";
+import { ShopCastPicker } from "@/components/admin/ShopCastPicker";
+import { searchShopsForEmbed, listMembersForEmbed, createEmbedPost, deleteEmbedPost, updateEmbedThumb } from "./actions";
 
 type Row = { id: string; shop_id: string | null; title?: string | null; caption?: string | null; embed_provider: string; embed_ref: string; poster_url?: string | null; image_url?: string | null; created_at?: string; published_at?: string | null };
 
@@ -76,7 +76,7 @@ export default async function AdminEmbedsPage() {
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700">店舗(この店舗の投稿として表示されます)</label>
-          <div className="mt-1 flex"><ShopSearchPicker name="shop_id" search={searchShopsForEmbed} /></div>
+          <ShopCastPicker searchShops={searchShopsForEmbed} listCasts={listMembersForEmbed} />
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700">動画のURL</label>
