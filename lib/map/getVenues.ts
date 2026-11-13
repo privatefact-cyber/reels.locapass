@@ -9,7 +9,7 @@ import { mergeLiveSpots } from "@/lib/map/liveSpots";
 import { isStaleShop } from "@/lib/shop/freshness";
 import { hasRealPhoto } from "@/lib/shop/sinkWithoutPhoto";
 import { shopPath } from "@/lib/locapass/publicUrls";
-import { getVenueFilterIds, type VenueFilters } from "@/lib/map/venueFilters";
+import { getActiveBoostShopIds, getVenueFilterIds, type VenueFilters } from "@/lib/map/venueFilters";
 
 /**
  * 地図の取得範囲。全国一括取得はメモリ・転送量が破綻するため、
@@ -166,7 +166,7 @@ async function latestReelDatesByShop(shopIds: string[]): Promise<Map<string, str
 }
 
 /**
- * 地図のスイッチ(🐾・今)の絞り込みをDBの問い合わせにも掛ける。対象が少ないときは id で絞ってから引き
+ * 地図のスイッチ(🐾・ブースト)の絞り込みをDBの問い合わせにも掛ける。対象が少ないときは id で絞ってから引き
  * (範囲内の店が多くても、上限で対象の店が欠けないように)、多いときは問い合わせ文が長くなりすぎるので、引いた後に絞る。
  * 移動販売の出店場所(mergeLiveSpots で後から足す店)も、呼び出し側で引いた後に同じ集合で絞る。
  */
@@ -184,10 +184,10 @@ const PIN_COLUMNS = "id, lat, lng, category, cover_url, icon_url, updated_at, po
 export async function getVenuePins(
   bounds: VenueBounds,
   limit = MAX_PIN_LIMIT,
-  filters: VenueFilters = { pet: false, now: false },
+  filters: VenueFilters = { pet: false, boost: false },
 ): Promise<VenuePin[]> {
   const supabase = mapClient();
-  const filterIds = await getVenueFilterIds(bounds, filters);
+  const [filterIds, boostIds] = await Promise.all([getVenueFilterIds(filters), getActiveBoostShopIds(supabase as never)]);
   if (filterIds && filterIds.size === 0) return [];
   const { data } = await narrowByIds(
     supabase
@@ -226,7 +226,8 @@ export async function getVenuePins(
     Math.max(Date.parse(s.updated_at ?? "") || 0, Date.parse(latestReelAt.get(s.id) ?? "") || 0);
 
   const pins: VenuePin[] = Array.from(groups.values()).map((g) => {
-    const s = g.length === 1 ? g[0] : [...g].sort((a, b) => freshness(b) - freshness(a) || a.id.localeCompare(b.id))[0];
+    // ブースト中の店がいれば、その店を代表にする(派手なピンが埋もれないように)。
+    const s = g.length === 1 ? g[0] : [...g].sort((a, b) => Number(boostIds.has(b.id)) - Number(boostIds.has(a.id)) || freshness(b) - freshness(a) || a.id.localeCompare(b.id))[0];
     return {
       id: s.id,
       lat: s.lat as number,
@@ -234,6 +235,7 @@ export async function getVenuePins(
       genre: s.category,
       // 現状locapass_shopsは全店舗plan="free"でスポンサー枠が無いため常にfalse。
       isSponsored: false,
+      boosted: boostIds.has(s.id),
       thumbUrl: pinThumbUrl(s.cover_url ?? s.icon_url),
       ...(() => {
         const live = s as unknown as { spot?: VenuePin["spot"]; name?: string; slug?: string; portal?: { slug: string } | { slug: string }[] | null };
@@ -281,11 +283,11 @@ export async function getVenueCards(
   bounds: VenueBounds,
   center: { lat: number; lng: number },
   limit = MAX_CARD_LIMIT,
-  filters: VenueFilters = { pet: false, now: false },
+  filters: VenueFilters = { pet: false, boost: false },
 ): Promise<VenueCardData[]> {
   const supabase = mapClient();
   const cardLimit = Math.min(limit, MAX_CARD_LIMIT);
-  const filterIds = await getVenueFilterIds(bounds, filters);
+  const [filterIds, boostIds] = await Promise.all([getVenueFilterIds(filters), getActiveBoostShopIds(supabase as never)]);
   if (filterIds && filterIds.size === 0) return [];
 
   const { data: rawShopRows } = await narrowByIds(
@@ -437,6 +439,7 @@ export async function getVenueCards(
           : null,
       reelCount: reelCountByShopId.get(s.id) ?? 0,
       isSponsored: false,
+      boosted: boostIds.has(s.id),
       sponsoredRank: undefined,
       supportsEnglish: false,
       isVerified: false,

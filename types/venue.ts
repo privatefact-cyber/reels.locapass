@@ -33,6 +33,8 @@ export interface VenuePin {
   memberIds?: string[];
   /** 移動販売(キッチンカー)の出店予定。ある店のピンは、営業中ならOPEN、まだなら予定の日時つきで描く。 */
   spot?: VenueSpot;
+  /** いまブースト中の店。ピンを派手な色で目立たせる。 */
+  boosted?: boolean;
 }
 
 /** 移動販売の出店場所の時間枠(ISO文字列)。営業中かどうかは、表示する側が今の時刻と比べて決める。 */
@@ -71,4 +73,6 @@ export interface VenueCardData {
   casts: CastSummary[];
   /** 移動販売の出店場所(営業中または予定)。無ければ通常の固定店舗。 */
   spot?: VenueSpot;
+  /** いまブースト中の店。カードに「ブースト中」と出す。 */
+  boosted?: boolean;
 }

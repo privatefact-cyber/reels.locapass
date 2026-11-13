@@ -26,6 +26,10 @@ const CLUSTER_LAYER = "venue-clusters";
 const CLUSTER_COUNT_LAYER = "venue-cluster-count";
 const POINT_LAYER = "venue-points";
 const SPONSORED_LAYER = "venue-sponsored-points";
+/** いまブースト中の店のピン(派手な色)と、その下に敷く光。 */
+const BOOST_LAYER = "venue-boost-points";
+const BOOST_GLOW_LAYER = "venue-boost-glow";
+const BOOST_COLOR = "#ff2d6f";
 /** 選択中のピンの下に敷く光。どのピンがカードと対応しているかを一目で分かるようにする。 */
 const ACTIVE_GLOW_LAYER = "venue-active-glow";
 /** ピンの大きさ・光の変化にかける時間(ms)。maplibreのpaint transitionで補間させる。 */
@@ -114,7 +118,7 @@ function toFeatureCollection(pins: VenuePin[]) {
     features: pins.map((p) => ({
       type: "Feature" as const,
       geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] },
-      properties: { id: p.id, sponsored: p.isSponsored ? 1 : 0 },
+      properties: { id: p.id, sponsored: p.isSponsored ? 1 : 0, boosted: p.boosted ? 1 : 0 },
     })),
   };
 }
@@ -147,8 +151,8 @@ export function VenueMapExplorer({
   initialCenter?: { lat: number; lng: number };
   /** ポータルの初期設定(?preset=)で開くときの縮尺。省略時は15。 */
   initialZoom?: number;
-  /** ポータルの初期設定で、スイッチ(🐾・今)を最初からオンにするか。 */
-  initialLayers?: { pet: boolean; now: boolean };
+  /** ポータルの初期設定で、スイッチ(🐾・ブースト)を最初からオンにするか。 */
+  initialLayers?: { pet: boolean; boost: boolean };
   /**
    * 指定エリアの店舗が全部収まる範囲。中心固定だと、店舗が数kmに散らばるエリア
    * (横浜など)で初期表示に1件も入らないことがあるため、範囲が来たらそちらを優先する。
@@ -181,9 +185,9 @@ export function VenueMapExplorer({
   // アフタータグ選択中か。アフター(深夜飲食店)は通常のマップに出さず、タグを押したときだけ
   // サーバーから別に取り直す(after=1)。取得系のコールバックから参照するのでrefで持つ。
   const afterMode = useRef(false);
-  // スイッチ(🐾: ペットと行ける店 / 今: 営業中・出店中・ブースト中)。絞り込みはサーバー側(lib/map/venueFilters.ts)で行う。
+  // スイッチ(🐾: ペットと行ける店 / ブースト: いまブースト中の店)。絞り込みはサーバー側(lib/map/venueFilters.ts)で行う。
   // 取得系のコールバックから参照するのでrefにも持つ。
-  const [layers, setLayers] = useState<{ pet: boolean; now: boolean }>(initialLayers ?? { pet: false, now: false });
+  const [layers, setLayers] = useState<{ pet: boolean; boost: boolean }>(initialLayers ?? { pet: false, boost: false });
   const layersRef = useRef(layers);
   // 地図のクリックハンドラは初期化時に1回だけ登録するので、そこから最新のfocusVenueを呼べるようrefで持つ。
   // (直接呼ぶと初回レンダー時のfocusVenue=カード0件の状態を掴んだままになり、どのピンを押しても
@@ -296,7 +300,7 @@ export function VenueMapExplorer({
    * 広域ズーム時に重いカードデータを引かないようにしている。
    */
   const fetchForQuery = useCallback(async (baseQuery: string) => {
-    const filterQuery = `${layersRef.current.pet ? "&pet=1" : ""}${layersRef.current.now ? "&now=1" : ""}`;
+    const filterQuery = `${layersRef.current.pet ? "&pet=1" : ""}${layersRef.current.boost ? "&boost=1" : ""}`;
     const queryString = `${afterMode.current ? `${baseQuery}&after=1` : baseQuery}${filterQuery}`;
     if (lastQuery.current === queryString) return;
     lastQuery.current = queryString;
@@ -395,6 +399,7 @@ export function VenueMapExplorer({
         clusterRadius: 36,
         clusterProperties: {
           hasSponsored: ["max", ["get", "sponsored"]],
+          hasBoosted: ["max", ["get", "boosted"]],
         },
       });
 
@@ -404,7 +409,7 @@ export function VenueMapExplorer({
         source: SOURCE_ID,
         filter: ["has", "point_count"],
         paint: {
-          "circle-color": ["case", [">", ["get", "hasSponsored"], 0], "#a855f7", "#d4a537"],
+          "circle-color": ["case", [">", ["get", "hasBoosted"], 0], BOOST_COLOR, [">", ["get", "hasSponsored"], 0], "#a855f7", "#d4a537"],
           "circle-radius": ["step", ["get", "point_count"], 18, 10, 24, 25, 30],
           "circle-stroke-width": 2,
           "circle-stroke-color": "#0b0b0d",
@@ -428,7 +433,7 @@ export function VenueMapExplorer({
         id: POINT_LAYER,
         type: "circle",
         source: SOURCE_ID,
-        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "sponsored"], 0]],
+        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "sponsored"], 0], ["==", ["get", "boosted"], 0]],
         paint: {
           "circle-color": "#d4a537",
           "circle-radius": 8,
@@ -441,12 +446,33 @@ export function VenueMapExplorer({
         id: SPONSORED_LAYER,
         type: "circle",
         source: SOURCE_ID,
-        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "sponsored"], 1]],
+        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "sponsored"], 1], ["==", ["get", "boosted"], 0]],
         paint: {
           "circle-color": "#a855f7",
           "circle-radius": 12,
           "circle-stroke-width": 3,
           "circle-stroke-color": "#f3e8ff",
+        },
+      });
+
+      // ブースト中の店は、ほかのピンより大きく派手な色にして、光を足して目立たせる。
+      map.addLayer({
+        id: BOOST_GLOW_LAYER,
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "boosted"], 1]],
+        paint: { "circle-color": BOOST_COLOR, "circle-radius": 24, "circle-blur": 0.8, "circle-opacity": 0.6 },
+      });
+      map.addLayer({
+        id: BOOST_LAYER,
+        type: "circle",
+        source: SOURCE_ID,
+        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "boosted"], 1]],
+        paint: {
+          "circle-color": BOOST_COLOR,
+          "circle-radius": 13,
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#ffffff",
         },
       });
 
@@ -469,11 +495,11 @@ export function VenueMapExplorer({
 
       // 大きさの変化を補間させる(選択時にポンと弾むように見せる)。
       // maplibre v3の型定義はaddLayerのpaintに *-transition を受け付けないので、追加後に設定する。
-      for (const layerId of [POINT_LAYER, SPONSORED_LAYER, ACTIVE_GLOW_LAYER]) {
+      for (const layerId of [POINT_LAYER, SPONSORED_LAYER, BOOST_LAYER, ACTIVE_GLOW_LAYER]) {
         map.setPaintProperty(layerId, "circle-radius-transition", PIN_TRANSITION);
       }
 
-      for (const layerId of [POINT_LAYER, SPONSORED_LAYER, CLUSTER_LAYER]) {
+      for (const layerId of [POINT_LAYER, SPONSORED_LAYER, BOOST_LAYER, CLUSTER_LAYER]) {
         map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
         map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
       }
@@ -488,7 +514,7 @@ export function VenueMapExplorer({
             [x - tol, y - tol],
             [x + tol, y + tol],
           ],
-          { layers: [SPONSORED_LAYER, POINT_LAYER, CLUSTER_LAYER] },
+          { layers: [BOOST_LAYER, SPONSORED_LAYER, POINT_LAYER, CLUSTER_LAYER] },
         );
         const distanceFromTap = (f: maplibregl.MapGeoJSONFeature) => {
           if (f.geometry.type !== "Point") return Infinity;
@@ -622,9 +648,9 @@ export function VenueMapExplorer({
   }, []);
 
 
-  /** スイッチ(🐾・今)を切り替えて、今の表示範囲で取り直す(問い合わせ文が変わるので、同じ範囲でも取り直される)。 */
+  /** スイッチ(🐾・ブースト)を切り替えて、今の表示範囲で取り直す(問い合わせ文が変わるので、同じ範囲でも取り直される)。 */
   const toggleLayer = useCallback(
-    (key: "pet" | "now") => {
+    (key: "pet" | "boost") => {
       const next = { ...layersRef.current, [key]: !layersRef.current[key] };
       layersRef.current = next;
       setLayers(next);
@@ -908,29 +934,40 @@ export function VenueMapExplorer({
       const marker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([p.lng, p.lat]).addTo(map);
       thumbMarkers.current.set(p.id, { marker, el });
     }
+    const boostedIds = new Set(all.filter((p) => p.boosted).map((p) => p.id));
     thumbMarkers.current.forEach(({ el }, id) => {
+      const boosted = boostedIds.has(id);
       el.style.display = shown.has(id) ? "block" : "none";
-      el.style.borderColor = id === activeIdRef.current ? "#fbbf24" : "#fff";
-      el.style.zIndex = id === activeIdRef.current ? "2" : "1";
+      el.style.borderColor = id === activeIdRef.current ? "#fbbf24" : boosted ? BOOST_COLOR : "#fff";
+      el.style.boxShadow = boosted ? `0 0 0 3px ${BOOST_COLOR}66, 0 0 16px 5px ${BOOST_COLOR}b3` : "0 2px 10px rgba(0,0,0,.6)";
+      el.style.zIndex = id === activeIdRef.current ? "3" : boosted ? "2" : "1";
     });
 
     // サムネイルにした店舗の金色の点は隠す(残りの点だけ描く)。
     const notThumb = ["!", ["in", ["get", "id"], ["literal", Array.from(shown)]]];
     const notCluster = ["!", ["has", "point_count"]];
     if (map.getLayer(POINT_LAYER)) {
-      map.setFilter(POINT_LAYER, ["all", notCluster, ["==", ["get", "sponsored"], 0], notThumb] as unknown as maplibregl.FilterSpecification);
+      map.setFilter(POINT_LAYER, ["all", notCluster, ["==", ["get", "sponsored"], 0], ["==", ["get", "boosted"], 0], notThumb] as unknown as maplibregl.FilterSpecification);
     }
     if (map.getLayer(SPONSORED_LAYER)) {
-      map.setFilter(SPONSORED_LAYER, ["all", notCluster, ["==", ["get", "sponsored"], 1], notThumb] as unknown as maplibregl.FilterSpecification);
+      map.setFilter(SPONSORED_LAYER, ["all", notCluster, ["==", ["get", "sponsored"], 1], ["==", ["get", "boosted"], 0], notThumb] as unknown as maplibregl.FilterSpecification);
+    }
+    // ブースト中の店も、サムネイルにした店は点を隠す(サムネイル側を派手な枠にする)。
+    for (const id of [BOOST_LAYER, BOOST_GLOW_LAYER]) {
+      if (map.getLayer(id)) {
+        map.setFilter(id, ["all", notCluster, ["==", ["get", "boosted"], 1], notThumb] as unknown as maplibregl.FilterSpecification);
+      }
     }
   };
 
   // 選択中の店舗のサムネイルは枠を金色にする。
   useEffect(() => {
     activeIdRef.current = activePinId;
+    const boostedIds = new Set(pinsRef.current.filter((p) => p.boosted).map((p) => p.id));
     thumbMarkers.current.forEach(({ el }, id) => {
-      el.style.borderColor = id === activePinId ? "#fbbf24" : "#fff";
-      el.style.zIndex = id === activePinId ? "2" : "1";
+      const boosted = boostedIds.has(id);
+      el.style.borderColor = id === activePinId ? "#fbbf24" : boosted ? BOOST_COLOR : "#fff";
+      el.style.zIndex = id === activePinId ? "3" : boosted ? "2" : "1";
     });
   }, [activePinId]);
 
@@ -1002,6 +1039,7 @@ export function VenueMapExplorer({
     // 一度大きめに膨らませてから落ち着かせる(paint transitionで補間されて、ポンと弾むように見える)。
     map.setPaintProperty(POINT_LAYER, "circle-radius", radiusFor(8, 17));
     map.setPaintProperty(SPONSORED_LAYER, "circle-radius", radiusFor(12, 21));
+    map.setPaintProperty(BOOST_LAYER, "circle-radius", radiusFor(13, 21));
     map.setFilter(ACTIVE_GLOW_LAYER, [
       "all",
       ["!", ["has", "point_count"]],
@@ -1011,6 +1049,7 @@ export function VenueMapExplorer({
     const settle = window.setTimeout(() => {
       map.setPaintProperty(POINT_LAYER, "circle-radius", radiusFor(8, 13));
       map.setPaintProperty(SPONSORED_LAYER, "circle-radius", radiusFor(12, 17));
+      map.setPaintProperty(BOOST_LAYER, "circle-radius", radiusFor(13, 17));
       map.setPaintProperty(ACTIVE_GLOW_LAYER, "circle-radius", 24);
     }, 200);
     return () => window.clearTimeout(settle);
@@ -1213,15 +1252,15 @@ export function VenueMapExplorer({
             </button>
             <button
               type="button"
-              aria-pressed={layers.now}
-              title={t.map.nowToggleHint}
-              onClick={() => toggleLayer("now")}
+              aria-pressed={layers.boost}
+              title={t.map.boostToggleHint}
+              onClick={() => toggleLayer("boost")}
               className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide transition ${
-                layers.now ? "border-hl-400 bg-hl-400 text-on-accent" : "border-main/15 bg-black/70 text-tone-200 backdrop-blur"
+                layers.boost ? "border-hl-400 bg-hl-400 text-on-accent" : "border-main/15 bg-black/70 text-tone-200 backdrop-blur"
               }`}
             >
-              <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle ${layers.now ? "bg-on-accent" : "bg-emerald-400"}`} aria-hidden />
-              {t.map.nowToggle}
+              <span className="mr-0.5" aria-hidden>⚡</span>
+              {t.map.boostToggle}
             </button>
             <span className="my-1 w-px shrink-0 bg-main/15" aria-hidden />
             {genrePills.map((pill) => (
@@ -1310,7 +1349,7 @@ export function VenueMapExplorer({
                     isActive
                       ? "scale-100 border-hl-400/70 opacity-100 shadow-hl-500/20"
                       : "scale-[0.94] border-main/10 opacity-60"
-                  } ${venue.isSponsored ? "ring-1 ring-purple-500/40" : ""}`}
+                  } ${venue.isSponsored ? "ring-1 ring-purple-500/40" : venue.boosted ? "ring-1 ring-[#ff2d6f]/70" : ""}`}
                 >
                   <div
                     data-card-preview
@@ -1360,6 +1399,10 @@ export function VenueMapExplorer({
                       {venue.isSponsored ? (
                         <span className="rounded bg-purple-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-main">
                           SPONSORED
+                        </span>
+                      ) : venue.boosted ? (
+                        <span className="rounded px-2 py-0.5 text-[10px] font-bold tracking-wide text-white shadow-[0_0_10px_rgba(255,45,111,0.8)]" style={{ background: BOOST_COLOR }}>
+                          ⚡ {t.map.boostBadge}
                         </span>
                       ) : venue.spot ? (
                         <SpotBadge spot={venue.spot} now={spotNow} today={t.map.spotToday} />

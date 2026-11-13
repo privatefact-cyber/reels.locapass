@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const limitParam = Number(request.nextUrl.searchParams.get("limit"));
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : MAX_CARD_LIMIT;
 
-  // pet=1 / now=1 の絞り込みはピンと同じ(lib/map/venueFilters.ts)。
+  // pet=1 / boost=1 の絞り込みはピンと同じ(lib/map/venueFilters.ts)。
   const venues = await getVenueCards(parsed.bounds, parsed.center, limit, parseVenueFilters(request.nextUrl.searchParams));
   return NextResponse.json({ venues }, { headers: VENUE_CACHE_HEADERS });
 }

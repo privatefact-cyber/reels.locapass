@@ -32,9 +32,10 @@ export type Dictionary = {
     zoomIn: string;
     /** 地図のスイッチ「🐾」(ペット同伴可・ペット専用の店だけ)の説明(aria-label・title)。 */
     petToggle: string;
-    /** 地図のスイッチ「今」の表示名と説明(営業中・出店中・ブースト中の店だけ)。 */
-    nowToggle: string;
-    nowToggleHint: string;
+    /** 地図のスイッチ「ブースト」の表示名と説明(いまブースト中の店だけ)と、カードのバッジ。 */
+    boostToggle: string;
+    boostToggleHint: string;
+    boostBadge: string;
     noPreview: string;
     visitNow: string;
     details: string;
@@ -501,8 +502,9 @@ const ja: Dictionary = {
     noVenuesInView: "この範囲に店舗がありません。地図を広げるか、住所で検索してください。",
     zoomIn: "範囲が広すぎます。地図を拡大するか、住所で検索してください。",
     petToggle: "ペットと行ける店だけ",
-    nowToggle: "今",
-    nowToggleHint: "営業中・出店中・ブースト中の店だけ",
+    boostToggle: "ブースト",
+    boostToggleHint: "いまブースト中の店だけ",
+    boostBadge: "ブースト中",
     noPreview: "動画なし",
     visitNow: "行き方を見る",
     details: "詳細",
@@ -965,8 +967,9 @@ const en: Dictionary = {
     noVenuesInView: "No venues in this area. Zoom out or search an address.",
     zoomIn: "Area too wide. Zoom in or search an address.",
     petToggle: "Pet-friendly places only",
-    nowToggle: "Now",
-    nowToggleHint: "Open now, serving now, or boosted",
+    boostToggle: "Boost",
+    boostToggleHint: "Only shops boosting right now",
+    boostBadge: "Boosting",
     noPreview: "No video",
     visitNow: "GET DIRECTIONS",
     details: "Details",
@@ -1429,8 +1432,9 @@ const zh: Dictionary = {
     noVenuesInView: "此范围内没有店铺。请缩小地图或搜索地址。",
     zoomIn: "范围过大。请放大地图或搜索地址。",
     petToggle: "只看可带宠物的店",
-    nowToggle: "现在",
-    nowToggleHint: "只看营业中・出摊中・推广中的店",
+    boostToggle: "推广",
+    boostToggleHint: "只看正在推广中的店",
+    boostBadge: "推广中",
     noPreview: "无视频",
     visitNow: "查看路线",
     details: "详情",
@@ -1897,8 +1901,9 @@ const ar: Dictionary = {
     "noVenuesInView": "لا توجد أماكن في هذه المنطقة. قم بتصغير الخريطة أو ابحث عن عنوان.",
     "zoomIn": "المنطقة واسعة جدًا. قم بتكبير الخريطة أو ابحث عن عنوان.",
     "petToggle": "الأماكن المناسبة للحيوانات الأليفة فقط",
-    "nowToggle": "الآن",
-    "nowToggleHint": "المفتوحة الآن أو التي تقدم الخدمة الآن أو المروّجة",
+    "boostToggle": "ترويج",
+    "boostToggleHint": "المتاجر التي تروّج الآن فقط",
+    "boostBadge": "ترويج نشط",
     "noPreview": "لا يوجد فيديو",
     "visitNow": "الحصول على الاتجاهات",
     "details": "التفاصيل",

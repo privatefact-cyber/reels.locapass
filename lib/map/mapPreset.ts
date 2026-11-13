@@ -21,15 +21,15 @@ const MAX_ZOOM = 18;
 export function parseMapPreset(raw: unknown): MapPreset | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const r = raw as { center?: unknown; zoom?: unknown; layers?: unknown };
-  const out: MapPreset = { layers: { pet: false, now: false } };
+  const out: MapPreset = { layers: { pet: false, boost: false } };
   if (Array.isArray(r.center) && r.center.length === 2) {
     const [lng, lat] = r.center.map(Number);
     if (Number.isFinite(lng) && Number.isFinite(lat) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) out.center = { lat, lng };
   }
   if (typeof r.zoom === "number" && Number.isFinite(r.zoom)) out.zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, r.zoom));
   if (r.layers && typeof r.layers === "object") {
-    const layers = r.layers as { pet?: unknown; now?: unknown };
-    out.layers = { pet: layers.pet === true, now: layers.now === true };
+    const layers = r.layers as { pet?: unknown; boost?: unknown };
+    out.layers = { pet: layers.pet === true, boost: layers.boost === true };
   }
   return out;
 }
@@ -73,6 +73,6 @@ async function boundsPreset(portalId: number): Promise<MapPreset | null> {
   return {
     bounds,
     center: { lat: (bounds.minLat + bounds.maxLat) / 2, lng: (bounds.minLng + bounds.maxLng) / 2 },
-    layers: { pet: false, now: false },
+    layers: { pet: false, boost: false },
   };
 }

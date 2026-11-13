@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  // pet=1(🐾: ペット同伴可・ペット専用の店)/ now=1(今: 営業中・出店中・ブースト中の店)で絞る。
+  // pet=1(🐾: ペット同伴可・ペット専用の店)/ boost=1(ブースト: いまブースト中の店)で絞る。
   const all = await getVenuePins(parsed.bounds, undefined, parseVenueFilters(request.nextUrl.searchParams));
   // spots=1: 移動販売(出店予定のある店)のピンだけ返す。走る広告トラックが、映している範囲に関係なく店を知るために使う。
   const pins = request.nextUrl.searchParams.get("spots") === "1" ? all.filter((p) => p.spot) : all;
