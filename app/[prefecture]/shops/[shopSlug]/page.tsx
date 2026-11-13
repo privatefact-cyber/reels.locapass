@@ -65,6 +65,7 @@ import { ShopAttributeBadges } from "@/components/shop/ShopAttributeBadges";
 import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
 import { isDemoShop } from "@/lib/seo/demo";
+import { shopCityLabel, parseAddress, cityKey, categoryToSlug, cityCategoryPath, cityPath } from "@/lib/seo/cityAreas";
 
 // revalidate指定が無いと無期限にキャッシュされ続け、本日の出勤・新着リールなど
 // 日次/都度更新のデータが反映されなくなる(実際に発生した不具合)。トップページと
@@ -110,12 +111,17 @@ export async function generateMetadata({
   const metaLocale = await getServerLocale();
   const isJa = metaLocale === "ja";
   // カテゴリは自由入力の日本語なので、日本語以外では付けない
-  const title = isJa ? `${shopRow.name}｜${shopRow.category ?? "掲載店舗"}情報 - LOCAPASS` : shopRow.name;
-  const description = isJa
-    ? shopRow.tagline ||
-      (shopRow.description ? shopRow.description.slice(0, 120) : null) ||
-      `「${shopRow.name}」の店舗情報・リールを今すぐチェック。`
-    : `${shopRow.name} — shop info and reels on LOCAPASS.`;
+  // 「渋谷区のカフェ・スイーツ」のように、地域名と業種を題名に入れる(地域×業種の検索で見つけてもらうため)。
+  // ブランド名はサイト共通の題名テンプレートが付けるので、ここでは付けない。
+  const city = shopCityLabel(shopRow.address);
+  const where = [city, shopRow.category && shopRow.category !== "その他" ? shopRow.category : null].filter(Boolean).join("の");
+  const title = isJa ? (where ? `${shopRow.name}｜${where}` : `${shopRow.name}｜店舗情報`) : shopRow.name;
+  const lead = isJa && where ? `${shopRow.name}は${where}のお店。` : "";
+  const body =
+    shopRow.tagline ||
+    (shopRow.description ? shopRow.description.replace(/\s+/g, " ").slice(0, 90) : null) ||
+    "営業時間・アクセス・最新のリールをチェック。";
+  const description = isJa ? `${lead}${body}` : `${shopRow.name} — shop info and reels on LOCAPASS.`;
   const { url, alternates } = await localizedPageUrls(shopPath(portal.slug, shopRow.slug));
   const demo = isDemoShop(shopRow.name, shopRow.slug);
   const image = shopRow.cover_url ?? shopRow.icon_url ?? undefined;
@@ -714,6 +720,24 @@ export default async function ShopDetailPage({
               {store.description}
             </p>
           )}
+          {locale === "ja" && (() => {
+            const parsed = parseAddress(shopRow.address);
+            if (!parsed) return null;
+            const key = cityKey(parsed);
+            const catSlug = shopRow.category ? categoryToSlug(shopRow.category) : null;
+            return (
+              <p className="text-xs text-tone-500">
+                {catSlug && shopRow.category && (
+                  <Link href={cityCategoryPath(key, catSlug)} className="mr-3 text-hl-300 underline underline-offset-2">
+                    {parsed.city}の{shopRow.category}をもっと見る
+                  </Link>
+                )}
+                <Link href={cityPath(key)} className="text-hl-300 underline underline-offset-2">
+                  {parsed.city}のお店一覧
+                </Link>
+              </p>
+            );
+          })()}
           {usedTranslation && (
             <p className="text-[11px] text-tone-500">{extraSource ? autoTranslatedFromLabel(locale, extraSource.native) : t.shop.autoTranslated}</p>
           )}

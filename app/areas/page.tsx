@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MIN_SHOPS_FOR_GUIDE, getPortalStats } from "@/lib/seo/areaStats";
 import { portalBlurb, portalLabel } from "@/lib/seo/areaGuide";
 import { isLowProfilePortal } from "@/lib/seo/portalMeta";
+import { MIN_SHOPS_FOR_CITY_PAGE, cityPath, getCityAreas } from "@/lib/seo/cityAreas";
 
 export const revalidate = 600;
 
@@ -29,6 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AreasIndexPage() {
   const supabase = await createClient();
   const portals = (await getPortalStats(supabase)).filter((p) => p.total >= MIN_SHOPS_FOR_GUIDE && !isLowProfilePortal(p.slug));
+
+  const cities = (await getCityAreas()).filter((a) => a.shops.length >= MIN_SHOPS_FOR_CITY_PAGE).slice(0, 40);
 
   return (
     <div className="mx-auto max-w-md space-y-8 px-4 py-8 md:max-w-4xl">
@@ -74,6 +77,22 @@ export default async function AreasIndexPage() {
           );
         })}
       </ul>
+
+      {cities.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-display text-lg font-semibold text-hl-200">市区町村から探す</h2>
+          <ul className="flex flex-wrap gap-2">
+            {cities.map((a) => (
+              <li key={a.key}>
+                <Link href={cityPath(a.key)} className="inline-block rounded-full border border-main/20 px-3 py-1 text-xs text-main hover:border-hl-400/60">
+                  {a.prefecture}{a.city}({a.shops.length})
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <p className="text-xs">
         <Link href="/journal" className="text-hl-200 underline underline-offset-2">ジャーナルを読む</Link>
       </p>

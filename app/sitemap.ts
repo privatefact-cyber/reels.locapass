@@ -13,6 +13,7 @@ import { fetchAllRows } from "@/lib/supabase/fetchAll";
 import { isDemoShop } from "@/lib/seo/demo";
 import { MIN_SHOPS_FOR_GUIDE, getPortalStats } from "@/lib/seo/areaStats";
 import { ATTRIBUTE_KEYS } from "@/lib/verticals/attributes";
+import { MIN_SHOPS_FOR_CITY_PAGE, categoryToSlug, cityCategoryUrl, cityUrl, getCityAreas } from "@/lib/seo/cityAreas";
 import { MIN_SHOPS_FOR_ATTRIBUTE_PAGE } from "@/lib/seo/attributePages";
 
 const BASE_URL = "https://locapass.net";
@@ -181,5 +182,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...areaGuideSlugs.map((slug) => ({ url: `${BASE_URL}/areas/${slug}`, changeFrequency: "weekly" as const, priority: 0.8 })),
   ];
 
-  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...attributeEntries, ...shopEntries, ...reelEntries, ...castEntries]), ...areaGuideEntries, ...petEntries];
+  // 地域(住所の市区町村)ページと、地域×業種ページ。日本語のみ。店舗が3件以上あるものだけ載せる(ページ側も同じ基準でnoindex)。
+  const cityEntries: MetadataRoute.Sitemap = [];
+  try {
+    for (const area of await getCityAreas()) {
+      if (area.shops.length >= MIN_SHOPS_FOR_CITY_PAGE) cityEntries.push({ url: cityUrl(area.key), changeFrequency: "weekly", priority: 0.8 });
+      for (const [category, list] of area.byCategory) {
+        if (list.length >= MIN_SHOPS_FOR_CITY_PAGE) cityEntries.push({ url: cityCategoryUrl(area.key, categoryToSlug(category)!), changeFrequency: "weekly", priority: 0.8 });
+      }
+    }
+  } catch (e) {
+    console.error("[sitemap] city entries failed", e);
+  }
+
+  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...attributeEntries, ...shopEntries, ...reelEntries, ...castEntries]), ...areaGuideEntries, ...cityEntries, ...petEntries];
 }

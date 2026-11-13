@@ -30,7 +30,7 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
   const choice = resolveChoice(attr, (await searchParams).v, locale);
   const shops = await getShopsByAttribute(attr, choice ?? undefined);
   const name = choice?.label ?? def.label[locale];
-  const title = locale === "ja" ? `${def.icon} ${name}のお店 ${shops.length}軒 | LOCAPASS` : `${def.icon} ${name} (${shops.length}) | LOCAPASS`;
+  const title = locale === "ja" ? `${def.icon} ${name}のお店 ${shops.length}軒` : `${def.icon} ${name} (${shops.length})`;
   const description = locale === "ja"
     ? `「${name}」のお店を、動画(リール)で雰囲気を見ながら探せます。LOCAPASSに掲載中の${shops.length}軒。`
     : `Find places tagged "${name}" and preview them with short videos on LOCAPASS (${shops.length} listed).`;
