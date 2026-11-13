@@ -53,7 +53,8 @@ export async function runSocialAutomation(): Promise<Array<{ destination: string
     const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
     const { count } = await admin.from("locapass_threads_posts").select("id", { count: "exact", head: true })
       .eq("platform", setting.platform).eq("account", setting.account).eq("status", "posted").gte("posted_at", since);
-    if ((count ?? 0) >= setting.daily_max) { out.push({ destination, result: "daily-cap" }); continue; }
+    // 下書きは公開されないので上限の対象外。自動公開のときだけ、直近24時間の投稿数で止める。
+    if (setting.mode === "auto" && (count ?? 0) >= setting.daily_max) { out.push({ destination, result: "daily-cap" }); continue; }
 
     // 同じ日の同じ投稿先は、cronが重なっても1回だけ進める。
     const { error: claimError } = await admin.from("locapass_social_automation_runs").insert({ platform: setting.platform, account: setting.account, run_on: now.date, status: "running" });
