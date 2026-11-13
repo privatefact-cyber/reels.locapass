@@ -28,8 +28,8 @@ export type ReelRow = {
   published_at: string | null;
   updated_at: string;
   locapass_shops:
-    | { name: string; address: string | null; category: string | null; slug: string; portal: { slug: string } | { slug: string }[] | null }
-    | { name: string; address: string | null; category: string | null; slug: string; portal: { slug: string } | { slug: string }[] | null }[]
+    | { name: string; address: string | null; address_en?: string | null; category: string | null; slug: string; portal: { slug: string } | { slug: string }[] | null }
+    | { name: string; address: string | null; address_en?: string | null; category: string | null; slug: string; portal: { slug: string } | { slug: string }[] | null }[]
     | null;
   cast_id: string | null;
   posted_by_staff_id: string | null;
@@ -82,7 +82,7 @@ export function toReelItem(row: ReelRow, locale: Locale = "ja", options?: { cuis
     }
   } else {
     // 店舗が書いた文章・空の投稿には、文末に「#店名 #エリア #料理」のタグだけを足す(要約文は足さない。書かれた文章は変えない)。
-    fields.caption = appendTags(fields.caption, { shopName: shop.name, address: shop.address, category: shop.category, cuisines: options?.cuisines });
+    fields.caption = appendTags(fields.caption, { shopName: shop.name, address: shop.address, addressEn: shop.address_en, category: shop.category, cuisines: options?.cuisines, locale });
   }
 
   return {
@@ -112,7 +112,7 @@ export function toReelItem(row: ReelRow, locale: Locale = "ja", options?: { cuis
 }
 
 export const REEL_SELECT =
-  "id, caption, translations, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) ), cast_id, posted_by_staff_id, is_comments_enabled, thumb_focus_x, thumb_focus_y, embed_provider, embed_ref, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url, issue_no )";
+  "id, caption, translations, video_url, images, poster_url, like_count, shop_id, author_name, author_icon_url, action_url, published_at, updated_at, locapass_shops!locapass_reels_shop_id_fkey ( name, address, address_en, category, slug, portal:locapass_portals ( slug ) ), cast_id, posted_by_staff_id, is_comments_enabled, thumb_focus_x, thumb_focus_y, embed_provider, embed_ref, locapass_cast_members:locapass_public_casts ( name, avatar_url, issue_no ), locapass_shop_staff_members ( name, avatar_url, issue_no )";
 
 export type PortalFeedData = {
   reels: ReelItem[];
@@ -129,8 +129,8 @@ export type PortalFeedData = {
  * 絞り込みにも内部結合が必要。
  */
 const REEL_PAGE_SELECT = REEL_SELECT.replace(
-  "locapass_shops!locapass_reels_shop_id_fkey ( name, address, category, slug, portal:locapass_portals ( slug ) )",
-  "locapass_shops!locapass_reels_shop_id_fkey!inner ( name, address, category, slug, portal:locapass_portals!inner ( slug ) )",
+  "locapass_shops!locapass_reels_shop_id_fkey ( name, address, address_en, category, slug, portal:locapass_portals ( slug ) )",
+  "locapass_shops!locapass_reels_shop_id_fkey!inner ( name, address, address_en, category, slug, portal:locapass_portals!inner ( slug ) )",
 );
 
 /**

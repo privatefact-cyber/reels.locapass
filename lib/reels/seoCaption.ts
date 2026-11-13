@@ -245,14 +245,20 @@ export function reelCaptionFor(input: ReelCaptionInput): string | null {
   return composeIntro({ ...input, menuHints: hints }) ?? (cleanAutoCaption(junk) || null);
 }
 
+export type TagLocale = "ja" | "en" | "zh" | "ar";
+
 export type TagInput = {
   /** 店名(スナップ写真ではスポット名) */
   shopName?: string | null;
   address?: string | null;
+  /** 英語の住所(ローマ字)。日本語以外の画面で、エリアのタグをローマ字にするのに使う。無ければ、英語・アラビア語ではエリアのタグを付けない */
+  addressEn?: string | null;
   /** 店舗の業種(「カフェ・スイーツ」など) */
   category?: string | null;
   /** 店舗が選んだ料理(「ラーメン・つけ麺」など)。あれば業種より優先 */
   cuisines?: readonly string[];
+  /** 表示する言語。省略は日本語 */
+  locale?: TagLocale;
 };
 
 /** 店名からタグにする語を作る(かっこの中身・記号・空白を外す)。長すぎる・短すぎるときはnull。 */
@@ -265,8 +271,58 @@ function shopNameTag(name: string | null | undefined): string | null {
   return base.length >= 2 && base.length <= 16 ? base : null;
 }
 
-/** 文末に付けるタグ(店名・市区町村・町名・料理/業種)。#は付けない。最大5つ。 */
+const ROMAN_WORD = /^[A-Za-z][A-Za-z' .-]*$/;
+const EN_SUFFIX = /[- ](?:shi|ku|cho|machi|gun|mura|city|ward|town|village)$/i;
+
+/** ローマ字の語を、ハッシュタグにできる形にする(「Taito-ku」「Tsukuba City」→「Taito」「Tsukuba」)。 */
+function romanTag(segment: string | undefined): string | null {
+  const raw = segment?.replace(/^[\d\s-]+/, "").trim();
+  if (!raw || !ROMAN_WORD.test(raw)) return null;
+  const t = raw.replace(EN_SUFFIX, "").replace(/[\s'.-]+/g, "");
+  return t.length >= 2 && t.length <= 20 ? t : null;
+}
+
+/**
+ * 英語の住所(「…, 3-1 Higashiueno, Taito-ku, Tokyo」)から、市区町村と町名のローマ字を取り出す。
+ * 最後は都道府県なので除き、区の前の語を町名にする(「Totsuka-ku, Yokohama」のように市が区の後ろに来るときは、区の前を町名にする)。取れなければnull。
+ */
+export function areaPartsFromEnglish(addressEn: string | null | undefined): { city: string | null; town: string | null } {
+  if (!addressEn) return { city: null, town: null };
+  const segs = addressEn.split(",").map((x) => x.trim()).filter(Boolean);
+  if (segs.length < 3) return { city: null, town: null };
+  const rest = segs.slice(0, -1); // 都道府県を除く
+  const last = rest[rest.length - 1];
+  const prev = rest[rest.length - 2];
+  const wardThenCity = /-ku$/i.test(prev ?? "") && !/-ku$/i.test(last);
+  const city = romanTag(last);
+  const town = romanTag(wardThenCity ? rest[rest.length - 3] : prev);
+  return { city, town: town && town !== city ? town : null };
+}
+
+/** タグに使う、業種の言い回し(日本語は flavorForCategory の noun)。 */
+const NOUN_TAG: Record<string, Partial<Record<TagLocale, string>>> = {
+  カフェ: { en: "Cafe", zh: "咖啡馆", ar: "مقهى" },
+  "居酒屋・バー": { en: "Izakaya", zh: "居酒屋", ar: "إيزاكايا" },
+  グルメ: { en: "Gourmet", zh: "美食", ar: "مأكولات" },
+  美容: { en: "Beauty", zh: "美容", ar: "جمال" },
+  宿泊: { en: "Lodging", zh: "住宿", ar: "إقامة" },
+  おでかけ: { en: "Sightseeing", zh: "观光", ar: "سياحة" },
+};
+
+/** 料理の語(「ラーメン」など)の、言語ごとのタグ。無い語はnull(日本語のまま出さない)。 */
+const CUISINE_TAG: Record<string, Partial<Record<TagLocale, string>>> = {
+  ラーメン: { en: "Ramen", zh: "拉面", ar: "رامن" },
+  つけ麺: { en: "Tsukemen", zh: "蘸面", ar: "تسوكيمن" },
+  寿司: { en: "Sushi", zh: "寿司", ar: "سوشي" },
+  焼肉: { en: "Yakiniku", zh: "烤肉", ar: "ياكينيكو" },
+  とんかつ: { en: "Tonkatsu", zh: "炸猪排", ar: "تونكاتسو" },
+  海鮮料理: { en: "Seafood", zh: "海鲜", ar: "مأكولات بحرية" },
+  ベーカリー: { en: "Bakery", zh: "面包店", ar: "مخبز" },
+};
+
+/** 文末に付けるタグ(店名・市区町村・町名・料理/業種)。#は付けない。最大5つ。日本語以外では、エリアはローマ字(中国語は漢字のまま)、業種・料理は言語に合わせる。 */
 export function composeTags(input: TagInput): string[] {
+  const locale = input.locale ?? "ja";
   const out: string[] = [];
   const add = (w: string | null | undefined) => {
     const t = w?.trim();
@@ -274,15 +330,19 @@ export function composeTags(input: TagInput): string[] {
     if (!out.some((o) => o.toLowerCase() === t.toLowerCase())) out.push(t);
   };
   add(shopNameTag(input.shopName));
-  const { city, town } = areaPartsFromAddress(input.address);
-  add(city);
-  add(town);
+  // エリア: 日本語・中国語は住所の漢字(中国語の読者は読める)。英語・アラビア語はローマ字の住所から(無ければ付けない)。
+  const area = locale === "ja" || locale === "zh" ? areaPartsFromAddress(input.address) : areaPartsFromEnglish(input.addressEn);
+  add(area.city);
+  add(area.town);
+  const before = out.length;
   const cuisine = input.cuisines?.find((c) => c.trim());
   if (cuisine) {
-    for (const part of cuisine.split("・").slice(0, 2)) add(part);
-  } else {
+    for (const part of cuisine.split("・").slice(0, 2)) add(locale === "ja" ? part : CUISINE_TAG[part]?.[locale]);
+  }
+  // 料理が無い(または、その言語の言い回しが無い)ときは、業種で補う。
+  if (out.length === before && !(cuisine && locale === "ja")) {
     const noun = flavorForCategory(input.category).noun;
-    if (noun !== "お店") add(noun);
+    if (noun !== "お店") add(locale === "ja" ? noun : NOUN_TAG[noun]?.[locale]);
   }
   return out.slice(0, 5);
 }
