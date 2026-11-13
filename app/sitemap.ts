@@ -30,6 +30,12 @@ function withLanguages(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
   });
 }
 
+/**
+ * サイトマップは1時間ごとに作り直す(これが無いとビルド時の内容のまま固定され、新しい店舗・リール・地域ページが、次のデプロイまで載らない)。
+ * 検索エンジンは、サイトマップを自分で定期的に読み直すので、Search Consoleへの再送信は要らない。
+ */
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createStaticClient();
   const journalPosts = await listPublishedJournalPosts();
