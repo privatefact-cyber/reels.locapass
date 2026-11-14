@@ -4,7 +4,7 @@ import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
 import { ResizingImageInput } from "@/components/admin/ResizingImageInput";
 import { BulkEmbedForm } from "@/components/admin/BulkEmbedForm";
 import { ShopCastPicker } from "@/components/admin/ShopCastPicker";
-import { searchShopsForEmbed, listMembersForEmbed, createEmbedPost, createEmbedPostsBulk, deleteEmbedPost, updateEmbedThumb } from "./actions";
+import { searchShopsForEmbed, listMembersForEmbed, createEmbedPost, createEmbedPostsBulk, deleteEmbedPost, updateEmbedThumb, moveEmbedPost } from "./actions";
 
 type Row = { id: string; shop_id: string | null; title?: string | null; caption?: string | null; embed_provider: string; embed_ref: string; poster_url?: string | null; image_url?: string | null; created_at?: string; published_at?: string | null };
 
@@ -29,7 +29,7 @@ export default async function AdminEmbedsPage() {
     ) : (
       <ul className="space-y-2">
         {rows.map((r) => (
-          <li key={r.id} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+          <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
             <div className="h-16 w-12 shrink-0 overflow-hidden rounded bg-slate-100">
               {(r.poster_url ?? r.image_url) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -53,6 +53,16 @@ export default async function AdminEmbedsPage() {
                 削除する
               </button>
             </form>
+            <details className="w-full basis-full text-xs">
+              <summary className="cursor-pointer text-blue-600 hover:underline">店舗・キャスト/スタッフを付け替える</summary>
+              <form action={moveEmbedPost.bind(null, kind, r.id)} className="mt-2 space-y-2 rounded-lg bg-slate-50 p-3">
+                <label className="block text-sm font-semibold text-slate-700">移動先の店舗</label>
+                <ShopCastPicker searchShops={searchShopsForEmbed} listCasts={listMembersForEmbed} />
+                <button type="submit" className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800">
+                  この内容で付け替える
+                </button>
+              </form>
+            </details>
           </li>
         ))}
       </ul>

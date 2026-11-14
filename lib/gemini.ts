@@ -53,6 +53,8 @@ export async function geminiGenerateWithFallback(apiKey: string, body: unknown, 
       );
       if (res.ok) return res;
       console.error(`${label}: ${model} ${res.status}`);
+      // 月間の利用上限(spending cap)に達しているときは、呼び直しても同じなので、すぐ止める。
+      if (res.status === 429 && /spending cap/i.test(await res.clone().text().catch(() => ""))) return null;
       if (!retryable.has(res.status)) skipSecondPrimary = true; // 恒久的なエラーは同じモデルでやり直さない
     } catch (e) {
       console.error(`${label}: ${model} failed`, e);

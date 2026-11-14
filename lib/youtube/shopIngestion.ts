@@ -607,7 +607,13 @@ export async function identifyShopFromVideo(input: { title: string; description?
     }),
     signal: AbortSignal.timeout(30_000),
   });
-  if (!response.ok) throw new Error(`店舗の特定に失敗しました: ${response.status} ${(await response.text()).slice(0, 200)}`);
+  if (!response.ok) {
+    const body = await response.text();
+    if (response.status === 429 && /spending cap/i.test(body)) {
+      throw new Error("AI(Gemini)の月間利用上限に達しているため、店名・住所の自動特定ができません。Google AI Studio(https://ai.studio/spend)で上限を引き上げると再開します。それまでは店名と住所を手入力してください。");
+    }
+    throw new Error(`店舗の特定に失敗しました: ${response.status} ${body.slice(0, 200)}`);
+  }
   const json = await response.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   const raw = json.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
   const result = parseJsonObject(raw);

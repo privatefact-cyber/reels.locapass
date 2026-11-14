@@ -92,6 +92,43 @@ export async function updateEmbedThumb(kind: "reel" | "event", id: string, formD
   revalidatePath("/events");
 }
 
+/** 追加済みの外部動画を、あとから別の店舗(・キャスト/スタッフ)に付け替える。キャスト等を選ばなければ店舗のリールになる。 */
+export async function moveEmbedPost(kind: "reel" | "event", id: string, formData: FormData) {
+  await requireRootAdmin();
+  const admin = createAdminClient() as any;
+  const shopId = String(formData.get("shop_id") ?? "").trim();
+  if (!shopId) throw new Error("移動先の店舗を選んでください");
+  const { data: shop } = await admin.from("locapass_shops").select("id, portal_id").eq("id", shopId).maybeSingle();
+  if (!shop) throw new Error("移動先の店舗が見つかりません");
+
+  let data: { id: string }[] | null;
+  let error: { message: string } | null;
+  if (kind === "event") {
+    ({ data, error } = await admin.from("locapass_shop_events").update({ shop_id: shop.id }).eq("id", id).not("embed_provider", "is", null).select("id"));
+  } else {
+    // キャスト・スタッフは、移動先の店舗の人かを確認する(値は「cast:ID」「staff:ID」)。
+    let castId: string | null = null;
+    let staffId: string | null = null;
+    const member = String(formData.get("member") ?? "").trim();
+    if (member) {
+      const [type, mid] = member.split(":");
+      const table = type === "cast" ? "locapass_cast_members" : type === "staff" ? "locapass_shop_staff_members" : null;
+      if (!table || !mid) throw new Error("選んだ人を判別できません");
+      const { data: m } = await admin.from(table).select("id").eq("id", mid).eq("shop_id", shop.id).is("deleted_at", null).maybeSingle();
+      if (!m) throw new Error("選んだ人が、移動先の店舗に見つかりません");
+      if (type === "cast") castId = mid;
+      else staffId = mid;
+    }
+    // 外部動画の行だけを更新する。ポータルも移動先の店舗に合わせる。0件でもエラーにならないので.select()で確認する。
+    ({ data, error } = await admin.from("locapass_reels").update({ shop_id: shop.id, portal_id: shop.portal_id, cast_id: castId, posted_by_staff_id: staffId }).eq("id", id).not("embed_provider", "is", null).select("id"));
+  }
+  if (error) throw new Error(`付け替えに失敗しました: ${error.message}`);
+  if (!data?.length) throw new Error("付け替えできませんでした(対象が見つかりません)");
+  revalidatePath("/admin/embeds");
+  revalidatePath("/");
+  revalidatePath("/events");
+}
+
 /** 店舗名で検索(上位30件)。運営者の画面の店舗選択用。 */
 export async function searchShopsForEmbed(q: string) {
   await requireRootAdmin();
