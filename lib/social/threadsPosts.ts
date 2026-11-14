@@ -271,16 +271,18 @@ export async function runThreadsTextCron(options: { dry: boolean }) {
   // 0) 動画の処理が終わったものを公開する
   try { const finalized = await finalizeProcessingVideos(); if (finalized.length) out.finalized = finalized; } catch (e) { out.finalizeError = e instanceof Error ? e.message : "動画の確認に失敗"; }
 
-  // 1) 予約の時間になったもの
-  const { data: due } = await admin.from("locapass_threads_posts").select("id").eq("status", "scheduled").lte("scheduled_at", new Date().toISOString()).order("scheduled_at", { ascending: true }).limit(1);
-  if (due?.length) {
+  // 1) 予約の時間になったもの。同じ時刻に予約したInstagramとThreadsが30分ずれないよう、1回に最大4本まで続けて投稿する(定期実行の制限時間に収めるため)。
+  const { data: due } = await admin.from("locapass_threads_posts").select("id").eq("status", "scheduled").lte("scheduled_at", new Date().toISOString()).order("scheduled_at", { ascending: true }).limit(4);
+  const posted: string[] = [];
+  for (const row of due ?? []) {
     try {
-      await publishThreadsDraft(due[0].id);
-      out.scheduledPosted = due[0].id;
+      await publishThreadsDraft(row.id);
+      posted.push(row.id);
     } catch (e) {
       out.scheduledError = e instanceof Error ? e.message : "予約の投稿に失敗しました";
     }
   }
+  if (posted.length) { out.scheduledPosted = posted[0]; out.scheduledPostedAll = posted; }
 
   // 2) AIの下書き/自動投稿(1日1回)
   const { hour, startOfDay } = jstNow();
