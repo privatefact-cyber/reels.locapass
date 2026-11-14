@@ -1,6 +1,7 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
+import { ResizingImageInput } from "@/components/admin/ResizingImageInput";
 import { BulkEmbedForm } from "@/components/admin/BulkEmbedForm";
 import { ShopCastPicker } from "@/components/admin/ShopCastPicker";
 import { searchShopsForEmbed, listMembersForEmbed, createEmbedPost, createEmbedPostsBulk, deleteEmbedPost, updateEmbedThumb } from "./actions";
@@ -42,7 +43,7 @@ export default async function AdminEmbedsPage() {
               </p>
             </div>
             <form action={updateEmbedThumb.bind(null, kind, r.id)} className="flex items-center gap-1">
-              <input type="file" name="thumb" accept="image/*" required className="w-40 text-[11px]" />
+              <ResizingImageInput name="thumb" required className="w-40 text-[11px]" />
               <button type="submit" className="whitespace-nowrap text-xs text-blue-600 hover:underline">
                 サムネイル変更
               </button>
@@ -111,7 +112,7 @@ export default async function AdminEmbedsPage() {
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700">サムネイル画像(任意)</label>
-          <input type="file" name="thumb" accept="image/*" className="mt-1 block text-sm" />
+          <ResizingImageInput name="thumb" className="mt-1 block text-sm" />
           <p className="mt-1 text-[11px] text-slate-500">YouTubeとTikTokは自動で取得します。Instagramなど自動で取れないときは、店舗の表紙画像を代わりに使います(あとから一覧で差し替えられます)。上限3MB。</p>
         </div>
         <button type="submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
