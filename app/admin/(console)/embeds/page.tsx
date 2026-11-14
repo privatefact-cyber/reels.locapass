@@ -1,8 +1,9 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIDEO_PROVIDER_LABEL, type VideoProvider } from "@/lib/video";
+import { BulkEmbedForm } from "@/components/admin/BulkEmbedForm";
 import { ShopCastPicker } from "@/components/admin/ShopCastPicker";
-import { searchShopsForEmbed, listMembersForEmbed, createEmbedPost, deleteEmbedPost, updateEmbedThumb } from "./actions";
+import { searchShopsForEmbed, listMembersForEmbed, createEmbedPost, createEmbedPostsBulk, deleteEmbedPost, updateEmbedThumb } from "./actions";
 
 type Row = { id: string; shop_id: string | null; title?: string | null; caption?: string | null; embed_provider: string; embed_ref: string; poster_url?: string | null; image_url?: string | null; created_at?: string; published_at?: string | null };
 
@@ -65,6 +66,8 @@ export default async function AdminEmbedsPage() {
           サムネイルをタップすると、サイトの中で再生されます(時間の制限なし)。投稿の元の持ち主の権利に配慮し、公開されている動画だけを使ってください。
         </p>
       </div>
+
+      <BulkEmbedForm action={createEmbedPostsBulk} searchShops={searchShopsForEmbed} listCasts={listMembersForEmbed} />
 
       <form action={createEmbedPost} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
         <div>

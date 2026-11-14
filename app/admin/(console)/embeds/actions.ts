@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseVideoUrlWithShortLinks } from "@/lib/video-resolve";
+import type { BulkEmbedState } from "@/components/admin/BulkEmbedForm";
 import { MAX_THUMB_BYTES, createEmbedPostForShop, uploadThumb } from "@/lib/embed-post/createEmbedPost";
 
 /** システム管理者だけが、外部動画(YouTubeショート/TikTok/Instagramリール)を、店舗を選んでリールまたはイベントとして追加する。 */
@@ -12,6 +14,47 @@ export async function createEmbedPost(formData: FormData) {
   revalidatePath("/admin/embeds");
   revalidatePath("/");
   revalidatePath("/events");
+}
+
+/** 外部動画のURLを、1つの店舗(とキャスト)に、まとめて追加する(リールのみ・最大30本)。 */
+export async function createEmbedPostsBulk(_prev: BulkEmbedState, formData: FormData): Promise<BulkEmbedState> {
+  await requireRootAdmin();
+  const shopId = String(formData.get("shop_id") ?? "").trim();
+  const member = String(formData.get("member") ?? "").trim();
+  const lines = [...new Set(String(formData.get("urls") ?? "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean))];
+  if (!shopId) return { rows: [{ line: "-", ok: false, message: "店舗を選んでください" }] };
+  if (lines.length === 0) return { rows: [{ line: "-", ok: false, message: "URLを貼ってください" }] };
+  if (lines.length > 30) return { rows: [{ line: "-", ok: false, message: `一度に追加できるのは30本までです(${lines.length}本あります)` }] };
+
+  const admin = createAdminClient();
+  const { data: existing } = await (admin as any).from("locapass_reels").select("embed_provider, embed_ref").eq("shop_id", shopId).not("embed_provider", "is", null);
+  const seen = new Set(((existing ?? []) as { embed_provider: string; embed_ref: string }[]).map((r) => `${r.embed_provider}:${r.embed_ref}`));
+
+  const rows: { line: string; ok: boolean; message: string }[] = new Array(lines.length);
+  const run = async (i: number) => {
+    const line = lines[i];
+    try {
+      const video = await parseVideoUrlWithShortLinks(line);
+      if (!video) throw new Error("URLを判別できません");
+      const key = `${video.provider}:${video.ref}`;
+      if (seen.has(key)) throw new Error("この店舗にはすでに追加済みです");
+      seen.add(key);
+      const fd = new FormData();
+      fd.set("kind", "reel");
+      fd.set("video_url", line);
+      if (member) fd.set("member", member);
+      await createEmbedPostForShop(admin, shopId, fd);
+      rows[i] = { line, ok: true, message: "追加しました" };
+    } catch (e) {
+      rows[i] = { line, ok: false, message: e instanceof Error ? e.message : "追加できませんでした" };
+    }
+  };
+  for (let i = 0; i < lines.length; i += 4) {
+    await Promise.all(lines.slice(i, i + 4).map((_, k) => run(i + k)));
+  }
+  revalidatePath("/admin/embeds");
+  revalidatePath("/");
+  return { rows };
 }
 
 export async function deleteEmbedPost(kind: "reel" | "event", id: string) {
