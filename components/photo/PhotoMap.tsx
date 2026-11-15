@@ -186,7 +186,8 @@ export function PhotoMap({
   const [focusIds, setFocusIds] = useState<string[] | null>(null);
   const focusIdsRef = useRef(focusIds);
   focusIdsRef.current = focusIds;
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false); // 通常の /map と同じく、最初は閉じておき、ピンをタップしたときに浮かび上がる
+  const focusSpotRef = useRef<(id: string, opts?: { fly?: boolean }) => void>(() => undefined);
   // 全面表示の間は、サイト共通ヘッダーを隠す(通常の /map と同じ)。
   useEffect(() => {
     document.body.setAttribute("data-snap-map", "1");
@@ -232,6 +233,7 @@ export function PhotoMap({
     }
   }, []);
 
+  focusSpotRef.current = focusSpot;
   useEffect(() => {
     const container = containerRef.current;
     if (!container || spots.length === 0) return;
@@ -246,6 +248,96 @@ export function PhotoMap({
     mapRef.current = map;
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+    // 現在地(ロカわんの地図と同じ作り): 開いたとき現在地が取れたら、そこから半径5km圏で表示。
+    // 写真の場所が3つ未満なら 10km → 20km → 40km と広げる。取れない・許可されないときは、そのまま(最新の場所)。
+    // 位置が届く前に利用者が地図を動かしていたら、勝手に動かさない。
+    let userMoved = false;
+    const markMoved = (e: { originalEvent?: unknown }) => {
+      if (e.originalEvent) userMoved = true;
+    };
+    map.on("dragstart", markMoved);
+    map.on("zoomstart", markMoved);
+    let hereMarker: maplibregl.Marker | null = null;
+    const showHere = (lat: number, lng: number) => {
+      hereMarker?.remove();
+      const el = document.createElement("div");
+      el.style.cssText = "width:18px;height:18px;border-radius:9999px;background:#3B82F6;border:3px solid #fff;box-shadow:0 0 0 6px rgba(59,130,246,.22),0 2px 6px rgba(0,0,0,.25);";
+      hereMarker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([lng, lat]).addTo(map);
+    };
+    const kmBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+      const rad = (d: number) => (d * Math.PI) / 180;
+      const h = Math.sin(rad(bLat - aLat) / 2) ** 2 + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(rad(bLng - aLng) / 2) ** 2;
+      return 2 * 6371 * Math.asin(Math.sqrt(h));
+    };
+    const fitRadius = (lat: number, lng: number, km: number, duration: number) => {
+      const dLat = km / 111;
+      const dLng = km / (111 * Math.cos((lat * Math.PI) / 180));
+      map.fitBounds(
+        [
+          [lng - dLng, lat - dLat],
+          [lng + dLng, lat + dLat],
+        ],
+        { padding: { top: 130, bottom: 330, left: 12, right: 12 }, duration },
+      );
+    };
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        if (mapRef.current !== map || userMoved) return;
+        const { latitude: lat, longitude: lng } = pos.coords;
+        showHere(lat, lng);
+        const list = spotsRef.current;
+        for (const km of [5, 10, 20, 40]) {
+          const n = list.filter((sp) => kmBetween(lat, lng, sp.lat, sp.lng) <= km).length;
+          if (n >= 3 || km === 40) {
+            fitRadius(lat, lng, km, 600);
+            break;
+          }
+        }
+        // いちばん近い場所のカードを選んでおく(地図は動かさない)。
+        let nearest: Spot | null = null;
+        let best = Infinity;
+        for (const sp of list) {
+          const d = kmBetween(lat, lng, sp.lat, sp.lng);
+          if (d < best) {
+            best = d;
+            nearest = sp;
+          }
+        }
+        if (nearest) focusSpotRef.current(nearest.id, { fly: false });
+      },
+      () => undefined,
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
+    );
+    // 現在地ボタン(押すと現在地へ移動)
+    map.addControl(
+      {
+        onAdd() {
+          const box = document.createElement("div");
+          box.className = "maplibregl-ctrl maplibregl-ctrl-group";
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.setAttribute("aria-label", "現在地");
+          btn.title = "現在地";
+          btn.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:auto"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg>';
+          btn.onclick = () => {
+            navigator.geolocation?.getCurrentPosition(
+              (pos) => {
+                showHere(pos.coords.latitude, pos.coords.longitude);
+                map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 14, duration: 900 });
+              },
+              () => undefined,
+              { enableHighAccuracy: false, timeout: 10_000 },
+            );
+          };
+          box.appendChild(btn);
+          return box;
+        },
+        onRemove() {},
+      },
+      "top-right",
+    );
 
     const ro = new ResizeObserver(() => map.resize());
     ro.observe(container);
@@ -272,6 +364,7 @@ export function PhotoMap({
       }
       el.addEventListener("click", (e) => {
         e.stopPropagation();
+        setDrawerOpen(true);
         focusSpot(spot.id);
       });
       // ルート選択中は、サムネイルの左上に選んだ順の文字(A/B/C…)を出す。
@@ -440,6 +533,7 @@ export function PhotoMap({
           .filter((f) => f.layer.id === POINT_LAYER)
           .sort((a, b) => dist(a) - dist(b))[0];
         if (pin) {
+          setDrawerOpen(true);
           focusSpot(String(pin.properties?.id));
           return;
         }
