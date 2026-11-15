@@ -3,6 +3,7 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CATEGORIES, MAX_NEW_PER_RUN, REGIONS } from "@/lib/overseas/scout";
 import { collectOverseas, setHidden, setStar } from "./actions";
+import { SubmitButton } from "../social/SubmitButton";
 
 // 検索(YouTube)と要約(Gemini)を続けて呼ぶので、長めにとる。
 export const maxDuration = 300;
@@ -49,7 +50,7 @@ export default async function OverseasPage({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-4xl space-y-6 p-4">
       <header className="space-y-1">
         <h1 className="text-xl font-bold text-slate-900">海外の情報集め({region.label})</h1>
-        <p className="text-sm text-slate-600">YouTubeを検索して、動画の題名・説明を日本語に要約して並べます。個人用の下調べで、一般には公開されません。</p>
+        <p className="text-sm text-slate-600">{region.label}について、YouTubeを検索して、動画の題名・説明を日本語に要約して並べます。個人用の下調べで、一般には公開されません。</p>
       </header>
 
       {sp.ok && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{sp.ok}</p>}
@@ -68,7 +69,20 @@ export default async function OverseasPage({ searchParams }: { searchParams: Pro
         <p className="text-xs text-slate-500">
           {region.queries.length}個の検索語(英語・日本語)で、過去1年の動画を探します。1回に新しく保存するのは最大{MAX_NEW_PER_RUN}本。YouTubeの1日の枠を約{region.queries.length * 101}単位(上限10,000)使います。
         </p>
-        <button className={`${btn} bg-slate-900 text-white`}>検索して集める</button>
+        <details className="text-xs text-slate-600">
+          <summary className="cursor-pointer font-semibold">検索する言葉の一覧({region.queries.length}個)</summary>
+          <ul className="mt-2 list-disc space-y-0.5 pl-5">
+            {region.queries.map((q) => (
+              <li key={q.q}>{q.q}({q.lang === "ja" ? "日本語の動画を優先" : "フィリピンの英語の動画を優先"})</li>
+            ))}
+          </ul>
+          <p className="mt-2 text-slate-500">この言葉をYouTubeの検索窓に入れるのと同じです。ここに書いたものだけが検索されます(世界中を探すわけではありません)。</p>
+        </details>
+        <div className="flex flex-wrap items-center gap-2">
+          <SubmitButton pendingText="集めています…" slow="YouTubeを検索して日本語に要約しています。1〜3分かかります。画面を閉じずに、このまま待ってください(終わると結果が出ます)。" className={`${btn} bg-slate-900 text-white`}>
+            検索して集める
+          </SubmitButton>
+        </div>
       </form>
 
       <nav className="flex flex-wrap gap-2">
