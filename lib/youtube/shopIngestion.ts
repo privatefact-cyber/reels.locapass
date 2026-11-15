@@ -423,10 +423,15 @@ export async function matchOrCreateAndPublish(ingestionId: string, input: {
 type PendingRow = { id: string; portal_id: number; title: string; description: string | null; candidate_name: string | null; candidate_address: string | null };
 
 /** 1件の保留候補をAIで判定し、店名・住所が確かなら公開まで進める。失敗は候補のerror_messageに残す。 */
-export async function processPendingIngestion(row: PendingRow, userId: string | null): Promise<"published" | "held" | "error"> {
+export async function processPendingIngestion(row: PendingRow, userId: string | null): Promise<"published" | "held" | "error" | "skipped"> {
   const admin = createAdminClient();
   try {
     const overseas = await overseasConfigForPortal(row.portal_id);
+    if (overseas) {
+      // 手動の実行と定期実行が重なっても、同じ動画を二重に処理して店舗を重複して作らないよう、先に「処理中」の印を付けた方だけが進める。
+      const { data: claimed } = await (admin as any).from("locapass_youtube_ingestions").update({ match_reason: "処理中" }).eq("id", row.id).is("match_reason", null).select("id");
+      if (!claimed?.length) return "skipped";
+    }
     const hint = extractShopHint(row.title, row.description ?? "");
     const result = overseas
       ? await identifyOverseasShopFromVideo(overseas, { title: row.title, description: row.description })
@@ -445,6 +450,8 @@ export async function processPendingIngestion(row: PendingRow, userId: string | 
     const message = errorText(error, "自動処理に失敗しました");
     console.error(`YouTube候補の自動処理に失敗しました(${row.id}): ${message}`);
     await (admin as any).from("locapass_youtube_ingestions").update({ error_message: message }).eq("id", row.id);
+    // 「処理中」の印を外して、次の回でもう一度試せるようにする。
+    await (admin as any).from("locapass_youtube_ingestions").update({ match_reason: null }).eq("id", row.id).eq("match_reason", "処理中");
     return "error";
   }
 }
@@ -484,7 +491,7 @@ export async function processPendingIngestions(options: {
     const outcome = await processPendingIngestion(row, options.userId);
     if (outcome === "published") summary.published += 1;
     else if (outcome === "held") summary.held += 1;
-    else summary.errors += 1;
+    else if (outcome === "error") summary.errors += 1;
   }
   return summary;
 }
@@ -738,12 +745,11 @@ export async function identifyOverseasShopFromVideo(cfg: OverseasConfig, input: 
   };
 }
 
-/** 海外ポータルの収集: 検索 → 候補を保存 → 店名・住所を特定して店舗を作り、リールを公開する。時間内に終わる分だけ処理する。 */
-export async function collectAndBuildOverseas(slug: string, options: { userId: string | null; processLimit?: number; budgetMs?: number }) {
+/** 海外ポータルの検索だけ行い、新しい候補を保存する(店舗の判定はしない)。 */
+export async function collectOverseasCandidates(slug: string) {
   const cfg = OVERSEAS_PORTALS[slug];
   if (!cfg) throw new Error("不明な地域です");
-  const admin = createAdminClient();
-  const { data: portal } = await admin.from("locapass_portals").select("id").eq("slug", slug).maybeSingle();
+  const { data: portal } = await createAdminClient().from("locapass_portals").select("id").eq("slug", slug).maybeSingle();
   if (!portal) throw new Error(`ポータル(${slug})がまだ作られていません`);
   const publishedAfter = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString();
   const found = new Map<string, YoutubeCandidate>();
@@ -757,8 +763,40 @@ export async function collectAndBuildOverseas(slug: string, options: { userId: s
     }
   }
   const saved = await saveYoutubeCandidates(portal.id as number, [...found.values()]);
-  const processed = await processPendingIngestions({ portalId: portal.id as number, limit: options.processLimit ?? 12, userId: options.userId, budgetMs: options.budgetMs ?? 190_000 });
-  return { queries: cfg.queries.length, found: found.size, saved, ...processed, searchErrors: errors };
+  return { portalId: portal.id as number, queries: cfg.queries.length, found: found.size, saved, searchErrors: errors };
+}
+
+/** 海外ポータルの収集: 検索 → 候補を保存 → 店名・住所を特定して店舗を作り、リールを公開する。時間内に終わる分だけ処理する。 */
+export async function collectAndBuildOverseas(slug: string, options: { userId: string | null; processLimit?: number; budgetMs?: number }) {
+  const collected = await collectOverseasCandidates(slug);
+  const processed = await processPendingIngestions({ portalId: collected.portalId, limit: options.processLimit ?? 12, userId: options.userId, budgetMs: options.budgetMs ?? 190_000 });
+  return { queries: collected.queries, found: collected.found, saved: collected.saved, ...processed, searchErrors: collected.searchErrors };
+}
+
+/**
+ * 全自動の1回分(定期実行から呼ぶ)。
+ *  - 判定待ちの候補があれば、時間内に進められる分(最大 limit 本)を店舗にして公開する。
+ *  - 判定待ちが無く、最後の収集から一定時間(既定20時間)たっていれば、新しく検索して候補を集める。
+ * これを数分おきに回すだけで、集める→店舗にする、が自動で進み、新着があれば1日1回ずつ補充される。
+ */
+export async function runOverseasAuto(options: { limit?: number; budgetMs?: number; recollectAfterHours?: number } = {}) {
+  const admin = createAdminClient() as any;
+  const results: Record<string, unknown> = {};
+  for (const slug of Object.keys(OVERSEAS_PORTALS)) {
+    const { data: portal } = await admin.from("locapass_portals").select("id").eq("slug", slug).maybeSingle();
+    if (!portal) { results[slug] = { skipped: "portal not found" }; continue; }
+    const portalId = portal.id as number;
+    const { count: waiting } = await admin.from("locapass_youtube_ingestions").select("id", { count: "exact", head: true }).eq("portal_id", portalId).eq("match_status", "pending").is("match_reason", null);
+    let collected: Awaited<ReturnType<typeof collectOverseasCandidates>> | null = null;
+    if ((waiting ?? 0) === 0) {
+      const { data: last } = await admin.from("locapass_youtube_ingestions").select("created_at").eq("portal_id", portalId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      const ageHours = last?.created_at ? (Date.now() - new Date(last.created_at).getTime()) / 3_600_000 : Infinity;
+      if (ageHours >= (options.recollectAfterHours ?? 20)) collected = await collectOverseasCandidates(slug);
+    }
+    const processed = await processPendingIngestions({ portalId, limit: options.limit ?? 12, userId: null, budgetMs: options.budgetMs ?? 200_000 });
+    results[slug] = { waitingBefore: waiting ?? 0, collected, processed };
+  }
+  return results;
 }
 
 /**
