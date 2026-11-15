@@ -9,6 +9,9 @@ export const LABELS = {
   ja: {
     title: "この店舗について質問",
     note: "AIがこの店舗の登録情報だけで答えます(ネットの情報は使いません)",
+    infoTitle: "このご案内について",
+    info: "お店の登録情報(営業時間・料金・出勤・イベント)と、お店が確認した資料だけをもとに、AIがお答えしています。ネットの情報は使いません。予約の確定は、開いた画面で、お客様ご自身で行ってください。",
+    heart: "ハートを送る",
     placeholder: "質問する",
     dockPlaceholder: "このお店のことを聞いてください",
     close: "閉じる",
@@ -42,6 +45,9 @@ export const LABELS = {
   en: {
     title: "Ask about this venue",
     note: "Answers use only this venue's registered information (no web search)",
+    infoTitle: "About this guide",
+    info: "This AI answers only from the venue's registered information (hours, prices, who is working, events) and materials the venue has confirmed. It does not use the web. Reservations are confirmed by you on the screen that opens.",
+    heart: "Send a heart",
     placeholder: "Ask a question",
     dockPlaceholder: "Ask about this venue",
     close: "Close",
@@ -148,6 +154,8 @@ export function useShopAi(shopId: string, opts?: { onLeave?: () => void }) {
   const [choices, setChoices] = useState<AiChoice[]>([]);
   const [speakOn, setSpeakOnState] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  /** 声で話しかけている間(音声入力中)。波形の動きに使う。 */
+  const [listening, setListening] = useState(false);
   const onLeaveRef = useRef(opts?.onLeave);
   onLeaveRef.current = opts?.onLeave;
   const speechLang = SPEECH_LANG[locale] ?? "en-US";
@@ -298,20 +306,26 @@ export function useShopAi(shopId: string, opts?: { onLeave?: () => void }) {
     [shopId, locale, loading, l, speakOn, speechLang],
   );
 
-  return { messages, loading, error, ask, quick, clear, labels: l, locale, nav, go, cancelNav, choices, speakOn, setSpeakOn, speaking, speechLang };
+  return { messages, loading, error, ask, quick, clear, listening, setListening, labels: l, locale, nav, go, cancelNav, choices, speakOn, setSpeakOn, speaking, speechLang };
 }
 
 export type Ai = ReturnType<typeof useShopAi>;
 
-export function ShopAiMessages({ ai }: { ai: Ai }) {
+export function ShopAiMessages({ ai, limit, glass }: { ai: Ai; /** 直近のメッセージだけを出す件数(顔を隠さないよう、全画面では少なくする)。 */ limit?: number; /** 全画面の背景に重ねる、半透明のガラス風の見た目。 */ glass?: boolean }) {
   if (ai.messages.length === 0 && !ai.loading && !ai.error && !ai.nav) return null;
   return (
     <div className="space-y-2 px-4" aria-live="polite">
-      {ai.messages.map((m) => (
+      {(limit ? ai.messages.slice(-limit) : ai.messages).map((m) => (
         <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
           <p
             className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-              m.role === "user" ? "bg-main/10 text-main" : "border border-hl-400/30 bg-panel-950 text-tone-200"
+              m.role === "user"
+                ? glass
+                  ? "bg-cta-light font-medium text-on-cta-gold shadow-md"
+                  : "bg-main/10 text-main"
+                : glass
+                  ? "border border-hl-400/30 bg-black/50 text-main shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-xl"
+                  : "border border-hl-400/30 bg-panel-950 text-tone-200"
             }`}
           >
             {m.text}
@@ -352,9 +366,9 @@ export function ShopAiMessages({ ai }: { ai: Ai }) {
   );
 }
 
-export function ShopAiInput({ ai, showChips, placeholder, compact, autoStartVoice }: { ai: Ai; showChips?: boolean; placeholder?: string; compact?: boolean; autoStartVoice?: boolean }) {
+export function ShopAiInput({ ai, showChips, placeholder, compact, autoStartVoice, glass, rightSlot }: { ai: Ai; showChips?: boolean; placeholder?: string; compact?: boolean; autoStartVoice?: boolean; glass?: boolean; rightSlot?: React.ReactNode }) {
   const [text, setText] = useState("");
-  const [listening, setListening] = useState(false);
+  const { listening, setListening } = ai;
   const [voiceOk, setVoiceOk] = useState(false);
   const recRef = useRef<{ stop: () => void } | null>(null);
   const finalRef = useRef("");
@@ -401,7 +415,7 @@ export function ShopAiInput({ ai, showChips, placeholder, compact, autoStartVoic
     } catch {
       setListening(false);
     }
-  }, [listening, ai]);
+  }, [listening, ai, setListening]);
   const startedRef = useRef(false);
   useEffect(() => {
     if (autoStartVoice && voiceOk && !startedRef.current) {
@@ -419,7 +433,7 @@ export function ShopAiInput({ ai, showChips, placeholder, compact, autoStartVoic
       {showChips && (
         <div className="flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {ai.labels.quickChips.map((c) => (
-            <button key={c.key} type="button" onClick={() => void ai.quick(c.key, c.label)} disabled={ai.loading} className="shrink-0 rounded-full border border-hl-400/40 bg-hl-500/10 px-3.5 py-1.5 text-xs font-semibold text-hl-300 hover:border-hl-400/70 disabled:opacity-50">
+            <button key={c.key} type="button" onClick={() => void ai.quick(c.key, c.label)} disabled={ai.loading} className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold hover:border-hl-400/70 disabled:opacity-50 ${glass ? "border-hl-400/40 bg-white/[0.12] text-main backdrop-blur-md" : "border-hl-400/40 bg-hl-500/10 text-hl-300"}`}>
               {c.label}
             </button>
           ))}
@@ -430,7 +444,7 @@ export function ShopAiInput({ ai, showChips, placeholder, compact, autoStartVoic
           e.preventDefault();
           submit();
         }}
-        className={`${compact ? "" : "mx-4 "}flex items-center gap-2 rounded-full border border-main/15 bg-main/5 py-1 pl-3 pr-1`}
+        className={`${compact ? "" : "mx-4 "}flex items-center gap-2 rounded-full border py-1 pl-3 pr-1 ${glass ? "border-white/20 bg-white/[0.11] shadow-lg backdrop-blur-md" : "border-main/15 bg-main/5"}`}
       >
         <Sparkles className="h-4 w-4 shrink-0 text-hl-300" />
         {/* 入力した文字は16px以上(未満だとiPhoneが自動で拡大する)。案内の文字だけ小さくして、狭い幅でも切れないようにしてある。 */}
@@ -454,6 +468,7 @@ export function ShopAiInput({ ai, showChips, placeholder, compact, autoStartVoic
             <Mic className="h-4 w-4" />
           </button>
         )}
+        {rightSlot}
         <button type="submit" disabled={ai.loading || !text.trim()} aria-label={ai.labels.send} className="rounded-full bg-cta-light p-2 text-on-cta-gold disabled:opacity-40">
           <Send className="h-4 w-4" />
         </button>
