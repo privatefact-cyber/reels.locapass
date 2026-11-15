@@ -218,6 +218,13 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
               <p className="mt-2">共通: 最後にサイトのURLを1つだけ / 数字・最上級は使ってよい / 料金・割引・公開状況・他社比較・効果の保証は書かない(指示では外せません)</p>
             </div>
             <form action={saveAiSettings.bind(null, key)} className="mt-3 space-y-2">
+              <label className="block text-xs font-semibold text-slate-700">投稿の言語</label>
+              <select name="language" defaultValue={st.language} className={input}>
+                <option value="ja">日本語</option>
+                <option value="mix">日本語と英語をまぜる(海外の旅行者向け・リンクは英語ページ)</option>
+                <option value="en">英語だけ(リンクは英語ページ)</option>
+              </select>
+              <p className="text-[11px] text-slate-500">「まぜる」「英語だけ」にすると、文末のURLが英語版(/en/…)になり、ハッシュタグも英語になります。次に作る下書きから反映されます。</p>
               <label className="block text-xs font-semibold text-slate-700">指示(最大{MAX_INSTRUCTIONS}文字)</label>
               <textarea name="instructions" defaultValue={st.instructions} rows={6} maxLength={MAX_INSTRUCTIONS} placeholder="例: 親しい友達に話しかけるような口調で。1行目は必ず問いかけ。絵文字は1〜2個まで。専門用語は使わない。" className={input} />
               <label className="block text-xs font-semibold text-slate-700">お手本の文章(任意・最大{MAX_EXAMPLES}文字)</label>

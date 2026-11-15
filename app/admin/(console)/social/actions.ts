@@ -287,7 +287,7 @@ export async function saveAiSettings(account: "locapass" | "luxela", formData: F
   await requireRootAdmin();
   let message: string | null = null;
   try {
-    await saveSocialSettings(account === "luxela" ? "luxela" : "locapass", { instructions: String(formData.get("instructions") ?? ""), examples: String(formData.get("examples") ?? "") });
+    await saveSocialSettings(account === "luxela" ? "luxela" : "locapass", { instructions: String(formData.get("instructions") ?? ""), examples: String(formData.get("examples") ?? ""), language: String(formData.get("language") ?? "ja") as "ja" | "mix" | "en" });
   } catch (e) {
     message = e instanceof Error ? e.message : "保存に失敗しました";
   }

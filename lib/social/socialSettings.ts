@@ -1,7 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type SocialAccountKey = "locapass" | "luxela";
-export type SocialSettings = { instructions: string; examples: string; updated_at: string | null };
+export type PostLanguage = "ja" | "mix" | "en";
+export const POST_LANGUAGES: PostLanguage[] = ["ja", "mix", "en"];
+export type SocialSettings = { instructions: string; examples: string; language: PostLanguage; updated_at: string | null };
 
 export const MAX_INSTRUCTIONS = 1500;
 export const MAX_EXAMPLES = 3000;
@@ -11,16 +13,17 @@ const db = () => createAdminClient() as any;
 
 /** 管理画面で書いた、AIへの指示とお手本(アカウントごと)。読めなければ空として扱う(投稿は止めない)。 */
 export async function getSocialSettings(account: SocialAccountKey): Promise<SocialSettings> {
-  const { data } = await db().from("locapass_social_settings").select("instructions, examples, updated_at").eq("account", account).maybeSingle();
-  return { instructions: String(data?.instructions ?? ""), examples: String(data?.examples ?? ""), updated_at: data?.updated_at ?? null };
+  const { data } = await db().from("locapass_social_settings").select("instructions, examples, language, updated_at").eq("account", account).maybeSingle();
+  const language = (POST_LANGUAGES as string[]).includes(data?.language) ? (data.language as PostLanguage) : "ja";
+  return { instructions: String(data?.instructions ?? ""), examples: String(data?.examples ?? ""), language, updated_at: data?.updated_at ?? null };
 }
 
-export async function saveSocialSettings(account: SocialAccountKey, input: { instructions: string; examples: string }): Promise<void> {
+export async function saveSocialSettings(account: SocialAccountKey, input: { instructions: string; examples: string; language?: PostLanguage }): Promise<void> {
   const instructions = input.instructions.trim();
   const examples = input.examples.trim();
   if (instructions.length > MAX_INSTRUCTIONS) throw new Error(`指示は${MAX_INSTRUCTIONS}文字までです(いま${instructions.length}文字)`);
   if (examples.length > MAX_EXAMPLES) throw new Error(`お手本は${MAX_EXAMPLES}文字までです(いま${examples.length}文字)`);
-  const { data, error } = await db().from("locapass_social_settings").upsert({ account, instructions, examples, updated_at: new Date().toISOString() }, { onConflict: "account" }).select("account");
+  const { data, error } = await db().from("locapass_social_settings").upsert({ account, instructions, examples, language: input.language && POST_LANGUAGES.includes(input.language) ? input.language : "ja", updated_at: new Date().toISOString() }, { onConflict: "account" }).select("account");
   if (error) throw new Error(`保存に失敗しました: ${error.message}`);
   if (!data?.length) throw new Error("保存できませんでした(0件)");
 }
