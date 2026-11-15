@@ -190,8 +190,20 @@ export function PhotoMap({
   const focusSpotRef = useRef<(id: string, opts?: { fly?: boolean }) => void>(() => undefined);
   // 全面表示の間は、サイト共通ヘッダーを隠す(通常の /map と同じ)。
   useEffect(() => {
+    // ヘッダーは残し(トップへ戻れるように)、その下から地図を全面に出す。高さは実測する(PWAのセーフエリアで変わるため)。
+    const header = document.querySelector<HTMLElement>("header[data-chrome]");
+    const apply = () => document.body.style.setProperty("--snap-top", `${header ? Math.round(header.getBoundingClientRect().bottom) : 0}px`);
+    apply();
+    const ro = header ? new ResizeObserver(apply) : null;
+    if (header) ro?.observe(header);
+    window.addEventListener("resize", apply);
     document.body.setAttribute("data-snap-map", "1");
-    return () => document.body.removeAttribute("data-snap-map");
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", apply);
+      document.body.removeAttribute("data-snap-map");
+      document.body.style.removeProperty("--snap-top");
+    };
   }, []);
   const shownSpots = useMemo(() => {
     if (!focusIds) return spots;
@@ -671,12 +683,12 @@ export function PhotoMap({
   }
 
   return (
-    <div data-surface="media" className="fixed inset-0 z-40 overflow-hidden bg-page">
+    <div data-surface="media" className="fixed inset-x-0 bottom-0 top-[var(--snap-top,0px)] z-40 overflow-hidden bg-page">
       {/* maplibre-gl.cssが .maplibregl-map{position:relative} を後勝ちで当てるため、インラインで確実に勝たせる */}
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
       {route.length > 0 ? (
-        <div className="pointer-events-auto absolute left-3 right-14 top-[calc(env(safe-area-inset-top)+118px)] z-10 space-y-2 rounded-2xl border border-main/15 bg-black/80 p-2.5 backdrop-blur">
+        <div className="pointer-events-auto absolute left-3 right-14 top-[118px] z-10 space-y-2 rounded-2xl border border-main/15 bg-black/80 p-2.5 backdrop-blur">
           <div className="flex flex-wrap items-center gap-1.5">
             {route.map((id, i) => {
               const sp = spots.find((x) => x.id === id);
