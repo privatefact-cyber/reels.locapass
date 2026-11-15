@@ -59,27 +59,15 @@ export default async function DashboardAiKnowledgePage({ params }: { params: Pro
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
         <h2 className="text-base font-bold text-slate-900">AIコンシェルジュの顔</h2>
         <p className="text-sm text-slate-600">
-          お客様が店舗AIを開いたとき、会話画面に、顔(写真)が出ます。店長などスタッフの写真、または店舗が決めたキャラクターの画像を選べます。
-          何も選ばないときは、AIのアイコンだけが出ます。会話画面には、常に「AI」と表示されます。
+          初期設定は、AIのアイコンです。お好きな写真に変えたいときは、下から写真を選んでください。会話画面には、常に「AI」と表示されます。
         </p>
         <form action={saveAiAvatar.bind(null, shopId)} className="space-y-3">
           <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input type="radio" name="kind" value="none" defaultChecked={avatarKind === "none"} /> 顔を使わない(AIのアイコンだけ)
+            <input type="radio" name="kind" value="none" defaultChecked={avatarKind !== "custom"} /> AIのアイコン(初期設定)
           </label>
           <div className="space-y-1">
             <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="radio" name="kind" value="staff" defaultChecked={avatarKind === "staff"} /> 店長・スタッフの写真
-            </label>
-            <select name="staff_id" defaultValue={avatarStaffId} className={input}>
-              <option value="">スタッフを選ぶ</option>
-              {staffList.map((c) => (
-                <option key={c.id} value={c.id}>{c.name || "(名前なし)"}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="radio" name="kind" value="custom" defaultChecked={avatarKind === "custom"} /> 店舗が決めたキャラクターの画像
+              <input type="radio" name="kind" value="custom" defaultChecked={avatarKind === "custom"} /> 任意の写真
             </label>
             <ResizingImageInput name="image" className="block text-sm" />
             {avatarKind === "custom" && avatarImage && (
@@ -91,8 +79,8 @@ export default async function DashboardAiKnowledgePage({ params }: { params: Pro
             )}
           </div>
           <label className="flex items-start gap-2 text-sm text-slate-700">
-            <input type="checkbox" name="consent" value="1" defaultChecked={avatarKind !== "none"} className="mt-1 h-4 w-4" />
-            <span>写真・画像に写る本人の<b>承諾を得ています</b>(スタッフの写真・キャラクターの画像を選ぶときは必須)</span>
+            <input type="checkbox" name="consent" value="1" defaultChecked={avatarKind === "custom"} className="mt-1 h-4 w-4" />
+            <span>写真に写る人・著作物について、<b>使ってよいことを確認しました</b>(写真を選ぶときは必須)</span>
           </label>
           <button type="submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">保存する</button>
         </form>

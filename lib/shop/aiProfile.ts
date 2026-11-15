@@ -10,6 +10,8 @@ export type AiProfile = {
   photoUrl: string | null;
   /** いまの状態の表示(「営業中」)。分からなければ null。 */
   status: string | null;
+  badge?: string | null;
+  href?: string | null;
 };
 
 /**

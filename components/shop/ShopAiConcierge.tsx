@@ -6,7 +6,16 @@ import { ChevronDown, Heart, Info, RotateCcw, Sparkles, Volume2, VolumeX, X } fr
 import { ShopAiInput, ShopAiMessages, clearAiReturn, consumeAiReturn, useShopAi, voiceOutput, type Ai } from "@/components/shop/ShopAiChat";
 
 /** 会話画面に出す「顔」。店舗が選び、本人の承諾が確認できたものだけ(無いときはAIのアイコン)。 */
-export type AiProfile = { name: string; avatarUrl: string | null; photoUrl?: string | null; status?: string | null } | null;
+export type AiProfile = {
+  name: string;
+  avatarUrl: string | null;
+  photoUrl?: string | null;
+  status?: string | null;
+  /** 顔の由来の印(「週間1位」など)。 */
+  badge?: string | null;
+  /** 丸いアイコンをタップしたときの行き先(そのキャスト・スタッフの公開ページ)。 */
+  href?: string | null;
+} | null;
 
 /** 全画面の動き(背景のゆっくりした揺れ・光の粒子・波形・ハート)。動きを減らす設定の端末では止める。 */
 const CSS = `
@@ -156,11 +165,19 @@ export function ShopAiConcierge({ ai, shopName, profile, onClose, autoStartVoice
       {/* 上: 名前・いまの状態・店名(左) と 操作(右)。「AI」の印は、小さく残す。 */}
       <header className="relative z-30 flex items-start justify-between gap-2 px-3.5 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex min-w-0 max-w-[68%] items-center gap-2.5 rounded-full border border-white/15 bg-black/40 py-1.5 pl-1.5 pr-3.5 shadow-lg backdrop-blur-xl">
-          <Avatar profile={profile} size={36} />
+          {/* 丸いアイコンをタップすると、そのキャスト・スタッフのページへ(会話は残り、「AIに戻る」で戻れる)。 */}
+          {profile?.href ? (
+            <button type="button" onClick={() => ai.go({ kind: "goto", path: profile.href! })} aria-label={`${profile.name}`} className="shrink-0 rounded-full transition active:scale-95">
+              <Avatar profile={profile} size={36} />
+            </button>
+          ) : (
+            <Avatar profile={profile} size={36} />
+          )}
           <div className="min-w-0 leading-tight">
             <div className="flex items-center gap-1.5">
               <span className="truncate text-[13.5px] font-bold text-main">{profile?.name ? profile.name : l.conciergeName}</span>
               <span className="shrink-0 rounded bg-white/15 px-1 py-px text-[9px] font-bold tracking-wide text-hl-300">{l.aiBadge}</span>
+              {profile?.badge && <span className="shrink-0 text-[10px] font-semibold text-hl-300">👑 {profile.badge}</span>}
             </div>
             <p className="mt-0.5 flex items-center gap-1.5 truncate text-[10.5px] text-main/75">
               {profile?.status && (
