@@ -1,5 +1,6 @@
 "use client";
 
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search, Store } from "lucide-react";
@@ -409,6 +410,12 @@ export function PhotoFeed({
               </button>
             ))}
           </div>
+          {/* マップはサイト共通ヘッダーを隠すので、言語切替はここに置く(通常の /map と同じ)。 */}
+          {view === "map" ? (
+            <div className="shrink-0 rounded-full bg-black/70 backdrop-blur">
+              <LanguageSwitcher />
+            </div>
+          ) : null}
         </div>
         {hideToolbar ? null : (
           <div className="flex items-center gap-2">

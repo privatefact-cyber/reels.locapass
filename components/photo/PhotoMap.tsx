@@ -317,8 +317,8 @@ export function PhotoMap({
           box.className = "maplibregl-ctrl maplibregl-ctrl-group";
           const btn = document.createElement("button");
           btn.type = "button";
-          btn.setAttribute("aria-label", "現在地");
-          btn.title = "現在地";
+          btn.setAttribute("aria-label", t.map.useMyLocation);
+          btn.title = t.map.useMyLocation;
           btn.innerHTML =
             '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:auto"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg>';
           btn.onclick = () => {
