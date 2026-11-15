@@ -14,6 +14,9 @@ import { isDemoShop } from "@/lib/seo/demo";
 import { MIN_SHOPS_FOR_GUIDE, getPortalStats } from "@/lib/seo/areaStats";
 import { ATTRIBUTE_KEYS } from "@/lib/verticals/attributes";
 import { englishIndexable } from "@/lib/seo/cityEn";
+import { GUIDE_ARTICLES } from "@/lib/guide/articles";
+import { GUIDE_LOCALES, guideAlternates, hasGuideTranslation } from "@/lib/guide/i18n";
+import { GUIDE_TRANSLATIONS } from "@/lib/guide/translations";
 import { MIN_SHOPS_FOR_CITY_PAGE, categoryToSlug, cityCategoryUrl, cityUrl, getCityAreas } from "@/lib/seo/cityAreas";
 import { MIN_SHOPS_FOR_ATTRIBUTE_PAGE } from "@/lib/seo/attributePages";
 
@@ -183,6 +186,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] pet entries failed", e);
   }
 
+  // ガイド記事(/guide)は日本語・英語。訳がある言語のURLだけを載せ、hreflang で結ぶ。
+  const guideEntries: MetadataRoute.Sitemap = [
+    ...GUIDE_LOCALES.map((locale) => ({
+      url: guideAlternates("/guide", locale).canonical,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+      alternates: { languages: guideAlternates("/guide", locale).languages },
+    })),
+    ...GUIDE_ARTICLES.flatMap((a) => {
+      const available = GUIDE_LOCALES.filter((l) => hasGuideTranslation(a, l, GUIDE_TRANSLATIONS));
+      return available.map((locale) => ({
+        url: guideAlternates(`/guide/${a.slug}`, locale).canonical,
+        lastModified: new Date(a.updated),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+        alternates: { languages: guideAlternates(`/guide/${a.slug}`, locale, available).languages },
+      }));
+    }),
+  ];
+
   // エリア一覧とエリアガイド(/areas・/areas/○○)は、日本語のみ(言語別URLに展開しない)。
   const areaGuideEntries: MetadataRoute.Sitemap = [
     { url: `${BASE_URL}/areas`, changeFrequency: "weekly", priority: 0.8 },
@@ -214,5 +237,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] city entries failed", e);
   }
 
-  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...attributeEntries, ...shopEntries, ...reelEntries, ...castEntries]), ...areaGuideEntries, ...cityEntries, ...petEntries];
+  return [...withLanguages([...staticEntries, ...portalEntries, ...areaCategoryEntries, ...attributeEntries, ...shopEntries, ...reelEntries, ...castEntries]), ...guideEntries, ...areaGuideEntries, ...cityEntries, ...petEntries];
 }

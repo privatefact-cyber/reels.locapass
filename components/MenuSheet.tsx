@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
-import { Bell, BookOpen, Camera, ChevronRight, CircleHelp, MapPinned, Settings, User, X, Zap } from "lucide-react";
+import { Bell, BookOpen, Camera, ChevronRight, CircleHelp, Compass, MapPinned, Settings, User, X, Zap } from "lucide-react";
 import { SELECT_FEED_EVENT, type FeedKind } from "@/lib/reels/events";
 import { useLocale, usePublicPathname, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
@@ -151,6 +151,14 @@ export function MenuSheet({ open, onClose, home, boostHref, accountHref, hasMana
             Journal
             <ChevronRight size={16} className="ml-auto text-tone-500" />
           </Link>
+          {/* ガイド(訪日の方へ)は日本語・英語 */}
+          {(locale === "ja" || locale === "en") && (
+            <Link href="/guide" className={row}>
+              <Compass size={18} className="text-tone-300" />
+              {locale === "ja" ? "ガイド(訪日の方へ)" : "Guides for visitors"}
+              <ChevronRight size={16} className="ml-auto text-tone-500" />
+            </Link>
+          )}
           {/* エリアの一覧は日本語のみ */}
           {locale === "ja" && (
             <Link href="/areas" className={row}>
