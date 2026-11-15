@@ -201,7 +201,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
 
       <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-bold text-slate-900">AIへの指示(文体・書き方)</h2>
-        <p className="text-xs text-slate-500">ここに書いた指示を、AIが文章を書くたびに読みます。次に作る下書きから反映されます。「絶対に守ること」(数字・料金・比較・保証などの禁止)は、指示で外せません。お手本は、1本ずつ「---」だけの行で区切ってください(そのまま写した文章は自動で不採用になります)。</p>
+        <p className="text-xs text-slate-500">ここに書いた指示を、AIが文章を書くたびに読みます。次に作る下書きから反映されます。「絶対に守ること」(料金・割引、公開状況、他社比較、効果の保証、事実メモに無い機能の禁止)は、指示で外せません。数字と最上級の表現は、使ってかまいません。お手本は、1本ずつ「---」だけの行で区切ってください(そのまま写した文章は自動で不採用になります)。</p>
         {([["locapass", "LOCAPASS", settingsLocapass], ["luxela", "LUXELA", settingsLuxela]] as const).map(([key, name, st]) => (
           <details key={key} className="rounded-lg border border-slate-200 p-3">
             <summary className="cursor-pointer text-sm font-semibold text-slate-800">{name}{st.instructions || st.examples ? "(設定あり)" : "(未設定)"}</summary>
@@ -215,7 +215,7 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
                   <p>全体の長さ: {d.length}</p>
                 </div>
               ))}
-              <p className="mt-2">共通: 最後にサイトのURLを1つだけ / 数字・料金・最上級・他社比較は書かない(指示では外せません)</p>
+              <p className="mt-2">共通: 最後にサイトのURLを1つだけ / 数字・最上級は使ってよい / 料金・割引・公開状況・他社比較・効果の保証は書かない(指示では外せません)</p>
             </div>
             <form action={saveAiSettings.bind(null, key)} className="mt-3 space-y-2">
               <label className="block text-xs font-semibold text-slate-700">指示(最大{MAX_INSTRUCTIONS}文字)</label>
