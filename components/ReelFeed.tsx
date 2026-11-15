@@ -1,5 +1,6 @@
 "use client";
 
+import { LOCALE_CHANGE_EVENT, saveRestore, takeRestore } from "@/lib/i18n/restoreState";
 import Link from "@/components/i18n/LocaleLink";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Search, ChevronLeft, Play, X } from "lucide-react";
@@ -728,6 +729,46 @@ export function ReelFeed({
     setWindowCenter(index);
     setOpenIndex(index);
   }, []);
+
+  // 言語を切り替えて読み込み直しても、絞り込みと、開いていたリールを元に戻す。
+  const restoreNow = useRef({ openIndex, overlayActiveIndex, tiles, keyword, activeGenres, activeTypes, reelAuthorFilter, nowOnly });
+  restoreNow.current = { openIndex, overlayActiveIndex, tiles, keyword, activeGenres, activeTypes, reelAuthorFilter, nowOnly };
+  const pendingOpenKey = useRef<string | null>(null);
+  const [restoreReady, setRestoreReady] = useState(false);
+  useEffect(() => {
+    const onChange = () => {
+      const r = restoreNow.current;
+      const t = r.tiles.length > 0 && r.openIndex !== null ? r.tiles[r.overlayActiveIndex % r.tiles.length] : null;
+      saveRestore("reels", {
+        keyword: r.keyword,
+        activeGenres: r.activeGenres,
+        activeTypes: r.activeTypes,
+        reelAuthorFilter: r.reelAuthorFilter,
+        nowOnly: r.nowOnly,
+        openKey: t ? tileKey(t) : null,
+      });
+    };
+    window.addEventListener(LOCALE_CHANGE_EVENT, onChange);
+    return () => window.removeEventListener(LOCALE_CHANGE_EVENT, onChange);
+  }, []);
+  useEffect(() => {
+    const saved = takeRestore<{ keyword: string; activeGenres: string[]; activeTypes: ContentType[]; reelAuthorFilter: "cast" | "shop" | null; nowOnly: boolean; openKey: string | null }>("reels");
+    if (!saved) return;
+    setKeyword(saved.keyword);
+    setActiveGenres(saved.activeGenres);
+    setActiveTypes(saved.activeTypes);
+    setReelAuthorFilter(saved.reelAuthorFilter);
+    setNowOnly(saved.nowOnly);
+    pendingOpenKey.current = saved.openKey;
+    setRestoreReady(true); // 絞り込みが反映された次の描画で、開いていたリールを開く
+  }, []);
+  useEffect(() => {
+    const key = pendingOpenKey.current;
+    if (!restoreReady || !key || tiles.length === 0) return;
+    const i = tiles.findIndex((t) => tileKey(t) === key);
+    pendingOpenKey.current = null;
+    if (i >= 0) openTileAt(i);
+  }, [tiles, openTileAt, restoreReady]);
 
   useEffect(() => {
     if (!tiles.length) return;

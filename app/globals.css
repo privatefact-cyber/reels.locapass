@@ -422,5 +422,6 @@ body[data-immersive="1"] [data-chrome] {
   display: none !important;
 }
 
-/* LOCA SNAPのマップ全面表示: 通常の /map と同じく地図のズーム操作を上部の検索バーの下へ逃がす */
-body[data-snap-map] .maplibregl-ctrl-top-right { margin-top: 110px; }
+/* LOCA SNAPのマップ全面表示: 通常の /map と同じくヘッダーを隠す(下のナビは残す)。ズーム操作は上部の検索バーの下へ逃がす */
+body[data-snap-map] header[data-chrome] { display: none; }
+body[data-snap-map] .maplibregl-ctrl-top-right { margin-top: calc(env(safe-area-inset-top) + 110px); }

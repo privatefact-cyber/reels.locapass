@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import { usePathname, useRouter } from "next/navigation";
 import { dictionaries, type Dictionary } from "@/lib/i18n/dictionaries";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, type Locale } from "@/lib/i18n/locale";
+import { LOCALE_CHANGE_EVENT } from "@/lib/i18n/restoreState";
 import { isLocalizablePath, localizeHref, stripLocalePrefix } from "@/lib/i18n/localePath";
 
 type LocaleContextValue = {
@@ -38,6 +39,8 @@ export function LocaleProvider({
       document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
       const path = stripLocalePrefix(window.location.pathname);
       if (isLocalizablePath(path)) {
+        // 読み込み直しの前に、各画面へ「状態を一時保存して」と知らせる。
+        window.dispatchEvent(new Event(LOCALE_CHANGE_EVENT));
         window.location.assign(localizeHref(path, next) + window.location.search + window.location.hash);
         return;
       }

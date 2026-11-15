@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search, Store } from "lucide-react";
 import { PhotoShareButton } from "@/components/photo/PhotoShareButton";
 import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
+import { LOCALE_CHANGE_EVENT, saveRestore, takeRestore } from "@/lib/i18n/restoreState";
 import { PhotoMap } from "@/components/photo/PhotoMap";
 import { PhotoSpotList } from "@/components/photo/PhotoSpotList";
 import { PhotoLikeButton } from "@/components/photo/PhotoLikeButton";
@@ -119,6 +120,35 @@ export function PhotoFeed({
     [viewer, latestById],
   );
   const [view, setView] = useState<"grid" | "map" | "spots">(initialView);
+  // 言語を切り替えて読み込み直しても、表示の切り替え・絞り込み・開いている写真を元に戻す。
+  const restoreRef = useRef({ view, keyword, activeTags, viewer });
+  restoreRef.current = { view, keyword, activeTags, viewer };
+  useEffect(() => {
+    const onChange = () => {
+      const r = restoreRef.current;
+      saveRestore("photo", {
+        view: r.view,
+        keyword: r.keyword,
+        activeTags: r.activeTags,
+        viewer: r.viewer ? { ids: r.viewer.posts.map((p) => p.id), index: r.viewer.index, title: r.viewer.title, mode: r.viewer.mode } : null,
+      });
+    };
+    window.addEventListener(LOCALE_CHANGE_EVENT, onChange);
+    return () => window.removeEventListener(LOCALE_CHANGE_EVENT, onChange);
+  }, []);
+  useEffect(() => {
+    const saved = takeRestore<{ view: "grid" | "map" | "spots"; keyword: string; activeTags: string[]; viewer: { ids: string[]; index: number; title: string | null; mode: "grid" | "detail" } | null }>("photo");
+    if (!saved) return;
+    setView(saved.view);
+    setKeyword(saved.keyword);
+    setActiveTags(saved.activeTags);
+    if (saved.viewer) {
+      const byId = new Map(allPosts.map((p) => [p.id, p]));
+      const list = saved.viewer.ids.map((id) => byId.get(id)).filter((p): p is PhotoPost => Boolean(p));
+      if (list.length > 0) setViewer({ posts: list, index: Math.min(saved.viewer.index, list.length - 1), title: saved.viewer.title, mode: saved.viewer.mode });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // フルスクリーン表示中の写真(ビューアの並びの中の番号)。nullなら閉じている。
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const openRef = useRef<HTMLDivElement | null>(null);
@@ -354,7 +384,7 @@ export function PhotoFeed({
   return (
     <div className="space-y-3">
       {/* 検索(虫眼鏡)・タグ・表示切り替えは、ヘッダー直下に固定する。グリッド・マップ・穴場のどれでも使える。 */}
-      <div className={view === "map" ? "fixed inset-x-0 top-[var(--snap-top,0px)] z-[45] space-y-2 bg-gradient-to-b from-black/85 via-black/60 to-transparent px-3 pb-4 pt-2.5" : "sticky top-[calc(81px+env(safe-area-inset-top))] z-30 -mx-0 space-y-2 border-b border-main/5 bg-tone-950/90 px-1 py-2 backdrop-blur-md"}>
+      <div className={view === "map" ? "fixed inset-x-0 top-0 z-[45] space-y-2 bg-gradient-to-b from-black/85 via-black/60 to-transparent px-3 pb-4 pt-[calc(env(safe-area-inset-top)+10px)]" : "sticky top-[calc(81px+env(safe-area-inset-top))] z-30 -mx-0 space-y-2 border-b border-main/5 bg-tone-950/90 px-1 py-2 backdrop-blur-md"}>
         <div className="flex items-center gap-2">
           <button
             type="button"
