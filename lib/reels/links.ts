@@ -29,3 +29,13 @@ export function reelCtaUrl(reel: Pick<ReelItem, "linkUrl"> & ReelLinkFields): st
   if (reel.linkUrl) return reel.linkUrl;
   return reelProfileUrl(reel);
 }
+
+/**
+ * リールのフィード用の「詳しく見る」・画像中央タップの遷移先。
+ * 投稿時に任意URLが指定されていればそちらを優先し、未指定ならマップの該当店舗のカード(詳細シートが開いた状態)へ。
+ * 店舗の詳細ページへは、シートの「店舗詳細」から行ける。
+ */
+export function reelCtaUrlViaMap(reel: Pick<ReelItem, "linkUrl" | "shopId">): string {
+  if (reel.linkUrl) return reel.linkUrl;
+  return `/map?venue=${encodeURIComponent(reel.shopId)}`;
+}

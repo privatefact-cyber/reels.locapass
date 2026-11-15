@@ -6,7 +6,7 @@ import { Search, ChevronLeft, Play, X } from "lucide-react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
 import { useCastFollows, useShopFavorites } from "@/lib/reels/useFollows";
-import { reelCtaUrl, reelProfileUrl } from "@/lib/reels/links";
+import { reelCtaUrlViaMap, reelProfileUrl } from "@/lib/reels/links";
 import { shopPath } from "@/lib/locapass/publicUrls";
 import { ShopMediaFallback } from "@/components/shop/ShopMediaFallback";
 import { ReelCard } from "@/components/ReelCard";
@@ -1116,7 +1116,7 @@ export function ReelFeed({
                       profileUrl={reelProfileUrl(tile.reel)}
                       shopName={tile.reel.shopName}
                       createdAt={tile.reel.createdAt}
-                      ctaUrl={reelCtaUrl(tile.reel)}
+                      ctaUrl={reelCtaUrlViaMap(tile.reel)}
                       caption={tile.reel.caption}
                       captionOriginal={tile.reel.captionOriginal}
                       likesCount={likeCounts[tile.reel.id] ?? tile.reel.likesCount}

@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useActiveReelIndex } from "@/lib/reels/useActiveReelIndex";
 import { useReelLikes } from "@/lib/reels/useReelLikes";
-import { reelCtaUrl, reelProfileUrl } from "@/lib/reels/links";
+import { reelCtaUrlViaMap, reelProfileUrl } from "@/lib/reels/links";
 import { ReelCard } from "@/components/ReelCard";
 import type { ReelItem } from "@/lib/reels/types";
 
@@ -147,7 +147,7 @@ export function ReelLoopFeed({ reels, loop = true }: { reels: ReelItem[]; /** fa
               profileUrl={reelProfileUrl(reel)}
               shopName={reel.shopName}
               createdAt={reel.createdAt}
-              ctaUrl={reelCtaUrl(reel)}
+              ctaUrl={reelCtaUrlViaMap(reel)}
               caption={reel.caption}
               captionOriginal={reel.captionOriginal}
               likesCount={likeCounts[reel.id] ?? reel.likesCount}

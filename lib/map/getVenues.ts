@@ -460,3 +460,11 @@ export async function getVenueCards(
 
   return venues;
 }
+
+/** マップを「この店舗のカードを開いた状態」で開くために、店舗の位置を引く(公開中の店舗だけ)。 */
+export async function getVenueCenter(shopId: string): Promise<{ lat: number; lng: number } | null> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shopId)) return null;
+  const { data } = await (mapClient() as any).from("locapass_shops").select("lat, lng").eq("id", shopId).eq("status", "active").maybeSingle();
+  if (!data || typeof data.lat !== "number" || typeof data.lng !== "number") return null;
+  return { lat: data.lat, lng: data.lng };
+}

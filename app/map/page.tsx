@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { VenueMapExplorer } from "@/components/map/VenueMapExplorer";
-import { getVenueGenres } from "@/lib/map/getVenues";
+import { getVenueGenres, getVenueCenter, radiusToBounds } from "@/lib/map/getVenues";
 import { getMapPreset } from "@/lib/map/mapPreset";
 import { siteConfig } from "@/config/site";
 
@@ -18,8 +18,15 @@ export const metadata: Metadata = {
  * ?preset={ポータルのslug} で開いたときは、そのポータルの初期設定(locapass_portals.map_preset)の中心・縮尺・スイッチで開く。
  * ポータルは初期表示を決めるだけで、表示する店舗は絞らない(所属は「権利」だけ)。
  */
-export default async function MapPage({ searchParams }: { searchParams: Promise<{ preset?: string | string[] }> }) {
-  const { preset: presetParam } = await searchParams;
+export default async function MapPage({ searchParams }: { searchParams: Promise<{ preset?: string | string[]; venue?: string | string[] }> }) {
+  const { preset: presetParam, venue: venueParam } = await searchParams;
+  // リールから来たときは、その店舗の位置で開いて、カードの詳細シートを最初から広げる。
+  const venueId = typeof venueParam === "string" ? venueParam : null;
+  const venueCenter = venueId ? await getVenueCenter(venueId) : null;
+  if (venueId && venueCenter) {
+    const genres = await getVenueGenres();
+    return <VenueMapExplorer initialCenter={venueCenter} initialBounds={radiusToBounds(venueCenter.lat, venueCenter.lng, 400)} openVenueId={venueId} genres={genres} />;
+  }
   // 店舗データはクライアントが「現在地の半径500m」「表示範囲」単位で取りに行く
   // (app/api/venues)。サーバー側で全国分を先読みしない。
   // ジャンルピルだけは掲載中店舗の実カテゴリ(全site横断)をここで集計して渡す。

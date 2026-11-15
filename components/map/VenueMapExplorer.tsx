@@ -19,6 +19,7 @@ import type { NightlifeGenre, VenueCardData, VenuePin } from "@/types/venue";
 import { StreamVideo } from "@/components/video/StreamVideo";
 import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { VenueDetailSheet } from "@/components/map/VenueDetailSheet";
 
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const SOURCE_ID = "venues";
@@ -145,6 +146,7 @@ export function VenueMapExplorer({
   initialBounds,
   initialLayers,
   autoLocate = false,
+  openVenueId,
   genres = [],
 }: {
   /** 指定エリアのマップとして開くときの初期中心。 */
@@ -160,6 +162,8 @@ export function VenueMapExplorer({
   initialBounds?: { minLat: number; maxLat: number; minLng: number; maxLng: number };
   /** 開いた直後に現在地へ寄せる(エリア指定なしのマップ入口用)。 */
   autoLocate?: boolean;
+  /** 開いた直後にこの店舗のカードを選び、詳細シートを広げる(リールからの導線)。 */
+  openVenueId?: string;
   /** ジャンル絞り込みピルの選択肢(ALL以外)。掲載中店舗の実カテゴリをサーバー側で集計して渡す。 */
   genres?: string[];
 }) {
@@ -207,6 +211,9 @@ export function VenueMapExplorer({
   const router = useLocaleRouter();
   // 全画面リールを開いている店舗(開いた起点)。nullなら閉じている。
   const [reelOverlayVenueId, setReelOverlayVenueId] = useState<string | null>(null);
+  // 店舗の詳細シート(カードが1段階広がった姿)を開いている店舗。nullなら閉じている。
+  const [sheetVenue, setSheetVenue] = useState<VenueCardData | null>(null);
+  const swipeStartY = useRef<number | null>(null);
   const [genre, setGenre] = useState<NightlifeGenre>("all");
   // 店舗カードは初期状態では画面下に収納し、ピンを選んだときだけドロワーとしてせり上げる。
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -1003,6 +1010,16 @@ export function VenueMapExplorer({
     focusVenueRef.current = focusVenue;
   }, [focusVenue]);
 
+  // リールから来たとき: 取得したカードの中にその店舗が入ったら、1回だけ選んで詳細シートを広げる。
+  const deepLinkHandled = useRef(false);
+  useEffect(() => {
+    if (!openVenueId || deepLinkHandled.current) return;
+    if (!venueById.has(openVenueId)) return;
+    deepLinkHandled.current = true;
+    focusVenue(openVenueId, { fromMap: true });
+    setSheetVenue(venueById.get(openVenueId) ?? null);
+  }, [openVenueId, venueById, focusVenue]);
+
   // 取得し直したカードの中に今のアクティブ店舗が居なくなったら、先頭カードに戻す。
   // (これが無いと、初回表示やパン直後にアクティブが決まらず、動画も再生されずピンも拡大しない)
   useEffect(() => {
@@ -1329,7 +1346,7 @@ export function VenueMapExplorer({
             ref={carouselRef}
             // 両端の余白は「カード幅の半分を引いた画面中央まで」。これが無いと最初・最後のカードは中央に来られない
             // (カード幅: スマホ82vw → 余白9vw、sm以上20rem → 余白は50%-10rem)。
-            className={`${CAROUSEL_HEIGHT} pointer-events-auto flex snap-x snap-mandatory gap-3 overflow-x-auto px-[9vw] sm:px-[calc(50%-10rem)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
+            className={`${CAROUSEL_HEIGHT} ${sheetVenue ? "pointer-events-none opacity-0" : "pointer-events-auto"} transition-opacity duration-200 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[9vw] sm:px-[calc(50%-10rem)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
           >
             {visibleVenues.map((venue) => {
               const mates = buildingMates(venue);
@@ -1343,6 +1360,16 @@ export function VenueMapExplorer({
                     else cardRefs.current.delete(venue.id);
                   }}
                   onClick={() => focusVenue(venue.id)}
+                  // 中央のカードを上へスワイプすると、詳細シート(カードが広がった姿)が開く。
+                  onTouchStart={(e) => {
+                    swipeStartY.current = e.touches[0]?.clientY ?? null;
+                  }}
+                  onTouchEnd={(e) => {
+                    const startY = swipeStartY.current;
+                    swipeStartY.current = null;
+                    const endY = e.changedTouches[0]?.clientY;
+                    if (isActive && startY !== null && endY !== undefined && startY - endY > 36) setSheetVenue(venue);
+                  }}
                   // 中央のカードは原寸・左右のカードは少し縮めて暗くし、スワイプで入れ替わる様子を見せる。
                   // transformは高さのレイアウトを変えないので、カルーセル固定高さの制約(再描画ループ防止)は崩れない。
                   className={`flex h-full w-[82vw] shrink-0 snap-center flex-col overflow-hidden rounded-2xl border bg-panel-950 shadow-xl transition-[transform,opacity,border-color,box-shadow] duration-300 ease-out sm:w-80 ${
@@ -1430,7 +1457,15 @@ export function VenueMapExplorer({
                     )}
                   </div>
 
-                  <div className="shrink-0 space-y-2 p-3">
+                  <div
+                    className="shrink-0 cursor-pointer space-y-2 p-3"
+                    onClick={(e) => {
+                      // 中央のカードの下半分をタップすると詳細シートが広がる(左右のカードは通常どおり中央へ寄せる)。
+                      if (!isActive) return;
+                      e.stopPropagation();
+                      setSheetVenue(venue);
+                    }}
+                  >
                     <p className="truncate font-display text-sm font-bold text-main">{venue.name}</p>
                     <div className="flex items-center gap-2 text-[11px] text-muted">
                       {venue.genre && <span>{genreLabel(locale, venue.genre)}</span>}
@@ -1582,6 +1617,24 @@ export function VenueMapExplorer({
             </button>
           </div>
         </div>
+      )}
+
+      {sheetVenue && (
+        // 取得し直しでカードの並びが変わっても、開いているシートは消さない(店舗の情報を持ったまま出す)。
+        <VenueDetailSheet
+          venue={sheetVenue}
+          walkMinutes={estimateTimeFromDistance(userPos, sheetVenue.location)?.walkMinutes ?? null}
+          onClose={() => {
+            // 閉じたら、いま見ていた店舗のカードが中央に来た状態に戻す。
+            const id = sheetVenue.id;
+            setSheetVenue(null);
+            focusVenue(id, { fromMap: true });
+          }}
+          onOpenReel={() => {
+            setSheetVenue(null);
+            setReelOverlayVenueId(sheetVenue.id);
+          }}
+        />
       )}
 
       {reelOverlayVenueId && (
