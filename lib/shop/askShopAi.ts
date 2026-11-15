@@ -209,14 +209,15 @@ export async function isRelatedQuestion(facts: Facts, question: string): Promise
     const res = await fetch(geminiLiteGenerateContentUrl(apiKey), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0, maxOutputTokens: 20, responseMimeType: "application/json" } }),
+      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0, maxOutputTokens: 64, responseMimeType: "application/json" } }),
       signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) return true;
     const json = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
     const raw = (json.candidates?.[0]?.content?.parts ?? []).map((x) => x.text ?? "").join("");
-    const parsed = JSON.parse(raw) as { related?: unknown };
-    return parsed.related !== false;
+    // 返答が途中で切れても読めるように、"related": true/false の部分だけを取り出す。
+    const m = /"related"\s*:\s*(true|false)/.exec(raw);
+    return m ? m[1] === "true" : true;
   } catch {
     return true;
   }

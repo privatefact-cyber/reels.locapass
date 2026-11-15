@@ -10,8 +10,16 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const MAX_KB_CHARS = 40000;
-const MAX_HISTORY_MESSAGES = 20;
+// 費用の防御(2026-11-15): 質問のたびにAIへ送る量を減らす。店舗情報は4万→3万文字、会話の履歴は20→8件
+// (それ以前の内容は、5ターンごとに作る要約(カルテ)が引き継ぐ)。
+const MAX_KB_CHARS = 30000;
+const MAX_HISTORY_MESSAGES = 8;
+// 1日の質問回数の上限(AIを呼ぶ質問だけを数える)。環境変数で変えられる。
+//  ・TOPAI_VISITOR_DAILY: 1人(端末)あたり  ・TOPAI_SITE_DAILY: サイト全体(費用が青天井にならないための安全装置)
+const TOPAI_VISITOR_DAILY = Number(Deno.env.get("TOPAI_VISITOR_DAILY") ?? "30");
+const TOPAI_SITE_DAILY = Number(Deno.env.get("TOPAI_SITE_DAILY") ?? "20000");
+const TOPAI_LIMIT_MESSAGE = "現在AIコンシェルジュへのご質問が大変混み合っております。お手数ですが、マップや検索から、お店をお探しください。";
+const TOPAI_UNRELATED_MESSAGE = "お店やエリアのご相談をお待ちしています。たとえば「渋谷でおすすめのカフェは?」のようにお聞きください。";
 const DIGEST_EVERY_N_TURNS = 5;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const LOCAPASS_NETWORK_ROOT_DOMAIN = "locapass.net";
@@ -194,6 +202,171 @@ function extractJobLines(raw: string): string[] {
     .slice(0, MAX_JOB_LINES_PER_SHOP);
 }
 
+
+// ===== 費用の防御(2026-11-15) =====
+// AI(n8n)を呼ぶ前に、 1) 回答キャッシュ 2) 1日の回数の制限 3) 無関係な質問のガード の順に確認する。
+// 回数の制限は、行を数えるのではなく、カウンター表(ai_usage_counters)に1回書き込む方式(100万人規模でも、DBが重くならない)。
+
+async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function uuidFromHex(hex: string): string {
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
+/** 質問を、比べやすい形にそろえる(全角半角・大文字小文字・空白・記号)。 */
+function normalizeQuestion(q: string): string {
+  return q
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s\u3000]+/g, "")
+    .replace(/[、。,.!?！？~〜…・「」『』()（）\[\]【】"'’”“:：;；\-ー]/g, "")
+    .slice(0, 200);
+}
+
+/** 時間や場所で答えが変わる質問は、回答を保存して再利用しない。 */
+function isVolatileQuestion(norm: string): boolean {
+  return /(今日|本日|きょう|いま|今|現在|空席|空いて|満席|営業中|開いて|明日|あした|今夜|今晩|近く|近い|周辺|ここから|tonight|today|now|currently|tomorrow|nearby|near me|今天|现在|اليوم)/.test(norm);
+}
+
+/**
+ * トップページのAIと関係のない質問(雑談・プログラム・天気・政治・AI自身についての雑談など)かを、軽量モデルで短く判定する。
+ * 無関係と判定できたときだけ false。迷うとき・失敗したときは true(通常のAIへ進める)。1回あたり約0.002円。
+ */
+async function isRelatedToSiteAi(message: string): Promise<boolean> {
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!apiKey) return true;
+  const prompt = [
+    "このAIは、街のお店・エリア・施設の探し方、おすすめ、営業時間・料金・予約・口コミ、サイトの使い方についてだけ答える案内係です。",
+    "次の質問が、その範囲の質問、または挨拶・お礼程度なら true。",
+    "天気・ニュース・株・スポーツ・芸能、一般的な知識や雑学、プログラムや宿題や翻訳や計算、政治・宗教、AI自身についての雑談(あなたは誰・恋人になって・好きな食べ物)、個人的な相談、攻撃的な文、意味のない文字の羅列なら false。迷うときは true。",
+    '出力は {"related": boolean} だけ。',
+    `質問: ${message.slice(0, 200)}`,
+  ].join("\n");
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0, maxOutputTokens: 64, responseMimeType: "application/json" },
+        }),
+        signal: AbortSignal.timeout(8000),
+      },
+    );
+    if (!res.ok) return true;
+    const data = await res.json();
+    const raw: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    // 返答が途中で切れても読めるように、"related": true/false の部分だけを取り出す。
+    const m = /"related"\s*:\s*(true|false)/.exec(raw);
+    return m ? m[1] === "true" : true;
+  } catch {
+    return true;
+  }
+}
+
+type TopAiCacheKey = { shopId: string; norm: string; hash: string };
+type TopAiGuardResult = { response: Response | null; cache: TopAiCacheKey | null };
+
+async function topAiGuard(args: {
+  req: Request;
+  // deno-lint-ignore no-explicit-any
+  supabase: any;
+  // deno-lint-ignore no-explicit-any
+  supabasePublic: any;
+  // deno-lint-ignore no-explicit-any
+  site: any;
+  // deno-lint-ignore no-explicit-any
+  conversation: any;
+  // deno-lint-ignore no-explicit-any
+  body: any;
+  message: string;
+  newTurnCount: number;
+}): Promise<TopAiGuardResult> {
+  const { req, supabase, supabasePublic, site, conversation, body, message, newTurnCount } = args;
+  const norm = normalizeQuestion(message);
+  const saveAiMessage = (content: string) =>
+    supabase.from("messages").insert({ conversation_id: conversation.id, role: "ai", content });
+
+  // 1) 回答キャッシュ。位置情報・閲覧中のエリア・選択中のタグ・街の声・求人・最初の質問ではない会話は、答えが人ごとに変わるので使わない。
+  const cacheable =
+    !body.mode &&
+    typeof body.user_lat !== "number" &&
+    !body.current_area_slug &&
+    !body.selected_keyword &&
+    !(Array.isArray(body.selected_genres) && body.selected_genres.length > 0) &&
+    newTurnCount === 1 &&
+    !JOB_INTENT_RE.test(message) &&
+    !isVolatileQuestion(norm);
+  let cache: TopAiCacheKey | null = null;
+  if (cacheable) {
+    // 鍵に「UTCの時」を入れる。店舗情報が変わっても、最長1時間で古い回答は使われなくなる。
+    cache = {
+      shopId: uuidFromHex(await sha256Hex(`site:${site.id}`)),
+      norm: `${site.domain}|${norm}`,
+      hash: new Date().toISOString().slice(0, 13),
+    };
+    try {
+      const { data: hit } = await supabasePublic
+        .from("shop_ai_answer_cache")
+        .select("response, hits")
+        .eq("shop_id", cache.shopId)
+        .eq("norm_question", cache.norm)
+        .eq("content_hash", cache.hash)
+        .maybeSingle();
+      const r = hit?.response as { reply?: string; links?: { title: string; url: string }[] } | undefined;
+      if (r?.reply) {
+        await saveAiMessage(r.reply);
+        await supabasePublic
+          .from("shop_ai_answer_cache")
+          .update({ hits: (hit.hits ?? 0) + 1, last_hit_at: new Date().toISOString() })
+          .eq("shop_id", cache.shopId)
+          .eq("norm_question", cache.norm)
+          .eq("content_hash", cache.hash);
+        return { response: json({ reply: r.reply, escalated: false, links: r.links ?? [] }), cache: null };
+      }
+    } catch (err) {
+      console.error("answer cache lookup failed", err);
+    }
+  }
+
+  // 2) 1日の回数の制限
+  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
+  const day = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  const visitor = (await sha256Hex(`${ip}|${req.headers.get("user-agent") ?? ""}|${day}|${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`)).slice(0, 24);
+  try {
+    const { data: quota } = await supabasePublic.rpc("ai_take_quota", {
+      p_day: day,
+      p_shop: `site:${site.id}`,
+      p_visitor: visitor,
+      p_visitor_limit: TOPAI_VISITOR_DAILY,
+      p_visitor_shop_limit: TOPAI_VISITOR_DAILY,
+      p_shop_limit: TOPAI_SITE_DAILY,
+    });
+    if (quota && quota !== "ok") {
+      await saveAiMessage(TOPAI_LIMIT_MESSAGE);
+      return { response: json({ reply: TOPAI_LIMIT_MESSAGE, escalated: false, limited: true }), cache: null };
+    }
+    if (Math.random() < 0.002) {
+      await supabasePublic.rpc("ai_purge_old", { p_day: day });
+    }
+  } catch (err) {
+    // 回数の確認に失敗しても、お客様の質問は止めない(ただし記録する)。
+    console.error("quota check failed", err);
+  }
+
+  // 3) 無関係な質問のガード
+  if (!(await isRelatedToSiteAi(message))) {
+    await saveAiMessage(TOPAI_UNRELATED_MESSAGE);
+    return { response: json({ reply: TOPAI_UNRELATED_MESSAGE, escalated: false }), cache: null };
+  }
+  return { response: null, cache };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -339,6 +512,10 @@ Deno.serve(async (req: Request) => {
     .from("conversations")
     .update({ turn_count: newTurnCount })
     .eq("id", conversation.id);
+
+  // 費用の防御: 重い処理(店舗情報の読み込み・AI呼び出し)の前に、キャッシュ・回数の制限・無関係な質問のガードを確認する。
+  const guard = await topAiGuard({ req, supabase, supabasePublic, site, conversation, body, message, newTurnCount });
+  if (guard.response) return guard.response;
 
   function coreNameFromTitle(title: string): string {
     const stripped = stripAdminPrefix(title);
@@ -866,6 +1043,20 @@ Deno.serve(async (req: Request) => {
   const usedWhisperShops = isMachiNoKoe
     ? mentionedLinks.filter((link) => whisperByUrl.has(link.url)).map((link) => link.title)
     : [];
+
+  // 回答キャッシュに保存(最初の質問・位置情報なしなど、人ごとに答えが変わらないものだけ。guard.cache があるときだけ)。
+  if (guard.cache && !escalate) {
+    try {
+      await supabasePublic
+        .from("shop_ai_answer_cache")
+        .upsert(
+          { shop_id: guard.cache.shopId, norm_question: guard.cache.norm, content_hash: guard.cache.hash, response: { reply, links: mentionedLinks } },
+          { onConflict: "shop_id,norm_question,content_hash" },
+        );
+    } catch (err) {
+      console.error("answer cache write failed", err);
+    }
+  }
 
   await supabase.from("messages").insert({
     conversation_id: conversation.id,
