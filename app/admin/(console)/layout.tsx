@@ -24,6 +24,7 @@ const NAV_GROUPS: ShopNavGroup[] = [
       { href: "/admin/ads", label: "広告投稿", icon: "📣", description: "リールフィードに混ぜる広告(PR)の投稿" },
       { href: "/admin/embeds", label: "外部動画", icon: "🎞️", description: "外部の動画をリールとして追加" },
       { href: "/admin/youtube-stock", label: "YouTube収集・動画ストック", icon: "📦", description: "YouTube Shortsの収集・判定・ステータス管理" },
+      { href: "/admin/overseas", label: "海外の情報集め", icon: "🌏", description: "セブなど海外のYouTube動画を日本語の要約つきで下調べ(個人用・非公開)" },
     ],
   },
   {
