@@ -26,6 +26,12 @@ async function call<T>(path: string, init: { method: "GET" | "POST"; params: Rec
   return body;
 }
 
+/**
+ * 作ったばかりのコンテナは、Threads側の反映が間に合わず、確認すると「存在しません」(400)と返ることがある(一時的)。
+ * この場合は失敗にせず、少し待ってやり直す(2026-11-15に画像つき投稿が、これで失敗した)。
+ */
+const isNotReadyYet = (e: unknown) => e instanceof Error && /does not exist/i.test(e.message);
+
 /** 自分のThreads投稿の成績を取得する。 */
 export async function getThreadsMediaInsights(config: ThreadsConfig, mediaId: string): Promise<Record<string, number>> {
   const body = await call<{ data?: Array<{ name?: string; values?: Array<{ value?: number }>; total_value?: { value?: number } }> }>(
@@ -47,15 +53,43 @@ async function createAndPublish(config: ThreadsConfig, params: Record<string, st
   const container = await call<{ id: string }>(`/${userId}/threads`, { method: "POST", params }, config.accessToken);
 
   // コンテナの処理が終わるまで少し待つ(文章・画像は通常すぐ終わる)。
-  for (let i = 0; i < 6; i++) {
-    const status = await call<{ status?: string; error_message?: string }>(`/${container.id}`, { method: "GET", params: { fields: "status,error_message" } }, config.accessToken);
+  for (let i = 0; i < 8; i++) {
+    let status: { status?: string; error_message?: string };
+    try {
+      status = await call<{ status?: string; error_message?: string }>(`/${container.id}`, { method: "GET", params: { fields: "status,error_message" } }, config.accessToken);
+    } catch (e) {
+      // 作った直後で、まだ反映されていないだけのときは待ってやり直す(最後の回まで続けても出るなら、本当のエラーとして扱う)。
+      if (isNotReadyYet(e) && i < 7) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        continue;
+      }
+      throw e;
+    }
     if (status.status === "FINISHED") break;
     if (status.status === "ERROR" || status.status === "EXPIRED") throw new Error(`Threads コンテナ処理に失敗: ${status.error_message ?? status.status}`);
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  const published = await call<{ id: string }>(`/${userId}/threads_publish`, { method: "POST", params: { creation_id: container.id } }, config.accessToken);
-  return published.id;
+  return publishWithRetry(userId, container.id, config.accessToken);
+}
+
+/**
+ * 公開する。コンテナが「まだ存在しない」と言われたときだけ、少し待ってやり直す(その場合、投稿はまだ作られていないので、二重投稿にならない)。
+ */
+async function publishWithRetry(userId: string, containerId: string, accessToken: string): Promise<string> {
+  for (let i = 0; i < 4; i++) {
+    try {
+      const published = await call<{ id: string }>(`/${userId}/threads_publish`, { method: "POST", params: { creation_id: containerId } }, accessToken);
+      return published.id;
+    } catch (e) {
+      if (isNotReadyYet(e) && i < 3) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("Threads 公開に失敗しました");
 }
 
 /** 文章だけの投稿を公開する。テキストは500文字まで(超えたら呼び出し側で防ぐ)。 */
@@ -82,7 +116,14 @@ export async function createThreadsVideoContainer(config: ThreadsConfig, input: 
 }
 
 export async function threadsContainerState(config: ThreadsConfig, containerId: string): Promise<ThreadsContainerState> {
-  const s = await call<{ status?: string; error_message?: string }>(`/${containerId}`, { method: "GET", params: { fields: "status,error_message" } }, config.accessToken);
+  let s: { status?: string; error_message?: string };
+  try {
+    s = await call<{ status?: string; error_message?: string }>(`/${containerId}`, { method: "GET", params: { fields: "status,error_message" } }, config.accessToken);
+  } catch (e) {
+    // 作った直後で、まだ反映されていないだけのときは、処理待ちとして扱う(次の確認でやり直す)。
+    if (isNotReadyYet(e)) return { state: "pending" };
+    throw e;
+  }
   if (s.status === "FINISHED") return { state: "finished" };
   if (s.status === "ERROR" || s.status === "EXPIRED") return { state: "error", message: s.error_message ?? s.status };
   return { state: "pending" };
