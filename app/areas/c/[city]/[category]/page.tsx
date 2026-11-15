@@ -19,6 +19,8 @@ import {
   getCityAreas,
   slugToCategory,
 } from "@/lib/seo/cityAreas";
+import { categoryEn, cityEn, englishCopy, englishIndexable } from "@/lib/seo/cityEn";
+import { localeUrl } from "@/lib/i18n/localePath";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
 export const revalidate = 600;
@@ -41,6 +43,31 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const r = await resolve(p);
   if (!r) return { title: "ページが見つかりません" };
   const locale = await getServerLocale();
+  const path = `/areas/c/${encodeURIComponent(r.area.key)}/${p.category}`;
+  // 英語ページは、地名と業種の英語が分かっていて店舗が基準以上のものだけ検索に出す。英語が出せるページだけ、日本語⇔英語を hreflang で結ぶ。
+  const enOk = englishIndexable(r.area.key, r.category, r.shops.length, MIN_SHOPS_FOR_CITY_PAGE);
+  const languages = enOk
+    ? { ja: localeUrl(path, "ja"), en: localeUrl(path, "en"), "x-default": localeUrl(path, "ja") }
+    : undefined;
+  if (locale === "en") {
+    const c = cityEn(r.area.key);
+    const cat = categoryEn(r.category);
+    if (c && cat) {
+      const copy = englishCopy({ city: c.city, pref: c.pref, category: cat.name, count: r.shops.length, word: cat.word });
+      const names = r.shops.slice(0, 3).map((s) => s.name).join(", ");
+      const title = copy.title;
+      const description = copy.description(names, c.pref);
+      const url = localeUrl(path, "en");
+      return {
+        title,
+        description,
+        alternates: { canonical: url, languages },
+        robots: enOk ? undefined : { index: false, follow: true },
+        openGraph: { title, description, url, siteName: "LOCAPASS" },
+        twitter: { card: "summary", title, description },
+      };
+    }
+  }
   const kw = categoryKeyword(r.category);
   const title = `${cityShortName(r.area.city)} ${categorySearchWord(r.category)}｜${r.area.city}の${kw} ${r.shops.length}店をリールで比較`;
   const names = r.shops.slice(0, 3).map((s) => s.name).join("、");
@@ -50,7 +77,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: { canonical: url, languages },
     robots: indexable ? undefined : { index: false, follow: true },
     openGraph: { title, description, url, siteName: "LOCAPASS" },
     twitter: { card: "summary", title, description },
@@ -62,16 +89,23 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
   const r = await resolve(p);
   if (!r) notFound();
   const { area, category, shops, areas } = r;
+  const locale = await getServerLocale();
+  // 英語の表示: 地名・業種の英語が分かるページだけ英語で出す(分からないページは日本語のまま)。
+  const ec = locale === "en" ? cityEn(area.key) : null;
+  const ecat = locale === "en" ? categoryEn(category) : null;
+  const en = ec && ecat ? { city: ec.city, pref: ec.pref, copy: englishCopy({ city: ec.city, pref: ec.pref, category: ecat.name, count: shops.length, word: ecat.word }), catName: ecat.name } : null;
   const kw = categoryKeyword(category);
   const url = cityCategoryUrl(area.key, p.category);
-  const summary = categorySummary(category);
+  const summary = en ? null : categorySummary(category);
 
   // 町名(神宮前・宇田川町など)。ページの文に実際の地名を入れる。
   const towns = [...new Set(shops.map((s) => s.town).filter((t): t is string => !!t))].slice(0, 5);
   // 同じ地域のほかの業種 / 同じ業種のほかの地域(内部リンク)
-  const otherCategories = [...area.byCategory.entries()].filter(([c]) => c !== category).sort((a, b) => b[1].length - a[1].length);
+  const otherCategories = [...area.byCategory.entries()]
+    .filter(([c]) => c !== category && (!en || !!categoryEn(c)))
+    .sort((a, b) => b[1].length - a[1].length);
   const otherCities = areas
-    .filter((a) => a.key !== area.key && (a.byCategory.get(category)?.length ?? 0) >= MIN_SHOPS_FOR_CITY_PAGE)
+    .filter((a) => a.key !== area.key && (a.byCategory.get(category)?.length ?? 0) >= MIN_SHOPS_FOR_CITY_PAGE && (!en || !!cityEn(a.key)))
     .sort((a, b) => (b.byCategory.get(category)?.length ?? 0) - (a.byCategory.get(category)?.length ?? 0))
     .slice(0, 8);
 
@@ -82,10 +116,10 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "ホーム", item: SITE_URL },
-            { "@type": "ListItem", position: 2, name: "エリアから探す", item: `${SITE_URL}/areas` },
-            { "@type": "ListItem", position: 3, name: area.city, item: cityUrl(area.key) },
-            { "@type": "ListItem", position: 4, name: `${area.city}の${kw}`, item: url },
+            { "@type": "ListItem", position: 1, name: en ? en.copy.home : "ホーム", item: SITE_URL },
+            { "@type": "ListItem", position: 2, name: en ? en.copy.areas : "エリアから探す", item: `${SITE_URL}/areas` },
+            { "@type": "ListItem", position: 3, name: en ? en.city : area.city, item: cityUrl(area.key) },
+            { "@type": "ListItem", position: 4, name: en ? en.copy.h1 : `${area.city}の${kw}`, item: url },
           ],
         }}
       />
@@ -98,32 +132,38 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
       />
 
       <header className="space-y-3">
-        <nav aria-label="パンくずリスト" className="text-xs text-muted">
-          <Link href="/" className="hover:text-hl-200">ホーム</Link> / <Link href="/areas" className="hover:text-hl-200">エリアから探す</Link> /{" "}
-          <Link href={cityPath(area.key)} className="hover:text-hl-200">{area.city}</Link>
+        <nav aria-label={en ? "Breadcrumb" : "パンくずリスト"} className="text-xs text-muted">
+          <Link href="/" className="hover:text-hl-200">{en ? en.copy.breadcrumbHome : "ホーム"}</Link> / <Link href="/areas" className="hover:text-hl-200">{en ? en.copy.areas : "エリアから探す"}</Link> /{" "}
+          <Link href={cityPath(area.key)} className="hover:text-hl-200">{en ? en.city : area.city}</Link>
         </nav>
-        <h1 className="font-display text-2xl font-bold leading-snug text-main sm:text-3xl">{area.city}の{kw}</h1>
+        <h1 className="font-display text-2xl font-bold leading-snug text-main sm:text-3xl">{en ? en.copy.h1 : `${area.city}の${kw}`}</h1>
         <p className="text-sm leading-relaxed text-muted">
-          {cityShortName(area.city)}の{categorySearchWord(category)}を探している方へ。{area.prefecture}{area.city}の{kw}を、{shops.length}店舗掲載しています。
-          {towns.length > 0 && `${towns.join("・")}などのお店があります。`}
-          お店の雰囲気や最新の様子を、ショート動画(リール)で確認してから選べます。
+          {en ? (
+            en.copy.intro(shops.length, en.pref, [])
+          ) : (
+            <>
+              {cityShortName(area.city)}の{categorySearchWord(category)}を探している方へ。{area.prefecture}{area.city}の{kw}を、{shops.length}店舗掲載しています。
+              {towns.length > 0 && `${towns.join("・")}などのお店があります。`}
+              お店の雰囲気や最新の様子を、ショート動画(リール)で確認してから選べます。
+            </>
+          )}
         </p>
         {summary && <p className="text-sm leading-relaxed text-muted">{summary}</p>}
       </header>
 
       <section className="space-y-3">
-        <h2 className="font-display text-lg font-semibold text-hl-200">{area.city}の{kw}一覧({shops.length}店舗)</h2>
+        <h2 className="font-display text-lg font-semibold text-hl-200">{en ? en.copy.listHeading(shops.length) : `${area.city}の${kw}一覧(${shops.length}店舗)`}</h2>
         <CityShopList shops={shops} />
       </section>
 
       {otherCategories.length > 0 && (
         <section className="space-y-2">
-          <h2 className="font-display text-base font-semibold text-hl-200">{area.city}のほかのお店</h2>
+          <h2 className="font-display text-base font-semibold text-hl-200">{en ? en.copy.otherShops : `${area.city}のほかのお店`}</h2>
           <ul className="flex flex-wrap gap-2">
             {otherCategories.map(([c, list]) => (
               <li key={c}>
                 <Link href={cityCategoryPath(area.key, categoryToSlug(c)!)} className="inline-block rounded-full border border-main/20 px-3 py-1 text-xs text-main hover:border-hl-400/60">
-                  {area.city}の{categoryKeyword(c)}({list.length})
+                  {en ? `${categoryEn(c)!.word} in ${en.city}` : `${area.city}の${categoryKeyword(c)}`}({list.length})
                 </Link>
               </li>
             ))}
@@ -133,12 +173,12 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
 
       {otherCities.length > 0 && (
         <section className="space-y-2">
-          <h2 className="font-display text-base font-semibold text-hl-200">ほかのエリアの{kw}</h2>
+          <h2 className="font-display text-base font-semibold text-hl-200">{en ? en.copy.otherAreas : `ほかのエリアの${kw}`}</h2>
           <ul className="flex flex-wrap gap-2">
             {otherCities.map((a) => (
               <li key={a.key}>
                 <Link href={cityCategoryPath(a.key, p.category)} className="inline-block rounded-full border border-main/20 px-3 py-1 text-xs text-main hover:border-hl-400/60">
-                  {a.city}の{kw}({a.byCategory.get(category)?.length})
+                  {en ? `${en.copy.h1.replace(en.city, cityEn(a.key)!.city)}` : `${a.city}の${kw}`}({a.byCategory.get(category)?.length})
                 </Link>
               </li>
             ))}
@@ -147,7 +187,7 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
       )}
 
       <p className="text-xs">
-        <Link href="/map" className="text-hl-200 underline underline-offset-2">地図で{area.city}のお店を探す</Link>
+        <Link href="/map" className="text-hl-200 underline underline-offset-2">{en ? en.copy.mapLink : `地図で${area.city}のお店を探す`}</Link>
       </p>
     </div>
   );

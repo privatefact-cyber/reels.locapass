@@ -13,6 +13,7 @@ import { fetchAllRows } from "@/lib/supabase/fetchAll";
 import { isDemoShop } from "@/lib/seo/demo";
 import { MIN_SHOPS_FOR_GUIDE, getPortalStats } from "@/lib/seo/areaStats";
 import { ATTRIBUTE_KEYS } from "@/lib/verticals/attributes";
+import { englishIndexable } from "@/lib/seo/cityEn";
 import { MIN_SHOPS_FOR_CITY_PAGE, categoryToSlug, cityCategoryUrl, cityUrl, getCityAreas } from "@/lib/seo/cityAreas";
 import { MIN_SHOPS_FOR_ATTRIBUTE_PAGE } from "@/lib/seo/attributePages";
 
@@ -188,13 +189,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...areaGuideSlugs.map((slug) => ({ url: `${BASE_URL}/areas/${slug}`, changeFrequency: "weekly" as const, priority: 0.8 })),
   ];
 
-  // 地域(住所の市区町村)ページと、地域×業種ページ。日本語のみ。店舗が3件以上あるものだけ載せる(ページ側も同じ基準でnoindex)。
+  // 地域(住所の市区町村)ページと、地域×業種ページ。日本語が基本(英語で検索に出せる地域×業種ページは英語URLも載せる)。店舗が3件以上あるものだけ載せる(ページ側も同じ基準でnoindex)。
   const cityEntries: MetadataRoute.Sitemap = [];
   try {
     for (const area of await getCityAreas()) {
       if (area.shops.length >= MIN_SHOPS_FOR_CITY_PAGE) cityEntries.push({ url: cityUrl(area.key), changeFrequency: "weekly", priority: 0.8 });
       for (const [category, list] of area.byCategory) {
-        if (list.length >= MIN_SHOPS_FOR_CITY_PAGE) cityEntries.push({ url: cityCategoryUrl(area.key, categoryToSlug(category)!), changeFrequency: "weekly", priority: 0.8 });
+        if (list.length >= MIN_SHOPS_FOR_CITY_PAGE) {
+          const slug = categoryToSlug(category)!;
+          const jaUrl = cityCategoryUrl(area.key, slug);
+          // 英語で検索に出せるページ(地名・業種の英語が分かるもの)は、英語URLも載せて、日本語と hreflang で結ぶ。
+          if (englishIndexable(area.key, category, list.length, MIN_SHOPS_FOR_CITY_PAGE)) {
+            const path = `/areas/c/${encodeURIComponent(area.key)}/${slug}`;
+            const languages = { ja: jaUrl, en: localeUrl(path, "en"), "x-default": jaUrl };
+            cityEntries.push({ url: jaUrl, changeFrequency: "weekly", priority: 0.8, alternates: { languages } });
+            cityEntries.push({ url: localeUrl(path, "en"), changeFrequency: "weekly", priority: 0.8, alternates: { languages } });
+          } else {
+            cityEntries.push({ url: jaUrl, changeFrequency: "weekly", priority: 0.8 });
+          }
+        }
       }
     }
   } catch (e) {
