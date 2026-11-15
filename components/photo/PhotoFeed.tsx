@@ -354,7 +354,7 @@ export function PhotoFeed({
   return (
     <div className="space-y-3">
       {/* 検索(虫眼鏡)・タグ・表示切り替えは、ヘッダー直下に固定する。グリッド・マップ・穴場のどれでも使える。 */}
-      <div className="sticky top-[calc(81px+env(safe-area-inset-top))] z-30 -mx-0 space-y-2 border-b border-main/5 bg-tone-950/90 px-1 py-2 backdrop-blur-md">
+      <div className={view === "map" ? "fixed inset-x-0 top-0 z-[45] space-y-2 bg-gradient-to-b from-black/85 via-black/60 to-transparent px-3 pb-4 pt-[calc(env(safe-area-inset-top)+10px)]" : "sticky top-[calc(81px+env(safe-area-inset-top))] z-30 -mx-0 space-y-2 border-b border-main/5 bg-tone-950/90 px-1 py-2 backdrop-blur-md"}>
         <div className="flex items-center gap-2">
           <button
             type="button"

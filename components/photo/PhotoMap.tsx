@@ -8,7 +8,7 @@ import * as maplibreNs from "maplibre-gl";
 // 名前空間に直接Mapが無く default の下にだけある場合がある。どちらでも使えるようにここで解決する。
 const maplibregl: typeof maplibreNs = (maplibreNs as unknown as { default?: typeof maplibreNs }).default ?? maplibreNs;
 import Link from "@/components/i18n/LocaleLink";
-import { Navigation, Play, Route as RouteIcon, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Navigation, Play, Route as RouteIcon, X } from "lucide-react";
 import type { PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -186,6 +186,12 @@ export function PhotoMap({
   const [focusIds, setFocusIds] = useState<string[] | null>(null);
   const focusIdsRef = useRef(focusIds);
   focusIdsRef.current = focusIds;
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  // 全面表示の間は、サイト共通ヘッダーを隠す(通常の /map と同じ)。
+  useEffect(() => {
+    document.body.setAttribute("data-snap-map", "1");
+    return () => document.body.removeAttribute("data-snap-map");
+  }, []);
   const shownSpots = useMemo(() => {
     if (!focusIds) return spots;
     const byId = new Map(spots.map((sp) => [sp.id, sp]));
@@ -571,12 +577,12 @@ export function PhotoMap({
   }
 
   return (
-    <div className="relative" style={{ height: "calc(100dvh - 11rem)", minHeight: 440 }}>
+    <div data-surface="media" className="fixed inset-0 z-40 overflow-hidden bg-page">
       {/* maplibre-gl.cssが .maplibregl-map{position:relative} を後勝ちで当てるため、インラインで確実に勝たせる */}
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
       {route.length > 0 ? (
-        <div className="pointer-events-auto absolute left-3 right-14 top-3 z-10 space-y-2 rounded-2xl border border-main/15 bg-black/80 p-2.5 backdrop-blur">
+        <div className="pointer-events-auto absolute left-3 right-14 top-[calc(env(safe-area-inset-top)+118px)] z-10 space-y-2 rounded-2xl border border-main/15 bg-black/80 p-2.5 backdrop-blur">
           <div className="flex flex-wrap items-center gap-1.5">
             {route.map((id, i) => {
               const sp = spots.find((x) => x.id === id);
@@ -628,7 +634,29 @@ export function PhotoMap({
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 pb-3">
+      {!drawerOpen && shownSpots.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          aria-label={t.photo.viewPhotos}
+          className="absolute bottom-[calc(env(safe-area-inset-bottom)+68px)] left-1/2 z-20 flex h-9 w-16 -translate-x-1/2 items-center justify-center rounded-t-2xl border border-b-0 border-hl-400/40 bg-black/85 text-hl-300 shadow-lg backdrop-blur transition hover:bg-black md:bottom-4"
+        >
+          <ChevronUp className="h-5 w-5" />
+        </button>
+      ) : null}
+      <div
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/95 to-transparent pt-8 pb-[calc(env(safe-area-inset-bottom)+60px)] transition-transform duration-300 ease-out md:pb-4 ${
+          drawerOpen ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(false)}
+          aria-label="close"
+          className="pointer-events-auto absolute left-1/2 top-0 flex h-8 w-16 -translate-x-1/2 items-center justify-center rounded-t-2xl border border-b-0 border-hl-400/40 bg-black/85 text-hl-300 backdrop-blur transition hover:bg-black"
+        >
+          <ChevronDown className="h-5 w-5" />
+        </button>
         {focusIds ? (
           <div className="pointer-events-none mb-2 flex justify-center">
             <button
