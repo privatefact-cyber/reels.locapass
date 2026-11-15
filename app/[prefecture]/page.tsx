@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ReelFeed, type ReelItem } from "@/components/ReelFeed";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
@@ -16,6 +16,8 @@ import type { Metadata } from "next";
 import { portalMeta } from "@/lib/seo/portalMeta";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
 import { JsonLd } from "@/components/JsonLd";
+import { AreaCategoryLinks } from "@/components/home/AreaCategoryLinks";
+import { localizeHref } from "@/lib/i18n/localePath";
 
 // 注記: このディレクトリ名は[prefecture]だが、既存の/[prefecture]/[city]/[category]
 // (LUXELA側のSEO用ルート、lib/seo/area.tsのPREFECTURE_SLUG="tokyo"固定)と同じNext.jsの
@@ -57,6 +59,10 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
 
 export default async function AreaPortalPage({ params }: { params: Promise<PageParams> }) {
   const { prefecture: slug } = await params;
+  // /SHIBUYA のように大文字で来たら、正規の小文字URL(/shibuya)へ恒久移動する(同じページが別URLとして評価されるのを防ぐ)。
+  if (slug !== slug.toLowerCase() && (await resolvePortal(slug.toLowerCase()))) {
+    permanentRedirect(localizeHref(`/${slug.toLowerCase()}`, await getServerLocale()));
+  }
   const portal = await resolvePortal(slug);
   if (!portal) notFound();
 
@@ -112,6 +118,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
         </Link>
       )}
       <ReelFeed reels={reels} reelsHasMore={reelsHasMore} feedPortalId={portal.id} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} boostHref={`/${slug}/boost`} />
+      {locale === "ja" && <AreaCategoryLinks portalSlug={slug} />}
     </div>
   );
 }

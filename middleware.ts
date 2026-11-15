@@ -64,6 +64,15 @@ async function routeLocale(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(url);
   }
 
+  // ポータルのURLは小文字が正(/shibuya)。/SHIBUYA のように先頭が大文字で来たら、小文字へ恒久移動する。
+  // (静的なルート名はすべて小文字なので、先頭に大文字を含むものは動的なポータルslugにしか当たらない。拡張子付きは対象外)
+  const firstSeg = path.split("/")[1] ?? "";
+  if (/[A-Z]/.test(firstSeg) && !firstSeg.includes(".")) {
+    const url = request.nextUrl.clone();
+    url.pathname = (prefixed ? `/${prefixed}` : "") + path.replace(firstSeg, firstSeg.toLowerCase());
+    return NextResponse.redirect(url, 308);
+  }
+
   const requestHeaders = new Headers(request.headers);
   // 外から送られてきた同名ヘッダーは使わない
   requestHeaders.delete(LOCALE_HEADER);

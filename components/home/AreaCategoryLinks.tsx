@@ -15,8 +15,10 @@ const MAX_LINKS = 8;
  * トップの最下部に出す「エリア × 業種」の入口。検索エンジンが「水戸のカフェ」などの専用ページへ
  * たどれるようにする(トップからのリンクがあるページは重要と判断されやすい)。表示は日本語のみ。
  */
-export async function AreaCategoryLinks() {
-  const areas = await getCityAreas().catch(() => []);
+export async function AreaCategoryLinks({ portalSlug }: { portalSlug?: string } = {}) {
+  const all = await getCityAreas().catch(() => []);
+  // ポータルのページでは、そのポータルの店が過半数を占める地域だけを出す(渋谷のページに水戸を出さない)。
+  const areas = portalSlug ? all.filter((a) => a.shops.filter((s) => s.portalSlug === portalSlug).length * 2 > a.shops.length) : all;
   const combos: { key: string; city: string; category: string; count: number }[] = [];
   for (const a of areas) {
     for (const [category, list] of a.byCategory) {
@@ -24,7 +26,7 @@ export async function AreaCategoryLinks() {
     }
   }
   const picked: typeof combos = [];
-  for (const p of PRIORITY) {
+  for (const p of portalSlug ? [] : PRIORITY) {
     const hit = combos.find((c) => c.key === p.cityKey && c.category === p.category);
     if (hit) picked.push(hit);
   }
