@@ -28,7 +28,8 @@ export const LABELS = {
     speak: "声で読み上げ",
     back: "AIに戻る",
     choicesTitle: "こちらはいかがですか?",
-    chips: ["営業時間は?", "料金は?", "今日のFACESは?"],
+    // 雛形カード: タップすると、AIを呼ばずに、DBと店舗が確認した資料から即答する(原価0円・回数に数えない)。
+    quickChips: [{ key: "today", label: "本日のFACES" }, { key: "price", label: "料金システム" }, { key: "access", label: "営業時間・アクセス" }, { key: "events", label: "開催中のイベント" }],
     choiceLabels: { cast: "FACES", today: "本日のFACES", price: "料金", access: "アクセス・地図", reels: "リール", call: "電話する", contact: "予約・ご連絡" } as Record<string, string>,
     errors: {
       "visitor-limit": "本日の質問回数の上限に達しました。明日またお試しください。",
@@ -60,7 +61,7 @@ export const LABELS = {
     speak: "Read aloud",
     back: "Back to AI",
     choicesTitle: "How about one of these?",
-    chips: ["Opening hours?", "Prices?", "Who are the FACES today?"],
+    quickChips: [{ key: "today", label: "FACES today" }, { key: "price", label: "Prices" }, { key: "access", label: "Hours & access" }, { key: "events", label: "Events" }],
     choiceLabels: { cast: "FACES", today: "FACES today", price: "Prices", access: "Access & map", reels: "Reels", call: "Call", contact: "Reserve / Contact" } as Record<string, string>,
     errors: {
       "visitor-limit": "You've reached today's question limit. Please try again tomorrow.",
@@ -267,7 +268,37 @@ export function useShopAi(shopId: string, opts?: { onLeave?: () => void }) {
     [shopId, locale, loading, l, speakOn, speechLang],
   );
 
-  return { messages, loading, error, ask, clear, labels: l, locale, nav, go, cancelNav, choices, speakOn, setSpeakOn, speaking, speechLang };
+  /** 雛形カード。AIを呼ばず、DBと店舗が確認した資料から、そのまま整えて即答する(原価0円・回数に数えない)。 */
+  const quick = useCallback(
+    async (key: string, label: string) => {
+      if (loading) return;
+      setError(null);
+      setNav(null);
+      setChoices([]);
+      setLoading(true);
+      const now = Date.now();
+      setMessages((m) => [...m, { id: now, role: "user", text: label }]);
+      try {
+        const res = await fetch(`/api/shops/${shopId}/quick?key=${encodeURIComponent(key)}&lang=${locale === "ja" ? "ja" : "en"}`);
+        const json = (await res.json().catch(() => ({}))) as { answer?: string; choices?: AiChoice[] };
+        if (res.ok && json.answer) {
+          const answer = json.answer;
+          setMessages((m) => [...m, { id: now + 1, role: "ai", text: answer }]);
+          if (Array.isArray(json.choices) && json.choices.length > 0) setChoices(json.choices);
+          if (speakOn) voiceOutput.speak(answer, speechLang, { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) });
+        } else {
+          setError(l.errors.failed);
+        }
+      } catch {
+        setError(l.errors.busy);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [shopId, locale, loading, l, speakOn, speechLang],
+  );
+
+  return { messages, loading, error, ask, quick, clear, labels: l, locale, nav, go, cancelNav, choices, speakOn, setSpeakOn, speaking, speechLang };
 }
 
 export type Ai = ReturnType<typeof useShopAi>;
@@ -385,11 +416,11 @@ export function ShopAiInput({ ai, showChips, placeholder, compact, autoStartVoic
   };
   return (
     <div className="space-y-2">
-      {showChips && ai.messages.length === 0 && (
+      {showChips && (
         <div className="flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {ai.labels.chips.map((c) => (
-            <button key={c} type="button" onClick={() => void ai.ask(c)} disabled={ai.loading} className="shrink-0 rounded-full border border-main/15 px-3 py-1 text-xs text-tone-300 hover:border-hl-400/50 hover:text-hl-300 disabled:opacity-50">
-              {c}
+          {ai.labels.quickChips.map((c) => (
+            <button key={c.key} type="button" onClick={() => void ai.quick(c.key, c.label)} disabled={ai.loading} className="shrink-0 rounded-full border border-hl-400/40 bg-hl-500/10 px-3.5 py-1.5 text-xs font-semibold text-hl-300 hover:border-hl-400/70 disabled:opacity-50">
+              {c.label}
             </button>
           ))}
         </div>

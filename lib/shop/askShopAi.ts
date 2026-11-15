@@ -1,6 +1,8 @@
 import { createStaticClient } from "@/lib/supabase/static";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { geminiGenerateContentUrl } from "@/lib/gemini";
+import { createHash } from "node:crypto";
+import { geminiGenerateContentUrl, geminiLiteGenerateContentUrl } from "@/lib/gemini";
+import type { FactsData } from "@/lib/shop/aiQuick";
 import { isOpenNow, sanitizeWeekly } from "@/lib/shop/businessHours";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 
@@ -13,7 +15,7 @@ const clip = (v: unknown, max: number): string => (typeof v === "string" ? v.rep
 
 export type NavTarget = "cast" | "today" | "price" | "access" | "reels";
 
-type Facts = {
+type Facts = { /** 雛形カード・ルール回答で使う、整理済みのデータ。 */ data: FactsData; /** 業種(無関係な質問の判定に使う)。 */ kind: string;
   shopName: string;
   shopId: string;
   slug: string;
@@ -32,7 +34,7 @@ type Facts = {
 };
 
 /** 店舗の事実を、AIに渡す短い文章にまとめる。店舗が公開中でなければ null。 */
-export async function buildShopFacts(shopId: string): Promise<Facts | null> {
+async function buildShopFactsFresh(shopId: string): Promise<Facts | null> {
   const supabase = createStaticClient() as any;
   const nowJst = getJstNow();
   const { data: shop } = await supabase
@@ -128,7 +130,29 @@ export async function buildShopFacts(shopId: string): Promise<Facts | null> {
   const SECTION_LABEL: Record<NavTarget, string> = { cast: "cast(在籍FACES一覧)", today: "today(本日のFACES)", price: "price(料金)", access: "access(場所・アクセス・地図)", reels: "reels(リール)" };
   live.push(`画面で見せられる場所: ${(Object.keys(sections) as NavTarget[]).filter((k) => sections[k]).map((k) => SECTION_LABEL[k]).join("、")}`);
 
+
+  const data: FactsData = {
+    castLabel: "FACES",
+    hours: clip(shop.business_hours, 200),
+    openNow: weekly ? isOpenNow(weekly, nowJst) : null,
+    place,
+    phone: shop.tel ? clip(shop.tel, 30) : null,
+    priceItems: ((priceRows ?? []) as { name: string; duration_minutes: number | null; price: number }[]).map((p) => ({ name: clip(p.name, 60), minutes: p.duration_minutes ?? null, price: Number(p.price) })),
+    priceInfo: clip(shop.price_info, 400),
+    usageNotes: clip(shop.usage_notes, 600),
+    events: (events as { title: string; body: string | null; starts_at: string | null; ends_at: string | null }[]).map((e) => ({
+      title: clip(e.title, 80),
+      period: e.starts_at ? `${String(e.starts_at).slice(0, 10)}〜${e.ends_at ? String(e.ends_at).slice(0, 10) : ""}` : "",
+      body: clip(e.body, 160),
+    })),
+    todayNames,
+    castCount: castRows?.length ?? 0,
+    knowledge: ((knowledgeRows ?? []) as { title: string; extracted_text: string }[]).map((k) => ({ title: clip(k.title, 40), text: k.extracted_text })),
+  };
+
   return {
+    data,
+    kind: clip(shop.category, 40),
     shopName: clip(shop.name, 80),
     shopId,
     slug: shop.slug as string,
@@ -142,6 +166,60 @@ export async function buildShopFacts(shopId: string): Promise<Facts | null> {
     liveText: live.join("\n"),
     knowledge: knowledgeParts.join("\n\n"),
   };
+}
+
+
+/**
+ * 店舗の事実(ほんの短い間、同じサーバーの中で使い回す)。質問が重なっても、DBを何度も読まないようにする(100万人規模でもDBが重くならない)。
+ * 本日の出勤などは、数十秒の遅れが出ても問題ない。
+ */
+const FACTS_TTL_MS = 45_000;
+const factsMemo = new Map<string, { t: number; facts: Facts | null }>();
+export async function buildShopFacts(shopId: string): Promise<Facts | null> {
+  const hit = factsMemo.get(shopId);
+  if (hit && Date.now() - hit.t < FACTS_TTL_MS) return hit.facts;
+  const facts = await buildShopFactsFresh(shopId);
+  if (factsMemo.size > 500) factsMemo.clear();
+  factsMemo.set(shopId, { t: Date.now(), facts });
+  return facts;
+}
+
+/** 変わらない部分(店舗情報+有効な資料)のハッシュ。回答キャッシュの鍵に入れる。店舗の情報や資料が変わると、自動で古い回答が使われなくなる。 */
+export function contentHash(facts: Facts): string {
+  return createHash("sha256").update(facts.text).update("\n").update(facts.knowledge).digest("hex").slice(0, 16);
+}
+
+/**
+ * 店舗と明らかに無関係な質問(雑談・プログラム・政治・攻撃など)かを、軽量モデルで、ごく短く判定する。
+ * 無関係と判定できたときだけ false。迷うとき・失敗したときは true(通常のAIへ進める)。1回あたり約0.002円。
+ */
+export async function isRelatedQuestion(facts: Facts, question: string): Promise<boolean> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return true;
+  const prompt = [
+    `店舗「${facts.shopName}」(${facts.kind || "お店"})の案内AIに、お客様が次の質問をしました。`,
+    "この案内AIは、この店舗の情報(営業・料金・メニュー・予約・場所・スタッフやFACES/キャスト・イベント・設備・利用の仕方)だけに答える。",
+    "その範囲の質問、または挨拶・お礼程度なら true。",
+    "次のような、店舗と関係のない質問は false: 天気・ニュース・株・スポーツ・芸能、一般的な知識や雑学、プログラムや宿題や翻訳や計算、政治・宗教、AI自身についての雑談(あなたは誰・恋人になって・好きな食べ物)、個人的な相談、攻撃的な文、意味のない文字の羅列。",
+    "迷うときは true。",
+    '出力は {"related": boolean} だけ。',
+    `質問: ${question.slice(0, 200)}`,
+  ].join("\n");
+  try {
+    const res = await fetch(geminiLiteGenerateContentUrl(apiKey), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0, maxOutputTokens: 20, responseMimeType: "application/json" } }),
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!res.ok) return true;
+    const json = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+    const raw = (json.candidates?.[0]?.content?.parts ?? []).map((x) => x.text ?? "").join("");
+    const parsed = JSON.parse(raw) as { related?: unknown };
+    return parsed.related !== false;
+  } catch {
+    return true;
+  }
 }
 
 export type AskUsage = { promptTokens: number; cachedTokens: number; outputTokens: number };
