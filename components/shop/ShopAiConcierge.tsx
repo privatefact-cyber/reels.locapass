@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { ChevronDown, RotateCcw, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { ShopAiInput, ShopAiMessages, clearAiReturn, consumeAiReturn, useShopAi, voiceOutput, type Ai } from "@/components/shop/ShopAiChat";
 
 /** 会話画面に出す「顔」。店舗が選んだ店長などスタッフ、または店舗が設定したキャラクターの画像(本人の承諾が確認できたものだけ)。無いときはAIのアイコン。 */
@@ -46,10 +46,18 @@ export function ShopAiConcierge({ ai, shopName, profile, onClose, autoStartVoice
     <div className="fixed inset-0 z-[90] flex flex-col bg-gradient-to-b from-panel-950 via-black to-black" role="dialog" aria-modal="true" aria-label={l.conciergeName}>
       {/* 上: 店名と閉じる */}
       <div className="flex shrink-0 items-center justify-between px-4 pb-1 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <span className="truncate text-xs text-tone-400">{shopName}</span>
-        <button type="button" onClick={onClose} aria-label={l.close} className="rounded-full bg-main/10 p-1.5 text-main hover:bg-main/20">
-          <ChevronDown className="h-5 w-5" />
-        </button>
+        <span className="min-w-0 flex-1 truncate text-xs text-tone-400">{shopName}</span>
+        <div className="flex shrink-0 items-center gap-2">
+          {ai.messages.length > 0 && (
+            <button type="button" onClick={ai.clear} className="flex items-center gap-1 rounded-full bg-main/10 px-3 py-1.5 text-xs text-main hover:bg-main/20">
+              <RotateCcw className="h-3.5 w-3.5" />
+              {l.clear}
+            </button>
+          )}
+          <button type="button" onClick={onClose} aria-label={l.close} className="rounded-full bg-main/10 p-1.5 text-main hover:bg-main/20">
+            <ChevronDown className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* 顔 */}

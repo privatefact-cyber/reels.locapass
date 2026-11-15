@@ -12,6 +12,7 @@ export const LABELS = {
     placeholder: "質問する",
     dockPlaceholder: "このお店のことを聞いてください",
     close: "閉じる",
+    clear: "新しい会話",
     send: "送信",
     voice: "音声で質問",
     listening: "聞いています…(話し終えると、そのまま送信します)",
@@ -43,6 +44,7 @@ export const LABELS = {
     placeholder: "Ask a question",
     dockPlaceholder: "Ask about this venue",
     close: "Close",
+    clear: "New chat",
     send: "Send",
     voice: "Ask by voice",
     listening: "Listening… (it sends when you stop talking)",
@@ -79,6 +81,8 @@ const SPEECH_LANG: Record<string, string> = { ja: "ja-JP", en: "en-US", zh: "zh-
 const stripLocale = (p: string) => p.replace(/^\/(en|zh|ar)(?=\/|$)/, "");
 const returnKey = (shopId: string) => `shopAiReturn:${shopId}`;
 const chatKey = (shopId: string) => `shopAi:${shopId}`;
+/** 会話を覚えておく時間。これより長く触らなかった会話は、次に開いたときに消える。 */
+const CHAT_TTL_MS = 30 * 60 * 1000;
 
 /**
  * 声の出力(読み上げ)の差し替え口。いまはブラウザの読み上げ(無料)。
@@ -151,7 +155,12 @@ export function useShopAi(shopId: string, opts?: { onLeave?: () => void }) {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(chatKey(shopId));
-      if (raw) setMessages((JSON.parse(raw) as AiMessage[]).slice(-30));
+      if (raw) {
+        const saved = JSON.parse(raw) as { t?: number; m?: AiMessage[] };
+        // 最後に触ってから時間がたった会話は、消す(昔の問い合わせが、いつまでも残らないように)。
+        if (saved.t && Array.isArray(saved.m) && Date.now() - saved.t <= CHAT_TTL_MS) setMessages(saved.m.slice(-30));
+        else sessionStorage.removeItem(chatKey(shopId));
+      }
       setSpeakOnState(localStorage.getItem("shopAiSpeak") === "1");
     } catch {
       // 使えない環境では、覚えずに続ける
@@ -159,7 +168,8 @@ export function useShopAi(shopId: string, opts?: { onLeave?: () => void }) {
   }, [shopId]);
   useEffect(() => {
     try {
-      sessionStorage.setItem(chatKey(shopId), JSON.stringify(messages.slice(-30)));
+      if (messages.length > 0) sessionStorage.setItem(chatKey(shopId), JSON.stringify({ t: Date.now(), m: messages.slice(-30) }));
+      else sessionStorage.removeItem(chatKey(shopId));
     } catch {
       // 使えない環境では、覚えずに続ける
     }
@@ -198,6 +208,21 @@ export function useShopAi(shopId: string, opts?: { onLeave?: () => void }) {
     [shopId],
   );
   const cancelNav = useCallback(() => setNav(null), []);
+  /** 会話を消して、新しく始める(声の読み上げも止める)。 */
+  const clear = useCallback(() => {
+    voiceOutput.cancel();
+    setSpeaking(false);
+    setMessages([]);
+    setNav(null);
+    setChoices([]);
+    setError(null);
+    try {
+      sessionStorage.removeItem(chatKey(shopId));
+      sessionStorage.removeItem(returnKey(shopId));
+    } catch {
+      // 使えない環境では、画面上だけ消す
+    }
+  }, [shopId]);
 
   // 画面を動かす合図があったら、タップしなくても動かす(少し待つ間に「やめる」も押せる)。
   useEffect(() => {
@@ -242,7 +267,7 @@ export function useShopAi(shopId: string, opts?: { onLeave?: () => void }) {
     [shopId, locale, loading, l, speakOn, speechLang],
   );
 
-  return { messages, loading, error, ask, labels: l, locale, nav, go, cancelNav, choices, speakOn, setSpeakOn, speaking, speechLang };
+  return { messages, loading, error, ask, clear, labels: l, locale, nav, go, cancelNav, choices, speakOn, setSpeakOn, speaking, speechLang };
 }
 
 export type Ai = ReturnType<typeof useShopAi>;

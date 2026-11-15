@@ -12,9 +12,13 @@ export const maxDuration = 30;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BOT = /bot|crawl|spider|slurp|facebookexternalhit|preview|monitor|curl|wget|python|httpclient|headless|lighthouse|pingdom|uptime/i;
 const MAX_QUESTION = 200;
-/** 1人(端末)が1日に聞ける回数と、1店舗が1日に受ける回数の上限(AIの利用料が青天井にならないようにする)。 */
-const VISITOR_DAILY_LIMIT = 15;
-const SHOP_DAILY_LIMIT = 300;
+/**
+ * 1人(端末)が1日に聞ける回数と、1店舗が1日に受ける回数の上限。
+ * 有料オプションなので、通常の利用では届かない高さにしてある。目的は、プログラムの暴走や悪意のある連続送信で、
+ * AIの利用料が青天井にならないようにする安全装置(1回の質問は、約0.2〜0.7円。最悪でも1店舗で1日1,000円ほど)。
+ */
+const VISITOR_DAILY_LIMIT = 100;
+const SHOP_DAILY_LIMIT = 1500;
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: shopId } = await params;
