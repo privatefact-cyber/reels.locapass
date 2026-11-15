@@ -54,7 +54,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!result.ok) return NextResponse.json({ error: result.reason }, { status: result.reason === "busy" ? 503 : 500 });
 
   // 記録は答えられたものだけ。失敗しても答えは返す。
-  await admin.from("locapass_shop_ai_chats").insert({ shop_id: shopId, question, answer: result.answer, lang, visitor_hash: visitor, answerable: result.answerable }).then(undefined, () => undefined);
+  await admin.from("locapass_shop_ai_chats").insert({ shop_id: shopId, question, answer: result.answer, lang, visitor_hash: visitor, answerable: result.answerable, prompt_tokens: result.usage.promptTokens, cached_tokens: result.usage.cachedTokens, output_tokens: result.usage.outputTokens }).then(undefined, () => undefined);
   // 画面を動かす先(店舗ページの該当の場所・連絡の画面・電話)。予約の確定はお客様が行う(AIは確定しない)。
   type Nav = { kind: "reserve" | "goto" | "call"; path?: string; hash?: string; contact?: boolean; href?: string };
   const base = shopPath(facts.portalSlug, facts.slug);
