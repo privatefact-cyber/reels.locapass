@@ -6,6 +6,8 @@ import Link from "@/components/i18n/LocaleLink";
 import { ChevronDown, ChevronRight, MapPin, Phone, Play } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { useShopAi } from "@/components/shop/ShopAiChat";
+import { ShopAiConcierge, ShopAiLauncher } from "@/components/shop/ShopAiConcierge";
 import type { VenueCardData } from "@/types/venue";
 import type { VenueSheetData, VenueSheetFace } from "@/app/api/venues/[shopId]/sheet/route";
 
@@ -81,6 +83,9 @@ export function VenueDetailSheet({ venue, walkMinutes, onClose, onOpenReel }: { 
   const l = locale === "ja" ? LABELS.ja : LABELS.en;
   const [data, setData] = useState<VenueSheetData | null>(null);
   const [failed, setFailed] = useState(false);
+  // 店舗AI質問(有料オプション)。オンの店舗だけ、バーを出す。タップすると、全画面のコンシェルジュが開く。
+  const [aiOpen, setAiOpen] = useState(false);
+  const ai = useShopAi(venue.id, { onLeave: () => setAiOpen(false) });
   // 開くとき、下からせり上がる(カードが広がる見え方)。
   const [shown, setShown] = useState(false);
   const [dragY, setDragY] = useState<number | null>(null);
@@ -216,6 +221,14 @@ export function VenueDetailSheet({ venue, walkMinutes, onClose, onOpenReel }: { 
             </section>
           )}
         </div>
+
+        {/* 店舗AI質問(有料オプション。オンの店舗だけ)。その店の登録情報だけで答える。 */}
+        {data?.aiChat && (
+          <div className="shrink-0 border-t border-main/10 px-4 py-2">
+            <ShopAiLauncher profile={data.aiAvatar ?? null} label={ai.labels.dockPlaceholder} onOpen={() => setAiOpen(true)} />
+          </div>
+        )}
+        {aiOpen && <ShopAiConcierge ai={ai} shopName={venue.name} profile={data?.aiAvatar ?? null} onClose={() => setAiOpen(false)} />}
 
         {/* フッター(即決アクション) */}
         <div className="shrink-0 space-y-2 border-t border-main/10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">

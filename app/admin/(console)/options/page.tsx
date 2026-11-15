@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { ShopOptionsEditor } from "@/components/admin/ShopOptionsEditor";
 import { SHOP_OPTIONS } from "@/lib/shop-options";
-import { getShopOptionStates, searchShopsForOptions, setShopOption } from "./actions";
+import { applyShopOptions, getShopsOptionStates, searchShopsForOptions } from "./actions";
 
 export default async function AdminOptionsPage() {
   await requireAdmin();
@@ -10,11 +10,11 @@ export default async function AdminOptionsPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">オプション管理</h1>
         <p className="mt-1 text-sm text-slate-600">
-          店舗を検索して選ぶと、その店舗のオプションがチェックボックスで出ます。チェックを入れる/外すと、その場で保存されます。
+          店舗を検索して、1店舗でも複数店舗でも選べます。オプションを「オンにする/オフにする」から選んで「更新する」を押すと、まとめて反映されます。反映後に、データベースを読み直した実際の状態が一覧で出ます。
         </p>
       </div>
       <section className="rounded-lg border border-slate-200 bg-slate-50 p-5">
-        <ShopOptionsEditor search={searchShopsForOptions} load={getShopOptionStates} save={setShopOption} />
+        <ShopOptionsEditor search={searchShopsForOptions} load={getShopsOptionStates} apply={applyShopOptions} />
       </section>
       <section>
         <h2 className="mb-2 text-sm font-semibold text-slate-900">オプションの種類</h2>

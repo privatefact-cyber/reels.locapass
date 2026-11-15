@@ -52,6 +52,8 @@ const NAV_GROUPS: { title: string; items: { path: string; label: string; icon: s
       { path: "/messages", label: "お客様へのメッセージ", icon: "💌", description: "お気に入り登録者へのお知らせ" },
       { path: "/applicants", label: "応募者管理", icon: "📝", description: "求人への応募の確認" },
       { path: "/inquiries", label: "お問い合わせ", icon: "✉️", description: "お客様からのお問い合わせ" },
+      { path: "/ai-knowledge", label: "AIの知識", icon: "📚", description: "メニュー・イベント案内などを置くだけで、店舗AIが読み取ります" },
+      { path: "/ai-questions", label: "AIへの質問", icon: "💬", description: "店舗AI質問(オプション)に寄せられた質問と答え" },
       { path: "/google-reviews", label: "Googleの口コミ", icon: "⭐", description: "Googleの口コミの確認と返信" },
     ],
   },  // スマホでは上のバーに「使い方」を出さないので、メニューの中にも置く。

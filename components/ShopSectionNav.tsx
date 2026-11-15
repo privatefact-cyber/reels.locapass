@@ -26,6 +26,7 @@ export function ShopSectionNav({
   bookingUrl = null,
   bookingLabel = null,
   sections,
+  raised = false,
 }: {
   shopId: string;
   phone: string | null;
@@ -38,11 +39,20 @@ export function ShopSectionNav({
   bookingLabel?: string | null;
   /** 店舗ページに実際に表示されているセクションのid。未入力で非表示のセクションはナビにも出さない。 */
   sections: string[];
+  /** 画面下に店舗AIのチャット欄が常駐するときは、その上に出す(重ならないように)。 */
+  raised?: boolean;
 }) {
   const { t } = useLocale();
   const SCROLL_ITEMS = getScrollItems(t).filter((item) => sections.includes(item.id));
   const [activeId, setActiveId] = useState(SCROLL_ITEMS[0]?.id ?? "");
   const [contactOpen, setContactOpen] = useState(false);
+  // 店舗AIが「予約して」などで連絡の画面を開くとき(同じページなら合図、別のページからなら ?contact=1)。
+  useEffect(() => {
+    const open = () => setContactOpen(true);
+    window.addEventListener("shop-contact-open", open);
+    if (new URLSearchParams(window.location.search).get("contact") === "1") open();
+    return () => window.removeEventListener("shop-contact-open", open);
+  }, []);
   const showContact = Boolean(phone || lineContactUrl);
 
   useEffect(() => {
@@ -73,7 +83,7 @@ export function ShopSectionNav({
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-24 z-50 mx-auto w-fit max-w-[92%] md:bottom-6">
+      <nav className={`fixed inset-x-0 z-50 mx-auto w-fit max-w-[92%] ${raised ? "bottom-40 md:bottom-24" : "bottom-24 md:bottom-6"}`}>
         <ul className="flex items-center gap-4 rounded-full border border-line/30 bg-panel-950/70 px-5 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_20px_rgb(var(--hl-500)/0.15)] backdrop-blur-2xl sm:gap-6">
           {SCROLL_ITEMS.map(({ id, label, icon: Icon }) => {
             const isActive = activeId === id;

@@ -4,6 +4,7 @@ import { isOpenNow, sanitizeWeekly } from "@/lib/shop/businessHours";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
 import { castPath, shopPhotosPath } from "@/lib/locapass/publicUrls";
 import { getShopPhotoPosts } from "@/lib/photo/getShopPhotoPosts";
+import { getAiProfile, type AiProfile } from "@/lib/shop/aiProfile";
 
 // マップのカードを広げたときに出す「店舗の詳細シート」用の、1店舗分の軽い取得API。
 // 一覧(getVenueCards)に全部載せると重くなるので、広げたときだけ取りに来る。公開情報だけを返す。
@@ -25,6 +26,10 @@ export type VenueSheetData = {
   /** 予約ボタンの行き先。店舗の予約URL → LINE → 電話の順。どれも無ければ null(店舗詳細へ)。 */
   reserve: { href: string; label: string | null; external: boolean } | null;
   phone: string | null;
+  /** 店舗AI質問(有料オプション)がオンの店舗だけ true。 */
+  aiChat: boolean;
+  /** AIコンシェルジュの顔(店長・店舗が設定したキャラクター。承諾済みのものだけ)。無ければ null。 */
+  aiAvatar: AiProfile | null;
 };
 
 export async function GET(_request: Request, { params }: { params: Promise<{ shopId: string }> }) {
@@ -45,6 +50,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sho
   const shopSlug = shop.slug as string;
 
   const nowJst = getJstNow();
+  // オプション列は型定義に無いので、別に引く。
+  const { data: aiRow } = await (supabase as any).from("locapass_shops").select("ai_chat_enabled").eq("id", shop.id).maybeSingle();
   const [{ data: castRows, error: castError }, { data: priceRows }, photoPosts] = await Promise.all([
     // 公開用ビュー(個人情報を含まない・公開中店舗の退会していないキャストだけ)。
     supabase.from("locapass_public_casts").select("id, name, issue_no, avatar_url").eq("shop_id", shop.id).order("name").limit(40),
@@ -94,6 +101,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sho
     minPrice: cheapest ? { name: cheapest.name as string, minutes: (cheapest.duration_minutes as number | null) ?? null, price: cheapest.price as number } : null,
     reserve,
     phone,
+    aiChat: Boolean(aiRow?.ai_chat_enabled),
+    aiAvatar: aiRow?.ai_chat_enabled ? await getAiProfile(shop.id as string) : null,
   };
   return NextResponse.json(body, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } });
 }

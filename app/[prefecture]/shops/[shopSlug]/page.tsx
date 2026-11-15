@@ -31,6 +31,8 @@ import { reservationEnabled, shopCanTakeReservations } from "@/lib/reservation/c
 import { ShopVideo } from "@/components/shop/ShopVideo";
 import { resolveStoredVideo } from "@/lib/video";
 import { ShopSectionNav } from "@/components/ShopSectionNav";
+import { ShopAiDock } from "@/components/shop/ShopAiConcierge";
+import { getAiProfile } from "@/lib/shop/aiProfile";
 import { ShopFollowButton } from "@/components/ShopFollowButton";
 import { StoryRing } from "@/components/StoryRing";
 import { GalleryThumbs } from "@/components/shop/GalleryThumbs";
@@ -269,6 +271,10 @@ export default async function ShopDetailPage({
   // 動画紹介(YouTube / TikTok / Instagram / Vimeo)。生成済みの型に列が無いため、小さな別クエリで取る(未設定ならnull)。
   const { data: ytRow } = await (supabase as any).from("locapass_shops").select("video_provider, video_ref, youtube_video_id, hero_youtube_id").eq("id", shopRow.id).maybeSingle();
   const introVideo = resolveStoredVideo(ytRow);
+  // 店舗AI質問(有料オプション)。オプション列は型定義に無いので別に引く。オンの店舗だけ、画面下にチャット欄を出す。
+  const { data: aiOptionRow } = await (supabase as any).from("locapass_shops").select("ai_chat_enabled").eq("id", shopRow.id).maybeSingle();
+  const aiChatEnabled = Boolean(aiOptionRow?.ai_chat_enabled);
+  const aiProfile = aiChatEnabled ? await getAiProfile(shopRow.id) : null;
   const addressDisplay = (locale === "en" || locale === "ar") && shopRow.address_en ? shopRow.address_en : store.address;
 
   const { data: activeStoryCastIds } = castIds.length
@@ -903,7 +909,12 @@ export default async function ShopDetailPage({
         )}
       </div>
 
+      {/* 店舗AI質問(有料オプション): 画面の下に常駐するチャット欄。下の余白は、最後のコンテンツが隠れないよう確保する。 */}
+      {aiChatEnabled && <div className="h-24" aria-hidden />}
+      {aiChatEnabled && <ShopAiDock shopId={shopRow.id} shopName={shopRow.name} profile={aiProfile} />}
+
       <ShopSectionNav
+        raised={aiChatEnabled}
         shopId={shopRow.id}
         phone={store.phone}
         lineContactUrl={store.lineContactUrl}
