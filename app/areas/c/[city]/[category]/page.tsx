@@ -9,10 +9,12 @@ import {
   MIN_SHOPS_FOR_CITY_PAGE,
   SITE_URL,
   categoryKeyword,
+  categorySearchWord,
   categoryToSlug,
   cityCategoryPath,
   cityCategoryUrl,
   cityPath,
+  cityShortName,
   cityUrl,
   getCityAreas,
   slugToCategory,
@@ -40,9 +42,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!r) return { title: "ページが見つかりません" };
   const locale = await getServerLocale();
   const kw = categoryKeyword(r.category);
-  const title = `${r.area.city}の${kw}｜${r.shops.length}店をリールで比較`;
+  const title = `${cityShortName(r.area.city)} ${categorySearchWord(r.category)}｜${r.area.city}の${kw} ${r.shops.length}店をリールで比較`;
   const names = r.shops.slice(0, 3).map((s) => s.name).join("、");
-  const description = `${r.area.prefecture}${r.area.city}の${kw}${r.shops.length}店を掲載。${names}など、店の雰囲気や最新情報をショート動画(リール)で確認してから選べます。`;
+  const description = `${cityShortName(r.area.city)}の${categorySearchWord(r.category)}を探すなら。${r.area.prefecture}${r.area.city}の${kw}${r.shops.length}店を掲載。${names}など、店の雰囲気や最新情報をショート動画(リール)で確認してから選べます。`;
   const url = cityCategoryUrl(r.area.key, p.category);
   const indexable = locale === "ja" && r.shops.length >= MIN_SHOPS_FOR_CITY_PAGE;
   return {
@@ -102,7 +104,7 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
         </nav>
         <h1 className="font-display text-2xl font-bold leading-snug text-main sm:text-3xl">{area.city}の{kw}</h1>
         <p className="text-sm leading-relaxed text-muted">
-          {area.prefecture}{area.city}の{kw}を、{shops.length}店舗掲載しています。
+          {cityShortName(area.city)}の{categorySearchWord(category)}を探している方へ。{area.prefecture}{area.city}の{kw}を、{shops.length}店舗掲載しています。
           {towns.length > 0 && `${towns.join("・")}などのお店があります。`}
           お店の雰囲気や最新の様子を、ショート動画(リール)で確認してから選べます。
         </p>

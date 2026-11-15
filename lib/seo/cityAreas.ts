@@ -51,6 +51,28 @@ export function categoryKeyword(category: string): string {
   return CATEGORY_KEYWORD[category] ?? category;
 }
 
+/** 検索で実際に打たれる短い言い方(「水戸 カフェ」「渋谷 居酒屋」)。タイトル・導入文に入れて、検索語との一致を高める。 */
+const CATEGORY_SEARCH_WORD: Record<string, string> = {
+  "カフェ・スイーツ": "カフェ",
+  "レストラン・食事": "ランチ",
+  "居酒屋・バー": "居酒屋",
+  ショッピング: "雑貨",
+  "観光・体験": "観光",
+  宿泊: "ホテル",
+  ペット: "ペット同伴",
+  "美容・暮らし": "美容室",
+  コミュニティ: "交流スペース",
+  "習い事・教室": "習い事",
+};
+export function categorySearchWord(category: string): string {
+  return CATEGORY_SEARCH_WORD[category] ?? category;
+}
+/** 「水戸市」→「水戸」、「渋谷区」→「渋谷」。2文字以下の地名は、そのまま。 */
+export function cityShortName(city: string): string {
+  const short = city.replace(/[市区町村]$/, "");
+  return short.length >= 2 ? short : city;
+}
+
 /** 内容が薄いページを検索に出さないための、最低店舗数(エリアガイドと同じ基準)。 */
 export const MIN_SHOPS_FOR_CITY_PAGE = 3;
 

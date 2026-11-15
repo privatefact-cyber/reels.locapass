@@ -10,6 +10,7 @@ import Link from "@/components/i18n/LocaleLink";
 import { getActiveBoosts } from "@/lib/boost/getBoosts";
 import { boostText } from "@/lib/boost/text";
 import { JsonLd } from "@/components/JsonLd";
+import { AreaCategoryLinks } from "@/components/home/AreaCategoryLinks";
 
 export const revalidate = 60;
 
@@ -60,6 +61,7 @@ export default async function TopPage() {
           それぞれ表示する(トップでは全パートナー分を出すと件数に上限がないため扱わない)。
           adsはシステム管理者が投稿するPRで、指定頻度でグリッド/リール一覧の両方に紛れ込ませる。 */}
       <ReelFeed reels={reels} reelsHasMore={reelsHasMore} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} />
+      {locale === "ja" && <AreaCategoryLinks />}
     </div>
   );
 }
