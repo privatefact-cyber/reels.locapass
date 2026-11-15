@@ -58,6 +58,8 @@ export function matchNames(a: string, b: string): "exact" | "partial" | null {
 export function addressKey(raw: string | null | undefined): string | null {
   if (!raw) return null;
   let s = normalizeAddress(raw.normalize("NFKC"));
+  // 海外の住所(日本語を含まない)は、番地だけに縮めると別の店と取り違えるので、全体を使う。
+  if (!/[\u3040-\u30ff\u3400-\u9fff]/.test(s)) return s.replace(/[\s,、]/g, "").toLowerCase() || null;
   s = s.replace(/^〒?\s*\d{3}-?\d{4}\s*/, "");
   s = toStreetPart(s);
   s = s.replace(/^(?:東京都|北海道|京都府|大阪府|.{2,3}県)/, "");

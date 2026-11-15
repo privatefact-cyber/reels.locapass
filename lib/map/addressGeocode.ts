@@ -114,7 +114,31 @@ async function geocodeNominatim(query: string): Promise<AddressGeocodeResult | n
  * 2. Nominatim(OSM): GSIが外したときの保険。ローマ字表記もこちらで拾える。
  * どちらも無料枠前提のため、一括実行時は呼び出し側で必ず間隔を空けること。
  */
+/** 日本語(ひらがな・カタカナ・漢字)を含まない住所は、海外の住所として扱う。 */
+export function isForeignAddress(raw: string): boolean {
+  return !/[\u3040-\u30ff\u3400-\u9fff]/.test(raw);
+}
+
+/** 海外の住所用のNominatim(国を絞らない)。「建物名, 通り, 地区, 市, 国」を、先頭から1つずつ減らして探す(建物名で外れても通り・地区で拾えるように)。1秒に1回の決まりがあるので間を空ける。 */
+async function geocodeForeign(raw: string): Promise<AddressGeocodeResult | null> {
+  const parts = normalizeAddress(raw).split(/\s*,\s*/).filter(Boolean);
+  for (let i = 0; i < Math.min(parts.length, 4); i++) {
+    const query = parts.slice(i).join(", ");
+    if (query.length < 6) break;
+    if (i > 0) await new Promise((r) => setTimeout(r, 1100));
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
+      headers: { "User-Agent": "locapass.net map geocoder (contact: admin@locapass.net)" },
+    }).catch(() => null);
+    if (!res?.ok) continue;
+    const hits = (await res.json().catch(() => [])) as { lat?: string; lon?: string; display_name?: string }[];
+    const hit = hits?.[0];
+    if (hit?.lat && hit?.lon) return { lat: Number(hit.lat), lng: Number(hit.lon), query, matched: hit.display_name, provider: "nominatim" };
+  }
+  return null;
+}
+
 export async function geocodeAddress(rawAddress: string): Promise<AddressGeocodeResult | null> {
+  if (isForeignAddress(rawAddress)) return geocodeForeign(rawAddress);
   const street = toStreetPart(rawAddress);
   if (!street) return null;
 

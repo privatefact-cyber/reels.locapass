@@ -1,6 +1,6 @@
 import { createEmbedPostForShop } from "@/lib/embed-post/createEmbedPost";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { geocodeAddress, normalizeAddress } from "@/lib/map/addressGeocode";
+import { geocodeAddress, isForeignAddress, normalizeAddress } from "@/lib/map/addressGeocode";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
 import { previewShopImport, type ImportPreview } from "@/lib/shop/importFromWebsite";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
@@ -127,15 +127,16 @@ export async function fetchYoutubeDescription(youtubeId: string): Promise<string
 }
 
 /** 検索と動画詳細を分離し、候補の長さ・埋め込み可否で絞る。 */
-export async function collectYoutubeCandidates(query: string, maxResults = 50, publishedAfter?: string): Promise<YoutubeCandidate[]> {
+export async function collectYoutubeCandidates(query: string, maxResults = 50, publishedAfter?: string, opts?: { regionCode?: string | null; relevanceLanguage?: string; order?: "date" | "relevance" }): Promise<YoutubeCandidate[]> {
+  const regionCode = opts?.regionCode === undefined ? "JP" : opts.regionCode;
   const search = await youtubeJson<YoutubeSearchResponse>("search", {
     part: "id",
     q: query,
     type: "video",
-    regionCode: "JP",
-    relevanceLanguage: "ja",
+    ...(regionCode ? { regionCode } : {}),
+    relevanceLanguage: opts?.relevanceLanguage ?? "ja",
     maxResults: String(Math.min(Math.max(maxResults, 1), 50)),
-    order: "date",
+    order: opts?.order ?? "date",
     videoEmbeddable: "true",
     // 3分未満だけに絞る(後段でも180秒以下に絞るが、検索結果の枠をShortsで埋めるため先に指定する)。
     videoDuration: "short",
@@ -322,6 +323,8 @@ export async function createShopForIngestion(ingestionId: string, input: {
     category,
     address: input.address.trim().slice(0, 300),
     business_type: businessTypeForCategory(category),
+    // 海外の住所(英語)は、日本語→英語の翻訳に回さず、そのまま英語表記にする。
+    ...(isForeignAddress(input.address) ? { address_en: input.address.trim().slice(0, 300) } : {}),
     status: input.publish === false ? "draft" : "active",
     ...(input.officialUrl ? { url: input.officialUrl } : {}),
   }).select("id").single();
@@ -423,8 +426,11 @@ type PendingRow = { id: string; portal_id: number; title: string; description: s
 export async function processPendingIngestion(row: PendingRow, userId: string | null): Promise<"published" | "held" | "error"> {
   const admin = createAdminClient();
   try {
+    const overseas = await overseasConfigForPortal(row.portal_id);
     const hint = extractShopHint(row.title, row.description ?? "");
-    const result = await identifyShopFromVideo({ title: row.title, description: row.description, name: hint.name ?? row.candidate_name, address: hint.address ?? row.candidate_address });
+    const result = overseas
+      ? await identifyOverseasShopFromVideo(overseas, { title: row.title, description: row.description })
+      : await identifyShopFromVideo({ title: row.title, description: row.description, name: hint.name ?? row.candidate_name, address: hint.address ?? row.candidate_address });
     if (!result.name || !result.address || !result.confident) {
       const why = !result.name || !result.address ? "店名・住所を特定できないため保留" : "店名・住所の裏付けが弱い(推測)ため保留。公式サイトURLを貼って保存すると自動で取得します";
       await (admin as any).from("locapass_youtube_ingestions").update({ candidate_name: result.name, candidate_address: result.address, official_url: result.officialUrl, match_reason: result.reason || why, error_message: why }).eq("id", row.id);
@@ -634,6 +640,125 @@ export async function identifyShopFromVideo(input: { title: string; description?
 /** 旧名の互換ラッパー。新しい呼び出しは identifyShopFromVideo を使う。 */
 export async function findOfficialWebsite(title: string, name: string | null, address: string | null, description?: string | null) {
   return identifyShopFromVideo({ title, description, name, address });
+}
+
+/**
+ * 海外ポータル(日本人向けの海外ガイド)。slug がキー。検索語・国・住所の確認用の正規表現を持つ。
+ * 地域を足すときは、ここに1つ足し、ポータル(locapass_portals)を作る。
+ */
+export type OverseasConfig = {
+  label: string;
+  country: string;
+  city: string;
+  regionCode: string;
+  /** 住所がこの地域のものか確認する(別の都市の店を混ぜない)。 */
+  addressMustMatch: RegExp;
+  queries: { q: string; lang: "en" | "ja"; regionCode?: string | null }[];
+};
+export const OVERSEAS_PORTALS: Record<string, OverseasConfig> = {
+  cebu: {
+    label: "セブ",
+    country: "Philippines",
+    city: "Cebu",
+    regionCode: "PH",
+    addressMustMatch: /cebu|mandaue|lapu[- ]?lapu|mactan|talisay|consolacion|liloan|minglanilla/i,
+    queries: [
+      { q: "Cebu cafe", lang: "en", regionCode: "PH" },
+      { q: "Cebu restaurant", lang: "en", regionCode: "PH" },
+      { q: "Cebu coffee shop IT Park", lang: "en", regionCode: "PH" },
+      { q: "Cebu coworking space", lang: "en", regionCode: "PH" },
+      { q: "Cebu food trip", lang: "en", regionCode: "PH" },
+      { q: "Cebu hotel review", lang: "en", regionCode: "PH" },
+      { q: "セブ島 カフェ", lang: "ja", regionCode: null },
+      { q: "セブ島 グルメ", lang: "ja", regionCode: null },
+      { q: "セブ島 レストラン", lang: "ja", regionCode: null },
+    ],
+  },
+};
+
+const overseasBySlug = new Map<number, OverseasConfig | null>();
+/** ポータルのIDから、海外ポータルの設定を引く(海外でなければnull)。 */
+export async function overseasConfigForPortal(portalId: number): Promise<OverseasConfig | null> {
+  if (overseasBySlug.has(portalId)) return overseasBySlug.get(portalId) ?? null;
+  const { data } = await createAdminClient().from("locapass_portals").select("slug").eq("id", portalId).maybeSingle();
+  const cfg = data?.slug ? OVERSEAS_PORTALS[data.slug] ?? null : null;
+  overseasBySlug.set(portalId, cfg);
+  return cfg;
+}
+
+/** 海外の店舗版。動画の題名・説明(英語など)から、店名と英語の住所を特定する。説明欄に無い情報は作らない。 */
+export async function identifyOverseasShopFromVideo(cfg: OverseasConfig, input: { title: string; description?: string | null }): Promise<ShopIdentification> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY が未設定です");
+  const prompt = [
+    `YouTubeの紹介動画で取り上げられた、${cfg.city}(${cfg.country})の店舗・施設(カフェ・レストラン・コワーキング・ホテル・サロン・ジム・観光施設など)を1つ特定してください。`,
+    "動画の題名・説明欄に店名・住所があればそれを最優先で使い、足りない部分だけGoogle検索で補ってください。",
+    "",
+    `動画タイトル: ${input.title}`,
+    `説明欄: ${(input.description ?? "").slice(0, 2500) || "なし"}`,
+    "",
+    "判定ルール:",
+    `- 店名は、現地の表記(英語など)のまま。住所は英語で、建物・モール名、通り、地区(barangay)、市(${cfg.city})まで書いてください。番地が分からなくても、モールや地区で場所が分かれば構いません。`,
+    `- ${cfg.city}周辺の店でなければ、name と address を null にしてください。`,
+    "- 複数の店舗を紹介する動画(〇選・TOP5・食べ歩き・ツアー)や、店舗の紹介ではない動画(Vlog・ニュース・広告)は name と address を null にしてください。",
+    "- 題名・説明欄・検索結果のどれにも店名の裏付けが無く、動画の雰囲気などからの推測でしか決められない場合は null にしてください(推測で店舗を作らない)。",
+    "- confident は、店名と住所が説明欄・公式サイト・検索結果ではっきり確認できたときだけ true。迷うときは false。",
+    "- officialUrl は店舗または運営会社の公式サイトが見つかった場合のみ。無ければ null(SNS・地図・予約サイトは不可)。",
+    `- category は次のどれか1つ: ${LOCAPASS_CATEGORIES.join(" / ")}`,
+    "",
+    "出力は次のJSONだけにしてください(前後に文章を付けない)。",
+    '{"name":string|null,"address":string|null,"officialUrl":string|null,"category":string,"confident":boolean,"reason":string}',
+  ].join("\n");
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      tools: [{ google_search: {} }],
+      generationConfig: { temperature: 0, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!response.ok) throw new Error(`店舗の特定に失敗しました: ${response.status} ${(await response.text()).slice(0, 200)}`);
+  const json = await response.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+  const raw = json.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
+  const result = parseJsonObject(raw);
+  const officialUrl = typeof result.officialUrl === "string" && /^https:\/\/[^\s]+$/i.test(result.officialUrl) ? result.officialUrl : null;
+  const category = typeof result.category === "string" && (LOCAPASS_CATEGORIES as readonly string[]).includes(result.category) ? result.category : "カフェ・スイーツ";
+  const name = typeof result.name === "string" && result.name.trim() ? result.name.trim().slice(0, 120) : null;
+  const rawAddress = typeof result.address === "string" ? result.address.trim().slice(0, 300) : "";
+  const address = rawAddress.length >= 8 && cfg.addressMustMatch.test(rawAddress) ? rawAddress : null;
+  return {
+    name,
+    address,
+    officialUrl,
+    category,
+    confident: result.confident === true,
+    reason: typeof result.reason === "string" ? result.reason.slice(0, 500) : "店名・住所を特定",
+  };
+}
+
+/** 海外ポータルの収集: 検索 → 候補を保存 → 店名・住所を特定して店舗を作り、リールを公開する。時間内に終わる分だけ処理する。 */
+export async function collectAndBuildOverseas(slug: string, options: { userId: string | null; processLimit?: number; budgetMs?: number }) {
+  const cfg = OVERSEAS_PORTALS[slug];
+  if (!cfg) throw new Error("不明な地域です");
+  const admin = createAdminClient();
+  const { data: portal } = await admin.from("locapass_portals").select("id").eq("slug", slug).maybeSingle();
+  if (!portal) throw new Error(`ポータル(${slug})がまだ作られていません`);
+  const publishedAfter = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString();
+  const found = new Map<string, YoutubeCandidate>();
+  const errors: string[] = [];
+  for (const query of cfg.queries) {
+    try {
+      const list = await collectYoutubeCandidates(query.q, 30, publishedAfter, { regionCode: query.regionCode === undefined ? cfg.regionCode : query.regionCode, relevanceLanguage: query.lang, order: "relevance" });
+      for (const c of list) if (!found.has(c.youtubeId)) found.set(c.youtubeId, c);
+    } catch (e) {
+      errors.push(`${query.q}: ${errorText(e, "失敗")}`);
+    }
+  }
+  const saved = await saveYoutubeCandidates(portal.id as number, [...found.values()]);
+  const processed = await processPendingIngestions({ portalId: portal.id as number, limit: options.processLimit ?? 12, userId: options.userId, budgetMs: options.budgetMs ?? 190_000 });
+  return { queries: cfg.queries.length, found: found.size, saved, ...processed, searchErrors: errors };
 }
 
 /**
