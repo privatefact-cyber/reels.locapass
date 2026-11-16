@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Bell, ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { PET_RETURN_KEY } from "./SpotsExplorer";
 
 /** 上のバー。トップでは「ロカわん」のロゴ、下の階層では戻るボタン。ベルは、ロカわんのお知らせ(/pet/notifications)へ。 */
 const PET_TYPES = ["pet_reminder", "pet_lost_alert", "pet_follow_request", "pet_follow_approved", "pet_sighting", "pet_found", "pet_found_claim", "pet_lost_check"];
@@ -49,7 +50,17 @@ export function PetTopBar() {
         )}
         <div className="flex items-center gap-1">
           {/* ロカわんはLOCAPASSのサービス。LOCAPASS本体(地図・お店・リール)へいつでも行けるように */}
-          <Link href="/" className="rounded-full border border-[#F1E1CF] bg-white/80 px-3 py-1.5 text-[11px] font-extrabold tracking-wide text-[#7A6050] active:scale-95">
+          <Link
+            href="/"
+            onClick={() => {
+              // LOCAPASS本体へ移ったあとも、画面の下に「ロカわんにもどる」を出して、いまの画面へ戻れるようにする
+              try {
+                sessionStorage.setItem(PET_RETURN_KEY, pathname);
+              } catch {
+                // 保存できなくても、LOCAPASSには移れる
+              }
+            }}
+            className="rounded-full border border-[#F1E1CF] bg-white/80 px-3 py-1.5 text-[11px] font-extrabold tracking-wide text-[#7A6050] active:scale-95">
             LOCAPASS ›
           </Link>
           {!isCard && (

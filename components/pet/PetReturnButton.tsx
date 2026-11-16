@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { PET_RETURN_KEY } from "./SpotsExplorer";
 
 /**
- * ロカわんの「おでかけ」からLOCAPASSの店舗ページへ移ったときだけ、画面の下に「ロカわんにもどる」を出す。
+ * ロカわんからLOCAPASS本体へ移ったとき(おでかけの店舗ページ・右上の「LOCAPASS ›」)に、画面の下に「ロカわんにもどる」を出す。
+ * ロカわんのiPhoneアプリの中(UAに LocaWanApp)では、印が無くても、LOCAPASS本体のどのページでも出す。
  * 店舗ページの中でリールや地図へ移っても出し続け、/pet に戻ったら消す(sessionStorage の印で判断)。
  */
 export function PetReturnButton() {
@@ -19,9 +20,11 @@ export function PetReturnButton() {
         setTo(null);
         return;
       }
-      setTo(sessionStorage.getItem(PET_RETURN_KEY));
+      // ロカわんのiPhoneアプリには「戻る」の操作が無いので、LOCAPASS本体のどのページでも、ロカわんへ戻れるようにする
+      const inApp = navigator.userAgent.includes("LocaWanApp");
+      setTo(sessionStorage.getItem(PET_RETURN_KEY) ?? (inApp ? "/pet" : null));
     } catch {
-      setTo(null);
+      setTo(navigator.userAgent.includes("LocaWanApp") ? "/pet" : null);
     }
   }, [pathname]);
 
