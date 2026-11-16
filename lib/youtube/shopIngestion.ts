@@ -2,6 +2,7 @@ import { createEmbedPostForShop } from "@/lib/embed-post/createEmbedPost";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { geocodeAddress, isForeignAddress, normalizeAddress } from "@/lib/map/addressGeocode";
 import { LOCAPASS_CATEGORIES } from "@/lib/shop/locapassCategories";
+import { quotaForPortal, remainingPublishSlots, shopIsAtVideoLimit } from "@/lib/youtube/publishQuota";
 import { previewShopImport, type ImportPreview } from "@/lib/shop/importFromWebsite";
 import { enrichNewShop } from "@/lib/shop/enrichNewShop";
 import { addressKey, filterSameShop, hasStreetNumber, safeSearchTerm, searchTerms, type ShopRow } from "@/lib/youtube/shopMatch";
@@ -401,6 +402,20 @@ export async function matchOrCreateAndPublish(ingestionId: string, input: {
       return "held";
     }
   }
+  if (existing.length === 1 && input.userId === null && !input.ignoreOption) {
+    // 自動処理では、1店あたりの動画本数に上限を置く(同じ店の動画ばかりにならないように)。
+    const shopQuota = await quotaForPortal(existing[0].portal_id);
+    if (shopQuota && (await shopIsAtVideoLimit(existing[0].id, shopQuota))) {
+      const { error: limitError } = await (admin as any).from("locapass_youtube_ingestions").update({
+        portal_id: input.portalId, candidate_name: input.name, candidate_address: input.address,
+        official_url: input.officialUrl ?? existing[0].url, matched_shop_id: existing[0].id, match_status: "matched_existing",
+        match_reason: `既存店舗に一意一致(この店のYouTube動画がすでに${shopQuota.perShopMax}本あるため、公開せず保留): ${input.reason}`.slice(0, 500),
+        error_message: null,
+      }).eq("id", ingestionId);
+      if (limitError) throw new Error(`候補の更新に失敗しました: ${limitError.message}`);
+      return "held";
+    }
+  }
   if (existing.length === 1) {
     // リールは店舗のポータルに作られるので、候補のポータルも既存店舗のものに合わせる。
     const { error } = await (admin as any).from("locapass_youtube_ingestions").update({
@@ -484,12 +499,17 @@ export async function processPendingIngestions(options: {
   if (options.createdAfter) query = query.gte("created_at", options.createdAfter);
   const { data: rows, error } = await query;
   if (error) throw new Error(`保留候補の取得に失敗しました: ${error.message}`);
-  const summary = { scanned: 0, published: 0, held: 0, errors: 0 };
+  const summary = { scanned: 0, published: 0, held: 0, errors: 0, quotaLeft: null as number | null };
+  // 自動処理(userIdなし)だけに、エリアごとの公開上限をかける。上限に届いていれば、AIも呼ばずに終わる(費用も出ない)。
+  const quota = options.userId === null ? await quotaForPortal(options.portalId) : null;
+  let slots = quota && options.portalId ? await remainingPublishSlots(options.portalId, quota) : Infinity;
+  if (quota) summary.quotaLeft = slots;
   for (const row of (rows ?? []) as PendingRow[]) {
+    if (slots <= 0) break;
     if (Date.now() - started > budgetMs) break;
     summary.scanned += 1;
     const outcome = await processPendingIngestion(row, options.userId);
-    if (outcome === "published") summary.published += 1;
+    if (outcome === "published") { summary.published += 1; slots -= 1; }
     else if (outcome === "held") summary.held += 1;
     else if (outcome === "error") summary.errors += 1;
   }
@@ -791,7 +811,10 @@ export async function runOverseasAuto(options: { limit?: number; budgetMs?: numb
     if ((waiting ?? 0) === 0) {
       const { data: last } = await admin.from("locapass_youtube_ingestions").select("created_at").eq("portal_id", portalId).order("created_at", { ascending: false }).limit(1).maybeSingle();
       const ageHours = last?.created_at ? (Date.now() - new Date(last.created_at).getTime()) / 3_600_000 : Infinity;
-      if (ageHours >= (options.recollectAfterHours ?? 20)) collected = await collectOverseasCandidates(slug);
+      // 上限に届いている間は、新しく探さない(YouTube検索の枠と費用を使わない)。
+      const quota = await quotaForPortal(portalId);
+      const slotsLeft = quota ? await remainingPublishSlots(portalId, quota) : Infinity;
+      if (slotsLeft > 0 && ageHours >= (options.recollectAfterHours ?? 20)) collected = await collectOverseasCandidates(slug);
     }
     const processed = await processPendingIngestions({ portalId, limit: options.limit ?? 12, userId: null, budgetMs: options.budgetMs ?? 200_000 });
     results[slug] = { waitingBefore: waiting ?? 0, collected, processed };
