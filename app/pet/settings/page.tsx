@@ -4,6 +4,7 @@ import { requirePetViewer } from "@/lib/pet/db";
 import { lineConfigured } from "@/lib/pet/notify";
 import { PetSettingsForm } from "@/components/pet/PetSettingsForm";
 import { PetPushCard } from "@/components/pet/PetPushCard";
+import { PetSignOutButton } from "@/components/pet/PetSignOutButton";
 import { PetCard } from "@/components/pet/ui";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,7 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
         lineNotify={s?.line_notify ?? true}
         lineReady={lineConfigured()}
       />
+      <PetSignOutButton />
       <p className="mt-6 px-2 text-center text-[11px] leading-relaxed text-[#B39C8C]">
         ロカわんはLOCAPASSのアカウントで動いています。
         <br />
