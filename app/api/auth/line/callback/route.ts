@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { finishPetLineLink } from "@/lib/pet/lineLink";
+import { APP_URL_SCHEME, appHandoffHtml, appNonceFor, isAppState, toBase64Url } from "@/lib/auth/lineAppHandoff";
 
 // mode: "pet_link" は、ログイン中の人がロカわんの通知をLINEで受け取るための連携(ログインはしない)。
 type LineOAuthCookie = { state: string; nonce: string; redirect: string; mode?: "pet_link" };
@@ -46,9 +47,15 @@ export async function GET(request: Request) {
     saved = null;
   }
 
-  const redirectTo = saved?.redirect ?? "/mypage";
+  // ロカわんアプリ発のログインが、LINEアプリからの戻りでSafariに開いた場合(Cookieが無い)。
+  // Safariで認証を終え、最後にカスタムURLでアプリへ受け渡す(lib/auth/lineAppHandoff.ts)。
+  const appHandoff = !saved && Boolean(code) && isAppState(state);
+  const redirectTo = saved?.redirect ?? (appHandoff ? "/pet" : "/mypage");
 
-  if (!code || !state || !saved || state !== saved.state) {
+  if (!appHandoff && (!code || !state || !saved || state !== saved.state)) {
+    return loginErrorRedirect(origin, redirectTo, "state_mismatch", { code, state, saved });
+  }
+  if (!code || !state) {
     return loginErrorRedirect(origin, redirectTo, "state_mismatch", { code, state, saved });
   }
 
@@ -82,7 +89,7 @@ export async function GET(request: Request) {
     body: new URLSearchParams({
       id_token: tokenData.id_token,
       client_id: channelId,
-      nonce: saved.nonce,
+      nonce: saved?.nonce ?? appNonceFor(state),
     }),
   });
   if (!verifyRes.ok) {
@@ -90,7 +97,7 @@ export async function GET(request: Request) {
   }
   const profile = (await verifyRes.json()) as LineVerifyResponse;
 
-  if (saved.mode === "pet_link") {
+  if (saved?.mode === "pet_link") {
     return finishPetLineLink(origin, profile.sub, searchParams.get("friendship_status_changed") === "true");
   }
 
@@ -156,6 +163,14 @@ export async function GET(request: Request) {
   });
   if (linkGenError || !linkData.properties?.action_link) {
     return loginErrorRedirect(origin, redirectTo, "generate_link_failed", linkGenError);
+  }
+
+  if (appHandoff) {
+    // Safariはここまで。ログイン用のリンク(1回限り)をアプリに渡す。アプリ側で state の一致を確かめてから使う。
+    const appUrl = `${APP_URL_SCHEME}://auth?u=${toBase64Url(linkData.properties.action_link)}&s=${encodeURIComponent(state)}`;
+    return new Response(appHandoffHtml(appUrl), {
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
   }
 
   const response = NextResponse.redirect(linkData.properties.action_link);
