@@ -8,7 +8,7 @@ export default function Privacy() {
     <article className="mx-auto max-w-2xl space-y-6 px-4 pb-28 pt-6 text-sm leading-7 text-muted md:pt-8">
       <Link href="/" className="text-xs text-muted hover:text-main">← トップへ</Link>
       <h1 className="text-2xl font-bold text-main">プライバシーポリシー</h1>
-      <p className="text-xs">制定: 2026年10月。LOCAPASS(locapass.net。以下「本サービス」)の運営者(以下「運営」)は、利用者の情報を、次のとおり取り扱います。</p>
+      <p className="text-xs">制定: 2026年10月(2026年11月: ロカわんの項目を追加)。LOCAPASS(locapass.net。以下「本サービス」)の運営者(以下「運営」)は、利用者の情報を、次のとおり取り扱います。</p>
 
       <section><h2 className="mb-1 text-base font-bold text-main">1. 取得する情報</h2>
         <ul className="list-disc space-y-1 pl-5">
@@ -56,7 +56,19 @@ export default function Privacy() {
       <section><h2 className="mb-1 text-base font-bold text-main">8. 安全管理と、改定</h2>
         <p>アクセスできる者を限定し、通信を暗号化するなど、情報の漏えい・滅失を防ぐために必要な措置を講じます。この方針は、必要に応じて改定し、改定後は、このページに掲載します。</p></section>
 
-      <section><h2 className="mb-1 text-base font-bold text-main">9. お問い合わせ窓口</h2>
+      <section><h2 className="mb-1 text-base font-bold text-main">9. ロカわん(ペット向けサービス)について</h2>
+        <p>ロカわん(以下「本アプリ」)では、本サービスのアカウントで、次の情報を取り扱います。</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>取得する情報: 愛犬(ペット)のプロフィール(名前、犬種、生年月日、マイクロチップ番号、鑑札・登録の情報など、ご自身が入力した内容)と写真。書類(狂犬病予防注射済票、ワクチン証明書、ペット保険証など)の画像と、そこから読み取った内容(有効期限など)。通院の記録(症状、お薬、明細など)、成長日誌、体重。迷子のお知らせ・見つけた(保護・目撃)の通報の内容と、公開をお選びいただいた連絡先(電話番号・LINE)。</li>
+          <li>位置情報(許可した場合のみ): 近くのペット施設・迷子の表示、散歩エリア(最大3か所)、「いまいる場所でも受け取る」を選んだ場合の現在地(約100mに丸めて、48時間だけ保管します)。</li>
+          <li>Appleでサインインを使った場合: Appleから提供される識別子と、お選びになったメールアドレス(非公開のリレーアドレスを含む)。端末への通知を許可した場合は、通知を送るために必要な情報。</li>
+          <li>書類・通院の記録の公開範囲: ご本人だけが閲覧できます。画像は非公開の保管場所に置き、有効期間の短いリンクでのみ表示します。</li>
+          <li>AIによる読み取り: 書類の画像から有効期限などを読み取るため、外部の生成AIサービスに画像を送信します。読み取りの目的以外には使いません。</li>
+          <li>迷子に関する情報: ご自身が公開した連絡先は、迷子のお知らせの終了時に削除します。見つけた通報の写真は、投稿から90日後に削除します。</li>
+          <li>アカウントの削除: アプリの「設定」の一番下から、いつでも削除できます。削除すると、愛犬の記録、書類の画像、投稿、通知の設定は削除されます。店舗の管理者・キャストなど、他の用途でも使っているアカウントは、ロカわんのデータのみ削除し、アカウント自体の削除は、下記の窓口にご連絡いただいたうえで行います。</li>
+        </ul></section>
+
+      <section><h2 className="mb-1 text-base font-bold text-main">10. お問い合わせ窓口</h2>
         <p>運営者: Private Factory ／ 所在地: 〒310-0021 茨城県水戸市南町3-3-42 アールズビル2F ／ 連絡先: support@locapass.net</p></section>
     </article>
   );
