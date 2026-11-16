@@ -11,6 +11,7 @@ import { getActiveBoosts } from "@/lib/boost/getBoosts";
 import { boostText } from "@/lib/boost/text";
 import { JsonLd } from "@/components/JsonLd";
 import { AreaCategoryLinks } from "@/components/home/AreaCategoryLinks";
+import { OverseasEntrance } from "@/components/home/OverseasEntrance";
 
 export const revalidate = 60;
 
@@ -43,6 +44,8 @@ export default async function TopPage() {
       {/* トップの提携店舗特集(FEATURED)。運営がshops.featured_rankで選んだ店舗だけを、
           黒×ゴールドのコンパクトな見せ方で出す。1件も無ければ/×で閉じたら何も表示しない。 */}
       <FeaturedSection shops={featuredShops} />
+
+      {(locale === "ja" || locale === "en") && <OverseasEntrance locale={locale} />}
 
       {boosts.length > 0 && (
         <Link
