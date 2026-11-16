@@ -104,6 +104,7 @@ export async function classifyReel(input: ClassifyInput): Promise<ClassifyResult
     "Rules:",
     '- Return ONLY JSON: {"tags":["id", ...],"keywords":["...", ...],"keywords_en":["...", ...],"summary":"..."}. Use an empty tags array if nothing clearly applies. Never invent tag ids.',
     "- keywords: up to 8 short Japanese noun words for concrete things that are clearly visible or mentioned: animals (e.g. 猫, 犬), dishes, drinks, items, places, scenes, weather, season, events, number of people. Only what you actually see or read; do not guess. Empty array if none.",
+    "- Never describe a person's appearance, body, age, or identity in keywords or summary. Only objects, clothing items, food, drinks, places, scenes and events.",
     "- keywords_en: English equivalents of the keywords (up to 8, lowercase).",
     "- summary: one Japanese sentence (max 60 characters) describing what the video shows. Empty string if unclear.",
     "- Prefer the most specific tags. Use the image together with the spoken transcript and caption; the transcript is the strongest hint for what is being introduced.",
