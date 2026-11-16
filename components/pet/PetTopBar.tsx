@@ -2,13 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Bell, ChevronLeft } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
-/** 上のバー。トップでは「ロカわん」のロゴ、下の階層では戻るボタン。お知らせはLOCAPASSのお知らせ一覧へ。 */
+/** 上のバー。トップでは「ロカわん」のロゴ、下の階層では戻るボタン。ベルは、ロカわんのお知らせ(/pet/notifications)へ。 */
+const PET_TYPES = ["pet_reminder", "pet_lost_alert", "pet_follow_request", "pet_follow_approved", "pet_sighting", "pet_found", "pet_found_claim", "pet_lost_check"];
+
 export function PetTopBar() {
   const pathname = usePathname() ?? "/pet";
   const isRoot = ["/pet", "/pet/spots", "/pet/gallery", "/pet/lost", "/pet/follows", "/pet/settings"].includes(pathname);
   const isCard = pathname.startsWith("/pet/t/");
+  // ベルの未読の数(ロカわんのお知らせだけ。ログインしていなければ出さない)
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user || cancelled) return setUnread(0);
+      const { count } = await supabase.from("locapass_notifications").select("id", { count: "exact", head: true }).eq("user_id", u.user.id).is("read_at", null).in("type", PET_TYPES);
+      if (!cancelled) setUnread(count ?? 0);
+    })().catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
   return (
     <header className="sticky top-0 z-30 bg-[#FFF7EC]/90 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
@@ -34,8 +53,11 @@ export function PetTopBar() {
             LOCAPASS ›
           </Link>
           {!isCard && (
-            <Link href="/notifications" aria-label="お知らせ" className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#7A6050] shadow-sm active:scale-95">
+            <Link href="/pet/notifications" aria-label="お知らせ" className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#7A6050] shadow-sm active:scale-95">
               <Bell size={18} />
+              {unread > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF8E5E] px-1 text-[9px] font-extrabold text-white">{unread > 9 ? "9+" : unread}</span>
+              )}
             </Link>
           )}
         </div>
