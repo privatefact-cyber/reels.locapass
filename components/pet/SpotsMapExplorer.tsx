@@ -6,7 +6,7 @@ import Link from "next/link";
 import * as maplibreNs from "maplibre-gl";
 import { Camera, ChevronRight, Loader2, LocateFixed, MapPin, Search, X } from "lucide-react";
 import { geocode } from "@/lib/map/geocode";
-import { PLACE_CATEGORY_EMOJI, type PetSpot } from "@/lib/pet/spots";
+import { PLACE_CATEGORY_EMOJI, type PetSpot, type PetSpotCounts } from "@/lib/pet/spots";
 import { PET_RETURN_KEY } from "./SpotsExplorer";
 import { VerifiedBadge } from "./VerifiedBadge";
 
@@ -103,7 +103,7 @@ function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
  * - 下から引き出す一覧(つまみを上下にドラッグ/タップで 小・半分・全体)。一覧は「いま地図に出ているピン」のお店
  * - 虫眼鏡で場所を検索して移動、現在地へ移動
  */
-export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: number } | null }) {
+export function SpotsMapExplorer({ origin, counts }: { origin: { lat: number; lng: number } | null; counts?: PetSpotCounts | null }) {
   const wrap = useRef<HTMLDivElement>(null);
   const mapBox = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -420,6 +420,12 @@ export function SpotsMapExplorer({ origin }: { origin: { lat: number; lng: numbe
             現在地
           </button>
         </div>
+        {counts && counts.total > 0 && (
+          <p className="pointer-events-auto inline-block rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-extrabold text-[#4A3426] shadow-sm">
+            🐾 登録 {counts.total.toLocaleString("ja-JP")}件
+            {counts.verified > 0 && <span className="ml-1 font-bold text-[#9C8273]">(うちLOCAPASS認証 {counts.verified.toLocaleString("ja-JP")}件)</span>}
+          </p>
+        )}
         {notice && (
           <p className="pointer-events-auto inline-block rounded-full bg-[#4A3426]/85 px-3 py-1.5 text-xs font-bold text-white" onClick={() => setNotice(null)}>
             {notice}

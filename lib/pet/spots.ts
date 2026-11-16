@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { gridThumb } from "@/lib/images/thumb";
@@ -203,3 +204,27 @@ export async function getNearbySnaps(lat: number, lng: number, limit = 12) {
     .limit(limit);
   return (data ?? []) as { id: string; image_url: string | null; video_url: string | null; spot_name: string | null; comment: string | null; created_at: string }[];
 }
+
+export type PetSpotCounts = { verified: number; places: number; total: number };
+
+/**
+ * 「おでかけ」に出す登録件数(LOCAPASS認証の店 + 取り込んだ施設)。DBの関数 locapass_pet_spot_counts で数える。
+ * 画面を開くたびに数えないよう5分キャッシュする。お店や施設が増えれば、次の5分後の表示で数え直される。
+ */
+export const getPetSpotCounts = unstable_cache(
+  async (): Promise<PetSpotCounts | null> => {
+    const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+    const { data, error } = await db.rpc("locapass_pet_spot_counts" as never);
+    if (error) {
+      console.error("[pet] spot counts failed", error.message);
+      return null;
+    }
+    const row = (Array.isArray(data) ? data[0] : data) as { verified?: number | string; places?: number | string } | null;
+    if (!row) return null;
+    const verified = Number(row.verified ?? 0);
+    const places = Number(row.places ?? 0);
+    return { verified, places, total: verified + places };
+  },
+  ["pet-spot-counts"],
+  { revalidate: 300, tags: ["pet-spot-counts"] },
+);
