@@ -9,15 +9,6 @@ const nextConfig = {
   // ページ内の permanentRedirect だと、レイアウトの描画が始まった後なので 200+meta refresh になってしまうため、ここで308を返す。
   // ポータル以外の固定ルート(/admin/… など)と、ポータル配下の固定ルート(/{ポータル}/shops/… など)は対象外。
   // 言語別URL(/en /zh /ar。lib/i18n/localePath.ts)の旧ポータル地図は、同じ言語の全国地図へ転送する。
-  // ロカわんiOSアプリのUniversal Link設定。拡張子が無いファイルなので、JSONとして返すことをここで明示する(Appleの検証に必要)。
-  async headers() {
-    return [
-      {
-        source: "/.well-known/apple-app-site-association",
-        headers: [{ key: "Content-Type", value: "application/json" }],
-      },
-    ];
-  },
   async redirects() {
     const localePrefixes = "en|zh|ar";
     const topRoutes = "admin|api|auth|boost|c|cast|dashboard|embed|events|gate|inquiries|journal|legal|login|lp|map|mypage|notifications|photo|privacy|reel|reserve|s|shop-recover|shops|staff|support|terms";

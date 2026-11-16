@@ -29,7 +29,7 @@ function loginErrorRedirect(origin: string, redirect: string, reason: string, de
 }
 
 export async function GET(request: Request) {
-  const { searchParams, origin, pathname } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
@@ -64,8 +64,7 @@ export async function GET(request: Request) {
     body: new URLSearchParams({
       grant_type: "authorization_code",
       code,
-      // 認可リクエストと同じ値でないとLINEに拒否される(通常/アプリ専用のどちらで来たかはパスで分かる)
-      redirect_uri: `${origin}${pathname}`,
+      redirect_uri: `${origin}/api/auth/line/callback`,
       client_id: channelId,
       client_secret: channelSecret,
     }),
