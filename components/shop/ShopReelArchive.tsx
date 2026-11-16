@@ -8,6 +8,7 @@ import { PageDots } from "@/components/shop/PageDots";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { tagLabel } from "@/lib/reels/tags/vocabulary";
 import { recordReelEvent } from "@/lib/reels/trackReelEvent";
+import { ReelSearchBox, useReelSearch } from "@/components/reels/ReelSearchBox";
 
 export type ArchiveItem = {
   id: string;
@@ -151,7 +152,17 @@ export function ShopReelArchive({
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [byAuthor]);
 
-  const filtered = useMemo(() => (tag ? byAuthor.filter((i) => i.tags.includes(tag)) : byAuthor), [byAuthor, tag]);
+  const tagFiltered = useMemo(() => (tag ? byAuthor.filter((i) => i.tags.includes(tag)) : byAuthor), [byAuthor, tag]);
+
+  // 文章検索(「猫の動画」など)。結果は、このグリッド自身がその場で絞り込んで、近い順に並べる。
+  const allIds = useMemo(() => items.map((i) => i.id), [items]);
+  const search = useReelSearch(allIds);
+  const searchActive = search.active;
+  const filtered = useMemo(() => {
+    if (!searchActive) return tagFiltered;
+    const byId = new Map(tagFiltered.map((i) => [i.id, i]));
+    return searchActive.ids.map((id) => byId.get(id)).filter((i): i is ArchiveItem => !!i);
+  }, [tagFiltered, searchActive]);
 
   const { months, byMonth, byDay } = useMemo(() => {
     const byMonth = new Map<string, ArchiveItem[]>();
@@ -261,6 +272,9 @@ export function ShopReelArchive({
         ))}
       </div>
 
+      {/* 文章で探す(AI検索)。結果はこの下のグリッドがその場で入れ替わる。 */}
+      <ReelSearchBox search={search} className="mt-4 px-3" />
+
       {/* タグ絞り込み(AIが投稿時に付けた「料理」「店内」など)。付いているタグがある店舗だけ出る。 */}
       {(tagCounts.length > 0 || tag) && (
         <div className="no-scrollbar -mx-1 mt-4 flex gap-2 overflow-x-auto px-4 pb-1" data-no-swipe>
@@ -289,6 +303,13 @@ export function ShopReelArchive({
       <div className="mt-5">
         {filtered.length === 0 ? (
           <p className="px-2 py-16 text-center text-sm text-tone-500">{t.shop.archiveEmpty}</p>
+        ) : view === "timeline" && searchActive ? (
+          // 検索中は、月ごとではなく「近い順」の1つのグリッドにする。
+          <div className={GRID_CLASS}>
+            {filtered.map((it) => (
+              <Tile key={it.id} item={it} href={reelsHref} dateLabel={shortDayFmt.format(new Date(it.at))} />
+            ))}
+          </div>
         ) : view === "timeline" ? (
           <div className="space-y-6">
             {months.map((m) => (

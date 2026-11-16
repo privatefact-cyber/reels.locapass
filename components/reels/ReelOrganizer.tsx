@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo, useState } from "react";
 import { TAG_DEFS } from "@/lib/reels/tags/vocabulary";
+import { ReelSearchBox, useReelSearch } from "./ReelSearchBox";
 
 /**
  * 自分用の管理画面(キャスト/スタッフ/店舗)で、自分の動画を整理するための絞り込み。
@@ -36,6 +37,8 @@ type Ctx = {
   setTag: (t: string | null) => void;
   month: string | null;
   setMonth: (m: string | null) => void;
+  /** 文章検索(AI)。結果の動画だけを残す。 */
+  search: ReturnType<typeof useReelSearch>;
 };
 
 const OrganizerContext = createContext<Ctx | null>(null);
@@ -50,6 +53,9 @@ export function ReelOrganizerProvider({ items, children }: { items: OrganizerIte
   const [tag, setTag] = useState<string | null>(null);
   const [month, setMonth] = useState<string | null>(null);
   const [ratings, setRatings] = useState<Record<string, Rating>>({});
+  const allIds = useMemo(() => items.map((i) => i.id), [items]);
+  const search = useReelSearch(allIds);
+  const searchHit = useMemo(() => (search.active ? new Set(search.active.ids) : null), [search.active]);
 
   const value = useMemo<Ctx>(() => {
     const byId = new Map(items.map((i) => [i.id, i]));
@@ -58,6 +64,7 @@ export function ReelOrganizerProvider({ items, children }: { items: OrganizerIte
       const item = byId.get(id);
       if (!item) return true;
       if (month && monthOf(item.createdAt) !== month) return false;
+      if (searchHit && !searchHit.has(id)) return false;
       if (tag === UNTAGGED) return tagsOf(id).length === 0;
       if (tag && !tagsOf(id).includes(tag)) return false;
       return true;
@@ -73,8 +80,9 @@ export function ReelOrganizerProvider({ items, children }: { items: OrganizerIte
       setTag,
       month,
       setMonth,
+      search,
     };
-  }, [items, overrides, tag, month, ratings]);
+  }, [items, overrides, tag, month, ratings, search, searchHit]);
 
   return <OrganizerContext.Provider value={value}>{children}</OrganizerContext.Provider>;
 }
@@ -116,7 +124,7 @@ export function ReelOrganizerBar({ variant = "dark" }: { variant?: "dark" | "lig
   const tagList = [...counts.entries()].sort((a, b) => b[1] - a[1]);
   const months = [...new Set(ctx.items.map((i) => monthOf(i.createdAt)))].sort().reverse();
   const shown = ctx.items.filter((i) => ctx.isVisible(i.id)).length;
-  const filtering = ctx.tag !== null || ctx.month !== null;
+  const filtering = ctx.tag !== null || ctx.month !== null || ctx.search.active !== null;
 
   // dark: キャスト/スタッフのマイページ(ダーク)。light: 店舗の管理画面(白地)。
   const light = variant === "light";
@@ -152,6 +160,7 @@ export function ReelOrganizerBar({ variant = "dark" }: { variant?: "dark" | "lig
           ))}
         </select>
       </div>
+      <ReelSearchBox search={ctx.search} variant={variant} />
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-1 pb-1" data-no-swipe>
         <button type="button" onClick={() => ctx.setTag(null)} className={chip(ctx.tag === null)}>
           すべて

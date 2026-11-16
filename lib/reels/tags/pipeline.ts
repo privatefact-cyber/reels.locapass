@@ -4,7 +4,8 @@
  * 失敗しても投稿には影響しない(タグが付かないだけ)。
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { classifyReelTags } from "./classify";
+import { classifyReel } from "./classify";
+import { saveReelSearch } from "@/lib/reels/search";
 
 /** 1日(UTC日付)にタグ付けする本数の上限(課金事故を防ぐサーキットブレーカー)。環境変数で変えられる。 */
 const DAILY_LIMIT = Number(process.env.TAG_DAILY_LIMIT ?? 600);
@@ -20,7 +21,7 @@ export type TagRunResult = "done" | "skipped" | "capped" | "busy" | "failed";
 export async function claimAndRunTags(db: SupabaseClient, reelId: string, opts: { force?: boolean } = {}): Promise<TagRunResult> {
   const { data: reel } = await db
     .from("locapass_reels")
-    .select("id, video_url, poster_url, images, caption, reel_type, tags_status, locapass_shops!locapass_reels_shop_id_fkey ( name, category )")
+    .select("id, shop_id, video_url, poster_url, images, caption, reel_type, tags_status, locapass_shops!locapass_reels_shop_id_fkey ( name, category )")
     .eq("id", reelId)
     .maybeSingle();
   if (!reel || reel.reel_type === "story") return "skipped";
@@ -59,7 +60,7 @@ export async function claimAndRunTags(db: SupabaseClient, reelId: string, opts: 
     const capRow = capRows?.find((r) => r.lang === "ja") ?? capRows?.[0];
     const transcript = Array.isArray(capRow?.cues) ? (capRow.cues as { t: string }[]).map((c) => c.t).join("\n") : null;
 
-    const tags = await classifyReelTags({
+    const classified = await classifyReel({
       imageUrl: reel.video_url ? reel.poster_url : (images[0]?.url ?? reel.poster_url),
       caption: reel.caption,
       transcript,
@@ -69,9 +70,15 @@ export async function claimAndRunTags(db: SupabaseClient, reelId: string, opts: 
 
     const { error } = await db
       .from("locapass_reels")
-      .update({ tags, tags_status: "ready", tags_generated_at: new Date().toISOString() })
+      .update({ tags: classified.tags, tags_status: "ready", tags_generated_at: new Date().toISOString() })
       .eq("id", reelId);
     if (error) throw new Error(`タグの保存に失敗: ${error.message}`);
+    // 文章検索用のデータ。失敗してもタグ付けは成功として扱う(あとで一括処理で埋められる)。
+    try {
+      await saveReelSearch({ reelId, shopId: reel.shop_id ?? null, classified, caption: reel.caption });
+    } catch (e) {
+      console.error("[tags] search index failed", reelId, e);
+    }
     return "done";
   } catch (cause) {
     console.error("[tags] pipeline failed", reelId, cause);
