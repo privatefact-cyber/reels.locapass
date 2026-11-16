@@ -79,15 +79,22 @@ export type CityCategoryCopy = {
   breadcrumbHome: string;
 };
 
+/** 「Mito, Ibaraki, Japan」のように、国名まで入れた地名(県と市が同じ綴りのときは重ねない)。 */
+export function englishPlace(city: string, pref: string): string {
+  return city === pref ? `${city}, Japan` : `${city}, ${pref}, Japan`;
+}
+
 /** 英語のページの文言。city/categoryはローマ字・英語に直したもの。 */
 export function englishCopy(args: { city: string; pref: string; category: string; count: number; word: string }): CityCategoryCopy {
   const { city, pref, category, count, word } = args;
+  // 同じ綴りの外国の地名(イタリア語の mito など)と区別するため、題名・見出し・説明の先頭近くに「市, 県, Japan」まで入れる。
+  const place = englishPlace(city, pref);
   return {
-    title: `${word} in ${city}: ${count} Spots in Short Videos`,
-    description: (names) => `Find ${count} ${category.toLowerCase()} in ${city}, ${pref}${names ? `, including ${names}` : ""}. Preview each place with short videos (reels) before you go.`,
-    h1: `${word} in ${city}`,
-    intro: (n, p, towns) => `Looking for ${word.toLowerCase()} in ${city}? Browse ${n} ${category.toLowerCase()} in ${city}, ${p}${towns.length ? ` — areas like ${towns.join(", ")}` : ""}. See each place's atmosphere in short videos (reels) before you choose.`,
-    listHeading: (n) => `${word} in ${city} (${n})`,
+    title: `${word} in ${place}: ${count} Spots in Short Videos`,
+    description: (names) => `Find ${count} ${category.toLowerCase()} in ${place}${names ? `, including ${names}` : ""}. Preview each place with short videos (reels) before you go.`,
+    h1: `${word} in ${place}`,
+    intro: (n, _p, towns) => `Looking for ${word.toLowerCase()} in ${place}? Browse ${n} ${category.toLowerCase()} in ${city}, Japan${towns.length ? ` — areas like ${towns.join(", ")}` : ""}. See each place's atmosphere in short videos (reels) before you choose.`,
+    listHeading: (n) => `${word} in ${place} (${n})`,
     home: "Home",
     areas: "Areas",
     otherShops: `More places in ${city}`,

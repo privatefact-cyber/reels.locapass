@@ -19,7 +19,7 @@ import {
   getCityAreas,
   slugToCategory,
 } from "@/lib/seo/cityAreas";
-import { categoryEn, cityEn, englishCopy, englishIndexable } from "@/lib/seo/cityEn";
+import { categoryEn, cityEn, englishCopy, englishIndexable, englishPlace } from "@/lib/seo/cityEn";
 import { localeUrl } from "@/lib/i18n/localePath";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
@@ -118,7 +118,7 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
           itemListElement: [
             { "@type": "ListItem", position: 1, name: en ? en.copy.home : "ホーム", item: SITE_URL },
             { "@type": "ListItem", position: 2, name: en ? en.copy.areas : "エリアから探す", item: `${SITE_URL}/areas` },
-            { "@type": "ListItem", position: 3, name: en ? en.city : area.city, item: cityUrl(area.key) },
+            { "@type": "ListItem", position: 3, name: en ? englishPlace(en.city, en.pref) : area.city, item: cityUrl(area.key) },
             { "@type": "ListItem", position: 4, name: en ? en.copy.h1 : `${area.city}の${kw}`, item: url },
           ],
         }}
@@ -127,6 +127,7 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
         data={{
           "@context": "https://schema.org",
           "@type": "ItemList",
+          ...(en ? { about: { "@type": "Place", name: en.city, address: { "@type": "PostalAddress", addressLocality: en.city, addressRegion: en.pref, addressCountry: "JP" } } } : {}),
           itemListElement: shops.map((s, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE_URL}${shopPath(s.portalSlug, s.slug)}`, name: s.name })),
         }}
       />
@@ -163,7 +164,7 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
             {otherCategories.map(([c, list]) => (
               <li key={c}>
                 <Link href={cityCategoryPath(area.key, categoryToSlug(c)!)} className="inline-block rounded-full border border-main/20 px-3 py-1 text-xs text-main hover:border-hl-400/60">
-                  {en ? `${categoryEn(c)!.word} in ${en.city}` : `${area.city}の${categoryKeyword(c)}`}({list.length})
+                  {en ? `${categoryEn(c)!.word} in ${englishPlace(en.city, en.pref)}` : `${area.city}の${categoryKeyword(c)}`}({list.length})
                 </Link>
               </li>
             ))}
@@ -178,7 +179,7 @@ export default async function CityCategoryPage({ params }: { params: Promise<Par
             {otherCities.map((a) => (
               <li key={a.key}>
                 <Link href={cityCategoryPath(a.key, p.category)} className="inline-block rounded-full border border-main/20 px-3 py-1 text-xs text-main hover:border-hl-400/60">
-                  {en ? `${en.copy.h1.replace(en.city, cityEn(a.key)!.city)}` : `${a.city}の${kw}`}({a.byCategory.get(category)?.length})
+                  {en ? `${ecat!.word} in ${englishPlace(cityEn(a.key)!.city, cityEn(a.key)!.pref)}` : `${a.city}の${kw}`}({a.byCategory.get(category)?.length})
                 </Link>
               </li>
             ))}
