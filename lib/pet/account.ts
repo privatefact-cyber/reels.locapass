@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { PET_BUCKET } from "./db";
+import { revokeAppleForUser } from "./appleAuth";
 
 /**
  * ロカわんの「アカウント削除」(App Store の審査で必須)。
@@ -94,7 +95,9 @@ export async function deletePetAccountForUser(admin: SupabaseClient, userId: str
 
   if (roles.length > 0) return { ok: true, mode: "data_only" };
 
-  // 役割が無い一般会員: アカウントごと削除する
+  // 役割が無い一般会員: アカウントごと削除する。Appleでサインインしていた人は、先にAppleとの連携を取り消す
+  // (取り消せなくても、本人の削除の依頼は止めない。理由はログに残す)
+  await revokeAppleForUser(admin, userId);
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) {
     // 想定外の理由で消せない場合も、ロカわんのデータはすでに消えている。アカウントは残して知らせる。

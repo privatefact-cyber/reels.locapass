@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { checkEmailRegistered } from "@/app/pet/actions";
+import { savePetAppleAuthorization } from "@/app/pet/appleActions";
 import { PetCard, petButton, petInput } from "./ui";
 
 /**
@@ -41,7 +42,7 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
     setAppleError(null);
     setBusy(true);
     try {
-      const plugin = (window as unknown as { Capacitor?: { Plugins?: Record<string, { authorize: (o: object) => Promise<{ response: { identityToken: string; givenName: string | null; familyName: string | null } }> }> } }).Capacitor?.Plugins?.SignInWithApple;
+      const plugin = (window as unknown as { Capacitor?: { Plugins?: Record<string, { authorize: (o: object) => Promise<{ response: { identityToken: string; authorizationCode?: string; givenName: string | null; familyName: string | null } }> }> } }).Capacitor?.Plugins?.SignInWithApple;
       if (!plugin) throw new Error("apple_unavailable");
       // Appleには nonce をハッシュにして渡し、Supabaseには元の値を渡す(なりすまし防止の組)
       const raw = `${crypto.randomUUID()}${crypto.randomUUID()}`;
@@ -51,6 +52,8 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: res.response.identityToken, nonce: raw });
       if (error) throw error;
+      // アカウント削除のときにAppleとの連携を取り消せるよう、認可コードをサーバーに渡す(失敗してもログインは続ける)
+      if (res.response.authorizationCode) void savePetAppleAuthorization(res.response.authorizationCode).catch(() => undefined);
       // 名前はAppleが初回しか渡さないので、あれば保存しておく
       const fullName = [res.response.familyName, res.response.givenName].filter(Boolean).join(" ");
       if (fullName) await supabase.auth.updateUser({ data: { full_name: fullName } });
