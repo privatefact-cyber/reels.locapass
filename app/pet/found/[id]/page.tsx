@@ -8,6 +8,7 @@ import { foundTimeLabel } from "@/components/pet/FoundReportCard";
 import { FoundActions } from "@/components/pet/FoundActions";
 import { ShareButtons } from "@/components/pet/ShareButtons";
 import { FlagButton } from "@/components/pet/FlagButton";
+import { BlockButton } from "@/components/pet/BlockButton";
 import { ContactReveal } from "@/components/pet/ContactReveal";
 import { ManageLinkBox } from "@/components/pet/ManageLinkBox";
 import { PetMap } from "@/components/pet/PetMap";
@@ -105,6 +106,9 @@ export default async function FoundDetailPage({ params, searchParams }: { params
       {!isReporter && (
         <div className="mt-4">
           <FlagButton targetType="found" targetId={r.id} loggedIn={Boolean(viewer)} />
+          <div className="mt-2">
+            <BlockButton targetType="found" targetId={r.id} loggedIn={Boolean(viewer)} />
+          </div>
         </div>
       )}
 

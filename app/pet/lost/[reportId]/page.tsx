@@ -6,6 +6,7 @@ import { LostInfoCard } from "@/components/pet/LostInfoCard";
 import { SightingForm } from "@/components/pet/SightingForm";
 import { ShareButtons } from "@/components/pet/ShareButtons";
 import { FlagButton } from "@/components/pet/FlagButton";
+import { BlockButton } from "@/components/pet/BlockButton";
 import { PetMap } from "@/components/pet/PetMap";
 import { PetCard, PetSectionTitle } from "@/components/pet/ui";
 
@@ -79,6 +80,9 @@ export default async function LostReportPage({ params }: { params: Promise<{ rep
       {!r.isOwner && (
         <div className="mt-4">
           <FlagButton targetType="lost" targetId={r.id} loggedIn={Boolean(viewer)} />
+          <div className="mt-2">
+            <BlockButton targetType="lost" targetId={r.id} loggedIn={Boolean(viewer)} />
+          </div>
         </div>
       )}
       <p className="mt-6 text-center text-xs text-[#B39C8C]">

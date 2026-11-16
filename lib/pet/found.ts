@@ -1,3 +1,4 @@
+import { getBlockedIds } from "./blocks";
 import { petAdmin, signPetImages } from "./db";
 import { maskContacts } from "./privacy";
 
@@ -40,7 +41,10 @@ export async function getFoundReports(opts: { id?: string; viewerId?: string | n
     const dLng = opts.near.km / (111 * Math.cos((opts.near.lat * Math.PI) / 180));
     q = q.gte("lat", opts.near.lat - dLat).lte("lat", opts.near.lat + dLat).gte("lng", opts.near.lng - dLng).lte("lng", opts.near.lng + dLng);
   }
-  const { data } = await q;
+  const { data: allData } = await q;
+  // ブロックした人の通報は出さない
+  const blocked = await getBlockedIds(opts.viewerId);
+  const data = blocked.size ? (allData ?? []).filter((r) => !r.reporter_id || !blocked.has(r.reporter_id as string)) : allData;
   if (!data?.length) return [];
   const signed = await signPetImages(data.map((r) => r.photo_path as string | null), 6 * 3600);
   return data.map((r) => ({

@@ -7,6 +7,7 @@ import { getGalleryItem } from "@/lib/pet/gallery";
 import { formatJpDate } from "@/lib/pet/calc";
 import { PawLikeButton } from "@/components/pet/PawLikeButton";
 import { FlagButton } from "@/components/pet/FlagButton";
+import { BlockButton } from "@/components/pet/BlockButton";
 import { ShareButtons } from "@/components/pet/ShareButtons";
 import { PetAvatar, PetCard, petButton } from "@/components/pet/ui";
 
@@ -94,7 +95,12 @@ export default async function PetGalleryItemPage({ params }: { params: Promise<{
         <Link href="/pet/gallery" className="text-xs font-bold text-[#EE6A36]">
           ‹ ギャラリーへ
         </Link>
-        {!isOwner && <FlagButton targetType="diary" targetId={item.id} loggedIn={Boolean(viewer)} />}
+        {!isOwner && (
+          <div className="flex flex-col items-end gap-2">
+            <FlagButton targetType="diary" targetId={item.id} loggedIn={Boolean(viewer)} />
+            <BlockButton targetType="diary" targetId={item.id} loggedIn={Boolean(viewer)} />
+          </div>
+        )}
       </div>
     </div>
   );

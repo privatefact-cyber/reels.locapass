@@ -8,6 +8,8 @@ import { PetSettingsForm } from "@/components/pet/PetSettingsForm";
 import { PetPushCard } from "@/components/pet/PetPushCard";
 import { PetSignOutButton } from "@/components/pet/PetSignOutButton";
 import { PetAiConsentSetting } from "@/components/pet/AiConsent";
+import { PetBlockedList } from "@/components/pet/PetBlockedList";
+import { getBlockedIds } from "@/lib/pet/blocks";
 import { PetCard } from "@/components/pet/ui";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +30,21 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
     supabase.from("locapass_pet_walk_areas").select("id, lat, lng, label").order("created_at"),
   ]);
   const notice = line ? LINE_MESSAGES[line] : null;
+  // ブロックしている人(ニックネームと、その人の犬の名前で見分けられるようにする)
+  const blockedIds = [...(await getBlockedIds(userId))];
+  const blockedUsers: { userId: string; label: string }[] = [];
+  if (blockedIds.length) {
+    const admin = petAdmin();
+    const [{ data: members }, { data: pets }] = await Promise.all([
+      admin.from("locapass_members").select("id, nickname").in("id", blockedIds),
+      admin.from("locapass_pets").select("owner_id, name").in("owner_id", blockedIds).order("sort_order"),
+    ]);
+    for (const id of blockedIds) {
+      const nick = (members ?? []).find((m) => m.id === id)?.nickname as string | undefined;
+      const names = (pets ?? []).filter((p) => p.owner_id === id).map((p) => p.name as string).slice(0, 2);
+      blockedUsers.push({ userId: id, label: names.length ? `${names.join("・")}の飼い主(${nick ?? "ゲスト"})` : (nick ?? "ゲスト") });
+    }
+  }
   // 他サービスの役割(店舗管理者・キャストなど)がある人は、アカウント削除でロカわんのデータだけを消す
   // 調べられないとき(null)は、安全な側(データだけ削除の説明)に倒す
   const roles = (await listAccountRoles(petAdmin(), userId)) ?? ["unknown"];
@@ -44,6 +61,7 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
         <PetPushCard />
       </div>
       <PetAiConsentSetting />
+      <PetBlockedList users={blockedUsers} />
       <Link href="/pet/follows" className="mb-4 block">
         <PetCard className="flex items-center gap-3">
           <span className="text-2xl" aria-hidden>

@@ -1,3 +1,4 @@
+import { getBlockedIds } from "./blocks";
 import { geminiGenerateWithFallback } from "@/lib/gemini";
 import { petAdmin, signPetImages } from "./db";
 import { ageLabel, todayJst } from "./calc";
@@ -47,7 +48,10 @@ function publicGallery() {
     .neq("image_paths", "{}");
 }
 
-async function toItems(rows: Row[], viewerId: string | null): Promise<GalleryItem[]> {
+async function toItems(allRows: Row[], viewerId: string | null): Promise<GalleryItem[]> {
+  // ブロックした人の投稿は出さない
+  const blocked = await getBlockedIds(viewerId);
+  const rows = blocked.size ? allRows.filter((r) => !blocked.has(r.owner_id)) : allRows;
   if (rows.length === 0) return [];
   const [signed, likedSet] = await Promise.all([
     signPetImages(rows.flatMap((r) => [...r.image_paths, r.pet.avatar_path])),
