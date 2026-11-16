@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -21,12 +21,48 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
   const [error, setError] = useState<string | null>(lineError ? "LINEでのログインに失敗しました。もう一度お試しください" : null);
   const [result, setResult] = useState<{ registered: boolean } | null>(null);
 
+  // ロカわんのiOSアプリの中でだけ「Appleでサインイン」を出す(アプリ標準の画面を呼ぶ)
+  const [inApp, setInApp] = useState(false);
+  const [appleError, setAppleError] = useState<string | null>(null);
+  useEffect(() => {
+    setInApp(navigator.userAgent.includes("LocaWanApp"));
+  }, []);
+
   const callbackUrl = (path = redirectTo) => `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(path)}`;
 
   async function google() {
     setError(null);
     const { error } = await createClient().auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl() } });
     if (error) setError(error.message);
+  }
+
+  async function apple() {
+    if (busy) return;
+    setAppleError(null);
+    setBusy(true);
+    try {
+      const plugin = (window as unknown as { Capacitor?: { Plugins?: Record<string, { authorize: (o: object) => Promise<{ response: { identityToken: string; givenName: string | null; familyName: string | null } }> }> } }).Capacitor?.Plugins?.SignInWithApple;
+      if (!plugin) throw new Error("apple_unavailable");
+      // Appleには nonce をハッシュにして渡し、Supabaseには元の値を渡す(なりすまし防止の組)
+      const raw = `${crypto.randomUUID()}${crypto.randomUUID()}`;
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+      const hashed = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      const res = await plugin.authorize({ clientId: "net.locapass.pet", redirectURI: "https://locapass.net/pet", scopes: "email name", nonce: hashed });
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: res.response.identityToken, nonce: raw });
+      if (error) throw error;
+      // 名前はAppleが初回しか渡さないので、あれば保存しておく
+      const fullName = [res.response.familyName, res.response.givenName].filter(Boolean).join(" ");
+      if (fullName) await supabase.auth.updateUser({ data: { full_name: fullName } });
+      router.push(redirectTo);
+      router.refresh();
+    } catch (e) {
+      // 本人が画面を閉じたとき(キャンセル)は何も出さない
+      const msg = e instanceof Error ? e.message : typeof e === "string" ? e : "";
+      if (!/1001|cancel/i.test(msg)) setAppleError("Appleでのログインに失敗しました。もう一度お試しください");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function sendLink(e: React.FormEvent) {
@@ -59,6 +95,20 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
   return (
     <div className="space-y-4">
       <PetCard className="space-y-3">
+        {inApp && (
+          <button
+            type="button"
+            onClick={apple}
+            disabled={busy}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3.5 text-[15px] font-bold text-white active:scale-[0.99] disabled:opacity-60"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M16.37 1.43c0 1.14-.46 2.22-1.2 3-.8.85-2.1 1.5-3.15 1.42-.13-1.1.4-2.25 1.1-2.98.8-.83 2.15-1.45 3.25-1.44zM20.5 17.1c-.55 1.27-.82 1.84-1.52 2.96-1 1.56-2.4 3.5-4.14 3.52-1.55.02-1.95-1-4.05-.99-2.1.01-2.54 1.01-4.09.99-1.74-.02-3.07-1.77-4.07-3.33C-.2 15.9-.5 10.9 1.7 8.1c1.1-1.4 2.85-2.3 4.5-2.3 1.67 0 2.72 1.01 4.1 1.01 1.34 0 2.15-1.02 4.08-1.02 1.45 0 3 .8 4.1 2.15-3.6 1.97-3.02 7.1.02 9.16z" />
+            </svg>
+            Appleでサインイン
+          </button>
+        )}
+        {inApp && appleError && <p className="text-sm font-bold text-[#D04848]">{appleError}</p>}
         <a
           href={`/api/auth/line/start?redirect=${encodeURIComponent(redirectTo)}`}
           className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#06C755] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-[0_4px_0_#04A044] active:translate-y-[2px]"
