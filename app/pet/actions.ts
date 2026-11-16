@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getPetViewer, petAdmin, PET_BUCKET } from "@/lib/pet/db";
 import { notifyPetUser } from "@/lib/pet/notify";
+import { AI_CONSENT_REQUIRED, hasPetAiConsent } from "@/lib/pet/aiConsent";
 import { findNearbyRecipients, isBannedUser } from "@/lib/pet/recipients";
 import { GUEST_LIMITS, guestIpHash, hashManageToken, newManageToken, verifyTurnstile } from "@/lib/pet/guest";
 import type { PetDocType, PetSex, PetVisibility } from "@/lib/pet/types";
@@ -503,6 +504,8 @@ export async function savePetDiary(input: PetDiaryInput): Promise<Result<{ snapP
   // 公開(ギャラリーに並ぶ)ときは、AIで「犬が写っているか・住所の手がかりが写っていないか」を確かめる
   let images: { data: Buffer; mimeType: string }[] = [];
   if (vis === "public" && imagePaths.length > 0) {
+    // 写真を外部のAIに送る前に、本人の同意を確かめる
+    if (!(await hasPetAiConsent(petAdmin(), viewer.userId))) return { ok: false, error: AI_CONSENT_REQUIRED };
     images = await loadPetImages(imagePaths);
     const { checkGalleryImages } = await import("@/lib/pet/gallery");
     const check = await checkGalleryImages(images);

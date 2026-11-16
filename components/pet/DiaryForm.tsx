@@ -9,6 +9,7 @@ import { VISIBILITY_LABEL, type PetVisibility } from "@/lib/pet/types";
 import type { PetSpot } from "@/lib/pet/spots";
 import { reverseGeocode } from "@/lib/map/geocode";
 import { uploadPetImage } from "./petUpload";
+import { useAiConsent } from "./AiConsent";
 import { PetMap } from "./PetMap";
 import { PetCard, PetField, petButton, petInput } from "./ui";
 
@@ -42,6 +43,7 @@ export function DiaryForm({
   autoOpen?: boolean;
 }) {
   const router = useRouter();
+  const aiConsent = useAiConsent();
   const fileInput = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(autoOpen || Boolean(presetPlace));
   const [entryDate, setEntryDate] = useState(todayJst());
@@ -141,6 +143,10 @@ export function DiaryForm({
       if (nearHome && !homeOk) return setError("自宅の近くかもしれません。場所を変えるか、確認のチェックを入れてください");
       snap = { lat: point.lat, lng: point.lng, spotName: spotName.trim(), address, shopId: picked?.kind === "shop" ? picked.id : null, placeId: picked?.kind === "place" ? picked.id : null };
     }
+    // 公開する写真は、外部のAIで内容を確かめる。送る前に同意を確かめる(同意しないときは「自分だけ」「フォロワー」で保存できる)
+    if (visibility === "public" && files.length > 0 && !(await aiConsent.ensure())) {
+      return setError("公開前の写真の確認(AI)に同意していないため、公開できません。「自分だけ」「フォロワー」なら、このまま保存できます");
+    }
     setBusy(true);
     try {
       const imagePaths: string[] = [];
@@ -154,7 +160,7 @@ export function DiaryForm({
           router.refresh();
           return;
         }
-        throw new Error(res.error);
+        throw new Error(res.error === "AI_CONSENT_REQUIRED" ? "公開前の写真の確認(AI)への同意が必要です。もう一度、公開で保存してください" : res.error);
       }
       reset();
       setNotice(res.snapPostId ? "保存しました。うちの子自慢と LOCAPASS snap にも載りました 🎉" : visibility === "public" ? "保存しました。うちの子自慢ギャラリーに載りました 🎉" : "保存しました");

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { geminiGenerateWithFallback } from "@/lib/gemini";
 import { getPetViewer, petAdmin } from "@/lib/pet/db";
+import { AI_CONSENT_REQUIRED, hasPetAiConsent } from "@/lib/pet/aiConsent";
 import { PET_SCAN_PROMPT, normalizePetScan } from "@/lib/pet/scan";
 import { expiryFor } from "@/lib/pet/calc";
 
@@ -30,6 +31,8 @@ export async function POST(request: Request) {
   if (imageBase64.length > MAX_BASE64_CHARS) return NextResponse.json({ error: "画像が大きすぎます" }, { status: 413 });
 
   const admin = petAdmin();
+  // 外部のAIに画像を送る前に、本人の同意を確かめる(同意がなければ送らない)
+  if (!(await hasPetAiConsent(admin, viewer.userId))) return NextResponse.json({ error: AI_CONSENT_REQUIRED }, { status: 403 });
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
   const { count } = await admin.from("locapass_pet_ai_scans").select("id", { count: "exact", head: true }).eq("user_id", viewer.userId).gte("created_at", since);
   if ((count ?? 0) >= DAILY_LIMIT) return NextResponse.json({ error: `1日の読み取り回数(${DAILY_LIMIT}回)を超えました。手入力で登録できます` }, { status: 429 });

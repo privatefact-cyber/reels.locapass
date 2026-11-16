@@ -6,6 +6,7 @@ import { PAW_PATTERN } from "@/components/pet/ui";
 import { HereLocationPing } from "@/components/pet/HereLocationPing";
 import { PetConcierge } from "@/components/pet/PetConcierge";
 import { getPetViewer } from "@/lib/pet/db";
+import { AiConsentProvider } from "@/components/pet/AiConsent";
 
 const rounded = M_PLUS_Rounded_1c({ weight: ["400", "700", "800"], subsets: ["latin"], display: "swap", preload: false });
 
@@ -24,20 +25,24 @@ export default async function PetLayout({ children }: { children: React.ReactNod
   // 「いまいる場所でも受け取る」がオンの人だけ、開いたときに現在地を送る
   const viewer = await getPetViewer();
   let hereEnabled = false;
+  let aiConsent = false;
   if (viewer) {
-    const { data } = await viewer.supabase.from("locapass_pet_owner_settings").select("here_alert_opt_in").eq("user_id", viewer.userId).maybeSingle();
+    const { data } = await viewer.supabase.from("locapass_pet_owner_settings").select("here_alert_opt_in, ai_consent_at").eq("user_id", viewer.userId).maybeSingle();
     hereEnabled = Boolean(data?.here_alert_opt_in);
+    aiConsent = Boolean(data?.ai_consent_at);
   }
   return (
     <div
       className={`${rounded.className} -mb-20 min-h-screen bg-[#FFF7EC] text-[#4A3426] md:mb-0`}
       style={{ backgroundImage: PAW_PATTERN, backgroundSize: "64px 64px" }}
     >
-      <HereLocationPing enabled={hereEnabled} />
-      <PetTopBar />
-      <div className="mx-auto w-full max-w-md px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-2">{children}</div>
-      <PetTabBar />
-      <PetConcierge />
+      <AiConsentProvider initialGranted={aiConsent} loggedIn={Boolean(viewer)}>
+        <HereLocationPing enabled={hereEnabled} />
+        <PetTopBar />
+        <div className="mx-auto w-full max-w-md px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-2">{children}</div>
+        <PetTabBar />
+        <PetConcierge />
+      </AiConsentProvider>
     </div>
   );
 }

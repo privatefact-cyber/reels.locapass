@@ -180,11 +180,14 @@ export type AiWidgetTheme = "default" | "christmas" | "beauty" | "nature" | "pet
 export function AiInquiryWidget({
   placement = "floating",
   theme,
+  beforeOpen,
   positionClassName,
 }: {
   placement?: "floating" | "map";
   /** このウィジェットだけ配色を変えたいときに指定。未指定ならサイト全体のテーマ(12/1〜12/25はクリスマス)に従う。 */
   theme?: AiWidgetTheme;
+  /** 開く前の確認(ロカわんのAI同意)。false を返すと開かない。同意されたら、渡した proceed で開く */
+  beforeOpen?: (proceed: () => void) => boolean;
   /** 置き場所だけ変えたいとき(ロカわんは下のタブが高いので、その上に出す)。未指定なら placement の既定位置 */
   positionClassName?: string;
 }) {
@@ -671,6 +674,7 @@ export function AiInquiryWidget({
       <button
         type="button"
         onClick={() => {
+          if (!open && beforeOpen && !beforeOpen(() => setOpen(true))) return;
           if (!open) requestLocation();
           setOpen((v) => !v);
         }}

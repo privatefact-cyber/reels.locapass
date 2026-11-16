@@ -8,6 +8,7 @@ import { expiryFor } from "@/lib/pet/calc";
 import type { PetScanResult } from "@/lib/pet/scan";
 import { DOC_TYPE_EMOJI, DOC_TYPE_LABEL, type PetDocType } from "@/lib/pet/types";
 import { imageToBase64, uploadPetImage } from "./petUpload";
+import { useAiConsent } from "./AiConsent";
 import { LocalImageNotice } from "./LocalImage";
 import { PetCard, PetField, petButton, petInput } from "./ui";
 
@@ -26,6 +27,7 @@ const EMPTY: Draft = { docType: "rabies", administeredOn: "", expiresOn: "", cli
 /** 書類を撮影→AIで読み取り→確認して保存。手入力でも追加できる。 */
 export function DocumentScanner({ petId }: { petId: string }) {
   const router = useRouter();
+  const aiConsent = useAiConsent();
   const fileInput = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -64,11 +66,17 @@ export function DocumentScanner({ petId }: { petId: string }) {
     setPreview(URL.createObjectURL(f));
     setError(null);
     setMessage(null);
+    // 外部のAIに書類の画像を送る前に、同意を確かめる。同意しないときは、読み取らずに手入力で登録できる。
+    if (!(await aiConsent.ensure())) {
+      setMessage("AIの利用に同意していないため、読み取りは使いません。下の欄に手で入れて保存できます。");
+      return;
+    }
     setPhase("reading");
     try {
       const { base64, mimeType } = await imageToBase64(f);
       const res = await fetch("/api/pet/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageBase64: base64, mimeType }) });
       const body = await res.json().catch(() => ({}));
+      if (res.status === 403 && body.error === "AI_CONSENT_REQUIRED") throw new Error("AIの利用に同意していないため、読み取りできませんでした");
       if (!res.ok) throw new Error(body.error ?? "読み取れませんでした");
       const s = body.scan as PetScanResult;
       setScan(s);

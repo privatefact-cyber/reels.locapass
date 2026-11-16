@@ -7,6 +7,7 @@ import { lineConfigured } from "@/lib/pet/notify";
 import { PetSettingsForm } from "@/components/pet/PetSettingsForm";
 import { PetPushCard } from "@/components/pet/PetPushCard";
 import { PetSignOutButton } from "@/components/pet/PetSignOutButton";
+import { PetAiConsentSetting } from "@/components/pet/AiConsent";
 import { PetCard } from "@/components/pet/ui";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +43,7 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
       <div className="mb-4">
         <PetPushCard />
       </div>
+      <PetAiConsentSetting />
       <Link href="/pet/follows" className="mb-4 block">
         <PetCard className="flex items-center gap-3">
           <span className="text-2xl" aria-hidden>

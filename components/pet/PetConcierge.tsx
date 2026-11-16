@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { AiInquiryWidget } from "@/components/AiInquiryWidget";
+import { useAiConsent } from "./AiConsent";
 
 /**
  * ロカわんのコンシェルジュAI(LOCAPASSと同じAI・同じ会話)。配色だけロカわん(theme="pet")。
@@ -9,8 +10,10 @@ import { AiInquiryWidget } from "@/components/AiInquiryWidget";
  */
 export function PetConcierge() {
   const pathname = usePathname() ?? "";
+  // 質問などを外部のAIに送るので、はじめて開くときは、同意を確かめる
+  const { ensureNow } = useAiConsent();
   if (pathname.startsWith("/pet/spots")) {
-    return <AiInquiryWidget theme="pet" placement="map" positionClassName="fixed right-3 top-[calc(env(safe-area-inset-top)+190px)] z-[60] flex flex-col-reverse items-end" />;
+    return <AiInquiryWidget theme="pet" beforeOpen={ensureNow} placement="map" positionClassName="fixed right-3 top-[calc(env(safe-area-inset-top)+190px)] z-[60] flex flex-col-reverse items-end" />;
   }
-  return <AiInquiryWidget theme="pet" positionClassName="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] right-4 z-[60] md:bottom-24" />;
+  return <AiInquiryWidget theme="pet" beforeOpen={ensureNow} positionClassName="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] right-4 z-[60] md:bottom-24" />;
 }
