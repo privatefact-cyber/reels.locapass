@@ -25,7 +25,7 @@ export const SHOP_OPTIONS: ShopOptionDef[] = [
   {
     key: "auto_video",
     label: "動画の自動追加",
-    description: "YouTubeなどで店舗が紹介された動画を、毎日自動で見つけて、お店のリールとして追加します。店舗詳細が自然に育っていきます。不要な動画は、投稿画面から非表示にできます。",
+    description: "お店のYouTubeチャンネルを登録すると、新しい動画(ショート)が自動でお店のリールに追加されます。本数の上限はありません。不要な動画は、投稿画面から非表示にできます。",
     column: "auto_video_enabled",
   },
   {

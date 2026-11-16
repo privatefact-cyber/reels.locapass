@@ -35,6 +35,7 @@ const NAV_GROUPS: { title: string; items: { path: string; label: string; icon: s
     items: [
       { path: "/posts", label: "投稿", icon: "🎬", description: "リール・イベントの投稿と管理" },
       { path: "/photos", label: "写真の管理", icon: "🖼️", description: "お客様が投稿した写真の表示・非表示" },
+      { path: "/video-channels", label: "動画の自動追加", icon: "📡", description: "YouTubeチャンネルの新しい動画を、自動でリールに追加(オプション)" },
     ],
   },
   {
