@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { requirePetViewer } from "@/lib/pet/db";
+import { petAdmin, requirePetViewer } from "@/lib/pet/db";
+import { listAccountRoles } from "@/lib/pet/account";
+import { PetDeleteAccount } from "@/components/pet/PetDeleteAccount";
 import { lineConfigured } from "@/lib/pet/notify";
 import { PetSettingsForm } from "@/components/pet/PetSettingsForm";
 import { PetPushCard } from "@/components/pet/PetPushCard";
@@ -25,6 +27,9 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
     supabase.from("locapass_pet_walk_areas").select("id, lat, lng, label").order("created_at"),
   ]);
   const notice = line ? LINE_MESSAGES[line] : null;
+  // 他サービスの役割(店舗管理者・キャストなど)がある人は、アカウント削除でロカわんのデータだけを消す
+  // 調べられないとき(null)は、安全な側(データだけ削除の説明)に倒す
+  const roles = (await listAccountRoles(petAdmin(), userId)) ?? ["unknown"];
 
   return (
     <div>
@@ -58,6 +63,7 @@ export default async function PetSettingsPage({ searchParams }: { searchParams: 
         lineReady={lineConfigured()}
       />
       <PetSignOutButton />
+      <PetDeleteAccount hasRoles={(roles?.length ?? 0) > 0} />
       <p className="mt-6 px-2 text-center text-[11px] leading-relaxed text-[#B39C8C]">
         ロカわんはLOCAPASSのアカウントで動いています。
         <br />

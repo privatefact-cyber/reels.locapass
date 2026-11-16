@@ -5,7 +5,7 @@ import { PetLoginForm } from "@/components/pet/PetLoginForm";
 export const dynamic = "force-dynamic";
 
 /** ロカわんのログイン・新規登録(LOCAPASSと同じアカウント)。戻り先は /pet の中だけ */
-export default async function PetLoginPage({ searchParams }: { searchParams: Promise<{ redirect?: string; line_error?: string }> }) {
+export default async function PetLoginPage({ searchParams }: { searchParams: Promise<{ redirect?: string; line_error?: string; deleted?: string }> }) {
   const sp = await searchParams;
   const back = typeof sp.redirect === "string" && sp.redirect.startsWith("/pet") && !sp.redirect.startsWith("//") ? sp.redirect : "/pet";
   if (await getPetViewer()) redirect(back);
@@ -18,6 +18,9 @@ export default async function PetLoginPage({ searchParams }: { searchParams: Pro
         <h1 className="mt-3 text-2xl font-extrabold">ログイン・新規登録</h1>
         <p className="mt-1 text-sm text-[#9C8273]">無料で、うちの子の手帳がつくれます</p>
       </div>
+      {sp.deleted && (
+        <p className="mb-4 rounded-2xl bg-[#E5F8EC] p-3 text-center text-sm font-bold text-[#06A34A]">アカウントを削除しました。ご利用ありがとうございました。</p>
+      )}
       <PetLoginForm redirectTo={back} lineError={Boolean(sp.line_error)} />
     </div>
   );
