@@ -80,11 +80,26 @@ export default async function FoundDetailPage({ params, searchParams }: { params
           <p className="mt-1 text-sm text-[#7A6050]">🕒 {foundTimeLabel(r.foundAt)} ごろ</p>
           {r.address && <p className="text-sm text-[#7A6050]">📍 {r.address}</p>}
           {r.features && <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-[#F6FBF9] px-3 py-2 text-sm text-[#5C4535]">{r.features}</p>}
-          {r.handedTo && <p className="mt-2 text-sm font-bold text-[#22806A]">🏠 {r.handedTo}</p>}
+          {r.handedTo && (
+            <div className="mt-3 rounded-2xl border-2 border-[#BFE8DA] bg-[#E5F7F0] px-3 py-2.5">
+              <p className="text-[11px] font-extrabold text-[#22806A]">🏠 いま、保護されている場所・預け先</p>
+              <p className="mt-0.5 text-[15px] font-extrabold text-[#1C6B55]">{r.handedTo}</p>
+              <p className="mt-0.5 text-[11px] text-[#5C8F80]">うちの子かもしれないときは、ここへ連絡・確認してください</p>
+            </div>
+          )}
         </div>
         {r.hasContact && r.status === "open" && (
           <div className="border-t border-[#DDF2EA] bg-[#F6FBF9] p-3">
             <ContactReveal type="found" id={r.id} label="通報した人の連絡方法を表示" tone="green" />
+          </div>
+        )}
+        {!r.hasContact && r.status === "open" && !isReporter && (
+          <div className="border-t border-[#F4E2B8] bg-[#FFF8E8] p-3 text-xs leading-relaxed text-[#7A6050]">
+            <p className="font-extrabold text-[#B26A00]">📞 通報した人は、連絡方法を書いていません</p>
+            <p className="mt-1">
+              {r.handedTo ? "上の預け先・保護されている場所を確認してください。" : "上の「見つけた場所」と日時を手がかりにしてください。"}
+              ロカわんのユーザーが通報した場合は、下の「うちの子かも!」を押すと、通報した人に通知が届きます。
+            </p>
           </div>
         )}
       </div>

@@ -55,6 +55,11 @@ export function FoundReportForm({ loggedIn }: { loggedIn: boolean }) {
   async function submit() {
     if (!point) return setError("見つけた場所を地図で選んでください");
     if (!loggedIn && turnstileRequired && !captcha) return setError("「人間です」の確認をしてください");
+    // ログインなし+連絡方法なし+預け先なしだと、飼い主さんが連絡する手段がなくなる。送る前に、ひとこと確認する。
+    if (!loggedIn && !contactNote.trim() && !(kind === "protected" && handedTo.trim())) {
+      const ok = window.confirm("連絡方法が書かれていません。\nこのままだと、飼い主さんから連絡できません。\n\nこのまま送りますか?(「キャンセル」で、書きに戻れます)");
+      if (!ok) return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -149,8 +154,16 @@ export function FoundReportForm({ loggedIn }: { loggedIn: boolean }) {
             <input className={petInput} value={handedTo} onChange={(e) => setHandedTo(e.target.value)} placeholder="例: 渋谷警察署に届けました" />
           </PetField>
         )}
-        <PetField label="飼い主さんへの連絡方法(公開されます・任意)" hint="入れなくても、飼い主さんが「うちの子かも」を押すと通知で届きます">
-          <input className={petInput} value={contactNote} onChange={(e) => setContactNote(e.target.value)} placeholder="例: 渋谷駅前の〇〇カフェで預かっています" />
+      </PetCard>
+
+      <PetCard className="space-y-3 border-2 border-[#F4C98A] bg-[#FFF8E8]">
+        <h3 className="text-sm font-extrabold text-[#B26A00]">📞 飼い主さんが連絡できる方法</h3>
+        <p className="text-xs leading-relaxed text-[#7A6050]">
+          ここに書くと、飼い主さんがすぐ連絡できて、早く会えます。
+          {!loggedIn && <strong className="text-[#B26A00]">ログインなしで送るときは、とくに大切です(飼い主さんに通知が届かないため)。</strong>}
+        </p>
+        <PetField label="連絡方法・受け渡しの場所(公開されます・任意)" hint="誰でも見られる場所に表示されます。個人の電話番号は、ご自身で判断して入れてください">
+          <input className={petInput} value={contactNote} onChange={(e) => setContactNote(e.target.value)} placeholder="例: 渋谷駅前の〇〇カフェで預かっています。毎日18時まで" />
         </PetField>
       </PetCard>
 
