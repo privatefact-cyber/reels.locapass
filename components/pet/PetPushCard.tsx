@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Share } from "lucide-react";
+import { removePetApnsToken } from "@/app/pet/pushActions";
+import { APP_PUSH_OFF_KEY, APP_PUSH_TOKEN_KEY, getAppPush, isLocaWanApp } from "./appPush";
 import { PetCard } from "./ui";
 
 const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -26,7 +28,7 @@ function isStandalone() {
  * ロカわんの端末通知(Webプッシュ)。LOCAPASS共通の仕組み(public/sw.js・/api/push/subscribe)をそのまま使う。
  * iPhoneは「ホーム画面に追加」したアプリから開いたときだけWebプッシュが使えるので、その案内を出す。
  */
-export function PetPushCard() {
+function WebPushCard() {
   const [status, setStatus] = useState<Status>("checking");
 
   useEffect(() => {
@@ -109,4 +111,98 @@ export function PetPushCard() {
       <p className="text-[11px] text-[#B39C8C]">ワクチンの期限・迷子アラート・フォロー申請などが届きます。</p>
     </PetCard>
   );
+}
+
+
+/** ロカわんのiPhoneアプリの中: アプリの通知(APNs)のオン/オフ */
+function AppPushControl() {
+  const [status, setStatus] = useState<"checking" | "off" | "on" | "denied" | "busy" | "unsupported">("checking");
+
+  useEffect(() => {
+    (async () => {
+      const push = getAppPush();
+      if (!push) return setStatus("unsupported");
+      const perm = await push.checkPermissions();
+      if (perm.receive === "denied") return setStatus("denied");
+      let off = false;
+      try {
+        off = localStorage.getItem(APP_PUSH_OFF_KEY) === "1";
+      } catch {
+        off = false;
+      }
+      setStatus(perm.receive === "granted" && !off ? "on" : "off");
+    })().catch(() => setStatus("unsupported"));
+  }, []);
+
+  async function enable() {
+    const push = getAppPush();
+    if (!push) return;
+    setStatus("busy");
+    try {
+      const perm = await push.requestPermissions();
+      if (perm.receive !== "granted") return setStatus(perm.receive === "denied" ? "denied" : "off");
+      try {
+        localStorage.removeItem(APP_PUSH_OFF_KEY);
+      } catch {
+        // 保存できなくても続ける
+      }
+      // 登録できたトークンは、AppPushBridge(registrationの受け取り)がサーバーへ保存する
+      await push.register();
+      setStatus("on");
+    } catch {
+      setStatus("off");
+    }
+  }
+
+  async function disable() {
+    const push = getAppPush();
+    setStatus("busy");
+    try {
+      let token: string | null = null;
+      try {
+        token = localStorage.getItem(APP_PUSH_TOKEN_KEY);
+        localStorage.setItem(APP_PUSH_OFF_KEY, "1");
+        localStorage.removeItem(APP_PUSH_TOKEN_KEY);
+      } catch {
+        token = null;
+      }
+      if (token) await removePetApnsToken(token);
+      await push?.unregister().catch(() => undefined);
+      setStatus("off");
+    } catch {
+      setStatus("on");
+    }
+  }
+
+  return (
+    <PetCard className="space-y-3">
+      <h3 className="text-sm font-extrabold text-[#EE6A36]">📲 このスマホに通知を届ける</h3>
+      {status === "checking" && <Loader2 size={16} className="animate-spin text-[#B39C8C]" />}
+      {status === "unsupported" && <p className="text-xs text-[#9C8273]">このアプリでは、通知を使えません。アプリを最新にしてください。</p>}
+      {status === "denied" && <p className="text-xs text-[#9C8273]">通知がオフになっています。iPhoneの「設定」→「ロカわん」→「通知」で、許可してください。</p>}
+      {(status === "off" || status === "on" || status === "busy") && (
+        <button
+          type="button"
+          onClick={status === "on" ? disable : enable}
+          disabled={status === "busy"}
+          className={`inline-flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-3 text-sm font-extrabold ${status === "on" ? "bg-[#F4EEE8] text-[#7A6050]" : "bg-[#FF8E5E] text-white shadow-[0_4px_0_#EE6A36]"}`}
+        >
+          {status === "busy" && <Loader2 size={16} className="animate-spin" />}
+          {status === "on" ? "✓ 通知オン(タップでオフ)" : "通知をオンにする"}
+        </button>
+      )}
+      <p className="text-[11px] text-[#B39C8C]">ワクチンの期限・迷子アラート・フォロー申請などが届きます。</p>
+    </PetCard>
+  );
+}
+
+/** 設定の通知カード。iPhoneアプリの中ではアプリの通知、ブラウザではWebプッシュ */
+export function PetPushCard() {
+  const [mode, setMode] = useState<"app" | "web" | null>(null);
+  useEffect(() => {
+    setMode(isLocaWanApp() ? "app" : "web");
+  }, []);
+  if (mode === "app") return <AppPushControl />;
+  if (mode === "web") return <WebPushCard />;
+  return null;
 }

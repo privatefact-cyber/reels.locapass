@@ -1,4 +1,5 @@
 import { sendPushToUser } from "@/lib/push/send";
+import { apnsConfigured, sendApnsToUser } from "@/lib/push/apns";
 import { petAdmin } from "./db";
 
 export type PetNotificationType = "pet_reminder" | "pet_lost_alert" | "pet_follow_request" | "pet_follow_approved" | "pet_sighting" | "pet_found" | "pet_found_claim" | "pet_lost_check";
@@ -35,7 +36,7 @@ const SITE = "https://locapass.net";
 /**
  * ロカわんの通知を1件送る。
  * 1) アプリ内のお知らせ(locapass_notifications)に入れる(必ず)
- * 2) 端末プッシュ(鍵がある環境・購読している端末だけ)
+ * 2) 端末プッシュ(Webプッシュ・iPhoneアプリ。鍵がある環境・オンにした端末だけ)
  * 3) LINE(連携済みで「LINEで受け取る」がオンの人だけ)
  * 失敗しても呼び出し側の処理は止めない(呼び出し側でcatchする)。
  */
@@ -53,6 +54,11 @@ export async function notifyPetUser(n: { userId: string; type: PetNotificationTy
 
   if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     await sendPushToUser(n.userId, { title: n.title, body: n.body ?? "", url: n.url }).catch((e) => console.error("[pet] push failed", e));
+  }
+
+  // iPhoneアプリ(ロカわん)への通知。APNsの鍵がある環境・アプリで通知をオンにした端末だけ
+  if (apnsConfigured()) {
+    await sendApnsToUser(n.userId, { title: n.title, body: n.body ?? "", url: n.url }).catch((e) => console.error("[pet] apns failed", e));
   }
 
   const { data: settings } = await admin.from("locapass_pet_owner_settings").select("line_user_id, line_notify").eq("user_id", n.userId).maybeSingle();
