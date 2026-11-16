@@ -59,7 +59,8 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
     } catch (e) {
       // 本人が画面を閉じたとき(キャンセル)は何も出さない
       const msg = e instanceof Error ? e.message : typeof e === "string" ? e : "";
-      if (!/1001|cancel/i.test(msg)) setAppleError("Appleでのログインに失敗しました。もう一度お試しください");
+      // 失敗の原因を後から調べられるよう、短い詳細を添える(個人情報は含まれない)
+      if (!/1001|cancel/i.test(msg)) setAppleError(`Appleでのログインに失敗しました。もう一度お試しください${msg ? `(詳細: ${msg.slice(0, 140)})` : ""}`);
     } finally {
       setBusy(false);
     }
