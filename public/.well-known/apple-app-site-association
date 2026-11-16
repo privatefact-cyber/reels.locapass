@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["7D746B5DRM.net.locapass.pet"],
+        "components": [
+          { "/": "/api/auth/line/app-callback", "comment": "ロカわんアプリのLINEログイン戻り先" }
+        ]
+      }
+    ]
+  }
+}

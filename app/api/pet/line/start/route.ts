@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
+import { lineCallbackPathFor } from "@/lib/auth/lineCallbackPath";
 
 /**
  * ロカわんの「LINEで通知を受け取る」の入り口。ログイン中の人だけ。
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
   const url = new URL("https://access.line.me/oauth2/v2.1/authorize");
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", channelId);
-  url.searchParams.set("redirect_uri", `${origin}/api/auth/line/callback`);
+  url.searchParams.set("redirect_uri", `${origin}${lineCallbackPathFor(request)}`);
   url.searchParams.set("state", state);
   url.searchParams.set("scope", "profile openid");
   url.searchParams.set("nonce", nonce);
