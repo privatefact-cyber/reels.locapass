@@ -5,6 +5,9 @@ import { ExternalLink, Play, RotateCw, Volume2, VolumeX, X } from "lucide-react"
 import { embedSrc } from "@/lib/embed";
 import { VIDEO_PROVIDER_LABEL, videoUrlFor, type VideoProvider } from "@/lib/video";
 
+/** 次のカードの見えない先読みを始めるまでの待ち時間(ms)。スワイプの切り替えと重ならないようにする。 */
+const PRELOAD_DELAY_MS = 800;
+
 const PRECONNECT_HOSTS: Record<VideoProvider, string[]> = {
   youtube: ["https://www.youtube.com", "https://i.ytimg.com"],
   tiktok: ["https://www.tiktok.com"],
@@ -110,8 +113,22 @@ export function EmbedPlayer({
   //  - noAutoSrc: 先読みで作ったiframeは「自動再生なし」のURLのまま、画面に出ても作り直さずに使う。
   const [played, setPlayed] = useState(false);
   const [noAutoSrc, setNoAutoSrc] = useState(false);
-  const prewarm = autoPlay && !dismissed && !played && ((preload && !active) || (active && noAutoSrc));
+  // 先読みは、スワイプが止まってから始める。切り替えの最中にiframeの読み込み(YouTubeのプレーヤーは重い)を始めると、
+  // スワイプのアニメーションとぶつかってカクつくため。見えない先読みが出来上がる前に次へ送った場合は、従来どおりその場で読み込む。
+  const [preloadReady, setPreloadReady] = useState(false);
+  useEffect(() => {
+    if (!preload || active) {
+      setPreloadReady(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setPreloadReady(true), PRELOAD_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [preload, active]);
+  const prewarm = autoPlay && !dismissed && !played && ((preloadReady && !active) || (active && noAutoSrc));
   const mounted = playing || warm || prewarm;
+  // フィードの自動再生のYouTubeは操作バーが無い(controls=0)ので、指のタッチを枠に渡さず、上下のスワイプ(スクロール)にだけ使う。
+  // iPhoneは別サイトの枠の上から始めたスクロールの開始が遅れてカクつくため。TikTok・Instagramは自前の操作があるので対象外。
+  const noTouch = autoPlay && provider === "youtube" ? "pointer-events-none " : "";
   // 先読みで作られるときだけ、自動再生なしのURLにする(描画中に切り替えて、同じ描画のうちに反映する)。
   if (mounted && !playing && !active && autoPlay && !noAutoSrc) setNoAutoSrc(true);
   if (!mounted && noAutoSrc) setNoAutoSrc(false);
@@ -226,8 +243,8 @@ export function EmbedPlayer({
               ? autoPlay
                 ? coverPortrait
                   ? // 枠(親)の大きさを cq 単位で測り、縦向きのときだけ「9:16で親を覆う」大きさにして中央に置く。
-                    "absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 border-0 bg-black portrait:h-[max(100cqh,calc(100cqw*16/9))] portrait:w-[max(100cqw,calc(100cqh*9/16))]"
-                  : "absolute inset-0 h-full w-full border-0 bg-black"
+                    `${noTouch}absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 border-0 bg-black portrait:h-[max(100cqh,calc(100cqw*16/9))] portrait:w-[max(100cqw,calc(100cqh*9/16))]`
+                  : `${noTouch}absolute inset-0 h-full w-full border-0 bg-black`
                 : "absolute inset-x-0 bottom-0 top-8 h-[calc(100%-2rem)] w-full border-0 bg-black"
               : "pointer-events-none absolute inset-0 h-full w-full border-0 opacity-0"
           }
