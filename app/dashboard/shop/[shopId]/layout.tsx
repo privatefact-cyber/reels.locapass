@@ -8,6 +8,7 @@ import { getAdminLocale } from "@/lib/i18n/getAdminLocale";
 import { RecoveryInfoGateModal } from "@/components/locapass-dashboard/RecoveryInfoGateModal";
 import { PasswordSetupGate } from "@/components/locapass-dashboard/PasswordSetupGate";
 import { ShopNavMenu, type ShopNavGroup } from "@/components/locapass-dashboard/ShopNavMenu";
+import { PostFab } from "@/components/locapass-dashboard/PostFab";
 
 /**
  * LUXELA本家の店舗ダッシュボード(app/dashboard/layout.tsx)と同じ画面構成。
@@ -34,6 +35,7 @@ const NAV_GROUPS: { title: string; items: { path: string; label: string; icon: s
     title: "投稿",
     items: [
       { path: "/posts", label: "投稿", icon: "🎬", description: "リール・イベントの投稿と管理" },
+      { path: "/murmurs", label: "ツイート", icon: "💬", description: "短い文章と写真1枚の、ひとこと投稿(動画なしで投稿できます)" },
       { path: "/photos", label: "写真の管理", icon: "🖼️", description: "お客様が投稿した写真の表示・非表示" },
       { path: "/video-channels", label: "動画の自動追加", icon: "📡", description: "YouTubeチャンネルの新しい動画を、自動でリールに追加(オプション)" },
     ],
@@ -152,7 +154,8 @@ export default async function LocapassShopDashboardLayout({
         </div>
       </nav>
       </div>
-      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">{children}</div>
+      <div className="mx-auto max-w-[1400px] px-4 pb-28 pt-6 sm:px-6">{children}</div>
+      <PostFab basePath={basePath} />
     </div>
   );
 }

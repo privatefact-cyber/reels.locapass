@@ -60,6 +60,8 @@ import { PhotoWallBackground } from "@/components/shop/PhotoWallBackground";
 import { resolvePreset } from "@/lib/photowall/presets";
 import { eventShopDict } from "@/lib/shop/eventWording";
 import { PageDots } from "@/components/shop/PageDots";
+import { MurmurBubble } from "@/components/murmur/MurmurBubble";
+import { getLatestMurmur } from "@/lib/murmur/queries";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
 import { getPublicShopAttributes } from "@/lib/verticals/shopAttributes";
@@ -282,6 +284,8 @@ export default async function ShopDetailPage({
     : { data: [] as string[] };
   const activeStoryCastIdSet = new Set(activeStoryCastIds ?? []);
   const castsWithActiveStory = (castMembers ?? []).filter((c) => c.id !== null && activeStoryCastIdSet.has(c.id));
+  // 店のひとこと(短い文章+写真1枚)。直近7日の最新1件を、ヒーローの下に吹き出しで出す。過去の分は一覧ページに残る。
+  const latestMurmur = await getLatestMurmur(supabase as never, shopRow.id);
 
   const { data: todaySchedules } = castIds.length
     ? await supabase
@@ -592,6 +596,12 @@ export default async function ShopDetailPage({
 
       {/* 2ページ構成(店舗ページ / 動画ストック)を示すドット。左スワイプでも2ページ目へ行ける。 */}
       {totalReels > 0 && <PageDots current={0} shopHref={shopPath(site.slug, shopRow.slug)} archiveHref={archiveHref} />}
+
+      {latestMurmur && (
+        <div className="mt-2">
+          <MurmurBubble item={latestMurmur} locale={locale} archiveHref={`${shopPath(site.slug, shopRow.slug)}/murmurs`} />
+        </div>
+      )}
 
       <div className="space-y-10 px-4 sm:px-6">
         {spot && <ShopSpotCard spot={spot} t={eventMode ? eventShopDict(t.shop, locale) : t.shop} locale={locale} />}

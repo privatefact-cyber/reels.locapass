@@ -1481,6 +1481,12 @@ export function VenueMapExplorer({
                       )}
                     </div>
 
+                    {venue.latestMurmur && (
+                      <p className="truncate rounded-lg bg-main/10 px-2 py-1 text-[11px] text-main/90" title={venue.latestMurmur.body}>
+                        💬 {venue.latestMurmur.body}
+                      </p>
+                    )}
+
                     {venue.casts.length > 0 && (
                       <div className="flex -space-x-2">
                         {venue.casts.slice(0, 5).map((c) => (

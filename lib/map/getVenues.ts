@@ -348,6 +348,25 @@ export async function getVenueCards(
     supabase.from("locapass_public_casts").select("id, name, shop_id").in("shop_id", shopIds),
   ]);
 
+  // 店のひとこと(短い文章)。直近7日分。最新1件をカードに出し、「投稿した日の数」を並び順の同点解消に使う(連投では有利にならない)。
+  const murmurSince = new Date(Date.now() - 7 * 86400_000).toISOString();
+  const { data: murmurRows } = await (supabase as any)
+    .from("locapass_shop_murmurs")
+    .select("shop_id, body, created_at")
+    .is("deleted_at", null)
+    .gte("created_at", murmurSince)
+    .order("created_at", { ascending: false })
+    .limit(3000);
+  const latestMurmurByShopId = new Map<string, { body: string; at: string }>();
+  const murmurDaysByShopId = new Map<string, Set<string>>();
+  for (const m of (murmurRows ?? []) as { shop_id: string; body: string; created_at: string }[]) {
+    if (!latestMurmurByShopId.has(m.shop_id)) latestMurmurByShopId.set(m.shop_id, { body: m.body, at: m.created_at });
+    const day = toJstDateString(new Date(m.created_at));
+    const set = murmurDaysByShopId.get(m.shop_id) ?? new Set<string>();
+    set.add(day);
+    murmurDaysByShopId.set(m.shop_id, set);
+  }
+
   const reelCountByShopId = new Map<string, number>();
   // 並び順には、店が実際に投稿したリール(仮のイメージリールを除く)の本数を使う。
   const realReelCountByShopId = new Map<string, number>();
@@ -438,6 +457,7 @@ export async function getVenueCards(
           ? (s.cover_image_attribution as { name?: string; uri?: string | null } | null)
           : null,
       reelCount: reelCountByShopId.get(s.id) ?? 0,
+      latestMurmur: latestMurmurByShopId.get(s.id) ?? null,
       isSponsored: false,
       boosted: boostIds.has(s.id),
       sponsoredRank: undefined,
@@ -455,6 +475,8 @@ export async function getVenueCards(
     (a, b) =>
       Number(staleIds.has(a.id)) - Number(staleIds.has(b.id)) ||
       (realReelCountByShopId.get(b.id) ?? 0) - (realReelCountByShopId.get(a.id) ?? 0) ||
+      // 同じ本数なら、直近7日にひとことを投稿した日が多い店を先に(1日に何件書いても1日分)。
+      (murmurDaysByShopId.get(b.id)?.size ?? 0) - (murmurDaysByShopId.get(a.id)?.size ?? 0) ||
       Number(hasRealPhoto(b.imageUrl)) - Number(hasRealPhoto(a.imageUrl)),
   );
 

@@ -66,6 +66,8 @@ export interface VenueCardData {
   imageAttribution?: { name?: string; uri?: string | null } | null;
   /** 公開リール数(ストーリーは含まない)。0件の店舗はカードをタップしても全画面リールを開かず店舗ページへ。 */
   reelCount: number;
+  /** 店のひとこと(直近7日の最新1件)。無ければ null。マップのカードに吹き出しで出す。 */
+  latestMurmur?: { body: string; at: string } | null;
   isSponsored: boolean;
   sponsoredRank?: number;
   supportsEnglish: boolean;
