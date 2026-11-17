@@ -31,7 +31,11 @@ export async function GET(request: Request) {
   authorizeUrl.searchParams.set("scope", "profile openid email");
   authorizeUrl.searchParams.set("nonce", nonce);
 
-  const response = NextResponse.redirect(authorizeUrl.toString());
+  // ext=1: Androidアプリから。LINEのログインは、アプリ内の画面ではQRコード画面になってしまうため、
+  // 認可URLだけを返し、アプリがChromeの安全な画面(Custom Tab)で開く。state のCookieは、いま、アプリ側のWebViewに付ける。
+  // 戻りは、iPhone版と同じ受け渡し(locawan://)で、アプリのWebViewが state の一致を確かめて完了する。
+  const external = searchParams.get("ext") === "1" && fromApp;
+  const response = external ? NextResponse.json({ url: authorizeUrl.toString() }) : NextResponse.redirect(authorizeUrl.toString());
   response.cookies.set("line_oauth", JSON.stringify({ state, nonce, redirect }), {
     httpOnly: true,
     secure: true,

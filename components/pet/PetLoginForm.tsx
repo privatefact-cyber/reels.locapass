@@ -24,7 +24,7 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
 
   // ロカわんのiOSアプリの中でだけ「Appleでサインイン」を出す(アプリ標準の画面を呼ぶ)
   const [inApp, setInApp] = useState(false);
-  // Androidアプリの中では、Googleの規則でWebView内のGoogleログインができないため、Googleのボタンを出さない
+  // Androidアプリの中では、LINE・Googleのログインを、Chromeの安全な画面(Custom Tab)で行う
   const [inAndroid, setInAndroid] = useState(false);
   const [appleError, setAppleError] = useState<string | null>(null);
   useEffect(() => {
@@ -33,12 +33,39 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
     setInApp(ua.includes("LocaWanApp") && !ua.includes("LocaWanAndroid"));
   }, []);
 
-  const callbackUrl = (path = redirectTo) => `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(path)}`;
+  const callbackUrl = (path = redirectTo, app = false) => `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(path)}${app ? "&app=1" : ""}`;
+
+  // Androidアプリでは、ログインのページを、Chromeの安全な画面(Custom Tab)で開く。
+  // (アプリ内の画面では、Googleがログインを禁止し、LINEもQRコード画面になるため)。開けないときは、そのまま移動する。
+  async function openExternal(url: string) {
+    const browser = (window as unknown as { Capacitor?: { Plugins?: Record<string, { open?: (o: { url: string }) => Promise<void> }> } }).Capacitor?.Plugins?.Browser;
+    if (browser?.open) await browser.open({ url });
+    else window.location.href = url;
+  }
 
   async function google() {
     setError(null);
+    if (inAndroid) {
+      const { data, error } = await createClient().auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl(redirectTo, true), skipBrowserRedirect: true } });
+      if (error || !data?.url) return setError(error?.message ?? "Googleでのログインを始められませんでした");
+      return openExternal(data.url);
+    }
     const { error } = await createClient().auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl() } });
     if (error) setError(error.message);
+  }
+
+  async function line(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (!inAndroid) return; // iPhoneアプリ・ブラウザは、いままでどおり
+    e.preventDefault();
+    setError(null);
+    try {
+      const res = await fetch(`/api/auth/line/start?redirect=${encodeURIComponent(redirectTo)}&ext=1`, { credentials: "include" });
+      const json = (await res.json()) as { url?: string };
+      if (!json.url) throw new Error("no_url");
+      await openExternal(json.url);
+    } catch {
+      setError("LINEでのログインを始められませんでした。もう一度お試しください");
+    }
   }
 
   async function apple() {
@@ -119,16 +146,15 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
         {inApp && appleError && <p className="text-sm font-bold text-[#D04848]">{appleError}</p>}
         <a
           href={`/api/auth/line/start?redirect=${encodeURIComponent(redirectTo)}`}
+          onClick={line}
           className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#06C755] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-[0_4px_0_#04A044] active:translate-y-[2px]"
         >
           LINEで登録・ログイン
         </a>
-        {!inAndroid && (
-          <button type="button" onClick={google} className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#F1E1CF] bg-white px-5 py-3 text-[15px] font-bold text-[#4A3426] active:scale-[0.99]">
-            <span className="text-lg font-extrabold text-[#4285F4]">G</span>
-            Googleで登録・ログイン
-          </button>
-        )}
+        <button type="button" onClick={google} className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#F1E1CF] bg-white px-5 py-3 text-[15px] font-bold text-[#4A3426] active:scale-[0.99]">
+          <span className="text-lg font-extrabold text-[#4285F4]">G</span>
+          Googleで登録・ログイン
+        </button>
       </PetCard>
 
       <div className="flex items-center gap-3 px-2 text-xs text-[#B39C8C]">

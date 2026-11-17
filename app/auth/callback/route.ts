@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { APP_URL_SCHEME, appHandoffHtml } from "@/lib/auth/lineAppHandoff";
 
 /**
  * Supabase Auth標準のコールバック(PKCE/OAuthのcode交換)。
@@ -12,6 +13,16 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const redirectTo = searchParams.get("redirect") ?? "/";
+
+  // Androidアプリ発のGoogleログイン(app=1)が、Chromeの安全な画面(Custom Tab)で戻ってきたとき。
+  // PKCEの鍵(code_verifier)は、ログインを始めたアプリのWebViewにあるので、ここでは交換せず、
+  // 認可コードをカスタムURL(locawan://)でアプリへ渡し、アプリのWebViewで交換する(コード単体では、他人は使えない)。
+  const ua = request.headers.get("user-agent") ?? "";
+  if (searchParams.get("app") === "1" && code && !ua.includes("LocaWanApp")) {
+    const safeRedirect = redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/pet";
+    const appUrl = `${APP_URL_SCHEME}://auth?c=${encodeURIComponent(code)}&r=${encodeURIComponent(safeRedirect)}`;
+    return new NextResponse(appHandoffHtml(appUrl), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+  }
 
   if (code) {
     const supabase = await createClient();
