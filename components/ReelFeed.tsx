@@ -181,6 +181,48 @@ function tileVideoUrl(tile: Tile | undefined): string | undefined {
   return media?.type === "video" ? media.url : undefined;
 }
 
+// 最初の画面(モバイルの3列×約4段)に入るタイルの数と、そのうち最優先で読む数(先頭の1段)。
+// これより後ろは画面外なので、遅延読み込みにして最初の通信を奪わない。
+const ABOVE_FOLD_TILES = 12;
+const HIGH_PRIORITY_TILES = 3;
+
+// 先頭フレーム表示用の<video>。画面外のタイルは、近づくまでsrcを付けず(動画のメタデータを取りに行かず)、
+// 最初の画面の通信をサムネイル画像に回す。画面の少し手前(300px)で読み始めるので、スクロール時に黒いままにはならない。
+function FirstFrameVideo({ src, eager, style, className }: { src: string; eager: boolean; style: React.CSSProperties; className: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [armed, setArmed] = useState(eager);
+  useEffect(() => {
+    if (armed) return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setArmed(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setArmed(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [armed]);
+  return (
+    <video
+      ref={ref}
+      src={armed ? `${src}#t=0.001` : undefined}
+      muted
+      playsInline
+      preload={armed ? "metadata" : "none"}
+      style={style}
+      className={className}
+    />
+  );
+}
+
 // グリッドの1タイル。memo化して、SHOPホバー時のプレビュー表示切り替えなど
 // 親(ReelFeed)側のstate変化のたびに全タイルが再レンダリングされないようにする
 // (tile/index/コールバックの参照が変わらない限り再描画しない)。
@@ -220,7 +262,9 @@ const GridTile = memo(function GridTile({
           onError={() => setThumbBroken(true)}
           src={thumbUrl}
           alt=""
-          loading="lazy"
+          // 最初の画面に入るタイルは遅延読み込みにしない(LCPがこのサムネイルになるため)。先頭の1段ぶんは最優先、それ以降の画面外は従来どおり遅延。
+          loading={index < ABOVE_FOLD_TILES ? "eager" : "lazy"}
+          fetchPriority={index < HIGH_PRIORITY_TILES ? "high" : undefined}
           decoding="async"
           style={{
             aspectRatio: "1 / 1",
@@ -233,11 +277,9 @@ const GridTile = memo(function GridTile({
       ) : fallbackVideoUrl ? (
         // モバイルSafari等の省データ仕様では#t=0.001を付けないと先頭フレームへ
         // シークしてくれず真っ黒のままになるため明示的に付与する。
-        <video
-          src={`${fallbackVideoUrl}#t=0.001`}
-          muted
-          playsInline
-          preload="metadata"
+        <FirstFrameVideo
+          src={fallbackVideoUrl}
+          eager={index < ABOVE_FOLD_TILES}
           style={{ aspectRatio: "1 / 1", objectFit: "cover", objectPosition: "center center" }}
           className="h-full w-full transform-gpu object-cover transition duration-300 will-change-transform group-hover:scale-105 group-hover:brightness-110"
         />

@@ -124,6 +124,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/icon.png" ||
     pathname === "/apple-icon.png" ||
     pathname === "/robots.txt" ||
+    pathname === "/llms.txt" ||
     pathname === "/sitemap.xml" ||
     pathname === "/webauth.html"
   ) {
