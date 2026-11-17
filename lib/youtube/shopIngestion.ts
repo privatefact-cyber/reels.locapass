@@ -11,6 +11,32 @@ import { cleanAutoCaption, composeIntro, menuHintsFromText } from "@/lib/reels/s
 import { getShopCuisineLabels } from "@/lib/verticals/shopCuisine";
 import { getBlockedChannelTitles } from "./stockHygiene";
 
+/**
+ * Gemini(店名・住所の特定)の呼び出し。Google側が一時的に混み合う(503 UNAVAILABLE など)ことが多いので、
+ * 数秒あけて、最大3回まで試す。月間の利用上限(spending cap)は、待っても直らないので、すぐ返す。
+ */
+async function geminiGenerateWithRetry(key: string, body: unknown, timeoutMs = 30_000): Promise<Response> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+  const waits = [2_000, 6_000];
+  let response!: Response;
+  for (let attempt = 0; attempt <= waits.length; attempt++) {
+    response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (response.ok || attempt === waits.length) return response;
+    const transient =
+      response.status === 500 || response.status === 503 || response.status === 504 ||
+      (response.status === 429 && !/spending cap/i.test(await response.clone().text()));
+    if (!transient) return response;
+    await new Promise((resolve) => setTimeout(resolve, waits[attempt] + Math.random() * 500));
+  }
+  return response;
+}
+
+
 export type YoutubeCandidate = {
   youtubeId: string;
   title: string;
@@ -630,20 +656,18 @@ export async function identifyShopFromVideo(input: { title: string; description?
     '{"name":string|null,"address":string|null,"officialUrl":string|null,"category":string,"confident":boolean,"reason":string}',
   ].join("\n");
   // google_search ツールと responseMimeType(JSONモード)は同時指定すると 400 になるため、JSONはテキストから取り出す。
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      tools: [{ google_search: {} }],
-      generationConfig: { temperature: 0, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
-    }),
-    signal: AbortSignal.timeout(30_000),
+  const response = await geminiGenerateWithRetry(key, {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    tools: [{ google_search: {} }],
+    generationConfig: { temperature: 0, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
   });
   if (!response.ok) {
     const body = await response.text();
     if (response.status === 429 && /spending cap/i.test(body)) {
       throw new Error("AI(Gemini)の月間利用上限に達しているため、店名・住所の自動特定ができません。Google AI Studio(https://ai.studio/spend)で上限を引き上げると再開します。それまでは店名と住所を手入力してください。");
+    }
+    if (response.status === 503 || response.status === 429) {
+      throw new Error("AI(Gemini)が混み合っていて、店名・住所を特定できませんでした(Google側の一時的な混雑です)。少し時間をおいて、もう一度お試しください。");
     }
     throw new Error(`店舗の特定に失敗しました: ${response.status} ${body.slice(0, 200)}`);
   }
@@ -736,17 +760,17 @@ export async function identifyOverseasShopFromVideo(cfg: OverseasConfig, input: 
     "出力は次のJSONだけにしてください(前後に文章を付けない)。",
     '{"name":string|null,"address":string|null,"officialUrl":string|null,"category":string,"confident":boolean,"reason":string}',
   ].join("\n");
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      tools: [{ google_search: {} }],
-      generationConfig: { temperature: 0, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
-    }),
-    signal: AbortSignal.timeout(30_000),
+  const response = await geminiGenerateWithRetry(key, {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    tools: [{ google_search: {} }],
+    generationConfig: { temperature: 0, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
   });
-  if (!response.ok) throw new Error(`店舗の特定に失敗しました: ${response.status} ${(await response.text()).slice(0, 200)}`);
+  if (!response.ok) {
+    if (response.status === 503 || response.status === 429) {
+      throw new Error("AI(Gemini)が混み合っていて、店名・住所を特定できませんでした(Google側の一時的な混雑です)。少し時間をおいて、もう一度お試しください。");
+    }
+    throw new Error(`店舗の特定に失敗しました: ${response.status} ${(await response.text()).slice(0, 200)}`);
+  }
   const json = await response.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   const raw = json.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
   const result = parseJsonObject(raw);
