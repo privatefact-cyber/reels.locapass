@@ -259,3 +259,58 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .look .eyebrow::after{content:"";width:34px;height:1px;background:var(--gold)}
 .look h2{font-size:clamp(22px,3.4vw,30px);font-weight:900;margin:12px 0 10px;text-wrap:balance}
 .look p{color:var(--muted);max-width:36em;margin:0 auto 24px;font-size:15px}
+
+/* ---- FACES(スタッフの個人ページ・スマホ画面のイメージ) ---- */
+.cast-demo{display:grid;grid-template-columns:auto 1fr;gap:48px;align-items:center}
+@media(max-width:860px){.cast-demo{grid-template-columns:1fr;gap:28px}}
+.cp-phone{width:min(300px,78vw);margin-inline:auto;border-radius:38px;border:2px solid #3a3326;background:#000;padding:10px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 6px #14110c,0 0 60px rgba(212,176,106,.12);position:relative}
+.cp-phone::before{content:"";position:absolute;top:14px;left:50%;translate:-50% 0;width:70px;height:18px;border-radius:99px;background:#000;z-index:3}
+.cp{border-radius:28px;overflow:hidden;background:#000;color:var(--text);font-size:10px;line-height:1.5}
+.cp .top{position:relative;overflow:hidden;background:#000;padding:30px 12px 8px;text-align:center}
+.cp .top::before{content:"";position:absolute;left:50%;top:-60px;width:140%;height:120px;transform:translateX(-50%);border-radius:9999px;background:linear-gradient(90deg,rgba(212,176,106,.16),rgba(241,220,164,.22),rgba(212,176,106,.16));filter:blur(28px)}
+.cp .top b{position:relative;font-family:var(--serif);letter-spacing:.3em;color:var(--gold);font-size:15px;font-weight:600}
+.cp .prof{display:flex;gap:10px;align-items:center;padding:12px 12px 8px}
+.cp .prof img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.cp .prof h4{font-size:13px;font-weight:700;line-height:1.3}
+.cp .prof h4 small{font-size:10px;color:var(--muted);font-weight:500;margin-left:4px}
+.cp .prof p{font-size:9px;color:var(--muted)}
+.cp .prof .role{display:inline-block;margin-top:2px;font-size:8px;font-weight:700;color:#1a1305;background:linear-gradient(135deg,var(--gold-hi),var(--gold));border-radius:99px;padding:0 7px}
+.cp .bio{padding:0 12px 6px;font-size:9px;color:var(--text);line-height:1.6}
+.cp .bio .tr{display:block;margin-top:3px;font-size:8px;color:var(--gold-hi)}
+.cp .tags{display:flex;flex-wrap:wrap;gap:3px;padding:0 12px 8px}
+.cp .tags span{font-size:8px;color:var(--gold-hi);border:1px solid var(--line);border-radius:99px;padding:1px 7px}
+.cp .stats{display:flex;gap:12px;padding:0 12px 8px}
+.cp .stats div{text-align:center;font-size:8px;color:var(--muted)}
+.cp .stats b{display:block;font-size:12px;color:var(--text)}
+.cp .follow{display:block;margin:0 12px 10px;text-align:center;padding:6px;border-radius:99px;background:linear-gradient(135deg,var(--gold-hi),var(--gold));color:#1a1305;font-weight:700;font-size:10px}
+.cp h5{display:flex;align-items:center;gap:6px;padding:4px 12px 5px;font-size:10px;letter-spacing:.14em;color:var(--gold-hi);font-weight:700}
+.cp h5 span{font-size:8px;color:var(--muted);letter-spacing:0;font-weight:500}
+.cp .reels{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:0 12px 10px}
+.cp .reels figure{position:relative;aspect-ratio:9/14;overflow:hidden;border-radius:6px}
+.cp .reels img{width:100%;height:100%;object-fit:cover}
+.cp .reels figure::after{content:"▶";position:absolute;right:4px;top:3px;font-size:8px;color:#fff;text-shadow:0 1px 3px #000}
+.cp .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:0 12px 10px}
+.cp .photos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px}
+.cp .team{display:flex;gap:8px;padding:2px 12px 14px}
+.cp .team figure{text-align:center;font-size:7px;color:var(--muted);line-height:1.3}
+.cp .team img{display:block;width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid var(--line);margin:0 auto 2px}
+.cp .team figure.me img{border-color:var(--gold)}
+
+/* 30本 vs 180本 の比較 */
+.vs{margin:34px auto 0;max-width:760px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px}
+.vs h3{font-size:16px;color:var(--gold-hi);margin-bottom:4px}
+.vs .sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.vs .row2{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;margin-top:10px}
+.vs .row2 span{font-size:13px;color:#c9c2b3}
+.vs .bar{height:30px;border-radius:8px;background:#3a3326;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;font-weight:700;font-size:14px;color:#e9e2d1}
+.vs .bar{white-space:nowrap}
+.vs .bar.s{width:16.7%;min-width:84px}
+.vs .bar.l{width:100%;background:linear-gradient(90deg,var(--gold-lo),var(--gold-hi));color:#1a1305}
+.vs .note{font-size:12px;color:var(--muted);margin-top:14px}
+@media(max-width:560px){.vs .row2{grid-template-columns:1fr;gap:4px}.vs{padding:20px 16px}}
+.boost{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+@media(max-width:760px){.boost{grid-template-columns:1fr}}
+.boost div{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.boost b{display:block;color:var(--gold-hi);font-size:15px;margin-bottom:4px}
+.boost b i{font-style:normal;font-family:var(--serif);color:var(--gold);margin-right:8px}
+.boost span{font-size:13px;color:#c9c2b3}
