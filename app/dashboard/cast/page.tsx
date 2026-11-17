@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireCurrentCast } from "@/lib/cast/current-cast";
 import { createClient } from "@/lib/supabase/server";
 import { CastDashboardClient, type MyReel, type MyStory } from "@/components/locapass-mypage/CastDashboardClient";
+import { MeetQrCard } from "@/components/locapass-mypage/MeetQrCard";
 
 type ReelRow = {
   id: string;
@@ -81,6 +82,8 @@ export default async function CastDashboardPage() {
   const portal = shop ? (Array.isArray(shop.portal) ? shop.portal[0] : shop.portal) : null;
 
   return (
+    <>
+    <MeetQrCard />
     <CastDashboardClient
       userId={cast.user_id ?? ""}
       portalId={shop?.portal_id ?? 0}
@@ -98,5 +101,6 @@ export default async function CastDashboardPage() {
       initialReels={myReels}
       initialStories={myStories}
     />
+    </>
   );
 }
