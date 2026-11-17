@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { petAdmin } from "@/lib/pet/db";
 import { finishPetLineLink } from "@/lib/pet/lineLink";
 import { APP_URL_SCHEME, appHandoffHtml, appNonceFor, isAppState, toBase64Url } from "@/lib/auth/lineAppHandoff";
 
@@ -27,6 +28,37 @@ function loginErrorRedirect(origin: string, redirect: string, reason: string, de
   const res = NextResponse.redirect(url);
   res.cookies.delete("line_oauth");
   return res;
+}
+
+const HANDOFF_REMEMBER_SECONDS = 180;
+
+function handoffResponse(appUrl: string) {
+  return new Response(appHandoffHtml(appUrl), {
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+  });
+}
+
+/** 数分以内に、同じ state で作った「アプリに戻る」リンクがあれば返す */
+async function findRememberedHandoff(state: string): Promise<string | null> {
+  try {
+    const since = new Date(Date.now() - HANDOFF_REMEMBER_SECONDS * 1000).toISOString();
+    const { data } = await petAdmin().from("locapass_app_handoffs").select("app_url").eq("state", state).gte("created_at", since).maybeSingle();
+    return (data?.app_url as string | undefined) ?? null;
+  } catch (e) {
+    console.error("[line-login] handoff_lookup_failed", e);
+    return null;
+  }
+}
+
+/** 「アプリに戻る」リンクを覚える(古いものは、ついでに消す) */
+async function rememberHandoff(state: string, appUrl: string) {
+  try {
+    const admin = petAdmin();
+    await admin.from("locapass_app_handoffs").delete().lt("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString());
+    await admin.from("locapass_app_handoffs").upsert({ state, app_url: appUrl, created_at: new Date().toISOString() }, { onConflict: "state" });
+  } catch (e) {
+    console.error("[line-login] handoff_remember_failed", e);
+  }
 }
 
 export async function GET(request: Request) {
@@ -65,6 +97,12 @@ export async function GET(request: Request) {
     return loginErrorRedirect(origin, redirectTo, "missing_env");
   }
 
+  // アプリ発のとき: 同じ戻りが2か所で開かれても(LINE内のブラウザとChrome)、同じ「アプリに戻る」ページを返す。
+  if (appHandoff) {
+    const remembered = await findRememberedHandoff(state);
+    if (remembered) return handoffResponse(remembered);
+  }
+
   const tokenRes = await fetch("https://api.line.me/oauth2/v2.1/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -77,6 +115,14 @@ export async function GET(request: Request) {
     }),
   });
   if (!tokenRes.ok) {
+    // 先に開かれた側が、まだ「覚える」前に、2回目が来た場合。少し待って、もう一度、覚えているページを探す。
+    if (appHandoff) {
+      for (let i = 0; i < 4; i++) {
+        await new Promise((r) => setTimeout(r, 700));
+        const remembered = await findRememberedHandoff(state);
+        if (remembered) return handoffResponse(remembered);
+      }
+    }
     return loginErrorRedirect(origin, redirectTo, "token_exchange_failed", await tokenRes.text());
   }
   const tokenData = (await tokenRes.json()) as LineTokenResponse;
@@ -168,9 +214,8 @@ export async function GET(request: Request) {
   if (appHandoff) {
     // Safariはここまで。ログイン用のリンク(1回限り)をアプリに渡す。アプリ側で state の一致を確かめてから使う。
     const appUrl = `${APP_URL_SCHEME}://auth?u=${toBase64Url(linkData.properties.action_link)}&s=${encodeURIComponent(state)}`;
-    return new Response(appHandoffHtml(appUrl), {
-      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
-    });
+    await rememberHandoff(state, appUrl);
+    return handoffResponse(appUrl);
   }
 
   const response = NextResponse.redirect(linkData.properties.action_link);
