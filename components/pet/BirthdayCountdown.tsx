@@ -2,21 +2,16 @@ import Link from "next/link";
 import { daysToBirthday, petPronoun, turningAge } from "@/lib/pet/calc";
 
 /**
- * 誕生日カウントダウン。誕生日の10日前から、当日まで、だけ出す(それ以外の日は出さない)。
- * 1週間を切ると、犬のひとことと、お祝いの入り口(日誌・おでかけ)を出す。
- * 誕生日が未入力のときだけ、小さく登録をうながす。当日の「枠」は、犬のアイコン側(BirthdayFrame)でつける。
+ * 誕生日カウントダウン。誕生日の10日前になったら、自動で出る(設定も、おすすめも、なし。突然出るのが、うれしい)。
+ * 10日前から当日までだけ出て、それ以外の日は出さない。誕生日が入っていない子には、何も出さない。
+ * 1週間を切ると、犬のひとことと、お祝いの入り口(日誌・おでかけ)を出す。当日の「枠」は、犬のアイコン側(BirthdayFrame)でつける。
  */
 export const COUNTDOWN_DAYS = 10;
 
 export function BirthdayCountdown({ petId, name, sex, birthday, estimated }: { petId: string; name: string; sex: string; birthday: string | null; estimated: boolean }) {
   const left = daysToBirthday(birthday);
-  if (!birthday || left === null) {
-    return (
-      <Link href={`/pet/${petId}?tab=profile`} className="mt-3 block text-center text-xs font-bold text-[#B39C8C] underline decoration-dotted active:opacity-70">
-        🎂 誕生日を登録すると、お祝いのカウントダウンができます
-      </Link>
-    );
-  }
+  // 誕生日が入っていない子には、何も出さない(登録のおすすめも出さない。10日前になったら、突然出るのが楽しい)
+  if (!birthday || left === null) return null;
   // 10日前になるまでは、何も出さない
   if (left > COUNTDOWN_DAYS) return null;
 

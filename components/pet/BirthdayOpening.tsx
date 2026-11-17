@@ -6,11 +6,16 @@ import { PetAvatar } from "./ui";
 
 export type BirthdayOpeningPet = { id: string; name: string; sex: string; avatarUrl: string | null; turning: number | null };
 
-const COLORS = ["#FF8E5E", "#FFC94D", "#7BD8B2", "#6AADEB", "#FF8FAB", "#B79CFF"];
+const PALETTES = {
+  male: ["#2F86E6", "#8EC5FF", "#B9DDFF", "#FFC94D", "#7BD8B2", "#5AA5F0"],
+  female: ["#FF5C8A", "#FFB3C9", "#FFD0DD", "#FFC94D", "#FF8E5E", "#FF8FAB"],
+  unknown: ["#FF8E5E", "#FFC94D", "#7BD8B2", "#6AADEB", "#FF8FAB", "#B79CFF"],
+} as const;
 
 /**
- * きょうが誕生日の子がいるとき、アプリを開いた(ホームを開いた)ときに、1日1回だけ出す「ハッピーバースデイ」の画面。
+ * きょうが誕生日の子がいるとき、アプリを開いた(ホームを開いた)たびに、何度でも出す「ハッピーバースデイ」の画面(当日はしつこく)。
  * 紙吹雪+犬のひとこと(「ぼく、今日誕生日だよ!」)。タップ、または数秒で閉じる。
+ * 同じ瞬間に二重に出ないよう、直前の表示から45秒以内は出さない。
  * 「動きを減らす」設定の端末では、紙吹雪を動かさない。
  */
 export function BirthdayOpening({ dayKey, pets }: { dayKey: string; pets: BirthdayOpeningPet[] }) {
@@ -20,8 +25,9 @@ export function BirthdayOpening({ dayKey, pets }: { dayKey: string; pets: Birthd
     if (pets.length === 0) return;
     const key = `locawan-birthday-opening-${dayKey}`;
     try {
-      if (window.localStorage.getItem(key)) return;
-      window.localStorage.setItem(key, "1");
+      const last = Number(window.localStorage.getItem(key) ?? 0);
+      if (Date.now() - last < 45_000) return;
+      window.localStorage.setItem(key, String(Date.now()));
     } catch {
       // 保存できない環境(プライベートブラウズなど)では、開くたびに出る
     }
@@ -37,6 +43,8 @@ export function BirthdayOpening({ dayKey, pets }: { dayKey: string; pets: Birthd
 /** 画面そのもの(紙吹雪・ことば・ボタン)。動きの確認用に、表示の判断(1日1回)とは分けてある。 */
 export function BirthdayOpeningView({ pets, onClose }: { pets: BirthdayOpeningPet[]; onClose: () => void }) {
   const shown = pets.slice(0, 3);
+  const first = shown[0]?.sex;
+  const COLORS = first === "male" ? PALETTES.male : first === "female" ? PALETTES.female : PALETTES.unknown;
 
   return (
     <div
@@ -88,7 +96,11 @@ export function BirthdayOpeningView({ pets, onClose }: { pets: BirthdayOpeningPe
                   <PetAvatar url={p.avatarUrl} name={p.name} size={shown.length > 1 ? 104 : 132} />
                 </BirthdayFrame>
               </div>
-              <p className="mt-4 text-xl font-extrabold text-[#4A3426]">{p.name}</p>
+              <p className="mt-4 text-xl font-extrabold text-[#4A3426]">
+                {p.name}
+                {p.sex === "male" && <span className="ml-1 text-[#2F86E6]">♂</span>}
+                {p.sex === "female" && <span className="ml-1 text-[#FF5C8A]">♀</span>}
+              </p>
               <p className="mt-1 max-w-[240px] rounded-2xl bg-white px-4 py-2 text-sm font-bold text-[#7A5030] shadow-[0_4px_14px_-8px_rgba(122,80,40,0.5)]">
                 「{me}、今日誕生日だよ!」🐶{p.turning && p.turning > 0 ? <><br />{p.turning}歳になりました!</> : null}
               </p>

@@ -8,6 +8,7 @@ import { ageLabel, daysBetween, daysToBirthday, expiryStatus, formatJpDate, huma
 import { DOC_TYPE_EMOJI, DOC_TYPE_LABEL, DOC_TYPE_SHORT, SEX_LABEL, VISIBILITY_LABEL, type PetDiaryRow, type PetDocType, type PetDocumentRow, type PetMedicalRow } from "@/lib/pet/types";
 import { PetHero } from "@/components/pet/PetHero";
 import { BirthdayCountdown } from "@/components/pet/BirthdayCountdown";
+import { BirthdayConfetti } from "@/components/pet/BirthdayConfetti";
 import { PetAvatar, PetCard, PetSectionTitle, StatusPill, petButton } from "@/components/pet/ui";
 import { DocumentScanner } from "@/components/pet/DocumentScanner";
 import { MedicalForm } from "@/components/pet/MedicalForm";
@@ -42,6 +43,7 @@ export default async function PetDetailPage({ params, searchParams }: { params: 
 
   return (
     <div>
+      {daysToBirthday(pet.birthday) === 0 && <BirthdayConfetti sex={pet.sex} />}
       {/* 多頭飼い: ほかの子へすぐ切り替え */}
       {pets.length > 1 && (
         <div className="-mx-4 mb-2 flex gap-3 overflow-x-auto px-4 pb-1">

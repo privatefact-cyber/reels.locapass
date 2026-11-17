@@ -5,6 +5,7 @@ import { getMyPets } from "@/lib/pet/queries";
 import { getPetSpots } from "@/lib/pet/spots";
 import { BirthdayFrame } from "@/components/pet/BirthdayFrame";
 import { BirthdayOpening } from "@/components/pet/BirthdayOpening";
+import { BirthdayConfetti } from "@/components/pet/BirthdayConfetti";
 import { COUNTDOWN_DAYS } from "@/components/pet/BirthdayCountdown";
 import { ageLabel, daysBetween, daysToBirthday, turningAge, expiryStatus, formatJpDate, latestByType, todayJst } from "@/lib/pet/calc";
 import { DOC_TYPE_EMOJI, DOC_TYPE_SHORT, SEX_LABEL, type PetDocumentRow } from "@/lib/pet/types";
@@ -59,7 +60,8 @@ export default async function PetHomePage() {
 
   return (
     <div>
-      {/* きょうが誕生日の子がいるときだけ、1日1回、ハッピーバースデイの画面を出す */}
+      {/* きょうが誕生日の子がいるときは、当日じゅう、紙吹雪をふらせる。開くたびに、ハッピーバースデイの画面も出す */}
+      {pets.some((p) => daysToBirthday(p.birthday) === 0) && <BirthdayConfetti sex={pets.find((p) => daysToBirthday(p.birthday) === 0)?.sex} />}
       <BirthdayOpening
         dayKey={todayJst()}
         pets={pets
