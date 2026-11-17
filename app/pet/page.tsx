@@ -126,7 +126,7 @@ export default async function PetHomePage() {
                 </div>
                 <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
                   {pet.is_lost && <span className="rounded-full bg-[#D04848] px-2.5 py-1 text-xs font-extrabold text-white">迷子のお知らせ中</span>}
-                  {bd !== null && bd <= 14 && <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-extrabold text-[#EE6A36]">{bd === 0 ? "🎂 きょう誕生日!" : `🎂 誕生日まで${bd}日`}</span>}
+                  {bd !== null && bd <= 30 && <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-extrabold text-[#EE6A36]">{bd === 0 ? "🎂 きょう誕生日!" : `🎂 誕生日まで${bd}日`}</span>}
                 </div>
               </div>
             );

@@ -117,3 +117,48 @@ export function latestByType<T extends { doc_type: PetDocType; expires_on: strin
   }
   return out;
 }
+
+/**
+ * 次の誕生日で何歳になるか(誕生日が未入力・未来なら null)。
+ * 例: 2022-05-10生まれで、今日が2026-04-01なら 4(2026-05-10で4歳)。
+ */
+export function turningAge(birthday: string | null, today = todayJst()): number | null {
+  const left = daysToBirthday(birthday, today);
+  if (!birthday || left === null) return null;
+  // 次の誕生日の年 = 今日から left 日後の年
+  const next = new Date(Date.parse(today) + left * 86_400_000).toISOString().slice(0, 10);
+  const years = Number(next.slice(0, 4)) - Number(birthday.slice(0, 4));
+  return years >= 0 ? years : null;
+}
+
+/** 犬のひとこと用の一人称。男の子は「ぼく」、女の子は「わたし」、不明は「うち」 */
+export function petPronoun(sex: string): string {
+  return sex === "male" ? "ぼく" : sex === "female" ? "わたし" : "うち";
+}
+
+/**
+ * 誕生日のお知らせの文。daysLeft は 7(1週間前)・1(前日)・0(当日)。
+ * 犬が話しかけるような口調にする(例: 「ぼくの誕生日まで、あと1週間だよ!」)。
+ */
+export function birthdayMessage(opts: { name: string; sex: string; daysLeft: 7 | 1 | 0; turning: number | null; estimated?: boolean }): { title: string; body: string } {
+  const { name, sex, daysLeft, turning, estimated } = opts;
+  const me = petPronoun(sex);
+  const ageText = turning && turning > 0 ? `${turning}歳` : null;
+  const tail = estimated ? "(推定の誕生日)" : "";
+  if (daysLeft === 7) {
+    return {
+      title: `🎂 ${name}の誕生日まで、あと1週間!`,
+      body: `「${me}の誕生日まで、あと1週間だよ!」と${name}が言っています🐶${ageText ? `\n${ageText}になる日が、もうすぐ。` : ""}${tail}\nお祝いの準備をしませんか?`,
+    };
+  }
+  if (daysLeft === 1) {
+    return {
+      title: `🎂 あした、${name}の誕生日です`,
+      body: `「${me}の誕生日、あしただよ!」と${name}が待ちきれない様子です🐾${ageText ? `\n${ageText}のお祝い、楽しんでね。` : ""}${tail}`,
+    };
+  }
+  return {
+    title: `🎉 きょうは${name}の誕生日!`,
+    body: `${ageText ? `${name}、${ageText}のお誕生日おめでとう!` : `${name}、お誕生日おめでとう!`}🎂${tail}\n今日の写真を、日誌に残したり、うちの子自慢に飾ったりしてみませんか?`,
+  };
+}

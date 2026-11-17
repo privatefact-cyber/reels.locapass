@@ -7,6 +7,7 @@ import { getMyPets } from "@/lib/pet/queries";
 import { ageLabel, daysBetween, expiryStatus, formatJpDate, humanAge, latestByType, todayJst } from "@/lib/pet/calc";
 import { DOC_TYPE_EMOJI, DOC_TYPE_LABEL, DOC_TYPE_SHORT, SEX_LABEL, VISIBILITY_LABEL, type PetDiaryRow, type PetDocType, type PetDocumentRow, type PetMedicalRow } from "@/lib/pet/types";
 import { PetHero } from "@/components/pet/PetHero";
+import { BirthdayCountdown } from "@/components/pet/BirthdayCountdown";
 import { PetAvatar, PetCard, PetSectionTitle, StatusPill, petButton } from "@/components/pet/ui";
 import { DocumentScanner } from "@/components/pet/DocumentScanner";
 import { MedicalForm } from "@/components/pet/MedicalForm";
@@ -87,6 +88,8 @@ export default async function PetDetailPage({ params, searchParams }: { params: 
           </Link>
         </div>
       </PetHero>
+
+      <BirthdayCountdown petId={pet.id} name={pet.name} sex={pet.sex} birthday={pet.birthday} estimated={Boolean(pet.birthday_estimated)} />
 
       <nav className="sticky top-14 z-20 -mx-4 mt-4 bg-[#FFF7EC]/90 px-4 py-2 backdrop-blur">
         <div className="grid grid-cols-4 gap-1 rounded-full bg-white p-1 shadow-[0_4px_14px_-10px_rgba(122,80,40,0.5)]">
