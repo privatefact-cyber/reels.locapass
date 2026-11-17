@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PetCard, PetSectionTitle } from "@/components/pet/ui";
+import { PwaInstallButton } from "@/components/pet/PwaInstallButton";
 
 const APP_ID = "6835396460";
 const APP_STORE_URL = `https://apps.apple.com/jp/app/id${APP_ID}`;
@@ -56,7 +57,8 @@ export default function PetAppLandingPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/pet/app/appstore-ja.svg" alt="App Storeからダウンロード" width={190} height={70} />
         </a>
-        <p className="mt-2 text-[11px] text-[#B39C8C]">iPhone用のアプリです(Android版は準備中)</p>
+        <p className="mt-2 text-[11px] text-[#B39C8C]">iPhone用のアプリです</p>
+        <PwaInstallButton variant="card" />
 
         {/* パソコンで見ている人向け: スマホで読み取る */}
         <div className="mt-5 hidden border-t border-[#F0E2D2] pt-4 md:block">

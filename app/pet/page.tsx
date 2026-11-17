@@ -4,6 +4,7 @@ import { getPetViewer } from "@/lib/pet/db";
 import { getMyPets } from "@/lib/pet/queries";
 import { getPetSpots } from "@/lib/pet/spots";
 import { BirthdayFrame } from "@/components/pet/BirthdayFrame";
+import { PwaInstallButton } from "@/components/pet/PwaInstallButton";
 import { BirthdayOpening } from "@/components/pet/BirthdayOpening";
 import { BirthdayConfetti } from "@/components/pet/BirthdayConfetti";
 import { COUNTDOWN_DAYS } from "@/components/pet/BirthdayCountdown";
@@ -80,6 +81,8 @@ export default async function PetHomePage() {
           </Link>
         )}
       </div>
+
+      <PwaInstallButton variant="banner" />
 
       {pets.length === 0 ? (
         <PetCard className="mt-4 text-center">
