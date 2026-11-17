@@ -2,31 +2,29 @@ import Link from "next/link";
 import { daysToBirthday, petPronoun, turningAge } from "@/lib/pet/calc";
 
 /**
- * 誕生日カウントダウン。次の誕生日まで何日かを、大きく見せる。
- * 1週間を切ると、犬のひとことと、お祝いの入り口(日誌・おでかけ)を出す。誕生日が未入力のときは、登録をうながす。
+ * 誕生日カウントダウン。誕生日の10日前から、当日まで、だけ出す(それ以外の日は出さない)。
+ * 1週間を切ると、犬のひとことと、お祝いの入り口(日誌・おでかけ)を出す。
+ * 誕生日が未入力のときだけ、小さく登録をうながす。当日の「枠」は、犬のアイコン側(BirthdayFrame)でつける。
  */
+export const COUNTDOWN_DAYS = 10;
+
 export function BirthdayCountdown({ petId, name, sex, birthday, estimated }: { petId: string; name: string; sex: string; birthday: string | null; estimated: boolean }) {
   const left = daysToBirthday(birthday);
   if (!birthday || left === null) {
     return (
-      <Link href={`/pet/${petId}?tab=profile`} className="mt-3 flex items-center gap-3 rounded-[24px] border-2 border-dashed border-[#F0D5BC] bg-[#FFFBF5] px-4 py-3 active:opacity-80">
-        <span className="text-2xl" aria-hidden>
-          🎂
-        </span>
-        <span className="text-sm font-bold text-[#9C8273]">
-          誕生日を登録すると、
-          <br />
-          カウントダウンできます
-        </span>
+      <Link href={`/pet/${petId}?tab=profile`} className="mt-3 block text-center text-xs font-bold text-[#B39C8C] underline decoration-dotted active:opacity-70">
+        🎂 誕生日を登録すると、お祝いのカウントダウンができます
       </Link>
     );
   }
+  // 10日前になるまでは、何も出さない
+  if (left > COUNTDOWN_DAYS) return null;
 
   const turning = turningAge(birthday);
   const md = `${Number(birthday.slice(5, 7))}月${Number(birthday.slice(8, 10))}日`;
   const me = petPronoun(sex);
   const soon = left <= 7;
-  const pct = Math.max(2, Math.min(100, Math.round(((365 - left) / 365) * 100)));
+  const pct = Math.max(4, Math.min(100, Math.round(((COUNTDOWN_DAYS - left) / COUNTDOWN_DAYS) * 100)));
 
   return (
     <div className={`mt-3 overflow-hidden rounded-[28px] border-2 ${soon ? "border-[#FFC94D] bg-gradient-to-br from-[#FFF3D6] to-[#FFE3D1]" : "border-[#F1E1CF] bg-white"} p-4 shadow-[0_6px_20px_-12px_rgba(122,80,40,0.35)]`}>
@@ -51,7 +49,7 @@ export function BirthdayCountdown({ petId, name, sex, birthday, estimated }: { p
         </div>
       </div>
 
-      {/* 1年のうち、どこまで来たか */}
+      {/* 10日のうち、どこまで来たか */}
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#F4E6D6]" role="img" aria-label={`誕生日まで、あと${left}日`}>
         <div className="h-full rounded-full bg-gradient-to-r from-[#FF8E5E] to-[#FFC94D]" style={{ width: `${pct}%` }} />
       </div>

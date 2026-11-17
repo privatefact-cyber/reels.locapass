@@ -144,21 +144,21 @@ export function birthdayMessage(opts: { name: string; sex: string; daysLeft: 7 |
   const { name, sex, daysLeft, turning, estimated } = opts;
   const me = petPronoun(sex);
   const ageText = turning && turning > 0 ? `${turning}歳` : null;
-  const tail = estimated ? "(推定の誕生日)" : "";
+  const tail = estimated ? "\n(推定の誕生日です)" : "";
   if (daysLeft === 7) {
     return {
-      title: `🎂 ${name}の誕生日まで、あと1週間!`,
-      body: `「${me}の誕生日まで、あと1週間だよ!」と${name}が言っています🐶${ageText ? `\n${ageText}になる日が、もうすぐ。` : ""}${tail}\nお祝いの準備をしませんか?`,
+      title: `🎂 ${name}「${me}の誕生日まで、あと1週間だよ!」`,
+      body: `${name}の誕生日まで、あと1週間です🐶${ageText ? `\n${ageText}になる日が、もうすぐ。` : ""}\nお祝いの準備をしませんか?${tail}`,
     };
   }
   if (daysLeft === 1) {
     return {
-      title: `🎂 あした、${name}の誕生日です`,
-      body: `「${me}の誕生日、あしただよ!」と${name}が待ちきれない様子です🐾${ageText ? `\n${ageText}のお祝い、楽しんでね。` : ""}${tail}`,
+      title: `🎂 ${name}「${me}の誕生日、あしただよ!」`,
+      body: `${name}は、待ちきれない様子です🐾${ageText ? `\n${ageText}のお祝い、楽しんでくださいね。` : ""}${tail}`,
     };
   }
   return {
-    title: `🎉 きょうは${name}の誕生日!`,
-    body: `${ageText ? `${name}、${ageText}のお誕生日おめでとう!` : `${name}、お誕生日おめでとう!`}🎂${tail}\n今日の写真を、日誌に残したり、うちの子自慢に飾ったりしてみませんか?`,
+    title: `🎉 ${name}「${me}、今日誕生日だよ!」`,
+    body: `${ageText ? `${name}、${ageText}のお誕生日、おめでとう!` : `${name}、お誕生日おめでとう!`}🎂${tail}\n今日の写真を、日誌に残したり、うちの子自慢に飾ったりしてみませんか?`,
   };
 }

@@ -3,7 +3,10 @@ import { ChevronRight, Plus } from "lucide-react";
 import { getPetViewer } from "@/lib/pet/db";
 import { getMyPets } from "@/lib/pet/queries";
 import { getPetSpots } from "@/lib/pet/spots";
-import { ageLabel, daysBetween, daysToBirthday, expiryStatus, formatJpDate, latestByType, todayJst } from "@/lib/pet/calc";
+import { BirthdayFrame } from "@/components/pet/BirthdayFrame";
+import { BirthdayOpening } from "@/components/pet/BirthdayOpening";
+import { COUNTDOWN_DAYS } from "@/components/pet/BirthdayCountdown";
+import { ageLabel, daysBetween, daysToBirthday, turningAge, expiryStatus, formatJpDate, latestByType, todayJst } from "@/lib/pet/calc";
 import { DOC_TYPE_EMOJI, DOC_TYPE_SHORT, SEX_LABEL, type PetDocumentRow } from "@/lib/pet/types";
 import { PetAvatar, PetCard, PetSectionTitle, StatusPill, petButton } from "@/components/pet/ui";
 import { VerifiedBadge } from "@/components/pet/VerifiedBadge";
@@ -56,6 +59,13 @@ export default async function PetHomePage() {
 
   return (
     <div>
+      {/* きょうが誕生日の子がいるときだけ、1日1回、ハッピーバースデイの画面を出す */}
+      <BirthdayOpening
+        dayKey={todayJst()}
+        pets={pets
+          .filter((p) => daysToBirthday(p.birthday) === 0)
+          .map((p) => ({ id: p.id, name: p.name, sex: p.sex, avatarUrl: p.avatarUrl, turning: turningAge(p.birthday) }))}
+      />
       <div className="mt-2 flex items-end justify-between px-1">
         <div>
           <p className="text-xs font-bold text-[#B39C8C]">きょうも いっしょに</p>
@@ -95,7 +105,13 @@ export default async function PetHomePage() {
                   />
                   <div className="flex items-center gap-3 px-4 pb-3">
                     <div className="-mt-8">
-                      <PetAvatar url={pet.avatarUrl} name={pet.name} size={72} />
+                      {bd === 0 ? (
+                        <BirthdayFrame size={72} sex={pet.sex}>
+                          <PetAvatar url={pet.avatarUrl} name={pet.name} size={72} />
+                        </BirthdayFrame>
+                      ) : (
+                        <PetAvatar url={pet.avatarUrl} name={pet.name} size={72} />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1 pt-2">
                       <p className="flex items-center gap-1.5 truncate text-lg font-extrabold">
@@ -126,7 +142,7 @@ export default async function PetHomePage() {
                 </div>
                 <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
                   {pet.is_lost && <span className="rounded-full bg-[#D04848] px-2.5 py-1 text-xs font-extrabold text-white">迷子のお知らせ中</span>}
-                  {bd !== null && bd <= 30 && <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-extrabold text-[#EE6A36]">{bd === 0 ? "🎂 きょう誕生日!" : `🎂 誕生日まで${bd}日`}</span>}
+                  {bd !== null && bd <= COUNTDOWN_DAYS && <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-extrabold text-[#EE6A36]">{bd === 0 ? "🎂 HAPPY BIRTHDAY!" : `🎂 誕生日まで${bd}日`}</span>}
                 </div>
               </div>
             );

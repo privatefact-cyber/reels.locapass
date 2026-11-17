@@ -6,6 +6,7 @@ import { Camera, ImagePlus, Loader2 } from "lucide-react";
 import { setPetImage } from "@/app/pet/actions";
 import { uploadPetImage } from "./petUpload";
 import { PetAvatar } from "./ui";
+import { BirthdayFrame } from "./BirthdayFrame";
 
 /**
  * 犬のページの上の部分。背景(カバー写真)とアイコンを、それぞれ写真に入れ替えられる。
@@ -17,6 +18,8 @@ export function PetHero({
   avatarUrl,
   coverUrl,
   editable,
+  birthdayToday = false,
+  sex = "unknown",
   children,
 }: {
   petId: string;
@@ -24,6 +27,10 @@ export function PetHero({
   avatarUrl: string | null;
   coverUrl: string | null;
   editable: boolean;
+  /** きょうが誕生日のとき、アイコンに「ハッピーバースデイ」の枠をつける */
+  birthdayToday?: boolean;
+  /** 誕生日の枠の色(男の子=青、女の子=ピンク)に使う */
+  sex?: string;
   children?: ReactNode;
 }) {
   const router = useRouter();
@@ -80,13 +87,19 @@ export function PetHero({
 
       <div className="relative -mt-14 flex flex-col items-center px-4">
         <div className="relative">
-          <PetAvatar url={avatar} name={name} size={112} />
+          {birthdayToday ? (
+            <BirthdayFrame size={112} sex={sex} ribbon>
+              <PetAvatar url={avatar} name={name} size={112} />
+            </BirthdayFrame>
+          ) : (
+            <PetAvatar url={avatar} name={name} size={112} />
+          )}
           {editable && (
             <button
               type="button"
               aria-label="アイコンをかえる"
               onClick={() => avatarInput.current?.click()}
-              className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-[#FF8E5E] text-white shadow-[0_3px_0_#EE6A36] active:scale-95"
+              className={`absolute right-1 flex h-9 w-9 ${birthdayToday ? "bottom-7" : "bottom-1"} items-center justify-center rounded-full bg-[#FF8E5E] text-white shadow-[0_3px_0_#EE6A36] active:scale-95`}
             >
               {busy === "avatar" ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
             </button>

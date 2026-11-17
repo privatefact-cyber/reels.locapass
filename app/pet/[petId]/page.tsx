@@ -4,7 +4,7 @@ import { AlertTriangle, QrCode } from "lucide-react";
 import { petAdmin, requirePetViewer, signPetImages } from "@/lib/pet/db";
 import { getPetPlace } from "@/lib/pet/spots";
 import { getMyPets } from "@/lib/pet/queries";
-import { ageLabel, daysBetween, expiryStatus, formatJpDate, humanAge, latestByType, todayJst } from "@/lib/pet/calc";
+import { ageLabel, daysBetween, daysToBirthday, expiryStatus, formatJpDate, humanAge, latestByType, todayJst } from "@/lib/pet/calc";
 import { DOC_TYPE_EMOJI, DOC_TYPE_LABEL, DOC_TYPE_SHORT, SEX_LABEL, VISIBILITY_LABEL, type PetDiaryRow, type PetDocType, type PetDocumentRow, type PetMedicalRow } from "@/lib/pet/types";
 import { PetHero } from "@/components/pet/PetHero";
 import { BirthdayCountdown } from "@/components/pet/BirthdayCountdown";
@@ -60,7 +60,7 @@ export default async function PetDetailPage({ params, searchParams }: { params: 
         </div>
       )}
 
-      <PetHero petId={pet.id} name={pet.name} avatarUrl={pet.avatarUrl} coverUrl={pet.coverUrl} editable>
+      <PetHero petId={pet.id} name={pet.name} avatarUrl={pet.avatarUrl} coverUrl={pet.coverUrl} editable birthdayToday={daysToBirthday(pet.birthday) === 0} sex={pet.sex}>
         <p className="mt-1 text-center text-sm font-bold text-[#9C8273]">
           {[pet.breed, pet.sex !== "unknown" ? SEX_LABEL[pet.sex] : null].filter(Boolean).join(" ・ ")}
         </p>
