@@ -206,10 +206,6 @@ export function BetaLaunchModal({ stats: initialStats = null }: { stats?: Stats 
           </div>
         )}
 
-        <p className="relative text-[11px] tracking-widest text-main/50">
-          正式ローンチ
-        </p>
-
         <button
           type="button"
           onClick={close}
