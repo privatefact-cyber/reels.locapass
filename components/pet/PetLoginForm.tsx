@@ -43,17 +43,6 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
     else window.location.href = url;
   }
 
-  // LINEは、Chromeの安全な画面(Custom Tab)だと、LINEアプリを呼び出せず、QRコードの画面になる。
-  // スマホの標準の開き方(外部のブラウザ・LINEアプリ)で開く。使えないときは、Custom Tabにする。
-  async function openInSystem(url: string) {
-    const plugins = (window as unknown as { Capacitor?: { Plugins?: Record<string, { openUrl?: (o: { url: string }) => Promise<unknown> }> } }).Capacitor?.Plugins;
-    if (plugins?.App?.openUrl) {
-      await plugins.App.openUrl({ url });
-      return;
-    }
-    await openExternal(url);
-  }
-
   async function google() {
     setError(null);
     if (inAndroid) {
@@ -73,7 +62,7 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
       const res = await fetch(`/api/auth/line/start?redirect=${encodeURIComponent(redirectTo)}&ext=1`, { credentials: "include" });
       const json = (await res.json()) as { url?: string };
       if (!json.url) throw new Error("no_url");
-      await openInSystem(json.url);
+      await openExternal(json.url);
     } catch {
       setError("LINEでのログインを始められませんでした。もう一度お試しください");
     }
