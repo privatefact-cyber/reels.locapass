@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Share } from "lucide-react";
 import { removePetApnsToken } from "@/app/pet/pushActions";
-import { APP_PUSH_OFF_KEY, APP_PUSH_TOKEN_KEY, getAppPush, isLocaWanApp } from "./appPush";
+import { APP_PUSH_OFF_KEY, APP_PUSH_TOKEN_KEY, getAppPush, isLocaWanAndroidApp, isLocaWanApp } from "./appPush";
 import { PetCard } from "./ui";
 
 const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -198,9 +198,10 @@ function AppPushControl() {
 
 /** 設定の通知カード。iPhoneアプリの中ではアプリの通知、ブラウザではWebプッシュ */
 export function PetPushCard() {
-  const [mode, setMode] = useState<"app" | "web" | null>(null);
+  const [mode, setMode] = useState<"app" | "web" | "none" | null>(null);
   useEffect(() => {
-    setMode(isLocaWanApp() ? "app" : "web");
+    // Androidアプリは、いまのところ端末プッシュに未対応(お知らせはアプリ内のベルに届く)
+    setMode(isLocaWanAndroidApp() ? "none" : isLocaWanApp() ? "app" : "web");
   }, []);
   if (mode === "app") return <AppPushControl />;
   if (mode === "web") return <WebPushCard />;

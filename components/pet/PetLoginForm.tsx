@@ -24,9 +24,13 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
 
   // ロカわんのiOSアプリの中でだけ「Appleでサインイン」を出す(アプリ標準の画面を呼ぶ)
   const [inApp, setInApp] = useState(false);
+  // Androidアプリの中では、Googleの規則でWebView内のGoogleログインができないため、Googleのボタンを出さない
+  const [inAndroid, setInAndroid] = useState(false);
   const [appleError, setAppleError] = useState<string | null>(null);
   useEffect(() => {
-    setInApp(navigator.userAgent.includes("LocaWanApp"));
+    const ua = navigator.userAgent;
+    setInAndroid(ua.includes("LocaWanAndroid"));
+    setInApp(ua.includes("LocaWanApp") && !ua.includes("LocaWanAndroid"));
   }, []);
 
   const callbackUrl = (path = redirectTo) => `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(path)}`;
@@ -119,10 +123,12 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
         >
           LINEで登録・ログイン
         </a>
-        <button type="button" onClick={google} className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#F1E1CF] bg-white px-5 py-3 text-[15px] font-bold text-[#4A3426] active:scale-[0.99]">
-          <span className="text-lg font-extrabold text-[#4285F4]">G</span>
-          Googleで登録・ログイン
-        </button>
+        {!inAndroid && (
+          <button type="button" onClick={google} className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#F1E1CF] bg-white px-5 py-3 text-[15px] font-bold text-[#4A3426] active:scale-[0.99]">
+            <span className="text-lg font-extrabold text-[#4285F4]">G</span>
+            Googleで登録・ログイン
+          </button>
+        )}
       </PetCard>
 
       <div className="flex items-center gap-3 px-2 text-xs text-[#B39C8C]">

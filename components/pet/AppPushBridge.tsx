@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { savePetApnsToken } from "@/app/pet/pushActions";
-import { APP_PUSH_OFF_KEY, APP_PUSH_TOKEN_KEY, getAppPush, isLocaWanApp } from "./appPush";
+import { APP_PUSH_OFF_KEY, APP_PUSH_TOKEN_KEY, getAppPush, isLocaWanIosApp } from "./appPush";
 
 /**
  * ロカわんのiPhoneアプリの中でだけ働く、通知の受け取り口(ログイン中のみ)。
@@ -14,7 +14,7 @@ export function AppPushBridge({ loggedIn }: { loggedIn: boolean }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loggedIn || !isLocaWanApp()) return;
+    if (!loggedIn || !isLocaWanIosApp()) return;
     const push = getAppPush();
     if (!push) return;
     const handles: { remove: () => Promise<void> | void }[] = [];

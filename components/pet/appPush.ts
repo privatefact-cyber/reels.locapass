@@ -17,6 +17,16 @@ export function isLocaWanApp(): boolean {
   return typeof navigator !== "undefined" && navigator.userAgent.includes("LocaWanApp");
 }
 
+/** ロカわんのAndroidアプリの中か(UAに LocaWanAndroid)。Androidでは、Appleでサインインと端末プッシュは使わない */
+export function isLocaWanAndroidApp(): boolean {
+  return typeof navigator !== "undefined" && navigator.userAgent.includes("LocaWanAndroid");
+}
+
+/** ロカわんのiPhoneアプリの中か */
+export function isLocaWanIosApp(): boolean {
+  return isLocaWanApp() && !isLocaWanAndroidApp();
+}
+
 export function getAppPush(): AppPushPlugin | null {
   const cap = (window as unknown as { Capacitor?: { Plugins?: Record<string, unknown> } }).Capacitor;
   return (cap?.Plugins?.PushNotifications as AppPushPlugin | undefined) ?? null;
