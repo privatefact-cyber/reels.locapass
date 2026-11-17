@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { connectViaMeetQr } from "../actions";
 
 /** 「つながる」ボタン。押すと、FACESをフォローして、FACES側も自動でフォローを返す(DMが開く)。 */
-export function MetConnect({ token, castName }: { token: string; castName: string }) {
+export function MetConnect({ token, castName, autoStart = false }: { token: string; castName: string; autoStart?: boolean }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<{ ok: true; castHref: string | null } | { ok: false; error: string } | null>(null);
+
+  // ログイン・登録を終えて戻ってきたときは、ボタンを押さなくても、そのままつなげる(「LINEで、すぐつながる」を押した時点で、つながる意思は示している)。
+  const started = useRef(false);
+  useEffect(() => {
+    if (!autoStart || started.current) return;
+    started.current = true;
+    startTransition(async () => setResult(await connectViaMeetQr(token)));
+  }, [autoStart, token]);
 
   if (result?.ok) {
     return (

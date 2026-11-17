@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { issueMetToken, verifyMetToken } from "@/lib/met/token";
+import { cookies } from "next/headers";
+import { issueMetToken, issueMetPending, parseMetToken, verifyMetPending, verifyMetToken, MET_PENDING_COOKIE, MET_PENDING_TTL_SEC } from "@/lib/met/token";
 import { castPath } from "@/lib/locapass/publicUrls";
 
 /** 1人のFACESが、1時間にQRでつながれる人数の上限(QRが広まっても、DMが一気に開かないように)。 */
@@ -29,10 +30,14 @@ export async function connectViaMeetQr(token: string): Promise<ConnectResult> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "ログインが必要です" };
 
-  const verified = verifyMetToken(token);
-  if (!verified.ok) {
-    return { ok: false, error: verified.reason === "expired" ? "QRの有効期限が切れました。相手の画面で、新しいQRを表示してもらってください" : "QRが正しくありません" };
+  // QRが有効なら、そのまま進む。ログイン・登録の途中で期限が切れた場合は、「QRを読んだ」と覚えておいた印(30分)があれば進める。
+  const jar = await cookies();
+  const parsed = parseMetToken(token);
+  if (!parsed) return { ok: false, error: "QRが正しくありません" };
+  if (parsed.expired && !verifyMetPending(jar.get(MET_PENDING_COOKIE)?.value, parsed.castId)) {
+    return { ok: false, error: "QRの有効期限が切れました。相手の画面で、新しいQRを表示してもらってください" };
   }
+  const verified = { castId: parsed.castId };
 
   const admin = createAdminClient() as any;
   const { data: cast } = await admin
@@ -66,10 +71,29 @@ export async function connectViaMeetQr(token: string): Promise<ConnectResult> {
     .upsert({ follower_id: cast.user_id, followee_id: user.id, source: "qr" }, { onConflict: "follower_id,followee_id" });
   if (e2) return { ok: false, error: "つながれませんでした。もう一度お試しください" };
 
+  jar.delete(MET_PENDING_COOKIE);
   const portal = Array.isArray(shop?.portal) ? shop.portal[0] : shop?.portal;
   return {
     ok: true,
     castName: cast.name,
     castHref: portal?.slug && shop?.slug && cast.issue_no != null ? castPath(portal.slug, shop.slug, cast.issue_no) : null,
   };
+}
+
+/**
+ * ログイン前にQRを読んだ人が、「LINE/Googleでログイン」を押したときに呼ぶ。
+ * 「このQRを読んだ」と、署名つきの印を30分だけ覚えておき、登録を終えて戻ってきたら、そのまま「つながる」まで進める。
+ */
+export async function rememberMetScan(token: string): Promise<{ ok: boolean }> {
+  const verified = verifyMetToken(token);
+  if (!verified.ok) return { ok: false };
+  const jar = await cookies();
+  jar.set(MET_PENDING_COOKIE, issueMetPending(verified.castId), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: MET_PENDING_TTL_SEC,
+  });
+  return { ok: true };
 }

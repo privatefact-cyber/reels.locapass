@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyMetToken } from "@/lib/met/token";
+import { cookies } from "next/headers";
+import { parseMetToken, verifyMetPending, MET_PENDING_COOKIE } from "@/lib/met/token";
 import { MetConnect } from "./MetConnect";
+import { MetLogin } from "./MetLogin";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "つながる - LOCAPASS", robots: { index: false, follow: false } };
@@ -11,23 +13,26 @@ export const metadata: Metadata = { title: "つながる - LOCAPASS", robots: { 
 /** FACES本人の画面のQRを読んだ人が開くページ。ログインして「つながる」を押すと、相互フォローになる。 */
 export default async function MetPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const verified = verifyMetToken(decodeURIComponent(token));
+  const rawToken = decodeURIComponent(token);
+  const parsed = parseMetToken(rawToken);
+  // ログイン・登録の途中で期限が切れても、「QRを読んだ」印(30分)が残っていれば、続けられる。
+  const jar = await cookies();
+  const pendingOk = parsed ? verifyMetPending(jar.get(MET_PENDING_COOKIE)?.value, parsed.castId) : false;
 
   const shell = (children: React.ReactNode) => (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center gap-6 px-6 py-12 text-main">{children}</div>
   );
 
-  if (!verified.ok) {
+  if (!parsed || (parsed.expired && !pendingOk)) {
     return shell(
       <>
-        <h1 className="text-xl font-bold">
-          {verified.reason === "expired" ? "QRの有効期限が切れました" : "QRが正しくありません"}
-        </h1>
+        <h1 className="text-xl font-bold">{parsed ? "QRの有効期限が切れました" : "QRが正しくありません"}</h1>
         <p className="text-sm text-tone-300">相手の画面で、新しいQRを表示してもらって、もう一度読み込んでください。</p>
         <Link href="/" className="text-sm text-hl-300 underline">トップへ</Link>
       </>,
     );
   }
+  const verified = { castId: parsed.castId };
 
   const admin = createAdminClient() as any;
   const { data: cast } = await admin
@@ -58,11 +63,9 @@ export default async function MetPage({ params }: { params: Promise<{ token: str
       </div>
       <p className="text-center text-sm text-tone-300">つながると、おたがいにフォローしあって、メッセージを送りあえるようになります。</p>
       {user ? (
-        <MetConnect token={decodeURIComponent(token)} castName={cast.name} />
+        <MetConnect token={rawToken} castName={cast.name} autoStart={pendingOk} />
       ) : (
-        <Link href={`/login?next=${encodeURIComponent(next)}`} className="block rounded-full bg-hl-300 py-4 text-center text-base font-bold text-black">
-          ログインして、つながる
-        </Link>
+        <MetLogin token={rawToken} redirectPath={next} />
       )}
     </>,
   );
