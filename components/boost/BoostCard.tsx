@@ -15,8 +15,8 @@ function mapUrl(s: BoostItem["shop"]): string | null {
   return null;
 }
 
-export function BoostCard({ boost, now, t }: { boost: BoostItem; now: number; t: BoostText }) {
-  const ended = new Date(boost.expiresAt).getTime() <= now;
+export function BoostCard({ boost, now, t }: { boost: BoostItem; now: number | null; t: BoostText }) {
+  const ended = now !== null && new Date(boost.expiresAt).getTime() <= now;
   const map = mapUrl(boost.shop);
   const tel = boost.shop.tel?.replace(/[^0-9+]/g, "");
   return (

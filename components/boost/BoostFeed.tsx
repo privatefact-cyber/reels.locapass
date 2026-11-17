@@ -77,7 +77,7 @@ export function BoostFeed({ initial, portalSlug }: { initial: BoostItem[]; porta
   const alive = useMemo(
     () =>
       items
-        .filter((b) => new Date(b.expiresAt).getTime() + FADE_MS > now)
+        .filter((b) => now === null || new Date(b.expiresAt).getTime() + FADE_MS > now)
         .sort((a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime()),
     [items, now],
   );

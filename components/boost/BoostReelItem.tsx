@@ -7,7 +7,7 @@ import { limitedLabel, type BoostText } from "@/lib/boost/text";
 import { photoResized } from "@/components/photo/photoUtils";
 
 /** 縦スワイプ一覧の1枚。全面に写真、残り時間と要約を重ねる。タップで詳細カードを開く。 */
-export function BoostReelItem({ boost, now, t, onOpen }: { boost: BoostItem; now: number; t: BoostText; onOpen: () => void }) {
+export function BoostReelItem({ boost, now, t, onOpen }: { boost: BoostItem; now: number | null; t: BoostText; onOpen: () => void }) {
   return (
     <button type="button" onClick={onOpen} className="relative block h-full w-full overflow-hidden bg-black text-left md:aspect-[9/16] md:h-full md:w-auto">
       {boost.imageUrl && (

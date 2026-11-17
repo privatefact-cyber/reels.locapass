@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-export function useNow(intervalMs = 1000) {
-  const [now, setNow] = useState(() => Date.now());
+/**
+ * 現在時刻(ミリ秒)。サーバー描画と端末の最初の描画で値が違うとハイドレーションが合わなくなるため、
+ * 最初は null(=まだ分からない)を返し、端末で表示された後に実際の時刻へ切り替える。
+ */
+export function useNow(intervalMs = 1000): number | null {
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), intervalMs);
     return () => clearInterval(id);
   }, [intervalMs]);
@@ -21,16 +26,17 @@ export function formatRemain(ms: number): string {
 }
 
 /** 残り時間のカウントダウン。5分を切ると赤く点滅して緊急感を出す。 */
-export function BoostCountdown({ expiresAt, now, remainLabel }: { expiresAt: string; now: number; remainLabel: string }) {
-  const left = new Date(expiresAt).getTime() - now;
-  const urgent = left < 5 * 60 * 1000;
+export function BoostCountdown({ expiresAt, now, remainLabel }: { expiresAt: string; now: number | null; remainLabel: string }) {
+  // 時刻が分かるまで(最初の描画)は、残り時間を「--:--」にして、点滅もさせない。
+  const left = now === null ? null : new Date(expiresAt).getTime() - now;
+  const urgent = left !== null && left < 5 * 60 * 1000;
   return (
     <div className="flex items-baseline gap-2" aria-live="off">
       <span className="text-xs font-bold text-white/80">{remainLabel}</span>
       <span
         className={`font-mono text-4xl font-black tabular-nums leading-none ${urgent ? "animate-pulse text-red-400" : "text-amber-300"}`}
       >
-        {formatRemain(left)}
+        {left === null ? "--:--" : formatRemain(left)}
       </span>
     </div>
   );

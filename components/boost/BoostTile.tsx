@@ -16,15 +16,16 @@ export const BoostTile = memo(function BoostTile({
 }: {
   boost: BoostItem;
   index: number;
-  now: number;
+  now: number | null;
   endedLabel: string;
   onOpen: (index: number) => void;
 }) {
   const thumb = gridThumb(boost.imageUrl ?? undefined);
   const [broken, setBroken] = useState(false);
-  const left = new Date(boost.expiresAt).getTime() - now;
-  const ended = left <= 0;
-  const urgent = left < 5 * 60 * 1000;
+  // 時刻が分かるまで(最初の描画)は、終了・急ぎの判定をせず「--:--」を出す。
+  const left = now === null ? null : new Date(boost.expiresAt).getTime() - now;
+  const ended = left !== null && left <= 0;
+  const urgent = left !== null && left < 5 * 60 * 1000;
   return (
     <button
       data-surface="media"
@@ -54,7 +55,7 @@ export const BoostTile = memo(function BoostTile({
         }`}
       >
         <Zap size={10} className="fill-current" />
-        {ended ? endedLabel : formatRemain(left)}
+        {ended ? endedLabel : left === null ? "--:--" : formatRemain(left)}
       </span>
       {boost.discountTag && (
         <span className="pointer-events-none absolute left-1.5 top-7 max-w-[85%] truncate rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
