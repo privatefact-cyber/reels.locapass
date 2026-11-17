@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { bookingButtonLabel, type BookingDestinationKey } from "@/lib/reservation/bookingDestination";
 import { createPortal } from "react-dom";
 import Link from "@/components/i18n/LocaleLink";
 import { ChevronDown, ChevronRight, MapPin, Phone, Play } from "lucide-react";
@@ -246,7 +247,7 @@ export function VenueDetailSheet({ venue, walkMinutes, onClose, onOpenReel }: { 
                 rel="noopener noreferrer"
                 className="flex-1 rounded-full bg-cta-light py-3 text-center text-sm font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
               >
-                {reserve.label ?? l.reserve}
+                {reserve.label ?? (reserve.destination ? bookingButtonLabel(reserve.destination as BookingDestinationKey, locale) : l.reserve)}
               </a>
             ) : (
               <Link

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { bookingDestinationKey } from "@/lib/reservation/bookingDestination";
 import { createStaticClient } from "@/lib/supabase/static";
 import { isOpenNow, sanitizeWeekly } from "@/lib/shop/businessHours";
 import { getJstNow, toJstDateString } from "@/lib/reels/nowWorking";
@@ -24,7 +25,7 @@ export type VenueSheetData = {
   /** 料金メニューのうち、いちばん安い項目。登録が無ければ null。 */
   minPrice: { name: string; minutes: number | null; price: number } | null;
   /** 予約ボタンの行き先。店舗の予約URL → LINE → 電話の順。どれも無ければ null(店舗詳細へ)。 */
-  reserve: { href: string; label: string | null; external: boolean } | null;
+  reserve: { href: string; label: string | null; external: boolean; destination?: string | null } | null;
   phone: string | null;
   /** 店舗AI質問(有料オプション)がオンの店舗だけ true。 */
   aiChat: boolean;
@@ -86,9 +87,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sho
   const bookingUrl = (shop.booking_url as string | null) ?? null;
   const lineUrl = (shop.line_url as string | null) ?? null;
   const reserve = bookingUrl
-    ? { href: bookingUrl, label: (shop.booking_label as string | null) ?? null, external: true }
+    ? { href: bookingUrl, label: (shop.booking_label as string | null) ?? null, external: true, destination: bookingDestinationKey(bookingUrl) }
     : lineUrl
-      ? { href: lineUrl, label: null, external: true }
+      ? { href: lineUrl, label: null, external: true, destination: "line" }
       : phone
         ? { href: `tel:${phone}`, label: null, external: false }
         : null;

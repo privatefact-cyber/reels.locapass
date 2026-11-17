@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
-import { Calendar, CalendarCheck, Car, Users, Star, MapPin, Phone } from "lucide-react";
+import { Calendar, CalendarCheck, Car, Users, Star, MapPin, Phone, MessageCircle } from "lucide-react";
 import { ShopContactModal } from "@/components/ShopContactModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { bookingDestinationKey, bookingNavLabel } from "@/lib/reservation/bookingDestination";
 
 function getScrollItems(t: Dictionary) {
   return [
@@ -42,7 +43,10 @@ export function ShopSectionNav({
   /** 画面下に店舗AIのチャット欄が常駐するときは、その上に出す(重ならないように)。 */
   raised?: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  // 予約ページのURLから行き先(LINEなど)を判定して、ボタンの名前にする。お店が名前を入れているときは、そちらを優先する。
+  const bookingKey = bookingDestinationKey(bookingUrl);
+  const BookingIcon = bookingKey === "line" ? MessageCircle : CalendarCheck;
   const SCROLL_ITEMS = getScrollItems(t).filter((item) => sections.includes(item.id));
   const [activeId, setActiveId] = useState(SCROLL_ITEMS[0]?.id ?? "");
   const [contactOpen, setContactOpen] = useState(false);
@@ -112,8 +116,8 @@ export function ShopSectionNav({
                 rel="noopener noreferrer nofollow sponsored"
                 className="flex flex-col items-center gap-1 text-[10px] font-bold text-hl-300"
               >
-                <CalendarCheck size={16} />
-                {bookingLabel || "予約"}
+                <BookingIcon size={16} />
+                {bookingLabel || (bookingKey ? bookingNavLabel(bookingKey, locale) : "予約")}
               </a>
             </li>
           )}
