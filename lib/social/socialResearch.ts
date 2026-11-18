@@ -7,6 +7,31 @@ import { validateThreadsText } from "@/lib/social/threadsWriter";
 const db = () => createAdminClient() as any;
 type Candidate = { title: string; summary: string; why_now: string; audience_value: string; score: number; post: string };
 
+type SearchResult = { facts: string; sources: { url: string; title?: string }[]; queries: string[] };
+/** 同じアカウント(Threads・Instagram)は、同じ日の検索結果を使い回す。検索は重く混みやすいので、1アカウント1回で済ませる。 */
+const searchCache = new Map<string, { at: number; promise: Promise<SearchResult> }>();
+
+function searchFacts(key: string, account: string, searchPrompt: string): Promise<SearchResult> {
+  const hit = searchCache.get(account);
+  if (hit && Date.now() - hit.at < 30 * 60_000) return hit.promise;
+  const promise = (async (): Promise<SearchResult> => {
+    // 検索は最大60秒(1回ごとの待ちも収める)。混雑で時間切れになっても、関数全体(120秒)を巻き込まない。
+    const searchResponse = await geminiGenerateWithFallback(key, { contents: [{ role: "user", parts: [{ text: searchPrompt }] }], tools: [{ google_search: {} }], generationConfig: { temperature: 0.7 } }, "social-research-search", 30_000, 55_000);
+    if (!searchResponse) throw new Error("Webリサーチに失敗しました");
+    const searchRaw = await searchResponse.json() as any;
+    const searchCandidate = searchRaw.candidates?.[0];
+    const facts = searchCandidate?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
+    const sources = (searchCandidate?.groundingMetadata?.groundingChunks ?? []).map((c: any) => ({ url: c.web?.uri, title: c.web?.title })).filter((s: any) => s.url);
+    const queries = searchCandidate?.groundingMetadata?.webSearchQueries ?? [];
+    if (!sources.length || !facts.trim()) throw new Error("出典を確認できる話題がありませんでした");
+    return { facts, sources, queries };
+  })();
+  searchCache.set(account, { at: Date.now(), promise });
+  // 失敗した結果は使い回さない(次の呼び出しでやり直せるように)
+  promise.catch(() => { if (searchCache.get(account)?.promise === promise) searchCache.delete(account); });
+  return promise;
+}
+
 /** 現在のWebを検索し、根拠のある話題だけを下書きにする。検索結果の出典もDBへ保存する。 */
 export async function createResearchDraft(dest: Destination): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
@@ -18,14 +43,7 @@ export async function createResearchDraft(dest: Destination): Promise<string> {
 対象: ${brand.audience}\n領域: ${brand.themes}
 5件の話題について、それぞれ「検索で確認できた事実(具体的な数字・固有名詞を含む)」と「なぜ今なのか」「読者の役に立つ点」を書いてください。
 除外: 古い一般論、芸能ゴシップ、事故・炎上便乗、政治、未確認情報、競合批判、売り込みだけの内容。`;
-  const searchResponse = await geminiGenerateWithFallback(key, { contents: [{ role: "user", parts: [{ text: searchPrompt }] }], tools: [{ google_search: {} }], generationConfig: { temperature: 0.7 } }, "social-research-search", 60_000);
-  if (!searchResponse) throw new Error("Webリサーチに失敗しました");
-  const searchRaw = await searchResponse.json() as any;
-  const searchCandidate = searchRaw.candidates?.[0];
-  const facts = searchCandidate?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
-  const sources = (searchCandidate?.groundingMetadata?.groundingChunks ?? []).map((c: any) => ({ url: c.web?.uri, title: c.web?.title })).filter((s: any) => s.url);
-  const queries = searchCandidate?.groundingMetadata?.webSearchQueries ?? [];
-  if (!sources.length || !facts.trim()) throw new Error("出典を確認できる話題がありませんでした");
+  const { facts, sources, queries } = await searchFacts(key, dest.account, searchPrompt);
 
   // 2段目: 集めた事実だけを材料に、投稿案をJSONで作る(検索は使わない)。
   const prompt = `次の「検索で確認できた事実」だけを材料に、${brand.name}公式SNSの投稿候補を3件作ってください。事実にないことは書かないでください。
@@ -40,7 +58,7 @@ ${facts}
 直近投稿と同じ話題・言い回しは避ける: ${(recent ?? []).map((r: any) => String(r.body).replace(/\s+/g, " ").slice(0, 70)).join(" / ")}
 
 JSONだけを返す: {"candidates":[{"title":"","summary":"確認できた事実","why_now":"今扱う理由","audience_value":"読者の役立ち方","score":0,"post":"投稿本文"}]}`;
-  const response = await geminiGenerateWithFallback(key, { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.85, responseMimeType: "application/json" } }, "social-research", 60_000);
+  const response = await geminiGenerateWithFallback(key, { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.85, responseMimeType: "application/json" } }, "social-research", 40_000, 45_000);
   if (!response) throw new Error("Webリサーチに失敗しました");
   const raw = await response.json() as any;
   const text = raw.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";

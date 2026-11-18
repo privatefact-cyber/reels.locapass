@@ -4,7 +4,7 @@ import { runSocialAutomation } from "@/lib/social/socialAutomation";
 import { collectSocialInsights } from "@/lib/social/socialInsights";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 /**
  * LOCAPASS公式Threadsの投稿を動かす(vercel.json の crons から、30分おきに呼ばれる)。
