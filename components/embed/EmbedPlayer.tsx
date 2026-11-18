@@ -344,13 +344,13 @@ export function EmbedPlayer({
               </div>
             </div>
           )}
-          {/* 上の細い帯に「閉じる」と元の投稿へのリンクを置く(埋め込み側のボタンと重ならないように)。 */}
-          <div className={`${autoPlay ? "absolute inset-x-0 top-0 z-20 flex items-center gap-2 p-2" : "absolute inset-x-0 top-0 z-20 flex h-8 items-center justify-between bg-black px-2"} ${barClassName}`}>
+          {/* 上の細い帯に「閉じる」と元の投稿へのリンクを置く。自動再生のときは左に寄せ、帯自体は指を通さない(右上のYouTube自身の音量・「⋮」と重ならず、押せるように)。 */}
+          <div className={`${autoPlay ? "pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-start gap-2 p-2" : "absolute inset-x-0 top-0 z-20 flex h-8 items-center justify-between bg-black px-2"} ${barClassName}`}>
             <a
               href={videoUrlFor(provider, refId)}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center gap-1 text-[10px] text-white/70 ${autoPlay ? "mr-auto rounded-full bg-black/60 px-2 py-1" : ""}`}
+              className={`flex items-center gap-1 text-[10px] text-white/70 ${autoPlay ? "pointer-events-auto rounded-full bg-black/60 px-2 py-1" : ""}`}
             >
               {label}で見る <ExternalLink size={10} />
             </a>
@@ -359,26 +359,29 @@ export function EmbedPlayer({
                 type="button"
                 onClick={toggleSound}
                 aria-label={soundOn ? "音を消す" : "音を出す"}
-                className="flex h-6 items-center gap-1 rounded-full bg-black/60 px-2 text-[11px] font-semibold text-white"
+                className="pointer-events-auto flex h-6 items-center gap-1 rounded-full bg-black/60 px-2 text-[11px] font-semibold text-white"
               >
                 {soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
                 {soundOn ? "音あり" : "音を出す"}
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                setPlaying(false);
-                setSoundOnInner(false);
-                setDismissed(true);
-                // 先読みしているInstagramは、閉じても読み込み済みのまま残す(また開いたとき待たない)。
-                if (!warm) setLoaded(false);
-              }}
-              aria-label="閉じる"
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
-            >
-              <X size={14} />
-            </button>
+            {/* フィードの自動再生では「×」を出さない(縦スワイプで次へ送れる・右上のYouTube自身の「⋮」と近いため)。タップで再生するカードだけ、閉じるを出す。 */}
+            {!autoPlay && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPlaying(false);
+                  setSoundOnInner(false);
+                  setDismissed(true);
+                  // 先読みしているInstagramは、閉じても読み込み済みのまま残す(また開いたとき待たない)。
+                  if (!warm) setLoaded(false);
+                }}
+                aria-label="閉じる"
+                className="pointer-events-auto flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </>
       ) : (
