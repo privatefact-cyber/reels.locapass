@@ -7,7 +7,6 @@ import { HereLocationPing } from "@/components/pet/HereLocationPing";
 import { PetConcierge } from "@/components/pet/PetConcierge";
 import { getPetViewer } from "@/lib/pet/db";
 import { AiConsentProvider } from "@/components/pet/AiConsent";
-import { AppStoreBanner } from "@/components/pet/AppStoreBanner";
 import { AppPushBridge } from "@/components/pet/AppPushBridge";
 
 const rounded = M_PLUS_Rounded_1c({ weight: ["400", "700", "800"], subsets: ["latin"], display: "swap", preload: false });
@@ -19,6 +18,8 @@ export const metadata: Metadata = {
   // ホーム画面に追加(PWA)。iPhoneはホーム画面に追加したときだけWebでも端末通知が届く
   manifest: "/pet.webmanifest",
   appleWebApp: { capable: true, title: "ロカわん", statusBarStyle: "default" },
+  // iPhoneのSafariで開くと、上にApple公式の「ロカわん - 入手」バナーが出る(アプリ導入済みなら「開く」)
+  other: { "apple-itunes-app": "app-id=6835396460" },
 };
 
 export const viewport: Viewport = { themeColor: "#FFF7EC" };
@@ -42,7 +43,6 @@ export default async function PetLayout({ children }: { children: React.ReactNod
         <HereLocationPing enabled={hereEnabled} />
         <AppPushBridge loggedIn={Boolean(viewer)} />
         <PetTopBar />
-        <AppStoreBanner />
         <div className="mx-auto w-full max-w-md px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-2">{children}</div>
         <PetTabBar />
         <PetConcierge />
