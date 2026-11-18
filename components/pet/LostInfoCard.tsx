@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { PublicLostReport } from "@/lib/pet/lost";
 import { ContactReveal } from "./ContactReveal";
+import { ShareButtons } from "./ShareButtons";
+import { lostShareText, lostShareUrl } from "@/lib/pet/lostShare";
 
 function timeLabel(iso: string | null) {
   if (!iso) return "ー";
@@ -8,7 +10,7 @@ function timeLabel(iso: string | null) {
 }
 
 /** 迷子情報のカード(迷子マップ・名刺ページ共通)。連絡先は飼い主が公開を選んだものだけで、ボタンを押したときに表示する。 */
-export function LostInfoCard({ report, showSightingLink = true }: { report: PublicLostReport; showSightingLink?: boolean }) {
+export function LostInfoCard({ report, showSightingLink = true, showShare = true }: { report: PublicLostReport; showSightingLink?: boolean; showShare?: boolean }) {
   return (
     <div className="overflow-hidden rounded-[28px] border-2 border-[#F5B5B5] bg-white shadow-[0_6px_20px_-12px_rgba(160,40,40,0.4)]">
       <div className="flex gap-3 p-4">
@@ -36,6 +38,12 @@ export function LostInfoCard({ report, showSightingLink = true }: { report: Publ
           </Link>
         )}
       </div>
+      {showShare && (
+        <div className="border-t border-[#FBE3E3] bg-[#FFF8F8] px-3 pb-3 pt-2">
+          <p className="mb-2 text-center text-xs font-extrabold text-[#D04848]">📣 この子を探すため、広めてください</p>
+          <ShareButtons url={lostShareUrl(report.id)} text={lostShareText(report)} />
+        </div>
+      )}
     </div>
   );
 }
