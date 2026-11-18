@@ -112,6 +112,13 @@ export function EmbedPlayer({
   //  - played: そのカードを一度再生した後は先読みしない(戻る側のカードが、見えないまま再生し続けないように)。
   //  - noAutoSrc: 先読みで作ったiframeは「自動再生なし」のURLのまま、画面に出ても作り直さずに使う。
   const [played, setPlayed] = useState(false);
+  // iPhone/iPadは、見えない状態で先読みした「自動再生なし」のiframeに、あとから再生の指示(postMessage)を送っても、
+  // 指のタッチを伴わないため再生されないことがある。iOSでは先読みをやめ、画面に出た時点で「自動再生つき・無音」のURLで読み込む。
+  const [ios, setIos] = useState(false);
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    setIos(/iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+  }, []);
   // YouTubeが実際に再生を始めたか(プレーヤーからの通知)。出るはずの時間を過ぎても始まらないときは ytStalled を立てる。
   const [ytStalled, setYtStalled] = useState(false);
   const [noAutoSrc, setNoAutoSrc] = useState(false);
@@ -126,7 +133,7 @@ export function EmbedPlayer({
     const timer = window.setTimeout(() => setPreloadReady(true), PRELOAD_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [preload, active]);
-  const prewarm = autoPlay && !dismissed && !played && ((preloadReady && !active) || (active && noAutoSrc));
+  const prewarm = autoPlay && !ios && !dismissed && !played && ((preloadReady && !active) || (active && noAutoSrc));
   const mounted = playing || warm || prewarm;
   // フィードの自動再生のYouTubeは操作バーが無い(controls=0)ので、指のタッチを枠に渡さず、上下のスワイプ(スクロール)にだけ使う。
   // iPhoneは別サイトの枠の上から始めたスクロールの開始が遅れてカクつくため。TikTok・Instagramは自前の操作があるので対象外。
