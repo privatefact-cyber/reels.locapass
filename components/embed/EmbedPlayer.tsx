@@ -112,6 +112,8 @@ export function EmbedPlayer({
   //  - played: そのカードを一度再生した後は先読みしない(戻る側のカードが、見えないまま再生し続けないように)。
   //  - noAutoSrc: 先読みで作ったiframeは「自動再生なし」のURLのまま、画面に出ても作り直さずに使う。
   const [played, setPlayed] = useState(false);
+  // YouTubeが実際に再生を始めたか(プレーヤーからの通知)。出るはずの時間を過ぎても始まらないときは ytStalled を立てる。
+  const [ytStalled, setYtStalled] = useState(false);
   const [noAutoSrc, setNoAutoSrc] = useState(false);
   // 先読みは、スワイプが止まってから始める。切り替えの最中にiframeの読み込み(YouTubeのプレーヤーは重い)を始めると、
   // スワイプのアニメーションとぶつかってカクつくため。見えない先読みが出来上がる前に次へ送った場合は、従来どおりその場で読み込む。
@@ -128,7 +130,8 @@ export function EmbedPlayer({
   const mounted = playing || warm || prewarm;
   // フィードの自動再生のYouTubeは操作バーが無い(controls=0)ので、指のタッチを枠に渡さず、上下のスワイプ(スクロール)にだけ使う。
   // iPhoneは別サイトの枠の上から始めたスクロールの開始が遅れてカクつくため。TikTok・Instagramは自前の操作があるので対象外。
-  const noTouch = autoPlay && provider === "youtube" ? "pointer-events-none " : "";
+  // ただし、自動再生がiPhoneに止められた(低電力モード等)ときは、枠に指を渡して、YouTube自身の再生ボタンを押せるようにする(ytStalled)。
+  const noTouch = autoPlay && provider === "youtube" && !ytStalled ? "pointer-events-none " : "";
   // 先読みで作られるときだけ、自動再生なしのURLにする(描画中に切り替えて、同じ描画のうちに反映する)。
   if (mounted && !playing && !active && autoPlay && !noAutoSrc) setNoAutoSrc(true);
   if (!mounted && noAutoSrc) setNoAutoSrc(false);
@@ -168,6 +171,48 @@ export function EmbedPlayer({
     }, 500);
     return () => window.clearInterval(timer);
   }, [playing, noAutoSrc, provider, reloadKey]);
+
+  // YouTubeの自動再生が止められていないか見張る。iPhoneは低電力モードなどで自動再生を止めることがあり、
+  // 枠に指を渡さない設定(pointer-events-none)のままだと、止まった映像のまま再生ボタンも押せなくなるため。
+  // プレーヤーに「状態を教えて」と頼み(listening)、再生中(playerState=1)の通知が来なければ、一定時間後に指を通す。
+  useEffect(() => {
+    if (!(playing && autoPlay && provider === "youtube")) {
+      setYtStalled(false);
+      return;
+    }
+    let started = false;
+    const onMessage = (e: MessageEvent) => {
+      if (e.source !== frame.current?.contentWindow) return;
+      let d: { event?: string; info?: unknown } | null = null;
+      try {
+        d = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+      } catch {
+        return;
+      }
+      const info = d?.info as { playerState?: number } | number | undefined;
+      const state = d?.event === "onStateChange" ? (info as number) : typeof info === "object" ? info?.playerState : undefined;
+      if (state === 1) {
+        started = true;
+        setYtStalled(false);
+      }
+    };
+    window.addEventListener("message", onMessage);
+    const listen = () => frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*");
+    listen();
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      if (++tries > 12) return window.clearInterval(timer);
+      listen();
+    }, 600);
+    const stallTimer = window.setTimeout(() => {
+      if (!started) setYtStalled(true);
+    }, 5000);
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(stallTimer);
+      window.removeEventListener("message", onMessage);
+    };
+  }, [playing, autoPlay, provider, reloadKey]);
 
   // TikTokのプレーヤーが明示的にエラー(onPlayerError。古い onError も)を通知したときだけ、
   // 「再読み込み」と「TikTokで開く」を出す。通知が来ない遅さは失敗扱いにしない(正常な再生を壊さないため)。
@@ -259,6 +304,11 @@ export function EmbedPlayer({
                 <img src={posterUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
               )}
               <span className="relative rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white">読み込み中…</span>
+            </div>
+          )}
+          {ytStalled && (
+            <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex justify-center">
+              <span className="rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white">画面をタップして再生</span>
             </div>
           )}
           {failed && (
