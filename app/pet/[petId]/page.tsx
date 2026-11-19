@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, QrCode } from "lucide-react";
-import { petAdmin, requirePetViewer, signPetImages } from "@/lib/pet/db";
-import { getPetPlace } from "@/lib/pet/spots";
+import { requirePetViewer, signPetImages } from "@/lib/pet/db";
 import { getMyPets } from "@/lib/pet/queries";
 import { ageLabel, daysBetween, daysToBirthday, expiryStatus, formatJpDate, humanAge, latestByType, todayJst } from "@/lib/pet/calc";
 import { DOC_TYPE_EMOJI, DOC_TYPE_LABEL, DOC_TYPE_SHORT, SEX_LABEL, VISIBILITY_LABEL, type PetDiaryRow, type PetDocType, type PetDocumentRow, type PetMedicalRow } from "@/lib/pet/types";
@@ -12,7 +11,7 @@ import { BirthdayConfetti } from "@/components/pet/BirthdayConfetti";
 import { PetAvatar, PetCard, PetSectionTitle, StatusPill, petButton } from "@/components/pet/ui";
 import { DocumentScanner } from "@/components/pet/DocumentScanner";
 import { MedicalForm } from "@/components/pet/MedicalForm";
-import { DiaryForm, type DiaryPresetPlace } from "@/components/pet/DiaryForm";
+import { DiaryForm } from "@/components/pet/DiaryForm";
 import { WeightChart } from "@/components/pet/WeightChart";
 import { PetDeleteButton } from "@/components/pet/DeleteButton";
 import { LocalImage, LocalImageNotice } from "@/components/pet/LocalImage";
@@ -28,9 +27,9 @@ const TABS = [
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
-export default async function PetDetailPage({ params, searchParams }: { params: Promise<{ petId: string }>; searchParams: Promise<{ tab?: string; compose?: string; place?: string; shop?: string }> }) {
+export default async function PetDetailPage({ params, searchParams }: { params: Promise<{ petId: string }>; searchParams: Promise<{ tab?: string; compose?: string }> }) {
   const { petId } = await params;
-  const { tab: rawTab, compose, place, shop } = await searchParams;
+  const { tab: rawTab, compose } = await searchParams;
   const tab: TabKey = (TABS.find((t) => t.key === rawTab)?.key ?? "notebook") as TabKey;
   const { supabase } = await requirePetViewer(`/pet/${petId}`);
 
@@ -112,7 +111,7 @@ export default async function PetDetailPage({ params, searchParams }: { params: 
       <div className="mt-2">
         {tab === "notebook" && <NotebookTab petId={pet.id} petName={pet.name} supabase={supabase} />}
         {tab === "medical" && <MedicalTab petId={pet.id} vetName={pet.vet_name} supabase={supabase} />}
-        {tab === "diary" && <DiaryTab petId={pet.id} supabase={supabase} compose={compose === "1"} placeId={place} shopId={shop} />}
+        {tab === "diary" && <DiaryTab petId={pet.id} supabase={supabase} compose={compose === "1"} />}
         {tab === "profile" && (
           <div className="mt-2">
             <PetProfileForm pet={pet} />
@@ -311,8 +310,8 @@ function Row({ k, v }: { k: string; v: string }) {
   );
 }
 
-async function DiaryTab({ petId, supabase, compose, placeId, shopId }: { petId: string; supabase: Sb; compose: boolean; placeId?: string; shopId?: string }) {
-  const [{ data }, { data: walk }, presetPlace] = await Promise.all([
+async function DiaryTab({ petId, supabase, compose }: { petId: string; supabase: Sb; compose: boolean }) {
+  const [{ data }] = await Promise.all([
     supabase
       .from("locapass_pet_diary_entries")
       .select("id, pet_id, entry_date, weight_kg, body, image_paths, visibility, created_at, like_count, snap_post_id, hidden_at")
@@ -320,11 +319,8 @@ async function DiaryTab({ petId, supabase, compose, placeId, shopId }: { petId: 
       .order("entry_date", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(200),
-    supabase.from("locapass_pet_walk_areas").select("lat, lng, label"),
-    getDiaryPresetPlace(placeId, shopId),
   ]);
   const rows = (data ?? []) as (PetDiaryRow & { like_count: number; snap_post_id: string | null; hidden_at: string | null })[];
-  const walkAreas = ((walk ?? []) as { lat: number; lng: number; label: string | null }[]).map((w) => ({ lat: Number(w.lat), lng: Number(w.lng), label: w.label }));
   const signed = await signPetImages(rows.flatMap((r) => r.image_paths));
   const weights = rows.filter((r) => r.weight_kg != null).map((r) => ({ date: r.entry_date, kg: Number(r.weight_kg) }));
 
@@ -335,7 +331,7 @@ async function DiaryTab({ petId, supabase, compose, placeId, shopId }: { petId: 
         <WeightChart points={weights} />
       </PetCard>
       <div className="mt-3">
-        <DiaryForm petId={petId} walkAreas={walkAreas} presetPlace={presetPlace} autoOpen={compose} />
+        <DiaryForm petId={petId} autoOpen={compose} />
       </div>
       <PetSectionTitle emoji="📔">成長日誌</PetSectionTitle>
       {rows.length === 0 ? (
@@ -386,18 +382,4 @@ async function DiaryTab({ petId, supabase, compose, placeId, shopId }: { petId: 
       )}
     </div>
   );
-}
-
-/** おでかけ・施設ページの「ここで撮った写真を投稿」から来たときの場所(施設の登録位置) */
-async function getDiaryPresetPlace(placeId?: string, shopId?: string): Promise<DiaryPresetPlace | null> {
-  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (placeId && uuid.test(placeId)) {
-    const p = await getPetPlace(placeId);
-    if (p) return { kind: "place", id: p.id, name: p.name, lat: p.lat, lng: p.lng, address: p.address };
-  }
-  if (shopId && uuid.test(shopId)) {
-    const { data } = await petAdmin().from("locapass_shops").select("id, name, address, lat, lng").eq("id", shopId).eq("status", "active").maybeSingle();
-    if (data && data.lat != null && data.lng != null) return { kind: "shop", id: data.id as string, name: data.name as string, lat: data.lat as number, lng: data.lng as number, address: (data.address as string | null) ?? null };
-  }
-  return null;
 }

@@ -461,7 +461,7 @@ export function SpotsMapExplorer({ origin, counts }: { origin: { lat: number; ln
             <p className="py-6 text-center text-sm text-[#9C8273]">この範囲にお店はありません。地図を動かすか、場所を検索してください。</p>
           )}
           <Link
-            href="/pet/post"
+            href="/pet/outing"
             className="flex items-center gap-3 rounded-[22px] border-2 border-dashed border-[#FFC9A8] bg-[#FFF3E6] p-3 active:scale-[0.99]"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF8E5E] text-white">
@@ -469,7 +469,7 @@ export function SpotsMapExplorer({ origin, counts }: { origin: { lat: number; ln
             </span>
             <span className="min-w-0 flex-1 text-xs leading-relaxed text-[#7A6050]">
               <b className="block text-sm text-[#4A3426]">ドッグランで遊んだ?いいカフェあった?</b>
-              うちの子の写真を投稿してみませんか。場所を付けると LOCAPASS snap と施設のページにも並びます。
+              写真と場所を共有してみませんか。LOCAPASS snap と施設のページにも並びます。
             </span>
             <ChevronRight size={16} className="shrink-0 text-[#E3A27F]" />
           </Link>

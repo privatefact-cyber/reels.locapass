@@ -71,17 +71,17 @@ export default async function PetPlacePage({ params }: { params: Promise<{ id: s
       </p>
 
       {/* LOCAPASS snap へ */}
-      <Link href={`/pet/post?place=${place.id}`} className="mt-4 flex items-center gap-3 rounded-[24px] bg-[#FF8E5E] p-4 text-white shadow-[0_4px_0_#EE6A36] active:translate-y-[2px]">
+      <Link href={`/pet/outing?place=${place.id}`} className="mt-4 flex items-center gap-3 rounded-[24px] bg-[#FF8E5E] p-4 text-white shadow-[0_4px_0_#EE6A36] active:translate-y-[2px]">
         <Camera size={26} className="shrink-0" />
         <span className="text-sm leading-snug">
-          <b className="block text-base">ここで遊んだ?写真を投稿</b>
-          うちの子自慢とLOCAPASS snapに。このページにも並びます
+          <b className="block text-base">ここで遊んだ?おでかけを共有</b>
+          写真と場所を地図に載せます。このページにも並びます
         </span>
       </Link>
 
       <PetSectionTitle emoji="📸">ここで撮られた LOCAPASS snap</PetSectionTitle>
       {snaps.length === 0 ? (
-        <PetCard className="text-center text-sm text-[#9C8273]">まだ投稿はありません。最初の1枚を投稿してみませんか?</PetCard>
+        <PetCard className="text-center text-sm text-[#9C8273]">まだ投稿はありません。最初の1枚を共有してみませんか?</PetCard>
       ) : (
         <div className="grid grid-cols-3 gap-1.5">
           {snaps.map((p) => (

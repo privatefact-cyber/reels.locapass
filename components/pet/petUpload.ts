@@ -22,6 +22,8 @@ export async function downscaleImage(file: File, maxEdge = 1600, quality = 0.85)
 /** 写真を非公開の置き場へ送り、保存用のパスを返す */
 export async function uploadPetImage(kind: UploadKind, targetId: string, file: File): Promise<string> {
   const blob = await downscaleImage(file);
+  // 縮小・再エンコードに失敗すると元の写真がそのまま返る(撮影位置などのExifが残る)。そのまま送らず、ここで止める。
+  if (blob === file || blob.type !== "image/jpeg") throw new Error("この写真は読み込めませんでした(撮影位置などの情報を消せないため送れません)。別の写真を選ぶか、写真アプリで書き出し直してください");
   const prepared = await requestPetUpload(kind, targetId);
   if (!prepared.ok) throw new Error(prepared.error);
   const { error } = await createClient()

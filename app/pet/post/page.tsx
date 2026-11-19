@@ -12,15 +12,16 @@ export const metadata: Metadata = { title: "写真を投稿", robots: { index: f
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * 「写真を投稿」の入口(ホーム・おでかけ・施設ページから)。どの子の日誌に書くかを選んで、日誌の投稿画面へ。
- * 施設ページから来たときは、その施設を場所に入れた状態で開く(?place= / ?shop=)。
+ * 「写真を投稿」の入口(ギャラリーから)。どの子の日誌に書くかを選んで、日誌の投稿画面へ(「公開」にするとうちの子自慢に並ぶ)。
+ * 場所を付けて地図に共有する「おでかけ共有」は別の画面(/pet/outing)。施設ページ(?place= / ?shop=)から来たときは、そちらへ送る。
  */
 export default async function PetPostPage({ searchParams }: { searchParams: Promise<{ place?: string; shop?: string }> }) {
   const { place, shop } = await searchParams;
+  if ((place && UUID.test(place)) || (shop && UUID.test(shop))) {
+    redirect(`/pet/outing?${new URLSearchParams({ ...(place && UUID.test(place) ? { place } : {}), ...(shop && UUID.test(shop) ? { shop } : {}) })}`);
+  }
   const extra = new URLSearchParams({ tab: "diary", compose: "1" });
-  if (place && UUID.test(place)) extra.set("place", place);
-  if (shop && UUID.test(shop)) extra.set("shop", shop);
-  const self = `/pet/post${place || shop ? `?${new URLSearchParams({ ...(place ? { place } : {}), ...(shop ? { shop } : {}) })}` : ""}`;
+  const self = "/pet/post";
 
   const { supabase } = await requirePetViewer(self);
   const pets = await getMyPets(supabase);
@@ -30,7 +31,7 @@ export default async function PetPostPage({ searchParams }: { searchParams: Prom
   return (
     <div className="pt-2">
       <h1 className="px-1 text-xl font-extrabold">どの子の写真?</h1>
-      <p className="mt-1 px-1 text-xs text-[#9C8273]">成長日誌に書いて、「公開」にするとうちの子自慢に並びます。場所を付けると LOCAPASS snap にも載ります。</p>
+      <p className="mt-1 px-1 text-xs text-[#9C8273]">成長日誌に書いて、「公開」にするとうちの子自慢に並びます。おでかけの場所を地図に載せたいときは「おでかけを共有」へ。</p>
       <div className="mt-3 space-y-2">
         {pets.map((p) => (
           <Link key={p.id} href={`/pet/${p.id}?${extra}`} className="block">
