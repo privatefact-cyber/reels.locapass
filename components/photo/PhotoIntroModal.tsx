@@ -27,6 +27,7 @@ export function PhotoIntroModal() {
 
   return (
     <div
+      data-surface="media" /* 白地のテーマでも、モーダルの文字は常に白(写真・動画の上と同じ扱い) */
       className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-[250ms] will-change-[opacity] ${
         closing ? "opacity-0" : "opacity-100"
       }`}
