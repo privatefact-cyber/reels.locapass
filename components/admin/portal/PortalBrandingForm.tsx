@@ -19,6 +19,8 @@ const THEME_OPTIONS: { value: SiteTheme | null; label: string; swatch: string }[
   { value: "cafe", label: "地中海カフェ(白・明るい)", swatch: "linear-gradient(135deg, #ffffff 50%, #1b2a5c 50%)" },
   { value: "coastal", label: "コースタル(クールな白×シーグラス)", swatch: "linear-gradient(135deg, #f4f8f7 50%, #548c82 50%)" },
   { value: "pure", label: "ピュアホワイト(白×シャンパンゴールド)", swatch: "linear-gradient(135deg, #ffffff 50%, #b28a47 50%)" },
+  { value: "warm", label: "ウォームトラベル(アイボリー×テラコッタ)", swatch: "linear-gradient(135deg, #fbf6ef 50%, #bb754e 50%)" },
+  { value: "botanical", label: "ボタニカルジャーナル(ペールセージ×オリーブ)", swatch: "linear-gradient(135deg, #f5f7f0 50%, #758956 50%)" },
 ];
 
 type Props = {

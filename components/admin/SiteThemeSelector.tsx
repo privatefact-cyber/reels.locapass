@@ -13,9 +13,11 @@ const OPTIONS: { value: SiteTheme | null; label: string; swatch: string }[] = [
   { value: "cafe", label: "地中海カフェ(白・明るい)", swatch: "linear-gradient(135deg, #ffffff 50%, #1b2a5c 50%)" },
   { value: "coastal", label: "コースタル(クールな白×シーグラス)", swatch: "linear-gradient(135deg, #f4f8f7 50%, #548c82 50%)" },
   { value: "pure", label: "ピュアホワイト(白×シャンパンゴールド)", swatch: "linear-gradient(135deg, #ffffff 50%, #b28a47 50%)" },
+  { value: "warm", label: "ウォームトラベル(アイボリー×テラコッタ)", swatch: "linear-gradient(135deg, #fbf6ef 50%, #bb754e 50%)" },
+  { value: "botanical", label: "ボタニカルジャーナル(ペールセージ×オリーブ)", swatch: "linear-gradient(135deg, #f5f7f0 50%, #758956 50%)" },
 ];
 
-const LABELS: Record<SiteTheme, string> = { default: "通常(ゴールド)", christmas: "クリスマス", beauty: "ビューティー", nature: "ネイチャー", cafe: "地中海カフェ", coastal: "コースタル", pure: "ピュアホワイト" };
+const LABELS: Record<SiteTheme, string> = { default: "通常(ゴールド)", christmas: "クリスマス", beauty: "ビューティー", nature: "ネイチャー", cafe: "地中海カフェ", coastal: "コースタル", pure: "ピュアホワイト", warm: "ウォームトラベル", botanical: "ボタニカルジャーナル" };
 
 /** サイト全体の配色テーマを選ぶ運営専用の切り替え。押すと公開サイトに即時反映される。 */
 export function SiteThemeSelector({ current, effective }: { current: SiteTheme | null; effective: SiteTheme }) {

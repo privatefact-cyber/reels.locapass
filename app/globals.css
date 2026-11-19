@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /*
- * サイト全体の配色テーマ。<html data-theme="default|christmas|beauty|nature|cafe|coastal|pure"> を切り替えるだけで色が一括で変わる。
+ * サイト全体の配色テーマ。<html data-theme="default|christmas|beauty|nature|cafe|coastal|pure|warm|botanical"> を切り替えるだけで色が一括で変わる。
  * - 値は "R G B"。Tailwind側で rgb(var(...) / 透明度) として使うので、/20 などの透過指定は各テーマ共通のまま効く。
  * - default は従来の実際の色(黒/白/neutral/zinc/amber/gold)とまったく同じ値。見た目は1pxも変わらない。
  * - tone = 旧 neutral、panel = 旧 zinc、hl = 旧 amber の段階ごとの置き換え先。
@@ -330,7 +330,11 @@
 [data-theme="coastal"] [data-surface="media"],
 [data-theme="coastal"][data-surface="media"],
 [data-theme="pure"] [data-surface="media"],
-[data-theme="pure"][data-surface="media"] {
+[data-theme="pure"][data-surface="media"],
+[data-theme="warm"] [data-surface="media"],
+[data-theme="warm"][data-surface="media"],
+[data-theme="botanical"] [data-surface="media"],
+[data-theme="botanical"][data-surface="media"] {
   --color-bg-base: 0 0 0;
   --color-bg-surface: 23 23 23;
   --color-text-main: 255 255 255;
@@ -351,6 +355,84 @@
   --color-accent: 214 184 126; --color-accent-light: 232 212 170; --color-accent-dark: 178 138 71; --color-on-accent: 0 0 0;
   --hl-50: 250 245 232; --hl-100: 244 234 210; --hl-200: 232 212 170; --hl-300: 214 184 126; --hl-400: 196 160 98;
   --hl-500: 178 138 71; --hl-600: 146 110 52; --hl-700: 112 84 36; --hl-800: 82 62 26; --hl-900: 46 34 14; --hl-950: 30 22 8;
+}
+
+/* ウォームトラベル(アイボリー×テラコッタ。旅先のカフェや食を感じさせる、やわらかく上質なあたたかさ) */
+[data-theme="warm"] {
+  --cta-300: 218 179 158; --cta-400: 204 152 122; --cta-500: 187 117 78; --cta-600: 146 91 61;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 187 117 78; --cta-gold-light: 204 152 122; --cta-gold-dark: 146 91 61;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 218 179 158;
+  --color-glow-2-scale: 0.4;
+  --color-on-accent: 255 255 255;
+  --color-header: 243 233 220;
+  --color-header-glow-1: 255 255 255;
+  --color-header-glow-2: 251 246 239;
+  --color-header-glow-3: 232 210 192;
+  --color-bg-base: 251 246 239;
+  --color-bg-surface: 255 253 249;
+  --color-text-main: 56 44 36;
+  --color-text-muted: 146 139 135;
+  --color-accent: 187 117 78;
+  --color-accent-light: 204 152 122;
+  --color-accent-dark: 146 91 61;
+  --color-border: 187 117 78;
+  --color-border-scale: 1.4;
+  --color-glow: 187 117 78;
+  --color-glow-scale: 1;
+
+  --tone-50: 36 29 23; --tone-100: 56 44 36; --tone-200: 86 76 69; --tone-300: 120 112 106;
+  --tone-500: 165 160 156; --tone-600: 205 202 200; --tone-700: 231 230 229; --tone-800: 243 233 220; --tone-950: 255 253 249;
+  --panel-400: 146 139 135; --panel-500: 165 160 156; --panel-600: 205 202 200; --panel-700: 231 230 229;
+  --panel-800: 243 233 220; --panel-900: 255 253 249; --panel-950: 251 246 239;
+  --hl-50: 41 26 17; --hl-100: 75 47 31; --hl-200: 108 68 45; --hl-300: 146 91 61; --hl-400: 168 105 70;
+  --hl-500: 187 117 78; --hl-600: 204 152 122; --hl-700: 221 186 166; --hl-800: 236 216 205; --hl-900: 245 236 230; --hl-950: 250 245 243;
+}
+[data-theme="warm"] [data-surface="media"],
+[data-theme="warm"][data-surface="media"] {
+  --color-accent: 214 172 149; --color-accent-light: 235 214 202; --color-accent-dark: 187 117 78; --color-on-accent: 0 0 0;
+  --hl-50: 250 245 243; --hl-100: 245 236 230; --hl-200: 236 216 205; --hl-300: 221 186 166; --hl-400: 214 172 149;
+  --hl-500: 204 152 122; --hl-600: 187 117 78; --hl-700: 146 91 61; --hl-800: 108 68 45; --hl-900: 75 47 31; --hl-950: 41 26 17;
+}
+
+/* ボタニカルジャーナル(ペールセージ×オリーブ。自然体で落ち着いた都市型ライフスタイルメディア) */
+[data-theme="botanical"] {
+  --cta-300: 179 190 162; --cta-400: 152 166 128; --cta-500: 117 137 86; --cta-600: 91 107 67;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 117 137 86; --cta-gold-light: 152 166 128; --cta-gold-dark: 91 107 67;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 179 190 162;
+  --color-glow-2-scale: 0.4;
+  --color-on-accent: 255 255 255;
+  --color-header: 232 237 223;
+  --color-header-glow-1: 255 255 255;
+  --color-header-glow-2: 245 247 240;
+  --color-header-glow-3: 209 217 196;
+  --color-bg-base: 245 247 240;
+  --color-bg-surface: 255 254 251;
+  --color-text-main: 48 57 45;
+  --color-text-muted: 141 146 140;
+  --color-accent: 117 137 86;
+  --color-accent-light: 152 166 128;
+  --color-accent-dark: 91 107 67;
+  --color-border: 117 137 86;
+  --color-border-scale: 1.4;
+  --color-glow: 117 137 86;
+  --color-glow-scale: 1;
+
+  --tone-50: 31 37 29; --tone-100: 48 57 45; --tone-200: 79 87 76; --tone-300: 114 120 112;
+  --tone-500: 162 166 160; --tone-600: 203 206 202; --tone-700: 230 231 230; --tone-800: 232 237 223; --tone-950: 255 254 251;
+  --panel-400: 141 146 140; --panel-500: 162 166 160; --panel-600: 203 206 202; --panel-700: 230 231 230;
+  --panel-800: 232 237 223; --panel-900: 255 254 251; --panel-950: 245 247 240;
+  --hl-50: 26 30 19; --hl-100: 47 55 34; --hl-200: 68 79 50; --hl-300: 91 107 67; --hl-400: 105 123 77;
+  --hl-500: 117 137 86; --hl-600: 152 166 128; --hl-700: 186 196 170; --hl-800: 216 222 208; --hl-900: 236 238 231; --hl-950: 245 247 243;
+}
+[data-theme="botanical"] [data-surface="media"],
+[data-theme="botanical"][data-surface="media"] {
+  --color-accent: 172 184 154; --color-accent-light: 214 220 204; --color-accent-dark: 117 137 86; --color-on-accent: 0 0 0;
+  --hl-50: 245 247 243; --hl-100: 236 238 231; --hl-200: 216 222 208; --hl-300: 186 196 170; --hl-400: 172 184 154;
+  --hl-500: 152 166 128; --hl-600: 117 137 86; --hl-700: 91 107 67; --hl-800: 68 79 50; --hl-900: 47 55 34; --hl-950: 26 30 19;
 }
 
 /* tone-400 / tone-900 は muted / surface と同じ色 */
