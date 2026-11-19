@@ -13,7 +13,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * 「写真を投稿」の入口(ギャラリーから)。どの子の日誌に書くかを選んで、日誌の投稿画面へ(「公開」にするとうちの子自慢に並ぶ)。
- * 場所を付けて地図に共有する「おでかけ共有」は別の画面(/pet/outing)。施設ページ(?place= / ?shop=)から来たときは、そちらへ送る。
+ * 場所を付けて地図に共有するのは LOCAPASS snap の投稿画面(/photo/new)。施設ページ(?place= / ?shop=)から来たときは、/pet/outing 経由でそちらへ送る。
  */
 export default async function PetPostPage({ searchParams }: { searchParams: Promise<{ place?: string; shop?: string }> }) {
   const { place, shop } = await searchParams;

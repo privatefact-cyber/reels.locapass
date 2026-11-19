@@ -71,7 +71,7 @@ export default async function PetPlacePage({ params }: { params: Promise<{ id: s
       </p>
 
       {/* LOCAPASS snap へ */}
-      <Link href={`/pet/outing?place=${place.id}`} className="mt-4 flex items-center gap-3 rounded-[24px] bg-[#FF8E5E] p-4 text-white shadow-[0_4px_0_#EE6A36] active:translate-y-[2px]">
+      <Link href="/photo/new" className="mt-4 flex items-center gap-3 rounded-[24px] bg-[#FF8E5E] p-4 text-white shadow-[0_4px_0_#EE6A36] active:translate-y-[2px]">
         <Camera size={26} className="shrink-0" />
         <span className="text-sm leading-snug">
           <b className="block text-base">ここで遊んだ?おでかけを共有</b>

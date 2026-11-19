@@ -25,7 +25,7 @@ function PhotoPreview({ file }: { file: File }) {
 /**
  * 成長日誌(写真・体重・ひとこと)を追加する。
  * - 見られる人を「公開」にすると、うちの子自慢ギャラリーに並ぶ(位置は持たない)
- * - 場所を付けて地図に共有する「おでかけ共有」は別の画面(/pet/outing)。日誌には場所を持たせない。
+ * - 場所を付けて地図に共有するのは LOCAPASS snap の投稿画面(/photo/new)。日誌には場所を持たせない。
  */
 export function DiaryForm({ petId, autoOpen = false }: { petId: string; autoOpen?: boolean }) {
   const router = useRouter();

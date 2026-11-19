@@ -812,6 +812,7 @@ export function PhotoComposer({ canOperator, preset }: { canOperator: boolean; p
         </div>
       ) : null}
 
+      <p className="rounded-xl border border-tone-300 px-3 py-2 text-center text-xs font-bold text-tone-600">📍 {t.photo.locationShareNotice}</p>
       <button
         type="submit"
         disabled={!file || !coords || !spotName.trim() || busy}

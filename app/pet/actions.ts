@@ -61,7 +61,7 @@ function refresh() {
 // ---------------------------------------------------------------------------
 // 画像のアップロード先(非公開の置き場への期限付きアップロードURL)
 // ---------------------------------------------------------------------------
-export type UploadKind = "avatar" | "cover" | "document" | "medical" | "diary" | "lost" | "sighting" | "found" | "outing";
+export type UploadKind = "avatar" | "cover" | "document" | "medical" | "diary" | "lost" | "sighting" | "found";
 
 export async function requestPetUpload(kind: UploadKind, targetId: string): Promise<Result<{ path: string; token: string }>> {
   const viewer = await viewerOrError();
@@ -70,13 +70,10 @@ export async function requestPetUpload(kind: UploadKind, targetId: string): Prom
     if (kind !== "found" && kind !== "sighting") return { ok: false, error: viewer.error };
     return guestUpload(kind, targetId);
   }
-  if (kind !== "found" && kind !== "outing" && !UUID.test(targetId)) return { ok: false, error: "対象が見つかりません" };
+  if (kind !== "found" && !UUID.test(targetId)) return { ok: false, error: "対象が見つかりません" };
 
   let path: string;
-  if (kind === "outing") {
-    // おでかけ共有の写真: うちの子を選ばずに投稿できる(日誌とは別。投稿が済んだら、この置き場の写真は消す)
-    path = `${viewer.userId}/outing/${crypto.randomUUID()}.jpg`;
-  } else if (kind === "found") {
+  if (kind === "found") {
     // 「見つけました」通報の写真: ログイン中の人なら誰でも(投稿前なので対象IDはない)
     path = `${viewer.userId}/found/${crypto.randomUUID()}.jpg`;
   } else if (kind === "sighting") {
@@ -552,35 +549,6 @@ export async function savePetDiary(input: PetDiaryInput): Promise<Result<{ snapP
   }
   refresh();
   return { ok: true, snapPostId };
-}
-
-/**
- * おでかけを共有する(LOCAPASS snap=地図への写真投稿だけ。成長日誌は作らない)。
- * - 写真1枚と場所が必須。場所の座標は、そのまま地図に公開される(施設を選んだときは施設の登録位置)。
- * - 公開前に、外部のAIで内容を確かめる(本人の同意が必要)。犬が写っているか・住所の手がかりが写っていないか、を確かめる。
- */
-export type PetOutingInput = { imagePath: string; comment?: string; place: PetSnapPlace };
-
-export async function postPetOuting(input: PetOutingInput): Promise<Result<{ postId: string }>> {
-  const viewer = await viewerOrError();
-  if ("error" in viewer) return { ok: false, error: viewer.error };
-  const imagePaths = ownPaths(viewer.userId, [input.imagePath], 1);
-  if (imagePaths.length === 0) return { ok: false, error: "写真を選んでください" };
-  const place = await resolveSnapPlace(input.place ?? ({} as PetSnapPlace));
-  if (!place) return { ok: false, error: "場所と、場所の名前を入れてください" };
-  // 写真を外部のAIに送る前に、本人の同意を確かめる
-  if (!(await hasPetAiConsent(petAdmin(), viewer.userId))) return { ok: false, error: AI_CONSENT_REQUIRED };
-  const images = await loadPetImages(imagePaths);
-  if (!images[0]) return { ok: false, error: "写真を読み込めませんでした。もう一度選んでください" };
-  const { checkGalleryImages } = await import("@/lib/pet/gallery");
-  const check = await checkGalleryImages(images);
-  if (!check.ok) return { ok: false, error: check.reason };
-  const posted = await postDiaryToSnap(viewer.userId, images[0], place, text(input.comment, 500));
-  if (!posted.ok) return posted;
-  // 地図に出した写真は公開側の置き場にコピー済み。非公開側の元の写真は残さない
-  await petAdmin().storage.from(PET_BUCKET).remove(imagePaths);
-  refresh();
-  return { ok: true, postId: posted.postId };
 }
 
 export async function deletePetDiary(id: string): Promise<Result> {

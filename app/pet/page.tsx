@@ -226,7 +226,7 @@ export default async function PetHomePage() {
         </>
       )}
 
-      <Link href="/pet/outing" className="mt-3 flex items-center gap-3 rounded-[24px] border-2 border-dashed border-[#FFC9A8] bg-[#FFF3E6] p-3 active:scale-[0.99]">
+      <Link href="/photo/new" className="mt-3 flex items-center gap-3 rounded-[24px] border-2 border-dashed border-[#FFC9A8] bg-[#FFF3E6] p-3 active:scale-[0.99]">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF8E5E] text-xl text-white">📸</span>
         <span className="min-w-0 flex-1 text-xs leading-relaxed text-[#7A6050]">
           <b className="block text-sm text-[#4A3426]">ドッグランで遊んだ?いい景色あった?</b>

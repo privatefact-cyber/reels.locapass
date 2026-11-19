@@ -399,6 +399,7 @@ export type Dictionary = {
     asOperator: string;
     submit: string;
     submitting: string;
+    locationShareNotice: string;
     moderationNote: string;
     errTooLarge15: string;
     errGeocode: string;
@@ -864,6 +865,7 @@ const ja: Dictionary = {
     asOperator: "運営として投稿する（表示名: LOCAPASS運営）",
     submit: "投稿する",
     submitting: "投稿しています…",
+    locationShareNotice: "位置情報が共有されます(投稿した場所のピンが地図に載り、誰でも見られます)",
     moderationNote: "不適切な写真は、AIによる確認で投稿できないことがあります。",
     errTooLarge15: "画像サイズは15MB以下にしてください。",
     errGeocode: "住所から位置を特定できませんでした。別の書き方でお試しください。",
@@ -1329,6 +1331,7 @@ const en: Dictionary = {
     asOperator: "Post as the operator (display name: LOCAPASS運営)",
     submit: "Post",
     submitting: "Posting…",
+    locationShareNotice: "Your location will be shared: the pin appears on the map for everyone to see.",
     moderationNote: "Inappropriate photos may be rejected by our AI check.",
     errTooLarge15: "Please use an image under 15 MB.",
     errGeocode: "Couldn't find that location. Try a different spelling.",
@@ -1794,6 +1797,7 @@ const zh: Dictionary = {
     asOperator: "以运营身份发布（显示名称：LOCAPASS运营）",
     submit: "发布",
     submitting: "正在发布…",
+    locationShareNotice: "将共享位置信息:投稿地点的图钉会显示在地图上,所有人都能看到。",
     moderationNote: "不当照片可能无法通过AI审核而无法发布。",
     errTooLarge15: "请使用15MB以下的图片。",
     errGeocode: "无法根据地址确定位置，请换一种写法试试。",
@@ -2260,6 +2264,7 @@ const ar: Dictionary = {
     asOperator: "النشر باسم المشغّل (الاسم المعروض: LOCAPASS运营)",
     submit: "نشر",
     submitting: "جارٍ النشر…",
+    locationShareNotice: "سيتم مشاركة الموقع: سيظهر دبوس مكان النشر على الخريطة ليراه الجميع.",
     moderationNote: "قد يتم رفض الصور غير المناسبة بواسطة فحص الذكاء الاصطناعي.",
     errTooLarge15: "يرجى استخدام صورة أقل من 15 ميغابايت.",
     errGeocode: "تعذّر تحديد الموقع من العنوان. جرّب صياغة أخرى.",
