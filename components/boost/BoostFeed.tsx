@@ -182,7 +182,7 @@ export function BoostFeed({ initial, portalSlug }: { initial: BoostItem[]; porta
           <Search size={16} />
         </button>
         <div className="flex flex-1 gap-2 overflow-x-auto no-scrollbar">
-          <span className="inline-flex shrink-0 items-center rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-black text-black">⚡ BOOST</span>
+          <span className="inline-flex shrink-0 items-center rounded-full bg-gradient-to-r from-boost-from to-boost-to px-3 py-1 text-xs font-black text-on-boost">⚡ BOOST</span>
           {keyword && (
             <button type="button" onClick={reset} className={`${pill(true)} inline-flex items-center gap-1`}>
               {keyword}

@@ -50,7 +50,7 @@ export default async function TopPage() {
       {boosts.length > 0 && (
         <Link
           href="/boost"
-          className="mx-2 flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 text-black active:scale-[0.99]"
+          className="mx-2 flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-boost-from to-boost-to px-4 py-3 text-on-boost active:scale-[0.99]"
         >
           <span className="text-sm font-black">⚡ {bt.title}・{bt.limited}</span>
           <span className="rounded-full bg-black px-3 py-0.5 text-xs font-black text-amber-300">{boosts.length}</span>

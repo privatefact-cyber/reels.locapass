@@ -64,7 +64,7 @@ export function ShopScheduleCalendar({ spots, routeLabel, eventMode = false }: {
   const markers = useRef<maplibregl.Marker[]>([]);
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = new maplibregl.Map({ container: mapEl.current, style: ["cafe", "beauty", "coastal", "pure", "warm", "botanical"].includes(document.documentElement.getAttribute("data-theme") ?? "") ? MAP_STYLE_LIGHT : MAP_STYLE_DARK, center: [spots[0].lng, spots[0].lat], zoom: 14, attributionControl: false, cooperativeGestures: true });
+    const map = new maplibregl.Map({ container: mapEl.current, style: ["cafe", "beauty", "coastal", "pure", "warm", "botanical", "newyork", "london"].includes(document.documentElement.getAttribute("data-theme") ?? "") ? MAP_STYLE_LIGHT : MAP_STYLE_DARK, center: [spots[0].lng, spots[0].lat], zoom: 14, attributionControl: false, cooperativeGestures: true });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     const ro = new ResizeObserver(() => map.resize());
     ro.observe(mapEl.current);

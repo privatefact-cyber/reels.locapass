@@ -136,7 +136,7 @@ export function ReserveForm({ shopId, shopName, defaultName, stub, freeCancelHou
       <button
         type="submit"
         disabled={pending || !agree || !name.trim() || !phone.trim()}
-        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-4 text-base font-black text-black disabled:opacity-50 active:scale-95"
+        className="w-full rounded-xl bg-gradient-to-r from-boost-from to-boost-to py-4 text-base font-black text-on-boost disabled:opacity-50 active:scale-95"
       >
         {pending ? "送信中..." : `デポジット${deposit.toLocaleString()}円で予約をリクエスト`}
       </button>

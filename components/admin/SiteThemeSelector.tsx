@@ -15,9 +15,11 @@ const OPTIONS: { value: SiteTheme | null; label: string; swatch: string }[] = [
   { value: "pure", label: "ピュアホワイト(白×シャンパンゴールド)", swatch: "linear-gradient(135deg, #ffffff 50%, #b28a47 50%)" },
   { value: "warm", label: "ウォームトラベル(アイボリー×テラコッタ)", swatch: "linear-gradient(135deg, #fbf6ef 50%, #bb754e 50%)" },
   { value: "botanical", label: "ボタニカルジャーナル(ペールセージ×オリーブ)", swatch: "linear-gradient(135deg, #f5f7f0 50%, #758956 50%)" },
+  { value: "newyork", label: "ニューヨーク(白×コバルトブルー)", swatch: "linear-gradient(135deg, #f0f4fb 50%, #2456d8 50%)" },
+  { value: "london", label: "ロンドン(白×ブリティッシュレッド)", swatch: "linear-gradient(135deg, #f8f2f0 50%, #b3263e 50%)" },
 ];
 
-const LABELS: Record<SiteTheme, string> = { default: "通常(ゴールド)", christmas: "クリスマス", beauty: "ビューティー", nature: "ネイチャー", cafe: "地中海カフェ", coastal: "コースタル", pure: "ピュアホワイト", warm: "ウォームトラベル", botanical: "ボタニカルジャーナル" };
+const LABELS: Record<SiteTheme, string> = { default: "通常(ゴールド)", christmas: "クリスマス", beauty: "ビューティー", nature: "ネイチャー", cafe: "地中海カフェ", coastal: "コースタル", pure: "ピュアホワイト", warm: "ウォームトラベル", botanical: "ボタニカルジャーナル", newyork: "ニューヨーク", london: "ロンドン" };
 
 /** サイト全体の配色テーマを選ぶ運営専用の切り替え。押すと公開サイトに即時反映される。 */
 export function SiteThemeSelector({ current, effective }: { current: SiteTheme | null; effective: SiteTheme }) {

@@ -23,7 +23,7 @@ export function BoostCard({ boost, now, t }: { boost: BoostItem; now: number | n
     <article
       className={`overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-b from-zinc-900 to-black shadow-lg shadow-amber-500/10 transition-opacity duration-700 ${ended ? "opacity-40" : ""}`}
     >
-      <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-black">
+      <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-boost-from to-boost-to px-4 py-2 text-on-boost">
         <span className="flex items-center gap-1 text-sm font-black">
           <Zap className="h-4 w-4 fill-black" /> {limitedLabel(t, boost.durationMinutes)}
         </span>

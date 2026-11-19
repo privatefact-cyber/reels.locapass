@@ -442,7 +442,7 @@ export function MypageClient({
                 </Link>
                 <Link
                   href={`/dashboard/shop/${s.id}/boost`}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-sm font-black text-black active:scale-95"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-boost-from to-boost-to py-3 text-sm font-black text-on-boost active:scale-95"
                 >
                   <Zap size={16} className="fill-black" /> ブースト投稿
                 </Link>
@@ -477,7 +477,7 @@ export function MypageClient({
             <Link
               href={opShopId ? `/dashboard/shop/${opShopId}/boost` : "#"}
               aria-disabled={!opShopId}
-              className={`flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-sm font-black text-black active:scale-95 ${opShopId ? "" : "pointer-events-none opacity-40"}`}
+              className={`flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-boost-from to-boost-to py-3 text-sm font-black text-on-boost active:scale-95 ${opShopId ? "" : "pointer-events-none opacity-40"}`}
             >
               <Zap size={16} className="fill-black" /> ブースト投稿
             </Link>

@@ -1076,7 +1076,7 @@ export function ReelFeed({
               </Link>
               <Link
                 href={boostHref}
-                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-black text-black"
+                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-boost-from to-boost-to px-3 py-1 text-xs font-black text-on-boost"
               >
                 ⚡ BOOST{boostCount > 0 && <span className="rounded-full bg-black px-1.5 text-[10px] text-amber-300">{boostCount}</span>}
               </Link>

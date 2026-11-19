@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /*
- * サイト全体の配色テーマ。<html data-theme="default|christmas|beauty|nature|cafe|coastal|pure|warm|botanical"> を切り替えるだけで色が一括で変わる。
+ * サイト全体の配色テーマ。<html data-theme="default|christmas|beauty|nature|cafe|coastal|pure|warm|botanical|newyork|london"> を切り替えるだけで色が一括で変わる。
  * - 値は "R G B"。Tailwind側で rgb(var(...) / 透明度) として使うので、/20 などの透過指定は各テーマ共通のまま効く。
  * - default は従来の実際の色(黒/白/neutral/zinc/amber/gold)とまったく同じ値。見た目は1pxも変わらない。
  * - tone = 旧 neutral、panel = 旧 zinc、hl = 旧 amber の段階ごとの置き換え先。
@@ -20,6 +20,8 @@
   --color-on-cta: 9 9 11;
   --cta-gold: 212 175 106; --cta-gold-light: 232 207 154; --cta-gold-dark: 169 126 63;
   --color-on-cta-gold: 0 0 0;
+  /* BOOSTチップ・ボタン(従来の amber-500→orange-500 と同じ値) */
+  --boost-from: 245 158 11; --boost-to: 249 115 22; --color-on-boost: 0 0 0;
   /* AIボタンの2色目の発光(default は透明=従来どおり1色) */
   --color-glow-2: 212 175 106;
   --color-glow-2-scale: 0;
@@ -95,6 +97,7 @@
   --color-on-cta: 255 255 255;
   --cta-gold: 190 24 93; --cta-gold-light: 236 72 153; --cta-gold-dark: 157 23 77;
   --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-gold-dark); --color-on-boost: 255 255 255;
   --color-glow-2: 253 186 140;
   --color-glow-2-scale: 0.6;
   --color-on-accent: 255 255 255;
@@ -200,6 +203,7 @@
   --color-on-cta: 255 255 255;
   --cta-gold: 176 62 40; --cta-gold-light: 214 98 62; --cta-gold-dark: 140 44 28;
   --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-600); --color-on-boost: 255 255 255;
   --color-glow-2: 250 204 21;
   --color-glow-2-scale: 0.4;
   --color-on-accent: 255 255 255;
@@ -266,6 +270,7 @@
   --color-on-cta: 255 255 255;
   --cta-gold: 84 140 130; --cta-gold-light: 110 163 153; --cta-gold-dark: 62 112 103;
   --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-600); --color-on-boost: 255 255 255;
   --color-glow-2: 140 186 177;
   --color-glow-2-scale: 0.4;
   --color-on-accent: 255 255 255;
@@ -299,6 +304,7 @@
   --color-on-cta: 255 255 255;
   --cta-gold: 178 138 71; --cta-gold-light: 196 160 98; --cta-gold-dark: 146 110 52;
   --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-600); --color-on-boost: 255 255 255;
   --color-glow-2: 214 184 126;
   --color-glow-2-scale: 0.4;
   --color-on-accent: 255 255 255;
@@ -334,7 +340,11 @@
 [data-theme="warm"] [data-surface="media"],
 [data-theme="warm"][data-surface="media"],
 [data-theme="botanical"] [data-surface="media"],
-[data-theme="botanical"][data-surface="media"] {
+[data-theme="botanical"][data-surface="media"],
+[data-theme="newyork"] [data-surface="media"],
+[data-theme="newyork"][data-surface="media"],
+[data-theme="london"] [data-surface="media"],
+[data-theme="london"][data-surface="media"] {
   --color-bg-base: 0 0 0;
   --color-bg-surface: 23 23 23;
   --color-text-main: 255 255 255;
@@ -363,6 +373,7 @@
   --color-on-cta: 255 255 255;
   --cta-gold: 187 117 78; --cta-gold-light: 204 152 122; --cta-gold-dark: 146 91 61;
   --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-600); --color-on-boost: 255 255 255;
   --color-glow-2: 218 179 158;
   --color-glow-2-scale: 0.4;
   --color-on-accent: 255 255 255;
@@ -402,6 +413,7 @@
   --color-on-cta: 255 255 255;
   --cta-gold: 117 137 86; --cta-gold-light: 152 166 128; --cta-gold-dark: 91 107 67;
   --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-600); --color-on-boost: 255 255 255;
   --color-glow-2: 179 190 162;
   --color-glow-2-scale: 0.4;
   --color-on-accent: 255 255 255;
@@ -433,6 +445,86 @@
   --color-accent: 172 184 154; --color-accent-light: 214 220 204; --color-accent-dark: 117 137 86; --color-on-accent: 0 0 0;
   --hl-50: 245 247 243; --hl-100: 236 238 231; --hl-200: 216 222 208; --hl-300: 186 196 170; --hl-400: 172 184 154;
   --hl-500: 152 166 128; --hl-600: 117 137 86; --hl-700: 91 107 67; --hl-800: 68 79 50; --hl-900: 47 55 34; --hl-950: 26 30 19;
+}
+
+/* ニューヨーク・コバルト(チョークホワイト×コバルトブルー。鮮やかなブルーを一点効かせた都会的なエディトリアル) */
+[data-theme="newyork"] {
+  --cta-300: 135 162 234; --cta-400: 91 128 226; --cta-500: 36 86 216; --cta-600: 28 67 168;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 36 86 216; --cta-gold-light: 91 128 226; --cta-gold-dark: 28 67 168;
+  --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-600); --color-on-boost: 255 255 255;
+  --color-glow-2: 135 162 234;
+  --color-glow-2-scale: 0.4;
+  --color-on-accent: 255 255 255;
+  --color-header: 240 244 251;
+  --color-header-glow-1: 255 255 255;
+  --color-header-glow-2: 255 255 255;
+  --color-header-glow-3: 199 212 244;
+  --color-bg-base: 255 255 255;
+  --color-bg-surface: 240 244 251;
+  --color-text-main: 17 28 53;
+  --color-text-muted: 124 130 144;
+  --color-accent: 36 86 216;
+  --color-accent-light: 91 128 226;
+  --color-accent-dark: 28 67 168;
+  --color-border: 36 86 216;
+  --color-border-scale: 1.4;
+  --color-glow: 36 86 216;
+  --color-glow-scale: 1;
+
+  --tone-50: 11 18 34; --tone-100: 17 28 53; --tone-200: 53 62 83; --tone-300: 93 101 118;
+  --tone-500: 148 153 164; --tone-600: 196 198 204; --tone-700: 226 228 231; --tone-800: 240 244 251; --tone-950: 240 244 251;
+  --panel-400: 124 130 144; --panel-500: 148 153 164; --panel-600: 196 198 204; --panel-700: 226 228 231;
+  --panel-800: 240 244 251; --panel-900: 240 244 251; --panel-950: 255 255 255;
+  --hl-50: 8 19 48; --hl-100: 14 34 86; --hl-200: 21 50 125; --hl-300: 28 67 168; --hl-400: 32 77 194;
+  --hl-500: 36 86 216; --hl-600: 91 128 226; --hl-700: 146 170 236; --hl-800: 194 208 244; --hl-900: 224 231 250; --hl-950: 240 243 252;
+}
+[data-theme="newyork"] [data-surface="media"],
+[data-theme="newyork"][data-surface="media"] {
+  --color-accent: 124 154 232; --color-accent-light: 189 204 243; --color-accent-dark: 36 86 216; --color-on-accent: 0 0 0;
+  --hl-50: 240 243 252; --hl-100: 224 231 250; --hl-200: 194 208 244; --hl-300: 146 170 236; --hl-400: 124 154 232;
+  --hl-500: 91 128 226; --hl-600: 36 86 216; --hl-700: 28 67 168; --hl-800: 21 50 125; --hl-900: 14 34 86; --hl-950: 8 19 48;
+}
+
+/* ロンドン・レッド(ブライトホワイト×ブリティッシュレッド。白・赤・インク色で輪郭を強く) */
+[data-theme="london"] {
+  --cta-300: 213 136 149; --cta-400: 198 92 110; --cta-500: 179 38 62; --cta-600: 140 30 48;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 179 38 62; --cta-gold-light: 198 92 110; --cta-gold-dark: 140 30 48;
+  --color-on-cta-gold: 255 255 255;
+  --boost-from: var(--cta-500); --boost-to: var(--cta-600); --color-on-boost: 255 255 255;
+  --color-glow-2: 213 136 149;
+  --color-glow-2-scale: 0.4;
+  --color-on-accent: 255 255 255;
+  --color-header: 248 242 240;
+  --color-header-glow-1: 255 255 255;
+  --color-header-glow-2: 255 253 251;
+  --color-header-glow-3: 234 201 204;
+  --color-bg-base: 255 253 251;
+  --color-bg-surface: 248 242 240;
+  --color-text-main: 32 37 54;
+  --color-text-muted: 132 135 144;
+  --color-accent: 179 38 62;
+  --color-accent-light: 198 92 110;
+  --color-accent-dark: 140 30 48;
+  --color-border: 179 38 62;
+  --color-border-scale: 1.4;
+  --color-glow: 179 38 62;
+  --color-glow-scale: 1;
+
+  --tone-50: 21 24 35; --tone-100: 32 37 54; --tone-200: 65 70 84; --tone-300: 103 107 118;
+  --tone-500: 155 157 165; --tone-600: 199 200 205; --tone-700: 228 229 231; --tone-800: 248 242 240; --tone-950: 248 242 240;
+  --panel-400: 132 135 144; --panel-500: 155 157 165; --panel-600: 199 200 205; --panel-700: 228 229 231;
+  --panel-800: 248 242 240; --panel-900: 248 242 240; --panel-950: 255 253 251;
+  --hl-50: 39 8 14; --hl-100: 72 15 25; --hl-200: 104 22 36; --hl-300: 140 30 48; --hl-400: 161 34 56;
+  --hl-500: 179 38 62; --hl-600: 198 92 110; --hl-700: 217 146 158; --hl-800: 234 194 201; --hl-900: 244 225 228; --hl-950: 250 240 241;
+}
+[data-theme="london"] [data-surface="media"],
+[data-theme="london"][data-surface="media"] {
+  --color-accent: 209 125 139; --color-accent-light: 232 190 197; --color-accent-dark: 179 38 62; --color-on-accent: 0 0 0;
+  --hl-50: 250 240 241; --hl-100: 244 225 228; --hl-200: 234 194 201; --hl-300: 217 146 158; --hl-400: 209 125 139;
+  --hl-500: 198 92 110; --hl-600: 179 38 62; --hl-700: 140 30 48; --hl-800: 104 22 36; --hl-900: 72 15 25; --hl-950: 39 8 14;
 }
 
 /* tone-400 / tone-900 は muted / surface と同じ色 */

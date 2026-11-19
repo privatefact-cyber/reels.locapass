@@ -76,7 +76,7 @@ export function BoostLaunchForm({ shopId, defaultImage }: { shopId: string; defa
       </div>
       {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
       {done && <p className="text-sm font-semibold text-emerald-700">発射しました! ブースト一覧に掲載中です。</p>}
-      <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-4 text-lg font-black text-black shadow disabled:opacity-60 active:scale-95">
+      <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-boost-from to-boost-to py-4 text-lg font-black text-on-boost shadow disabled:opacity-60 active:scale-95">
         <Zap className="h-5 w-5 fill-black" /> {pending ? "発射中..." : "⚡️ 緊急ブーストを発射する"}
       </button>
     </form>

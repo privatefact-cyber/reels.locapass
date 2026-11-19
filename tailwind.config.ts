@@ -45,6 +45,9 @@ const config: Config = {
         "on-cta": "rgb(var(--color-on-cta) / <alpha-value>)",
         "cta-gold": { DEFAULT: "rgb(var(--cta-gold) / <alpha-value>)", light: "rgb(var(--cta-gold-light) / <alpha-value>)", dark: "rgb(var(--cta-gold-dark) / <alpha-value>)" },
         "on-cta-gold": "rgb(var(--color-on-cta-gold) / <alpha-value>)",
+        // BOOSTチップ・ボタン(テーマごとに色が変わる。default は従来の amber→orange)
+        boost: { from: "rgb(var(--boost-from) / <alpha-value>)", to: "rgb(var(--boost-to) / <alpha-value>)" },
+        "on-boost": "rgb(var(--color-on-boost) / <alpha-value>)",
         // ヘッダーの背景色と、背景の光暈(3色グラデーション)
         header: {
           DEFAULT: "rgb(var(--color-header) / <alpha-value>)",
