@@ -68,3 +68,22 @@ export async function publishInstagramContainer(token: string, containerId: stri
   const published = await call<{ id: string }>("/me/media_publish", "POST", { creation_id: containerId }, token);
   return published.id;
 }
+
+/** ストーリーズ(写真)を公開し、idを返す。ストーリーズは24時間で消える。APIでは文章(キャプション)やリンクは付けられない。 */
+export async function publishInstagramStoryImage(token: string, input: { imageUrl: string }): Promise<string> {
+  const container = await call<{ id: string }>("/me/media", "POST", { media_type: "STORIES", image_url: input.imageUrl }, token);
+  for (let i = 0; i < 8; i++) {
+    const s = await call<{ status_code?: string }>(`/${container.id}`, "GET", { fields: "status_code" }, token);
+    if (s.status_code === "FINISHED") break;
+    if (s.status_code === "ERROR" || s.status_code === "EXPIRED") throw new Error(`Instagram ストーリーズの処理に失敗: ${s.status_code}`);
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  const published = await call<{ id: string }>("/me/media_publish", "POST", { creation_id: container.id }, token);
+  return published.id;
+}
+
+/** ストーリーズ(動画)のコンテナを作る。公開は、リールと同じく処理が終わってから publishInstagramContainer で行う。 */
+export async function createInstagramStoryVideoContainer(token: string, input: { videoUrl: string }): Promise<string> {
+  const container = await call<{ id: string }>("/me/media", "POST", { media_type: "STORIES", video_url: input.videoUrl }, token);
+  return container.id;
+}

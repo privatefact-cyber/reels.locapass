@@ -185,6 +185,14 @@ export default async function AdminThreadsPage({ searchParams }: { searchParams:
                 <label className="block text-xs font-semibold text-slate-700">素材
                   <select name="source" defaultValue={a.source} className={`${input} mt-1`}><option value="research">Webで話題を調べて作る</option><option value="shop">掲載店舗の素材</option><option value="ai">固定テーマから作る</option></select>
                 </label>
+                <fieldset className="text-xs font-semibold text-slate-700">投稿のかたち(毎日、選んだ分を1件ずつ作る)
+                  <div className="mt-1 flex flex-wrap gap-3 font-normal">
+                    <label className="flex items-center gap-1"><input type="checkbox" name="forms" value="feed" defaultChecked={a.forms.includes("feed")} />通常(写真)</label>
+                    <label className="flex items-center gap-1"><input type="checkbox" name="forms" value="reel" defaultChecked={a.forms.includes("reel")} />リール(店舗の動画)</label>
+                    {a.platform === "instagram" && <label className="flex items-center gap-1"><input type="checkbox" name="forms" value="story" defaultChecked={a.forms.includes("story")} />ストーリーズ(店舗の写真)</label>}
+                  </div>
+                  <p className="mt-1 font-normal text-[11px] text-slate-500">リールは掲載店舗の縦動画から、ストーリーズは店舗の写真から作ります(ストーリーズは24時間で消え、APIでは文章・リンクを付けられません)。全部外すと通常のみ。</p>
+                </fieldset>
                 <div className="grid grid-cols-2 gap-2">
                   <label className="text-xs font-semibold text-slate-700">時刻(日本時間)<input name="run_hour_jst" type="number" min="0" max="23" defaultValue={a.run_hour_jst} className={`${input} mt-1`} /></label>
                   <label className="text-xs font-semibold text-slate-700">1日の上限<input name="daily_max" type="number" min="1" max="3" defaultValue={a.daily_max} className={`${input} mt-1`} /></label>

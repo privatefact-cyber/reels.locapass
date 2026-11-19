@@ -12,7 +12,7 @@ import { checkSocialTokens, refreshSocialTokens } from "@/lib/social/tokens";
 import { runSocialApiAudit } from "@/lib/social/apiAudit";
 import { composeDraftWithScene, fanOutDraft, prepareCompose, saveReelDraft, type ComposeInput } from "@/lib/social/threadsPosts";
 import { generateAiImage } from "@/lib/social/socialImages";
-import { saveAutomationSetting, type AutomationMode, type AutomationSource } from "@/lib/social/socialAutomation";
+import { saveAutomationSetting, type AutomationMode, type AutomationForm, type AutomationSource } from "@/lib/social/socialAutomation";
 import { createUploadedVideoDraft, createVideoDraft, createImageDraft, createManualThreadsPost, createThreadsDraft, discardThreadsDraft, publishThreadsDraft, scheduleThreadsPost, setThreadsDraftImage, updateThreadsPostBody } from "@/lib/social/threadsPosts";
 
 function back(kind: "ok" | "error", message: string, posting?: string[]): never {
@@ -47,6 +47,7 @@ export async function saveAutomation(platform: "threads" | "instagram", account:
       enabled: formData.get("enabled") === "on",
       mode: (formData.get("mode") === "auto" ? "auto" : "draft") as AutomationMode,
       source: (formData.get("source") === "research" ? "research" : formData.get("source") === "ai" ? "ai" : "shop") as AutomationSource,
+      forms: formData.getAll("forms").map(String) as AutomationForm[],
       run_hour_jst: Number(formData.get("run_hour_jst") ?? 12),
       daily_max: Number(formData.get("daily_max") ?? 1),
       emergency_stop: formData.get("emergency_stop") === "on",
