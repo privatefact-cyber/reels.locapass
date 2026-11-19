@@ -11,7 +11,7 @@ import { getActiveBoosts } from "@/lib/boost/getBoosts";
 import { boostText } from "@/lib/boost/text";
 import { JsonLd } from "@/components/JsonLd";
 import { AreaCategoryLinks } from "@/components/home/AreaCategoryLinks";
-import { OverseasEntrance } from "@/components/home/OverseasEntrance";
+import { SiteAnnouncement } from "@/components/home/SiteAnnouncement";
 
 export const revalidate = 60;
 
@@ -45,7 +45,8 @@ export default async function TopPage() {
           黒×ゴールドのコンパクトな見せ方で出す。1件も無ければ/×で閉じたら何も表示しない。 */}
       <FeaturedSection shops={featuredShops} />
 
-      {(locale === "ja" || locale === "en") && <OverseasEntrance locale={locale} />}
+      {/* サイトのお知らせ(管理画面トップで編集。本文が空なら何も出さない) */}
+      <SiteAnnouncement />
 
       {boosts.length > 0 && (
         <Link

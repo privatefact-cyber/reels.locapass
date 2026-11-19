@@ -416,3 +416,16 @@ export async function setSiteTheme(theme: SiteTheme | null) {
   // 公開サイト全体(ルートレイアウト)に即時反映する
   revalidatePath("/", "layout");
 }
+
+/** locapass のトップに出す「サイトのお知らせ」。本文が空なら非表示(削除)。リンク先は https:// かサイト内パスのみ。 */
+export async function setSiteAnnouncement(text: string, url: string) {
+  await requireRootAdmin();
+  const t = String(text ?? "").trim();
+  const u = String(url ?? "").trim();
+  if (t.length > 500) throw new Error("本文は500文字までです");
+  if (u && !/^https?:\/\//.test(u) && !/^\/[^/]/.test(u)) throw new Error("リンク先は https:// で始まるURLか、/events のようなサイト内パスで入力してください");
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("locapass_set_announcement", { p_text: t, p_url: u });
+  if (error) throw new Error(`お知らせの保存に失敗しました: ${error.message}`);
+  revalidatePath("/", "layout");
+}

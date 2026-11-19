@@ -3319,6 +3319,8 @@ export type Database = {
           featured_section_enabled: boolean
           id: boolean
           locapass_machi_no_koe_beta_enabled: boolean
+          locapass_announcement: string | null
+          locapass_announcement_url: string | null
           locapass_site_theme: string | null
           machi_no_koe_beta_enabled: boolean
           site_theme: string | null
@@ -3328,6 +3330,8 @@ export type Database = {
           featured_section_enabled?: boolean
           id?: boolean
           locapass_machi_no_koe_beta_enabled?: boolean
+          locapass_announcement?: string | null
+          locapass_announcement_url?: string | null
           locapass_site_theme?: string | null
           machi_no_koe_beta_enabled?: boolean
           site_theme?: string | null
@@ -3337,6 +3341,8 @@ export type Database = {
           featured_section_enabled?: boolean
           id?: boolean
           locapass_machi_no_koe_beta_enabled?: boolean
+          locapass_announcement?: string | null
+          locapass_announcement_url?: string | null
           locapass_site_theme?: string | null
           machi_no_koe_beta_enabled?: boolean
           site_theme?: string | null
@@ -5239,6 +5245,7 @@ export type Database = {
         Args: { p_enabled: boolean }
         Returns: undefined
       }
+      locapass_set_announcement: { Args: { p_text: string; p_url: string }; Returns: undefined }
       locapass_set_site_theme: { Args: { p_theme: string }; Returns: undefined }
       locapass_set_staff_login_pin: {
         Args: { p_staff_member_id: string }

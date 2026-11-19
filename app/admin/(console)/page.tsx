@@ -9,6 +9,7 @@ import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusT
 import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
 import { ContactStatsToggle } from "@/components/admin/ContactStatsToggle";
 import { SiteThemeSelector } from "@/components/admin/SiteThemeSelector";
+import { SiteAnnouncementEditor } from "@/components/admin/SiteAnnouncementEditor";
 import { isSiteTheme, resolveSiteTheme } from "@/lib/theme";
 import { LoginUrlCard } from "@/components/locapass-dashboard/LoginUrlCard";
 import { ConciergeBetaMetrics } from "@/components/admin/ConciergeBetaMetrics";
@@ -68,12 +69,14 @@ export default async function AdminShopsPage({
       : portalIds.length
         ? supabase.from("locapass_portal_admins").select("portal_id").in("portal_id", portalIds)
         : Promise.resolve({ data: [] as { portal_id: number }[] }),
-    supabase.from("platform_settings").select("locapass_machi_no_koe_beta_enabled, locapass_site_theme").eq("id", true).maybeSingle(),
+    supabase.from("platform_settings").select("locapass_machi_no_koe_beta_enabled, locapass_site_theme, locapass_announcement, locapass_announcement_url").eq("id", true).maybeSingle(),
   ]);
   const machiNoKoeEnabled = settings?.locapass_machi_no_koe_beta_enabled ?? false;
   // 店舗ダッシュボードの「経由の連絡」カードの表示(別に読んで、列が無い間も他の設定の読み込みを壊さない)。
   const { data: contactStatsSetting } = await (supabase as any).from("platform_settings").select("locapass_contact_stats_visible").eq("id", true).maybeSingle();
   const contactStatsVisible = Boolean(contactStatsSetting?.locapass_contact_stats_visible);
+  const announcementText = settings?.locapass_announcement ?? "";
+  const announcementUrl = settings?.locapass_announcement_url ?? "";
   const siteTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
 
   // 登録ユーザー数(locapass_members)。会員はポータルに紐づかず、運営者でも本人の行しかRLSで読めないため、
@@ -207,6 +210,16 @@ export default async function AdminShopsPage({
             </p>
           </div>
           <SiteThemeSelector current={siteTheme} effective={resolveSiteTheme("/", siteTheme)} />
+        </div>
+      )}
+
+      {scope.portalIds === null && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-sm font-bold text-slate-900">サイトのお知らせ</h2>
+          <p className="mt-1 mb-4 text-xs text-slate-500">
+            公開サイトのトップに出るお知らせ。本文を書いて「公開する」で表示、書き換えて「更新する」で編集、「削除する」で消せる。本文が空のときは、トップには何も表示されない(日本語のみ)。
+          </p>
+          <SiteAnnouncementEditor initialText={announcementText} initialUrl={announcementUrl} />
         </div>
       )}
 
