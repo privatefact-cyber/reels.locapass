@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /*
- * サイト全体の配色テーマ。<html data-theme="default|christmas|beauty"> を切り替えるだけで色が一括で変わる。
+ * サイト全体の配色テーマ。<html data-theme="default|christmas|beauty|nature|cafe|coastal|pure"> を切り替えるだけで色が一括で変わる。
  * - 値は "R G B"。Tailwind側で rgb(var(...) / 透明度) として使うので、/20 などの透過指定は各テーマ共通のまま効く。
  * - default は従来の実際の色(黒/白/neutral/zinc/amber/gold)とまったく同じ値。見た目は1pxも変わらない。
  * - tone = 旧 neutral、panel = 旧 zinc、hl = 旧 amber の段階ごとの置き換え先。
@@ -258,6 +258,99 @@
   --panel-800: 39 39 42; --panel-900: 24 24 27; --panel-950: 9 9 11;
   --hl-50: 240 243 250; --hl-100: 226 231 244; --hl-200: 196 206 230; --hl-300: 160 175 215; --hl-400: 120 138 190;
   --hl-500: 72 94 160; --hl-600: 48 72 140; --hl-700: 36 56 116; --hl-800: 27 42 92; --hl-900: 20 34 80; --hl-950: 12 20 50;
+}
+
+/* コースタル・エディトリアル(クールな白×シーグラス。旅雑誌のようなすっきり透明感) */
+[data-theme="coastal"] {
+  --cta-300: 140 186 177; --cta-400: 110 163 153; --cta-500: 84 140 130; --cta-600: 62 112 103;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 84 140 130; --cta-gold-light: 110 163 153; --cta-gold-dark: 62 112 103;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 140 186 177;
+  --color-glow-2-scale: 0.4;
+  --color-on-accent: 255 255 255;
+  --color-header: 234 241 239; /* #EAF1EF */
+  --color-header-glow-1: 255 255 255;
+  --color-header-glow-2: 244 248 247;
+  --color-header-glow-3: 200 222 217;
+  --color-bg-base: 244 248 247; /* #F4F8F7 */
+  --color-bg-surface: 255 255 255;
+  --color-text-main: 37 52 50; /* #253432 */
+  --color-text-muted: 106 125 121;
+  --color-accent: 84 140 130; /* #548C82 */
+  --color-accent-light: 110 163 153;
+  --color-accent-dark: 62 112 103;
+  --color-border: 84 140 130;
+  --color-border-scale: 1.4;
+  --color-glow: 84 140 130;
+  --color-glow-scale: 1;
+
+  --tone-50: 24 36 34; --tone-100: 37 52 50; --tone-200: 58 76 72; --tone-300: 88 108 103;
+  --tone-500: 128 146 142; --tone-600: 164 178 174; --tone-700: 212 224 221; --tone-800: 234 241 239; --tone-950: 255 255 255;
+  --panel-400: 106 125 121; --panel-500: 128 146 142; --panel-600: 164 178 174; --panel-700: 212 224 221;
+  --panel-800: 234 241 239; --panel-900: 255 255 255; --panel-950: 244 248 247;
+  --hl-50: 20 40 36; --hl-100: 37 70 64; --hl-200: 52 98 90; --hl-300: 62 112 103; --hl-400: 72 126 116;
+  --hl-500: 84 140 130; --hl-600: 110 163 153; --hl-700: 150 194 186; --hl-800: 200 224 219; --hl-900: 226 240 237; --hl-950: 240 247 245;
+}
+
+/* ピュアホワイト×シャンパンゴールド(余白と写真が映える、潔くプレミアムな純白ベース) */
+[data-theme="pure"] {
+  --cta-300: 214 184 126; --cta-400: 196 160 98; --cta-500: 178 138 71; --cta-600: 146 110 52;
+  --color-on-cta: 255 255 255;
+  --cta-gold: 178 138 71; --cta-gold-light: 196 160 98; --cta-gold-dark: 146 110 52;
+  --color-on-cta-gold: 255 255 255;
+  --color-glow-2: 214 184 126;
+  --color-glow-2-scale: 0.4;
+  --color-on-accent: 255 255 255;
+  --color-header: 255 255 255;
+  --color-header-glow-1: 255 255 255;
+  --color-header-glow-2: 250 250 249;
+  --color-header-glow-3: 232 220 196;
+  --color-bg-base: 255 255 255; /* #FFFFFF */
+  --color-bg-surface: 250 250 249; /* #FAFAF9 */
+  --color-text-main: 36 38 34; /* #242622 */
+  --color-text-muted: 112 114 108;
+  --color-accent: 178 138 71; /* #B28A47 */
+  --color-accent-light: 196 160 98;
+  --color-accent-dark: 146 110 52;
+  --color-border: 120 120 110;
+  --color-border-scale: 1.2;
+  --color-glow: 178 138 71;
+  --color-glow-scale: 1;
+
+  --tone-50: 26 28 24; --tone-100: 36 38 34; --tone-200: 58 60 55; --tone-300: 88 90 84;
+  --tone-500: 130 132 126; --tone-600: 168 170 164; --tone-700: 214 214 210; --tone-800: 232 232 229; --tone-950: 250 250 249;
+  --panel-400: 112 114 108; --panel-500: 130 132 126; --panel-600: 168 170 164; --panel-700: 214 214 210;
+  --panel-800: 232 232 229; --panel-900: 250 250 249; --panel-950: 255 255 255;
+  --hl-50: 46 34 14; --hl-100: 82 62 26; --hl-200: 112 84 36; --hl-300: 146 110 52; --hl-400: 162 124 60;
+  --hl-500: 178 138 71; --hl-600: 196 160 98; --hl-700: 214 184 126; --hl-800: 232 212 170; --hl-900: 244 234 210; --hl-950: 250 245 232;
+}
+
+/* coastal / pure の写真・動画の上(カードのサムネ、リール、地図)は、白地テーマでも文字は白、暗い配色のまま(cafe・beauty と同じ考え方)。 */
+[data-theme="coastal"] [data-surface="media"],
+[data-theme="coastal"][data-surface="media"],
+[data-theme="pure"] [data-surface="media"],
+[data-theme="pure"][data-surface="media"] {
+  --color-bg-base: 0 0 0;
+  --color-bg-surface: 23 23 23;
+  --color-text-main: 255 255 255;
+  --color-text-muted: 163 163 163;
+  --tone-50: 250 250 250; --tone-100: 245 245 245; --tone-200: 229 229 229; --tone-300: 212 212 212;
+  --tone-500: 115 115 115; --tone-600: 82 82 82; --tone-700: 64 64 64; --tone-800: 38 38 38; --tone-950: 10 10 10;
+  --panel-400: 161 161 170; --panel-500: 113 113 122; --panel-600: 82 82 91; --panel-700: 63 63 70;
+  --panel-800: 39 39 42; --panel-900: 24 24 27; --panel-950: 9 9 11;
+}
+[data-theme="coastal"] [data-surface="media"],
+[data-theme="coastal"][data-surface="media"] {
+  --color-accent: 150 194 186; --color-accent-light: 200 224 219; --color-accent-dark: 84 140 130; --color-on-accent: 0 0 0;
+  --hl-50: 240 247 245; --hl-100: 226 240 237; --hl-200: 200 224 219; --hl-300: 170 208 200; --hl-400: 150 194 186;
+  --hl-500: 110 163 153; --hl-600: 84 140 130; --hl-700: 62 112 103; --hl-800: 52 98 90; --hl-900: 37 70 64; --hl-950: 20 40 36;
+}
+[data-theme="pure"] [data-surface="media"],
+[data-theme="pure"][data-surface="media"] {
+  --color-accent: 214 184 126; --color-accent-light: 232 212 170; --color-accent-dark: 178 138 71; --color-on-accent: 0 0 0;
+  --hl-50: 250 245 232; --hl-100: 244 234 210; --hl-200: 232 212 170; --hl-300: 214 184 126; --hl-400: 196 160 98;
+  --hl-500: 178 138 71; --hl-600: 146 110 52; --hl-700: 112 84 36; --hl-800: 82 62 26; --hl-900: 46 34 14; --hl-950: 30 22 8;
 }
 
 /* tone-400 / tone-900 は muted / surface と同じ色 */
