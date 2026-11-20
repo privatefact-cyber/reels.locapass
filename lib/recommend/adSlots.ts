@@ -21,10 +21,12 @@ export const AD_SLOT_SIZES: Record<AdSlotPosition, { width: number; height: numb
   bottom: { width: 320, height: 100, label: "横長バナー" },
 };
 
-/** preview は URL の ?ad_preview= の値。"1"=ダミー / "live"=自社の中身。 */
-export function adSlotMode(preview: string | undefined): AdSlotMode {
+/** preview は URL の ?ad_preview= の値。"1"=ダミー / "live"=自社の中身。dbLive は管理画面のスイッチ。 */
+export function adSlotMode(preview: string | undefined, dbLive = false): AdSlotMode {
   if (preview === "live") return "live";
   if (preview === "1") return "placeholder";
+  // 管理画面(トップ)のスイッチ。オンなら全体で出す。
+  if (dbLive) return "live";
   const env = process.env.AD_SLOT_MODE;
   if (env === "live") return "live";
   if (env === "placeholder") return "placeholder";

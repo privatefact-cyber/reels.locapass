@@ -9,6 +9,7 @@ import { LocapassShopStatusToggle } from "@/components/admin/LocapassShopStatusT
 import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
 import { ContactStatsToggle } from "@/components/admin/ContactStatsToggle";
 import { SiteThemeSelector } from "@/components/admin/SiteThemeSelector";
+import { AdSlotSwitch } from "@/components/admin/AdSlotSwitch";
 import { SiteAnnouncementEditor } from "@/components/admin/SiteAnnouncementEditor";
 import { isSiteTheme, resolveSiteTheme } from "@/lib/theme";
 import { LoginUrlCard } from "@/components/locapass-dashboard/LoginUrlCard";
@@ -75,6 +76,8 @@ export default async function AdminShopsPage({
   // 店舗ダッシュボードの「経由の連絡」カードの表示(別に読んで、列が無い間も他の設定の読み込みを壊さない)。
   const { data: contactStatsSetting } = await (supabase as any).from("platform_settings").select("locapass_contact_stats_visible").eq("id", true).maybeSingle();
   const contactStatsVisible = Boolean(contactStatsSetting?.locapass_contact_stats_visible);
+  const { data: adSlotSetting } = await (supabase as any).from("platform_settings").select("locapass_ad_slot_mode").eq("id", true).maybeSingle();
+  const adSlotLive = adSlotSetting?.locapass_ad_slot_mode === "live";
   const announcementText = settings?.locapass_announcement ?? "";
   const announcementUrl = settings?.locapass_announcement_url ?? "";
   const siteTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
@@ -197,6 +200,19 @@ export default async function AdminShopsPage({
           <div className="w-full">
             <ConciergeBetaMetrics />
           </div>
+        </div>
+      )}
+
+      {scope.portalIds === null && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-bold text-slate-900">店舗ページの広告枠</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              オンにすると、無料プランの店舗ページに、広告枠(ロカわんの案内・掲載店向けの案内・最新の特集)が出る。有料プランの店舗ページには出ない。
+              表示と、タップされた回数は自動で記録される。オフでも、URLの末尾に ?ad_preview=live を付ければ、自分だけ確認できる。
+            </p>
+          </div>
+          <AdSlotSwitch enabled={adSlotLive} />
         </div>
       )}
 

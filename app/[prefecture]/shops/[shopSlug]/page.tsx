@@ -437,7 +437,10 @@ export default async function ShopDetailPage({
   const showsPromoSlot = shopShowsPromoSlot(shopRow.plan);
   const relatedShops = showsPromoSlot ? await getRelatedShops(supabase, shopId, { limit: 6 }) : [];
   // 広告枠の土台(いまはダミー表示だけ)。おすすめ枠と同じく、有料掲載の店舗ページには出さない。
-  const adMode = showsPromoSlot ? adSlotMode(adPreview) : "off";
+  const { data: adSlotSetting } = showsPromoSlot
+    ? await (supabase as any).from("platform_settings").select("locapass_ad_slot_mode").eq("id", true).maybeSingle()
+    : { data: null };
+  const adMode = showsPromoSlot ? adSlotMode(adPreview, adSlotSetting?.locapass_ad_slot_mode === "live") : "off";
   const petOk = shopAttributes.some((a) => (PET_ATTRIBUTE_KEYS as readonly string[]).includes(a.key));
   const adCtx = { shopId, locale, petOk };
   const [adMid, adBottom] =

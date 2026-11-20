@@ -393,6 +393,16 @@ export async function setMachiNoKoeBetaEnabled(enabled: boolean) {
   revalidatePath("/admin");
 }
 
+/** 店舗ページの広告枠(自社告知・編集枠)を、無料掲載の店舗ページに出すかどうか。スーパー管理者のみ。 */
+export async function setAdSlotLive(enabled: boolean) {
+  await requireRootAdmin();
+  const supabase = await createClient();
+  const { error } = await (supabase as any).rpc("locapass_set_ad_slot_mode", { p_mode: enabled ? "live" : "off" });
+  if (error) throw new Error(`広告枠の設定変更に失敗しました: ${error.message}`);
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
+}
+
 /**
  * 店舗ダッシュボードの「LOCAPASS経由の連絡」カードを、店舗に見せるかどうか。スーパー管理者のみ。オフでも集計(連絡ボタンの押下回数)は続く。
  * platform_settings はLUXELAと共通のテーブルなので、locapass用の列だけをRPC経由で切り替える。
