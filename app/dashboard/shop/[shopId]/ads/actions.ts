@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { assertAdBanner } from "@/lib/recommend/adBanner";
 import { translateFields } from "@/lib/i18n/contentTranslation";
 import { containsNgWord } from "@/lib/reels/ngWords";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
 const MAX_CARDS_PER_SHOP = 3;
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 /** ADオプションを使えないプラン。 */
 const EXCLUDED_PLANS = ["free", "lite"];
 
@@ -54,8 +54,8 @@ function parse(formData: FormData, ownPath: string): Parsed {
 
 async function uploadImage(admin: any, shopId: string, file: FormDataEntryValue | null): Promise<string | null> {
   if (!(file instanceof File) || file.size === 0) return null;
-  if (!file.type.startsWith("image/")) throw new Error("画像ファイルを選んでください");
-  if (file.size > MAX_IMAGE_BYTES) throw new Error("画像が大きすぎます(上限4MB)");
+  // 規格(サイズ・形式・容量)に合わない画像は弾く。
+  await assertAdBanner(file);
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "jpg";
   const path = `cards/${shopId}/${Date.now()}.${ext}`;
   const { error } = await admin.storage.from("locapass-ads").upload(path, file, { contentType: file.type });

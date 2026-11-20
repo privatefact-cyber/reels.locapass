@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ResizingImageInput } from "@/components/admin/ResizingImageInput";
+import { AdBannerInput } from "@/components/admin/AdBannerInput";
 import { createShopAdCard, deleteShopAdCard, setShopAdCardActive, updateShopAdCard } from "./actions";
 
 type Card = {
@@ -52,7 +52,7 @@ function Fields({ card }: { card?: Card }) {
       </div>
       <div>
         <label className={labelCls}>画像(任意)</label>
-        <ResizingImageInput name="image" className="mt-1 block w-full text-sm text-slate-700" />
+        <AdBannerInput name="image" className="mt-1 block w-full text-sm text-slate-700" />
         {card?.image_url && (
           <div className="mt-2 flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}

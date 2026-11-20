@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createClient } from "@/lib/supabase/server";
+import { assertAdBanner } from "@/lib/recommend/adBanner";
 import { translateFields } from "@/lib/i18n/contentTranslation";
 
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 type Parsed = {
   title: string;
@@ -63,8 +63,8 @@ function parse(formData: FormData): Parsed {
 
 async function uploadImage(file: FormDataEntryValue | null): Promise<string | null> {
   if (!(file instanceof File) || file.size === 0) return null;
-  if (!file.type.startsWith("image/")) throw new Error("画像ファイルを選んでください");
-  if (file.size > MAX_IMAGE_BYTES) throw new Error("画像が大きすぎます(上限4MB)");
+  // 規格(サイズ・形式・容量)に合わない画像は弾く。
+  await assertAdBanner(file);
   const supabase = await createClient();
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "jpg";
   const path = `cards/${Date.now()}.${ext}`;

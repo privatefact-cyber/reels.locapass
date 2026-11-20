@@ -1,7 +1,7 @@
 import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ResizingImageInput } from "@/components/admin/ResizingImageInput";
+import { AdBannerInput } from "@/components/admin/AdBannerInput";
 import { approveAdCard, createAdCard, deleteAdCard, rejectAdCard, setAdCardActive, updateAdCard } from "./actions";
 
 type Card = {
@@ -70,8 +70,8 @@ function Fields({ card }: { card?: Card }) {
         </div>
       </div>
       <div>
-        <label className={labelCls}>画像(任意・正方形に近いものがきれいです)</label>
-        <ResizingImageInput name="image" className="mt-1 block w-full text-sm text-slate-700" />
+        <label className={labelCls}>画像(任意)</label>
+        <AdBannerInput name="image" className="mt-1 block w-full text-sm text-slate-700" />
         {card?.image_url && (
           <div className="mt-2 flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
