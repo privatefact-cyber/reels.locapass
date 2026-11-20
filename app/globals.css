@@ -683,12 +683,6 @@ summary {
 }
 
 
-/* リールの縦スワイプ一覧(通常表示)では、ページ全体をカードの頭でカチッと止める(ReelFeedが html[data-reel-snap] と --reel-snap-top を付ける)。 */
-html[data-reel-snap="1"] {
-  scroll-snap-type: y mandatory;
-  scroll-padding-top: var(--reel-snap-top, 0px);
-}
-
 /* リールの全画面スワイプ中(ReelFeedが body[data-immersive="1"] を付ける)は、
    ヘッダー・ボトムナビ・AIボタンを隠して、画面いっぱいにリールだけを出す。 */
 body[data-immersive="1"] [data-chrome] {

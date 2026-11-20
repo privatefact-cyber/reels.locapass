@@ -912,23 +912,6 @@ export function ReelFeed({
     overlayItemRefs.current[activeIndexRef.current]?.scrollIntoView({ behavior: "auto", block: "start" });
   }, [immersive]);
 
-  // 通常表示(ヘッダーが見えるまま)の縦スワイプ一覧でも、インスタのようにカードの頭でカチッと止める。
-  // ページ全体(html)に scroll-snap を付け、固定ヘッダーの高さぶんだけ上に余白(scroll-padding-top)を取る。一覧を閉じたら外す。
-  useEffect(() => {
-    if (openIndex === null || immersive) return;
-    const root = document.documentElement;
-    const header = document.querySelector<HTMLElement>("header[data-chrome]");
-    const measure = () => root.style.setProperty("--reel-snap-top", `${header ? Math.round(header.getBoundingClientRect().height) : 0}px`);
-    measure();
-    root.dataset.reelSnap = "1";
-    window.addEventListener("resize", measure);
-    return () => {
-      window.removeEventListener("resize", measure);
-      delete root.dataset.reelSnap;
-      root.style.removeProperty("--reel-snap-top");
-    };
-  }, [openIndex, immersive]);
-
   useEffect(() => {
     if (openIndex === null) return;
     function onKeyDown(e: KeyboardEvent) {
@@ -1215,7 +1198,7 @@ export function ReelFeed({
               className={`relative mx-auto w-full overflow-hidden bg-black ${
                 immersive
                   ? "h-[100dvh] snap-start snap-always md:flex md:items-center md:justify-center"
-                  : `snap-start snap-always md:flex md:h-[85dvh] md:[@media(max-height:500px)]:h-[100dvh] md:items-center md:justify-center ${mounted ? "" : "aspect-[9/16] md:aspect-auto"}`
+                  : `md:flex md:h-[85dvh] md:[@media(max-height:500px)]:h-[100dvh] md:items-center md:justify-center ${mounted ? "" : "aspect-[9/16] md:aspect-auto"}`
               }`}
             >
               {!mounted ? null : tile.kind === "cast" ? (
