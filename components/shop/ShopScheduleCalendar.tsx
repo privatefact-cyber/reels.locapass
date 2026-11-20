@@ -1,5 +1,6 @@
 "use client";
 
+import { currentMapStyle } from "@/lib/mapTheme";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
@@ -10,8 +11,6 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, Navigation } fr
 export type ScheduleSpot = { id: string; address: string | null; lat: number; lng: number; startsAt: string; endsAt: string; note: string | null };
 
 /** 白地のスキン(cafe・beauty・coastal・pure)では明るい地図、それ以外は暗い地図。 */
-const MAP_STYLE_LIGHT = "https://tiles.openfreemap.org/styles/positron";
-const MAP_STYLE_DARK = "https://tiles.openfreemap.org/styles/dark";
 
 /** ISO文字列 → JSTの日付キー(YYYY-MM-DD)。 */
 function jstKey(iso: string | number): string {
@@ -64,7 +63,7 @@ export function ShopScheduleCalendar({ spots, routeLabel, eventMode = false }: {
   const markers = useRef<maplibregl.Marker[]>([]);
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = new maplibregl.Map({ container: mapEl.current, style: ["cafe", "beauty", "coastal", "pure", "warm", "botanical", "newyork", "london"].includes(document.documentElement.getAttribute("data-theme") ?? "") ? MAP_STYLE_LIGHT : MAP_STYLE_DARK, center: [spots[0].lng, spots[0].lat], zoom: 14, attributionControl: false, cooperativeGestures: true });
+    const map = new maplibregl.Map({ container: mapEl.current, style: currentMapStyle(), center: [spots[0].lng, spots[0].lat], zoom: 14, attributionControl: false, cooperativeGestures: true });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     const ro = new ResizeObserver(() => map.resize());
     ro.observe(mapEl.current);

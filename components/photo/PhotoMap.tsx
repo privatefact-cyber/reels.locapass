@@ -1,5 +1,6 @@
 "use client";
 
+import { currentMapStyle } from "@/lib/mapTheme";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as maplibreNs from "maplibre-gl";
@@ -14,7 +15,6 @@ import { photoResized, photoRouteUrl } from "@/components/photo/photoUtils";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 // /map(VenueMapExplorer)と同じダーク地図・金色のピン・下のカードの見た目に揃えてある。
-const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const SOURCE_ID = "photo-spots";
 const POINT_LAYER = "photo-spot-points";
 const COUNT_LAYER = "photo-spot-count";
@@ -240,7 +240,7 @@ export function PhotoMap({
 
     const map = new maplibregl.Map({
       container,
-      style: MAP_STYLE_URL,
+      style: currentMapStyle(),
       center: [spots[0].lng, spots[0].lat],
       zoom: 14,
       attributionControl: false,

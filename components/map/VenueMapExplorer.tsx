@@ -1,5 +1,6 @@
 "use client";
 
+import { currentMapStyle } from "@/lib/mapTheme";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
@@ -21,7 +22,6 @@ import { PlacePhotoCredit } from "@/components/shop/PlacePhotoCredit";
 import { shopPath } from "@/lib/locapass/publicUrls";
 import { VenueDetailSheet } from "@/components/map/VenueDetailSheet";
 
-const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const SOURCE_ID = "venues";
 const CLUSTER_LAYER = "venue-clusters";
 const CLUSTER_COUNT_LAYER = "venue-cluster-count";
@@ -379,7 +379,7 @@ export function VenueMapExplorer({
       // 背景がほぼ黒(rgb(12,12,12))のナイトモード地図をズーム19相当まで使える
       // (CARTOの無料タイルはAPIキー必須化、Esriの無償ダークタイルはズーム16以上で
       //  "Map data not yet available"になるため、どちらも不採用)。
-      style: MAP_STYLE_URL,
+      style: currentMapStyle(),
       center,
       zoom: initialZoom ?? 15,
       attributionControl: false,
