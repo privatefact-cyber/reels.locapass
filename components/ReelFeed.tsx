@@ -187,7 +187,9 @@ const ABOVE_FOLD_TILES = 12;
 const HIGH_PRIORITY_TILES = 3;
 
 // 先頭フレーム表示用の<video>。画面外のタイルは、近づくまでsrcを付けず(動画のメタデータを取りに行かず)、
-// 最初の画面の通信をサムネイル画像に回す。画面の少し手前(300px)で読み始めるので、スクロール時に黒いままにはならない。
+// 最初の画面の通信をサムネイル画像に回す。ただし黒いまま・読み込みが遅れる状態を避けるため、
+//  - 画面の手前1500px(約3画面ぶん)に入ったら読み始める
+//  - 最初の画面の描画が落ち着いたら(ページ読み込み完了+アイドル時)、近づくのを待たずに残りも順に読み始める
 function FirstFrameVideo({ src, eager, style, className }: { src: string; eager: boolean; style: React.CSSProperties; className: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [armed, setArmed] = useState(eager);
@@ -198,17 +200,37 @@ function FirstFrameVideo({ src, eager, style, className }: { src: string; eager:
       setArmed(true);
       return;
     }
+    const arm = () => setArmed(true);
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setArmed(true);
+          arm();
           io.disconnect();
         }
       },
-      { rootMargin: "300px" },
+      { rootMargin: "1500px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    // 近づくのを待たずに、ページ読み込みの後のアイドル時に読み始める(タイルごとに少しずらして、通信が一度に集中しないようにする)。
+    let idleHandle: number | undefined;
+    let timer: number | undefined;
+    const schedule = () => {
+      const delay = 400 + Math.floor(Math.random() * 2500);
+      timer = window.setTimeout(() => {
+        const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+        if (ric) idleHandle = ric(arm, { timeout: 2000 });
+        else arm();
+      }, delay);
+    };
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener("load", schedule);
+      if (timer) window.clearTimeout(timer);
+      const cic = (window as unknown as { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback;
+      if (idleHandle !== undefined && cic) cic(idleHandle);
+    };
   }, [armed]);
   return (
     <video
