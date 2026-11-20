@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { ShopReelPostForm } from "@/components/locapass-dashboard/ShopReelPostForm";
 import { ShopEmbedSection } from "@/components/locapass-dashboard/ShopEmbedSection";
-import { deleteReel, hideReel, setMapPreviewReel } from "../actions";
+import { deleteReel, hideReel, repostReel, setMapPreviewReel } from "../actions";
 import { StreamThumb } from "@/components/video/StreamThumb";
 import { ReelCaptionEditButton } from "@/components/reels/ReelCaptionEditor";
 import { ReelTagEditButton } from "@/components/reels/ReelTagEditor";
@@ -38,7 +38,7 @@ export async function ReelsTab({
   const { data: reelRows } = await supabase
     .from("locapass_reels")
     .select(
-      "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, tags, shop_pinned_at, shop_sort_order, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
+      "id, caption, video_url, images, poster_url, like_count, published_at, updated_at, status, reel_type, author_name, tags, shop_pinned_at, shop_sort_order, embed_provider, locapass_cast_members ( name ), locapass_shop_staff_members ( name )",
     )
     .eq("shop_id", shop.id)
     // ダミー(イメージ映像)は店舗の投稿ではないので、管理画面の一覧・インサイトには出さない。
@@ -67,6 +67,7 @@ export async function ReelsTab({
       author_name: r.author_name,
       createdAt: r.published_at ?? r.updated_at ?? "",
       tags: (r.tags as string[] | null) ?? [],
+      isEmbed: Boolean(r.embed_provider),
       cast_members: r.locapass_cast_members,
       shop_staff_members: r.locapass_shop_staff_members,
     };
@@ -78,8 +79,9 @@ export async function ReelsTab({
   ).flatMap((r) => {
     const images = (r.images as { url: string }[] | null) ?? [];
     const type = r.video_url ? "video" : "image";
-    const url = r.video_url ?? images[0]?.url ?? r.poster_url;
-    if (!url) return [];
+    // 外部動画でサムネイルが無いもの(Instagramなど)も並べ替えの対象にする(urlは空のまま、タイルに仮表示)。
+    const url = r.video_url ?? images[0]?.url ?? r.poster_url ?? (r.embed_provider ? "" : null);
+    if (url === null) return [];
     return [{ id: r.id, type, url, label: r.caption?.trim().slice(0, 20) || "(説明なし)", pinned: Boolean(r.shop_pinned_at) } as OrderItem];
   });
 
@@ -212,6 +214,16 @@ export async function ReelsTab({
                     ))}
                 </div>
                 <div className="absolute right-1 top-1 flex gap-1">
+                  {r.status === "published" && r.isEmbed && (
+                    <form action={repostReel.bind(null, shop.id, r.id)}>
+                      <ConfirmSubmitButton
+                        message={"この動画を再投稿しますか?\n同じ動画(URLそのまま)が新着として先頭に上がります。重複して増えることはありません。"}
+                        className="rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white hover:bg-indigo-600"
+                      >
+                        再投稿
+                      </ConfirmSubmitButton>
+                    </form>
+                  )}
                   {r.status === "published" && (
                     <form action={hideReel.bind(null, shop.id, r.id)}>
                       <ConfirmSubmitButton

@@ -23,7 +23,9 @@ function Tile({ item, onTogglePin }: { item: OrderItem; onTogglePin: (id: string
       {...attributes}
       {...listeners}
     >
-      {item.type === "video" ? (
+      {!item.url ? (
+        <div className="pointer-events-none flex h-full w-full items-center justify-center bg-slate-200 text-[10px] font-semibold text-slate-500">外部動画</div>
+      ) : item.type === "video" ? (
         <StreamThumb url={item.url} className="pointer-events-none h-full w-full object-cover" />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element

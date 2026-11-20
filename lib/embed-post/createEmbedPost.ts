@@ -112,6 +112,23 @@ export async function createEmbedPostForShop(admin: Admin, shopId: string, formD
     });
     if (error) throw new Error(`イベントの保存に失敗しました: ${error.message}`);
   } else {
+    // 同じ店舗に同じ動画(同じURL)がすでにあるときは、新しく増やさず、既存のものを新着として上げ直す(非表示にしていたら再表示も)。
+    const { data: same } = await (admin as any)
+      .from("locapass_reels")
+      .select("id")
+      .eq("shop_id", shop.id)
+      .eq("embed_provider", video.provider)
+      .eq("embed_ref", video.ref)
+      .limit(1)
+      .maybeSingle();
+    if (same?.id) {
+      const patch: Record<string, unknown> = { status: "publish", hidden_at: null, hidden_reason: null, published_at: new Date().toISOString(), shop_sort_order: null };
+      if (text) patch.caption = text;
+      const { error: upErr } = await (admin as any).from("locapass_reels").update(patch).eq("id", same.id);
+      if (upErr) throw new Error(`リールの再投稿に失敗しました: ${upErr.message}`);
+      if (text) await refreshReelTranslation(admin as any, same.id).catch(() => undefined);
+      return;
+    }
     const { data: inserted, error } = await (admin as any).from("locapass_reels").insert({
       shop_id: shop.id,
       portal_id: shop.portal_id,

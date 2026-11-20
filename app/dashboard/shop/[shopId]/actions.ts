@@ -383,6 +383,29 @@ export async function deleteReel(shopId: string, reelId: string) {
 }
 
 /**
+ * 外部動画(エンベッド)を再投稿する(自店舗のものだけ)。新しいリールは作らず、同じ動画の投稿日を今にして新着として先頭へ上げる。
+ * URLも説明文もそのままなので、同じ動画が重複して増えることはない。店舗ページの手動の並び順(固定以外)も外れて先頭に来る。
+ */
+export async function repostReel(shopId: string, reelId: string) {
+  const supabase = await requireShopAccess(shopId);
+  const { data, error } = await supabase
+    .from("locapass_reels")
+    .update({ published_at: new Date().toISOString(), shop_sort_order: null })
+    .eq("id", reelId)
+    .eq("shop_id", shopId)
+    .eq("status", "publish")
+    .not("embed_provider", "is", null)
+    .select("id");
+
+  if (error || !data || data.length === 0) {
+    throw new Error(`再投稿に失敗しました: ${error?.message ?? "対象が見つかりません"}`);
+  }
+
+  revalidatePath(`/dashboard/shop/${shopId}/posts`);
+  revalidatePath("/");
+}
+
+/**
  * 書庫(非表示のストック)のリールを、再び公開する(自店舗のものだけ)。
  * 退店したパートナーのリールでも、店が判断して再表示できる(プラットフォームは使う/使わないを判断しない)。
  */
