@@ -68,6 +68,8 @@ import { getPublicShopAttributes } from "@/lib/verticals/shopAttributes";
 import { shopShowsPromoSlot } from "@/lib/recommend/slot";
 import { getRelatedShops } from "@/lib/recommend/shops";
 import { ShopRecommendSlot } from "@/components/shop/ShopRecommendSlot";
+import { ShopAdSlot } from "@/components/shop/ShopAdSlot";
+import { adSlotMode } from "@/lib/recommend/adSlots";
 import { ShopAttributeBadges } from "@/components/shop/ShopAttributeBadges";
 import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
@@ -160,10 +162,10 @@ export default async function ShopDetailPage({
   searchParams,
 }: {
   params: Promise<PageParams>;
-  searchParams: Promise<{ orig?: string }>;
+  searchParams: Promise<{ orig?: string; ad_preview?: string }>;
 }) {
   const resolvedParams = await params;
-  const { orig } = await searchParams;
+  const { orig, ad_preview: adPreview } = await searchParams;
   const { supabase, portal: site, shopRow, shopError } = await resolveShop(resolvedParams);
   const locale = await getServerLocale();
   const t = dictionaries[locale];
@@ -430,7 +432,10 @@ export default async function ShopDetailPage({
   // 属性(ペット同伴可・駐車場など)。オンの属性だけを出す(未設定を「不可」とは出さない)。
   const shopAttributes = await getPublicShopAttributes(supabase, shopId, locale);
   // 無料掲載の店舗ページにだけ「この近くのおすすめ」を出す(有料掲載では取得も表示もしない)。取得に失敗したら枠なしで表示する。
-  const relatedShops = shopShowsPromoSlot(shopRow.plan) ? await getRelatedShops(supabase, shopId, { limit: 6 }) : [];
+  const showsPromoSlot = shopShowsPromoSlot(shopRow.plan);
+  const relatedShops = showsPromoSlot ? await getRelatedShops(supabase, shopId, { limit: 6 }) : [];
+  // 広告枠の土台(いまはダミー表示だけ)。おすすめ枠と同じく、有料掲載の店舗ページには出さない。
+  const adMode = showsPromoSlot ? adSlotMode(adPreview === "1") : "off";
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")
@@ -858,6 +863,9 @@ export default async function ShopDetailPage({
           )}
         </section>
 
+        {/* 広告枠(基本情報の下)。無料掲載の店舗ページだけ */}
+        <ShopAdSlot position="mid" mode={adMode} />
+
         {/* 在庫車両(掲載アイテム) */}
         <ShopItemsSection items={shopItems} totalCount={shopItems.length} portalSlug={site.slug} shopSlug={shopRow.slug} officialUrl={shopRow.url} locale={locale} t={t.items} />
 
@@ -925,6 +933,9 @@ export default async function ShopDetailPage({
 
         {/* この近くのおすすめ(無料掲載の店舗ページだけ。有料の店が先に並び「PR」が付く) */}
         <ShopRecommendSlot items={relatedShops} title={t.shop.recommendTitle} prLabel={t.shop.recommendPr} />
+
+        {/* 広告枠(ページ最下部)。無料掲載の店舗ページだけ */}
+        <ShopAdSlot position="bottom" mode={adMode} />
       </div>
 
       {/* 店舗AI質問(有料オプション): 画面の下に常駐するチャット欄。下の余白は、最後のコンテンツが隠れないよう確保する。 */}
