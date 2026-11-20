@@ -23,9 +23,9 @@ const input = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm 
 const labelCls = "block text-sm font-semibold text-slate-700";
 
 const STATUS: Record<Card["status"], { text: string; cls: string }> = {
-  pending: { text: "承認待ち", cls: "bg-amber-100 text-amber-700" },
-  approved: { text: "承認済み", cls: "bg-emerald-100 text-emerald-700" },
-  rejected: { text: "承認されませんでした", cls: "bg-red-100 text-red-700" },
+  pending: { text: "運営の確認待ち", cls: "bg-amber-100 text-amber-700" },
+  approved: { text: "配信中", cls: "bg-emerald-100 text-emerald-700" },
+  rejected: { text: "配信停止(運営により)", cls: "bg-red-100 text-red-700" },
 };
 
 function Fields({ card }: { card?: Card }) {
@@ -132,8 +132,8 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
         <p className="text-xs text-slate-500">{shop.name}</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-900">広告カード</h1>
         <p className="mt-1 text-sm text-slate-600">
-          お店の広告を、同じエリアの無料掲載の店舗ページに出せます(カードは最大{MAX_CARDS}枚)。登録したカードは、運営が確認してから配信されます。
-          内容を直したときも、もう一度確認が入ります。
+          お店の広告を、同じエリアの無料掲載の店舗ページに出せます(カードは最大{MAX_CARDS}枚)。登録したカードは、すぐに配信されます。内容は、いつでも直せます。
+          運営が不適切と判断したカードは、配信を止めることがあります。
         </p>
       </section>
 
@@ -142,7 +142,7 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
           <p className="font-semibold text-emerald-800">いまは「自動カード」で配信中です</p>
           <p className="mt-1 text-xs">
             カードを登録しなくても、お店の名前・ひとこと・写真から作ったカードが、同じエリアの無料店ページに出ています(ボタンは「お店の詳細を見る」で、お店の詳細ページに飛びます)。
-            下でカードを登録すると、運営が承認した後は、そのカードに置き換わります(承認待ちの間も、自動カードで配信されます)。
+            下でカードを登録すると、そのカードに置き換わります。
           </p>
           {(() => {
             const a = stats.get(`auto:${shop.id}`) ?? { imp: 0, tap: 0 };
@@ -160,7 +160,7 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
           <h2 className="mb-3 text-sm font-semibold text-slate-900">カードを追加する</h2>
           <Fields />
           <button type="submit" className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-            登録して承認を依頼する
+            登録する
           </button>
         </form>
       )}
@@ -209,11 +209,11 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
                     </div>
                   </div>
                   <details className="mt-3 border-t border-slate-100 pt-3">
-                    <summary className="cursor-pointer text-xs font-semibold text-slate-700">内容を直す(もう一度確認が入ります)</summary>
+                    <summary className="cursor-pointer text-xs font-semibold text-slate-700">内容を直す</summary>
                     <form action={updateShopAdCard.bind(null, shop.id, c.id)} className="mt-3">
                       <Fields card={c} />
                       <button type="submit" className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-                        保存して承認を依頼する
+                        保存する
                       </button>
                     </form>
                   </details>

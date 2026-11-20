@@ -9,6 +9,13 @@ import { containsNgWord } from "@/lib/reels/ngWords";
 import { shopPath } from "@/lib/locapass/publicUrls";
 
 const MAX_CARDS_PER_SHOP = 3;
+/**
+ * true: 店舗が登録・編集したカードは、確認なしですぐ配信する(運営は、あとから見て止める)。
+ * false: 運営が承認するまで配信しない(承認制)。
+ * いずれの場合も、使えない言葉の確認・リンクは https のみ・画像の規格・PR表示は必ずかかる。
+ * 運営が却下したカードを直したときだけは、自動承認にせず、運営の確認に戻す。
+ */
+const AUTO_APPROVE = true;
 /** ADオプションを使えないプラン。 */
 const EXCLUDED_PLANS = ["free", "lite"];
 
@@ -88,7 +95,7 @@ export async function createShopAdCard(shopId: string, formData: FormData) {
     title: `${shop.name}`.slice(0, 100),
     placement: "both",
     shop_id: shopId,
-    status: "pending", // 運営の承認後に配信される
+    status: AUTO_APPROVE ? "approved" : "pending",
     is_active: true,
     sort_order: 100,
     image_url,
@@ -98,14 +105,18 @@ export async function createShopAdCard(shopId: string, formData: FormData) {
   refresh(shopId);
 }
 
-/** 内容を直すと、もう一度承認が必要になる(承認済みの内容と違うものが出ないように)。 */
+/** 内容を直したときの扱いは、AUTO_APPROVE と同じ(却下されたカードだけは運営の確認に戻る)。 */
 export async function updateShopAdCard(shopId: string, id: string, formData: FormData) {
   const { admin, ownPath } = await authorize(shopId);
   const p = parse(formData, ownPath);
   const newImage = await uploadImage(admin, shopId, formData.get("image"));
   const removeImage = formData.get("removeImage") === "on";
   const translations = await translate(p);
-  const patch: Record<string, unknown> = { ...p, translations, status: "pending", reject_reason: null, updated_at: new Date().toISOString() };
+  const { data: current } = await admin.from("locapass_ad_cards").select("status").eq("id", id).eq("shop_id", shopId).maybeSingle();
+  if (!current) throw new Error("カードが見つかりません");
+  // 運営が却下したカードは、直しても自動では配信せず、運営の確認に戻す。
+  const nextStatus = AUTO_APPROVE && current.status !== "rejected" ? "approved" : "pending";
+  const patch: Record<string, unknown> = { ...p, translations, status: nextStatus, reject_reason: null, updated_at: new Date().toISOString() };
   if (newImage) patch.image_url = newImage;
   else if (removeImage) patch.image_url = null;
   const { data, error } = await admin.from("locapass_ad_cards").update(patch).eq("id", id).eq("shop_id", shopId).select("id");
