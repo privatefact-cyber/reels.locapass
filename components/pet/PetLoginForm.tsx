@@ -28,6 +28,10 @@ export function PetLoginForm({ redirectTo, lineError }: { redirectTo: string; li
   const [inAndroid, setInAndroid] = useState(false);
   const [appleError, setAppleError] = useState<string | null>(null);
   useEffect(() => {
+    // 新規登録の「登録元=ロカわん」を記録するための目印(1時間)。LINE・Apple・メールのどの入口でも使える
+    try {
+      document.cookie = "lp_signup_src=pet; path=/; max-age=3600; samesite=lax";
+    } catch {}
     const ua = navigator.userAgent;
     setInAndroid(ua.includes("LocaWanAndroid"));
     setInApp(ua.includes("LocaWanApp") && !ua.includes("LocaWanAndroid"));

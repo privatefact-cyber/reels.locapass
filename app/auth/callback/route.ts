@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { APP_URL_SCHEME, appHandoffHtml } from "@/lib/auth/lineAppHandoff";
+import { resolveSignupSource } from "@/lib/auth/signupSource";
 
 /**
  * Supabase Auth標準のコールバック(PKCE/OAuthのcode交換)。
@@ -47,6 +48,7 @@ export async function GET(request: Request) {
           id: user.id,
           nickname: defaultNickname,
           avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
+          signup_source: await resolveSignupSource(redirectTo),
         });
       }
     }

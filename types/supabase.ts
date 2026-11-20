@@ -1481,6 +1481,7 @@ export type Database = {
           id: string
           last_login_at: string
           nickname: string
+          signup_source: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1491,6 +1492,7 @@ export type Database = {
           id: string
           last_login_at?: string
           nickname: string
+          signup_source?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1501,6 +1503,7 @@ export type Database = {
           id?: string
           last_login_at?: string
           nickname?: string
+          signup_source?: string | null
         }
         Relationships: []
       }

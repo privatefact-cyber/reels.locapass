@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { resolveSignupSource } from "@/lib/auth/signupSource";
 
 export async function requireCurrentUser(redirectTo = "/mypage") {
   const supabase = await createClient();
@@ -23,7 +24,7 @@ export async function requireCurrentUser(redirectTo = "/mypage") {
 
   if (!profile) {
     // 初回ログイン。locapass_membersに自分の行を作る(id=auth.users.id、RLSでid=auth.uid()のみ許可)。
-    await supabase.from("locapass_members").insert({ id: user.id, nickname: "ゲスト" });
+    await supabase.from("locapass_members").insert({ id: user.id, nickname: "ゲスト", signup_source: await resolveSignupSource(redirectTo) });
   }
 
   return {

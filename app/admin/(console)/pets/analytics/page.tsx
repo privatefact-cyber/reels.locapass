@@ -174,7 +174,9 @@ export default async function PetAnalyticsPage({ searchParams }: { searchParams:
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <Kpi v={u.pets} l="登録された犬" sub={plus(u.pets_new)} />
           <Kpi v={u.owners} l="飼い主(犬を登録した会員)" sub={`${plus(u.owners_new)} / 多頭飼い ${u.multi_pet_owners}`} />
-          <Kpi v={u.owners_joined_via_pet} l="ロカわんで会員になった人" sub="会員登録から24時間以内に犬を登録" />
+          <Kpi v={u.members_via_pet} l="ロカわんから会員登録した人" sub={`${plus(u.members_via_pet_new)} / 犬まで登録 ${u.members_via_pet_with_dog}人`} />
+          <Kpi v={u.members_via_locapass} l="LOCAPASS本体から会員登録した人" sub={`記録開始前の会員 ${u.members_unknown_source}人は区別不可`} />
+          <Kpi v={u.owners_joined_via_pet} l="(目安)登録直後に犬を登録した人" sub="会員登録から24時間以内に犬を登録・過去分を含む" />
           <Kpi v={u.gallery} l="うちの子自慢の投稿" sub={plus(u.gallery_new)} />
           <Kpi v={u.snap} l="snapにも投稿" sub={plus(u.snap_new)} />
           <Kpi v={u.likes} l="肉球" sub={plus(u.likes_new)} />
