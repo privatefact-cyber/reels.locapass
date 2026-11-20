@@ -1,12 +1,12 @@
 /** 店舗オプションの定義。運営の画面・店舗の画面・機能の制限は、すべてこの一覧から作る。オン/オフの実体は locapass_shops の column。 */
-export type ShopOptionKey = "embed" | "map_video" | "auto_video" | "ai_chat";
+export type ShopOptionKey = "embed" | "map_video" | "auto_video" | "ai_chat" | "ad";
 
 export type ShopOptionDef = {
   key: ShopOptionKey;
   label: string;
   description: string;
   /** locapass_shops 側の、オン/オフを持つ列。 */
-  column: "embed_enabled" | "map_video_enabled" | "auto_video_enabled" | "ai_chat_enabled";
+  column: "embed_enabled" | "map_video_enabled" | "auto_video_enabled" | "ai_chat_enabled" | "ad_option_enabled";
 };
 
 export const SHOP_OPTIONS: ShopOptionDef[] = [
@@ -33,6 +33,12 @@ export const SHOP_OPTIONS: ShopOptionDef[] = [
     label: "店舗AI質問",
     description: "マップのカードと店舗ページに、この店舗の登録情報だけで答えるAIの質問欄が出ます(ネットの情報は使いません)。営業時間・料金・今日のFACESなどを、お客様がその場で聞けます。質問の内容は、管理画面で見られます。",
     column: "ai_chat_enabled",
+  },
+  {
+    key: "ad",
+    label: "広告カード(ADオプション)",
+    description: "通常版以上の店舗が、自分の広告カード(最大3枚)を、同じエリアの無料掲載の店舗ページに出せます。登録したカードは運営の承認後に配信され、表示回数・タップ数は管理画面で見られます。",
+    column: "ad_option_enabled",
   },
 ];
 

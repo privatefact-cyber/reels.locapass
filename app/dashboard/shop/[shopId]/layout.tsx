@@ -45,6 +45,7 @@ const NAV_GROUPS: { title: string; items: { path: string; label: string; icon: s
     items: [
       { path: "/boost", label: "ブースト", icon: "⚡", description: "時間限定のお得情報をすぐ掲載" },
       { path: "/contract", label: "掲載プランの契約", icon: "📄", description: "プランの選択とご契約" },
+      { path: "/ads", label: "広告カード", icon: "🪧", description: "同じエリアの無料店ページに出す広告(ADオプション)" },
       { path: "/options", label: "オプション", icon: "🧩", description: "追加機能のオン・オフ" },
     ],
   },

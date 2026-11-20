@@ -440,7 +440,7 @@ export default async function ShopDetailPage({
     ? await (supabase as any).from("platform_settings").select("locapass_ad_slot_mode").eq("id", true).maybeSingle()
     : { data: null };
   const adMode = showsPromoSlot ? adSlotMode(adPreview, adSlotSetting?.locapass_ad_slot_mode === "live") : "off";
-  const ads = adMode === "live" ? await getAdCreatives({ shopId, locale }) : { mid: [], bottom: null };
+  const ads = adMode === "live" ? await getAdCreatives({ shopId, locale, portalId: shopRow.portal_id, category: (shopRow as { category?: string | null }).category ?? null }) : { mid: [], bottom: null };
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")

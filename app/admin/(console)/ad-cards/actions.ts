@@ -131,3 +131,34 @@ export async function deleteAdCard(id: string) {
   if (error) throw new Error(error.message);
   refresh();
 }
+
+/** 店舗が登録したカードを承認する。承認すると配信が始まる(店舗側が停止していなければ)。 */
+export async function approveAdCard(id: string) {
+  await requireRootAdmin();
+  const supabase = await createClient();
+  const { data, error } = await (supabase as any)
+    .from("locapass_ad_cards")
+    .update({ status: "approved", reject_reason: null, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .not("shop_id", "is", null)
+    .select("id");
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("カードが見つかりません");
+  refresh();
+}
+
+/** 店舗が登録したカードを却下する(理由は店舗の画面に出る)。 */
+export async function rejectAdCard(id: string, formData: FormData) {
+  await requireRootAdmin();
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 200) || null;
+  const supabase = await createClient();
+  const { data, error } = await (supabase as any)
+    .from("locapass_ad_cards")
+    .update({ status: "rejected", reject_reason: reason, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .not("shop_id", "is", null)
+    .select("id");
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("カードが見つかりません");
+  refresh();
+}

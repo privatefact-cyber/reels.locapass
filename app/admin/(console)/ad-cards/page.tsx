@@ -2,7 +2,7 @@ import { requireRootAdmin } from "@/lib/admin/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ResizingImageInput } from "@/components/admin/ResizingImageInput";
-import { createAdCard, deleteAdCard, setAdCardActive, updateAdCard } from "./actions";
+import { approveAdCard, createAdCard, deleteAdCard, rejectAdCard, setAdCardActive, updateAdCard } from "./actions";
 
 type Card = {
   id: string;
@@ -18,6 +18,11 @@ type Card = {
   sort_order: number;
   starts_at: string | null;
   ends_at: string | null;
+  shop_id: string | null;
+  status: "pending" | "approved" | "rejected";
+  reject_reason: string | null;
+  same_category_only: boolean;
+  shop: { name: string } | { name: string }[] | null;
 };
 
 const PLACEMENT_LABEL: Record<Card["placement"], string> = { mid: "上の枠(横スライド)", bottom: "下の枠(横長バナー)", both: "上の枠と下の枠" };
@@ -112,10 +117,14 @@ export default async function AdminAdCardsPage() {
   const supabase = await createClient();
   const { data } = await (supabase as any)
     .from("locapass_ad_cards")
-    .select("id, title, label, headline, body, cta, link_url, image_url, placement, is_active, sort_order, starts_at, ends_at")
+    .select("id, title, label, headline, body, cta, link_url, image_url, placement, is_active, sort_order, starts_at, ends_at, shop_id, status, reject_reason, same_category_only, shop:locapass_shops ( name )")
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
-  const cards = (data ?? []) as Card[];
+  const all = (data ?? []) as Card[];
+  const cards = all.filter((c) => !c.shop_id);
+  const shopCards = all.filter((c) => c.shop_id);
+  const pending = shopCards.filter((c) => c.status === "pending");
+  const shopName = (c: Card) => (Array.isArray(c.shop) ? c.shop[0]?.name : c.shop?.name) ?? "(店舗名なし)";
 
   // 直近30日の表示(imp)とタップ(tap)の回数。記録は service role だけが読める。
   const since = new Date(Date.now() + 9 * 3600 * 1000 - 30 * 86400 * 1000).toISOString().slice(0, 10);
@@ -150,6 +159,45 @@ export default async function AdminAdCardsPage() {
           日本語で書けば、英語・中国語・アラビア語は自動で翻訳します。
         </p>
       </div>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">店舗の広告カード(ADオプション)の承認待ち{pending.length > 0 ? `(${pending.length}件)` : ""}</h2>
+        {pending.length === 0 ? (
+          <p className="text-sm text-slate-500">承認待ちのカードはありません。</p>
+        ) : (
+          <ul className="space-y-3">
+            {pending.map((c) => (
+              <li key={c.id} className="rounded-lg border border-amber-200 bg-amber-50/40 p-4">
+                <div className="flex items-start gap-3">
+                  {c.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.image_url} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                  )}
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-xs text-slate-500">{shopName(c)}{c.same_category_only ? " · 同じ業種のページだけ" : " · 同じエリアの無料店ページ"}</p>
+                    <p className="text-sm font-semibold text-slate-900">{c.headline}</p>
+                    {c.body && <p className="text-xs text-slate-700">{c.body}</p>}
+                    <p className="truncate text-xs text-slate-500">ボタン「{c.cta}」→ {c.link_url}</p>
+                    <div className="flex flex-wrap items-end gap-3 pt-2 text-xs">
+                      <form action={approveAdCard.bind(null, c.id)}>
+                        <button type="submit" className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white hover:bg-emerald-700">
+                          承認する
+                        </button>
+                      </form>
+                      <form action={rejectAdCard.bind(null, c.id)} className="flex items-center gap-2">
+                        <input type="text" name="reason" maxLength={200} placeholder="却下の理由(店舗に表示されます)" className="w-56 rounded border border-slate-300 px-2 py-1.5 text-xs" />
+                        <button type="submit" className="rounded-lg border border-red-300 px-3 py-1.5 font-semibold text-red-600 hover:bg-red-50">
+                          却下する
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <form action={createAdCard} className="rounded-lg border border-slate-200 bg-white p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">カードを追加する</h2>
@@ -217,6 +265,58 @@ export default async function AdminAdCardsPage() {
                 </li>
               );
             })}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">店舗の広告カード(承認済み・却下)</h2>
+        {shopCards.filter((c) => c.status !== "pending").length === 0 ? (
+          <p className="text-sm text-slate-500">まだありません。</p>
+        ) : (
+          <ul className="space-y-3">
+            {shopCards
+              .filter((c) => c.status !== "pending")
+              .map((c) => {
+                const s = stats.get(`ad:${c.id}`) ?? { imp: 0, tap: 0 };
+                return (
+                  <li key={c.id} className="rounded-lg border border-slate-200 bg-white p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{shopName(c)}</p>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${c.status === "approved" ? (c.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500") : "bg-red-100 text-red-700"}`}>
+                        {c.status === "approved" ? (c.is_active ? "配信中" : "店舗が停止中") : "却下"}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-700">{c.headline}</p>
+                    {c.reject_reason && <p className="text-xs text-red-600">却下の理由: {c.reject_reason}</p>}
+                    <p className="mt-1 text-xs text-slate-600">
+                      直近30日: 表示 {s.imp.toLocaleString("ja-JP")} 回 / タップ {s.tap.toLocaleString("ja-JP")} 回
+                    </p>
+                    <div className="mt-2 flex items-center gap-3 text-xs">
+                      {c.status === "approved" && (
+                        <form action={rejectAdCard.bind(null, c.id)}>
+                          <input type="hidden" name="reason" value="運営により配信を停止しました" />
+                          <button type="submit" className="text-red-600 hover:underline">
+                            配信をやめさせる(却下に戻す)
+                          </button>
+                        </form>
+                      )}
+                      {c.status === "rejected" && (
+                        <form action={approveAdCard.bind(null, c.id)}>
+                          <button type="submit" className="text-blue-600 hover:underline">
+                            承認する
+                          </button>
+                        </form>
+                      )}
+                      <form action={deleteAdCard.bind(null, c.id)}>
+                        <button type="submit" className="text-red-600 hover:underline">
+                          削除する
+                        </button>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
           </ul>
         )}
       </section>
