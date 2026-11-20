@@ -1,15 +1,30 @@
 /**
- * 地図の見た目(明るい/暗い)をサイトの配色テーマ(<html data-theme>)に合わせる。
- * 明るいテーマのときは明るい地図、それ以外(default など)は暗い地図。ブラウザ側(地図の初期化時)で呼ぶ。
+ * 地図の見た目をサイトの配色テーマ(<html data-theme>)に合わせる。
+ * OpenFreeMap の無料スタイル(APIキー不要)をテーマごとに割り当てる。違和感があれば THEME_MAP_STYLE だけ直せばよい。
+ *  positron=白っぽくすっきり / liberty=カラフルで詳細 / bright=標準的な明るい地図 / dark=ほぼ黒 / fiord=青みの夜
  */
-export const MAP_STYLE_LIGHT = "https://tiles.openfreemap.org/styles/positron";
-export const MAP_STYLE_DARK = "https://tiles.openfreemap.org/styles/dark";
+const BASE = "https://tiles.openfreemap.org/styles";
+export const MAP_STYLE_LIGHT = `${BASE}/positron`;
+export const MAP_STYLE_DARK = `${BASE}/dark`;
 
-/** 明るい地図を使うテーマ。 */
-export const LIGHT_MAP_THEMES: readonly string[] = ["cafe", "beauty", "coastal", "pure", "warm", "botanical", "newyork", "london"];
+export type MapStyleName = "positron" | "liberty" | "bright" | "dark" | "fiord";
+
+/** テーマ → 地図スタイル。ここに無いテーマ(default・nature など)は dark。 */
+export const THEME_MAP_STYLE: Record<string, MapStyleName> = {
+  cafe: "liberty",
+  warm: "liberty",
+  botanical: "liberty",
+  pure: "positron",
+  london: "positron",
+  beauty: "positron",
+  newyork: "bright",
+  coastal: "bright",
+  christmas: "fiord",
+  default: "dark",
+};
 
 export function mapStyleForTheme(theme: string | null | undefined): string {
-  return LIGHT_MAP_THEMES.includes(theme ?? "") ? MAP_STYLE_LIGHT : MAP_STYLE_DARK;
+  return `${BASE}/${THEME_MAP_STYLE[theme ?? ""] ?? "dark"}`;
 }
 
 /** いまのページのテーマに合う地図スタイル(ブラウザ専用)。 */
