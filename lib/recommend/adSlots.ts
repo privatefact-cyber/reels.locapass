@@ -12,7 +12,8 @@
 
 /** mid = 基本情報のすぐ下 / bottom = ページ最下部(おすすめ枠の下) */
 export type AdSlotPosition = "mid" | "bottom";
-export type AdSlotMode = "off" | "placeholder";
+/** off=出さない / placeholder=場所確認用のダミー / live=自社の中身(告知・編集枠)を出して表示・タップを記録する */
+export type AdSlotMode = "off" | "placeholder" | "live";
 
 /** 枠ごとの大きさ。広告が読み込まれる前後でページが動かないよう、この高さを先に確保する。 */
 export const AD_SLOT_SIZES: Record<AdSlotPosition, { width: number; height: number; label: string }> = {
@@ -20,9 +21,12 @@ export const AD_SLOT_SIZES: Record<AdSlotPosition, { width: number; height: numb
   bottom: { width: 320, height: 100, label: "横長バナー" },
 };
 
-export function adSlotMode(preview: boolean): AdSlotMode {
-  if (preview) return "placeholder";
+/** preview は URL の ?ad_preview= の値。"1"=ダミー / "live"=自社の中身。 */
+export function adSlotMode(preview: string | undefined): AdSlotMode {
+  if (preview === "live") return "live";
+  if (preview === "1") return "placeholder";
   const env = process.env.AD_SLOT_MODE;
+  if (env === "live") return "live";
   if (env === "placeholder") return "placeholder";
   if (env === "off") return "off";
   return process.env.NODE_ENV === "production" ? "off" : "placeholder";

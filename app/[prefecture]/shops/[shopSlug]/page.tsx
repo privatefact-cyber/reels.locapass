@@ -69,6 +69,8 @@ import { shopShowsPromoSlot } from "@/lib/recommend/slot";
 import { getRelatedShops } from "@/lib/recommend/shops";
 import { ShopRecommendSlot } from "@/components/shop/ShopRecommendSlot";
 import { ShopAdSlot } from "@/components/shop/ShopAdSlot";
+import { pickAdCreative } from "@/lib/recommend/adCreatives";
+import { PET_ATTRIBUTE_KEYS } from "@/lib/verticals/attributes";
 import { adSlotMode } from "@/lib/recommend/adSlots";
 import { ShopAttributeBadges } from "@/components/shop/ShopAttributeBadges";
 import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
@@ -435,7 +437,11 @@ export default async function ShopDetailPage({
   const showsPromoSlot = shopShowsPromoSlot(shopRow.plan);
   const relatedShops = showsPromoSlot ? await getRelatedShops(supabase, shopId, { limit: 6 }) : [];
   // 広告枠の土台(いまはダミー表示だけ)。おすすめ枠と同じく、有料掲載の店舗ページには出さない。
-  const adMode = showsPromoSlot ? adSlotMode(adPreview === "1") : "off";
+  const adMode = showsPromoSlot ? adSlotMode(adPreview) : "off";
+  const petOk = shopAttributes.some((a) => (PET_ATTRIBUTE_KEYS as readonly string[]).includes(a.key));
+  const adCtx = { shopId, locale, petOk };
+  const [adMid, adBottom] =
+    adMode === "live" ? await Promise.all([pickAdCreative("mid", adCtx), pickAdCreative("bottom", adCtx)]) : [null, null];
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")
@@ -864,7 +870,7 @@ export default async function ShopDetailPage({
         </section>
 
         {/* 広告枠(基本情報の下)。無料掲載の店舗ページだけ */}
-        <ShopAdSlot position="mid" mode={adMode} />
+        <ShopAdSlot position="mid" mode={adMode} creative={adMid} shopId={shopId} locale={locale} />
 
         {/* 在庫車両(掲載アイテム) */}
         <ShopItemsSection items={shopItems} totalCount={shopItems.length} portalSlug={site.slug} shopSlug={shopRow.slug} officialUrl={shopRow.url} locale={locale} t={t.items} />
@@ -935,7 +941,7 @@ export default async function ShopDetailPage({
         <ShopRecommendSlot items={relatedShops} title={t.shop.recommendTitle} prLabel={t.shop.recommendPr} />
 
         {/* 広告枠(ページ最下部)。無料掲載の店舗ページだけ */}
-        <ShopAdSlot position="bottom" mode={adMode} />
+        <ShopAdSlot position="bottom" mode={adMode} creative={adBottom} shopId={shopId} locale={locale} />
       </div>
 
       {/* 店舗AI質問(有料オプション): 画面の下に常駐するチャット欄。下の余白は、最後のコンテンツが隠れないよう確保する。 */}
