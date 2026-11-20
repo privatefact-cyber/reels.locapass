@@ -96,12 +96,62 @@ async function activeCards(ctx: AdContext, now: number): Promise<Row[]> {
   }
 }
 
+type L4 = "ja" | "en" | "zh" | "ar";
+const AUTO_LABEL: Record<L4, string> = { ja: "PR", en: "Ad", zh: "广告", ar: "إعلان" };
+const AUTO_CTA: Record<L4, string> = { ja: "お店の詳細を見る", en: "View shop details", zh: "查看店铺详情", ar: "عرض تفاصيل المتجر" };
+
+/**
+ * ADオプションの店舗が、配信中(承認済み)の自分のカードが1枚も無いときの自動カード。お店の情報(店名・ひとこと・写真)から作り、
+ * リンク先は、その店の詳細ページ。設定をしなくても配信が始まる。お店が自分で公開している情報だけなので、承認は要らない。
+ * 1つのページに出すのは最大4店(店舗・時間ごとに安定して入れ替わる)。
+ */
+async function autoCards(ctx: AdContext, now: number): Promise<AdCreative[]> {
+  if (ctx.portalId == null) return [];
+  try {
+    const admin = createAdminClient() as any;
+    const { data: shops } = await admin
+      .from("locapass_shops")
+      .select("id, name, slug, tagline, cover_url, icon_url, plan, portal:locapass_portals ( slug )")
+      .eq("ad_option_enabled", true)
+      .eq("status", "active")
+      .eq("portal_id", ctx.portalId)
+      .neq("id", ctx.shopId)
+      .limit(60);
+    const candidates = ((shops ?? []) as any[]).filter((r) => !AD_ADVERTISER_EXCLUDED_PLANS.includes(r.plan));
+    if (candidates.length === 0) return [];
+    const { data: owned } = await admin.from("locapass_ad_cards").select("shop_id").eq("status", "approved").eq("is_active", true).in("shop_id", candidates.map((r) => r.id));
+    const hasOwn = new Set(((owned ?? []) as { shop_id: string }[]).map((r) => r.shop_id));
+    const bucket = Math.floor(now / 3_600_000);
+    const loc: L4 = (["ja", "en", "zh", "ar"] as const).includes(ctx.locale as L4) ? (ctx.locale as L4) : "en";
+    return candidates
+      .filter((r) => !hasOwn.has(r.id))
+      .sort((a, b) => hash(`${a.id}|${ctx.shopId}|${bucket}`) - hash(`${b.id}|${ctx.shopId}|${bucket}`))
+      .slice(0, 4)
+      .map((r) => {
+        const portal = Array.isArray(r.portal) ? r.portal[0] : r.portal;
+        return {
+          id: `auto:${r.id}`,
+          label: AUTO_LABEL[loc],
+          title: r.name as string,
+          sub: (r.tagline as string | null) ?? "",
+          cta: AUTO_CTA[loc],
+          href: portal?.slug ? `/${portal.slug}/shops/${r.slug}` : "/",
+          imageUrl: (r.cover_url as string | null) ?? (r.icon_url as string | null),
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
 export async function getAdCreatives(ctx: AdContext): Promise<{ mid: AdCreative[]; bottom: AdCreative | null }> {
   const now = ctx.now ?? Date.now();
   const rows = await activeCards(ctx, now);
-  const mid = rows.filter((r) => r.placement !== "bottom").map((r) => toCreative(r, ctx.locale));
+  const auto = await autoCards(ctx, now);
+  const mid = [...rows.filter((r) => r.placement !== "bottom").map((r) => toCreative(r, ctx.locale)), ...auto];
   const bottomRows = rows.filter((r) => r.placement !== "mid");
   const bucket = Math.floor(now / 3_600_000);
-  const bottomRow = bottomRows.length ? bottomRows[hash(`${ctx.shopId}|bottom|${bucket}`) % bottomRows.length] : null;
-  return { mid, bottom: bottomRow ? toCreative(bottomRow, ctx.locale) : null };
+  const bottomPool: AdCreative[] = [...bottomRows.map((r) => toCreative(r, ctx.locale)), ...auto];
+  const bottom = bottomPool.length ? bottomPool[hash(`${ctx.shopId}|bottom|${bucket}`) % bottomPool.length] : null;
+  return { mid, bottom };
 }

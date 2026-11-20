@@ -39,7 +39,7 @@ type Parsed = { label: string; headline: string; body: string | null; cta: strin
 function parse(formData: FormData, ownPath: string): Parsed {
   const headline = String(formData.get("headline") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim() || null;
-  const cta = String(formData.get("cta") ?? "").trim() || "詳しく見る";
+  const cta = String(formData.get("cta") ?? "").trim() || "お店の詳細を見る";
   const rawLink = String(formData.get("linkUrl") ?? "").trim();
   if (!headline) throw new Error("見出しを入力してください");
   if (headline.length > 80) throw new Error("見出しは80文字以内にしてください");

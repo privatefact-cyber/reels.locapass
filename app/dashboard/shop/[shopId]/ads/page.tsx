@@ -42,12 +42,12 @@ function Fields({ card }: { card?: Card }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className={labelCls}>ボタンの文言</label>
-          <input type="text" name="cta" maxLength={30} defaultValue={card?.cta ?? "お店を見る"} className={input} />
+          <input type="text" name="cta" maxLength={30} defaultValue={card?.cta ?? "お店の詳細を見る"} placeholder="例: 予約はこちら / LINEでクーポンを受け取る" className={input} />
         </div>
         <div>
-          <label className={labelCls}>リンク先(任意)</label>
-          <input type="text" name="linkUrl" defaultValue={card && card.link_url.startsWith("https://") ? card.link_url : ""} placeholder="空欄ならお店のページ" className={input} />
-          <p className="mt-1 text-[11px] text-slate-500">外部のページに飛ばすときだけ、https:// のURLを入れてください。</p>
+          <label className={labelCls}>リンク先のURL(任意)</label>
+          <input type="text" name="linkUrl" defaultValue={card && card.link_url.startsWith("https://") ? card.link_url : ""} placeholder="空欄なら、お店の詳細ページ" className={input} />
+          <p className="mt-1 text-[11px] text-slate-500">予約ページ・公式LINE・Instagram・キャンペーンやクーポンのページなど、https:// のURLを自由に入れられます。入れなければ、お店の詳細ページに飛びます。</p>
         </div>
       </div>
       <div>
@@ -112,14 +112,11 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
 
   const since = new Date(Date.now() + 9 * 3600 * 1000 - 30 * 86400 * 1000).toISOString().slice(0, 10);
   const stats = new Map<string, { imp: number; tap: number }>();
-  if (cards.length > 0) {
+  {
     const { data: events } = await admin
       .from("locapass_ad_events")
       .select("creative, kind")
-      .in(
-        "creative",
-        cards.map((c) => `ad:${c.id}`),
-      )
+      .in("creative", [...cards.map((c) => `ad:${c.id}`), `auto:${shop.id}`])
       .gte("day", since)
       .limit(100000);
     for (const e of (events ?? []) as { creative: string; kind: "imp" | "tap" }[]) {
@@ -139,6 +136,24 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
           内容を直したときも、もう一度確認が入ります。
         </p>
       </section>
+
+      {!cards.some((c) => c.status === "approved" && c.is_active) && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-slate-700">
+          <p className="font-semibold text-emerald-800">いまは「自動カード」で配信中です</p>
+          <p className="mt-1 text-xs">
+            カードを登録しなくても、お店の名前・ひとこと・写真から作ったカードが、同じエリアの無料店ページに出ています(ボタンは「お店の詳細を見る」で、お店の詳細ページに飛びます)。
+            下でカードを登録すると、運営が承認した後は、そのカードに置き換わります(承認待ちの間も、自動カードで配信されます)。
+          </p>
+          {(() => {
+            const a = stats.get(`auto:${shop.id}`) ?? { imp: 0, tap: 0 };
+            return (
+              <p className="mt-2 text-xs text-slate-600">
+                直近30日: 表示 {a.imp.toLocaleString("ja-JP")} 回 / タップ {a.tap.toLocaleString("ja-JP")} 回
+              </p>
+            );
+          })()}
+        </div>
+      )}
 
       {cards.length < MAX_CARDS && (
         <form action={createShopAdCard.bind(null, shop.id)} className="rounded-lg border border-slate-200 bg-white p-5">
