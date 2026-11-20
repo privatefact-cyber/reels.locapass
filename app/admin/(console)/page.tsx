@@ -17,6 +17,7 @@ import { ConciergeBetaMetrics } from "@/components/admin/ConciergeBetaMetrics";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "無料",
+  lite: "簡易版",
 };
 
 export default async function AdminShopsPage({

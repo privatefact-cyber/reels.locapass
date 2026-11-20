@@ -73,7 +73,7 @@ export default async function ShopContractPage({ params }: { params: Promise<{ s
 
       {showsSlot ? (
         <section className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
-          <div className="font-bold text-amber-900">無料プランの間、あなたの店舗ページに「この近くのおすすめ」が表示されます</div>
+          <div className="font-bold text-amber-900">現在のプラン(無料・簡易版)では、あなたの店舗ページに「この近くのおすすめ」と広告枠が表示されます</div>
           {slotPreview.length > 0 ? (
             <>
               <p className="text-amber-900">いま、お客様に実際に表示されている内容のプレビューです(タップすると、その店舗のページが開きます)。</p>
@@ -85,8 +85,8 @@ export default async function ShopContractPage({ params }: { params: Promise<{ s
             <p className="text-amber-900">現在、あなたのページに表示できるおすすめはありません(近くに似たお店が増えると表示されます)。</p>
           )}
           <ul className="list-disc space-y-1 pl-5 text-amber-900">
-            <li>有料プランにすると、あなたの店舗ページからこの枠が表示されなくなります。</li>
-            <li>有料プランのお店は、他のお店のページの「おすすめ」に優先して掲載されます(「PR」と表示されます)。</li>
+            <li>通常版のプランにすると、あなたの店舗ページからこれらの枠が表示されなくなります。</li>
+            <li>簡易版・通常版などの有料プランのお店は、他のお店のページの「おすすめ」に優先して掲載されます(「PR」と表示されます)。</li>
           </ul>
         </section>
       ) : (
