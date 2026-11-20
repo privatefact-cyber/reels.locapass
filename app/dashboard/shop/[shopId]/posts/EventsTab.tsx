@@ -4,6 +4,7 @@ import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { EventFormSection } from "@/components/locapass-dashboard/EventFormSection";
 import { ShopEmbedSection } from "@/components/locapass-dashboard/ShopEmbedSection";
 import type { ShopEvent } from "@/lib/types/shop";
+import { isPaidPlan } from "@/lib/recommend/slot";
 import { addEvent, deleteEvent, updateEvent } from "../actions";
 
 /** 「投稿」メニューのイベントのタブ。イベントの投稿・編集と、外部動画(オプション)の追加。 */
@@ -19,7 +20,7 @@ export async function EventsTab({ shopId }: { shopId: string }) {
       .select("id, title, body, starts_at, ends_at, image_url, gallery_image_urls, created_at")
       .eq("shop_id", shop.id)
       .order("created_at", { ascending: false }),
-    supabase.from("locapass_shops").select("embed_enabled").eq("id", shop.id).maybeSingle(),
+    supabase.from("locapass_shops").select("embed_enabled, plan").eq("id", shop.id).maybeSingle(),
   ]);
 
   const now = Date.now();
@@ -36,7 +37,7 @@ export async function EventsTab({ shopId }: { shopId: string }) {
 
   return (
     <div className="space-y-6">
-      <ShopEmbedSection kind="event" shopId={shop.id} enabled={Boolean(embedOpt?.embed_enabled) || viewer.isOperator} />
+      <ShopEmbedSection kind="event" shopId={shop.id} shopName={shop.name} enabled={Boolean(embedOpt?.embed_enabled) || isPaidPlan(embedOpt?.plan) || viewer.isOperator} />
       <EventFormSection
         shopId={shop.id}
         events={events}

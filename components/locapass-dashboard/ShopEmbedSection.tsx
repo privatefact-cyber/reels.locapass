@@ -10,7 +10,7 @@ const inputClass =
  * 店舗オプション「外部動画の追加」。YouTubeショート / TikTok / Instagramリールのリンクを、リール・イベントの1枚として並べる。
  * 契約していない店舗(enabled=false)には、フォームを灰色にし、オプションのボタンも押せない状態で出す(準備中)。
  */
-export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; enabled: boolean; kind: "reel" | "event" }) {
+export function ShopEmbedSection({ shopId, enabled, kind, shopName }: { shopId: string; enabled: boolean; kind: "reel" | "event"; shopName?: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
@@ -33,7 +33,7 @@ export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; en
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-slate-900">{kind === "event" ? "リンクの動画でイベントを投稿(オプション)" : "リンクの動画を投稿(YouTube・TikTok・Instagram / オプション)"}</h2>
+        <h2 className="text-lg font-bold text-slate-900">{kind === "event" ? "リンクの動画でイベントを投稿(有料プラン)" : "リンクの動画を投稿(YouTube・TikTok・Instagram / 有料プラン)"}</h2>
         {!enabled && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">準備中</span>}
       </div>
       <p className="text-sm text-slate-600">
@@ -42,6 +42,20 @@ export function ShopEmbedSection({ shopId, enabled, kind }: { shopId: string; en
           : "YouTubeショート・TikTok・Instagramリールのリンクを貼ると、リールの1枚として表示されます。タップすると、サイトの中で再生されます。"}{" "}
         説明文は自動で翻訳されます(動画の中身は原語のままです)。自分のアカウントの動画、または権利のある動画だけを使ってください。
       </p>
+      {shopName && kind === "reel" && (
+        <p className="text-sm text-slate-600">
+          他の人が投稿したお店の動画を載せたいときは、
+          <a
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(shopName)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-sky-700 underline"
+          >
+            YouTubeでお店の名前を検索
+          </a>
+          して、見つかった動画のリンクを下に貼ってください。
+        </p>
+      )}
 
       <form ref={formRef} onSubmit={onSubmit}>
         <fieldset disabled={!enabled || pending} className="space-y-3 disabled:opacity-70">

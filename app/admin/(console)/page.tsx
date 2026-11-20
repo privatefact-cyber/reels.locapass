@@ -10,6 +10,7 @@ import { MachiNoKoeBetaToggle } from "@/components/admin/MachiNoKoeBetaToggle";
 import { ContactStatsToggle } from "@/components/admin/ContactStatsToggle";
 import { SiteThemeSelector } from "@/components/admin/SiteThemeSelector";
 import { AdSlotSwitch } from "@/components/admin/AdSlotSwitch";
+import { AutoLinkPaidOnlySwitch } from "@/components/admin/AutoLinkPaidOnlySwitch";
 import { SiteAnnouncementEditor } from "@/components/admin/SiteAnnouncementEditor";
 import { isSiteTheme, resolveSiteTheme } from "@/lib/theme";
 import { LoginUrlCard } from "@/components/locapass-dashboard/LoginUrlCard";
@@ -77,8 +78,9 @@ export default async function AdminShopsPage({
   // 店舗ダッシュボードの「経由の連絡」カードの表示(別に読んで、列が無い間も他の設定の読み込みを壊さない)。
   const { data: contactStatsSetting } = await (supabase as any).from("platform_settings").select("locapass_contact_stats_visible").eq("id", true).maybeSingle();
   const contactStatsVisible = Boolean(contactStatsSetting?.locapass_contact_stats_visible);
-  const { data: adSlotSetting } = await (supabase as any).from("platform_settings").select("locapass_ad_slot_mode").eq("id", true).maybeSingle();
+  const { data: adSlotSetting } = await (supabase as any).from("platform_settings").select("locapass_ad_slot_mode, locapass_auto_link_paid_only").eq("id", true).maybeSingle();
   const adSlotLive = adSlotSetting?.locapass_ad_slot_mode === "live";
+  const autoLinkPaidOnly = adSlotSetting?.locapass_auto_link_paid_only === true;
   const announcementText = settings?.locapass_announcement ?? "";
   const announcementUrl = settings?.locapass_announcement_url ?? "";
   const siteTheme = isSiteTheme(settings?.locapass_site_theme) ? settings.locapass_site_theme : null;
@@ -214,6 +216,20 @@ export default async function AdminShopsPage({
             </p>
           </div>
           <AdSlotSwitch enabled={adSlotLive} />
+        </div>
+      )}
+
+      {scope.portalIds === null && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-bold text-slate-900">YouTube動画の自動の紐づけ</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              オフ(いまの設定)だと、収集した動画を、店名が一致した全店舗(無料プランを含む)に自動で紐づけて公開する。
+              オンにすると、有料プランの店舗(と動画の自動追加オプションを契約した店舗)だけに自動で公開する。無料の店は、紐づけまで行って公開を見送る(運営が確認して追加できる)。
+              動画が十分に集まったら、オンにする。
+            </p>
+          </div>
+          <AutoLinkPaidOnlySwitch enabled={autoLinkPaidOnly} />
         </div>
       )}
 

@@ -10,6 +10,7 @@ import { randomBytes } from "node:crypto";
 import { cleanAutoCaption, composeIntro, menuHintsFromText } from "@/lib/reels/seoCaption";
 import { getShopCuisineLabels } from "@/lib/verticals/shopCuisine";
 import { getBlockedChannelTitles } from "./stockHygiene";
+import { isPaidPlan } from "@/lib/recommend/slot";
 
 /**
  * Gemini(店名・住所の特定)の呼び出し。Google側が一時的に混み合う(503 UNAVAILABLE など)ことが多いので、
@@ -384,6 +385,12 @@ export async function createShopForIngestion(ingestionId: string, input: {
   return shopId;
 }
 
+/** 管理画面のスイッチ。オンなら、自動の紐づけ・公開を有料の店舗(とオプション契約の店舗)だけに限る。読めないときはオフ(限らない)として扱う。 */
+async function autoLinkPaidOnly(): Promise<boolean> {
+  const { data } = await (createAdminClient() as any).from("platform_settings").select("locapass_auto_link_paid_only").eq("id", true).maybeSingle();
+  return data?.locapass_auto_link_paid_only === true;
+}
+
 /**
  * 店名・住所が決まった候補を、既存店に一意に一致すればその店へ、無ければ新規登録して、リールとして公開する。
  * 既存店が複数一致するときは重複登録を避けて保留にする。
@@ -414,14 +421,18 @@ export async function matchOrCreateAndPublish(ingestionId: string, input: {
     return "held";
   }
   if (existing.length === 1 && !input.ignoreOption) {
-    // 自動追加はオプション契約の店舗だけ。未契約の店は、紐づけまで行って公開は見送る(運営が確認して「リールを投稿」で追加できる)。
-    const { data: optionRow } = await (admin as any).from("locapass_shops").select("auto_video_enabled").eq("id", existing[0].id).maybeSingle();
-    if (!optionRow?.auto_video_enabled) {
+    // 管理画面のスイッチ「自動の紐づけは有料店だけ」がオンのときだけ、有料プラン(free以外)かオプション契約の店舗に限る。
+    // 対象外の店は、紐づけまで行って公開は見送る(運営が確認して「リールを投稿」で追加できる)。オフ(既定)なら、無料の店にも紐づける。
+    const paidOnly = await autoLinkPaidOnly();
+    const { data: optionRow } = paidOnly
+      ? await (admin as any).from("locapass_shops").select("auto_video_enabled, plan").eq("id", existing[0].id).maybeSingle()
+      : { data: null };
+    if (paidOnly && !optionRow?.auto_video_enabled && !isPaidPlan(optionRow?.plan)) {
       const { error: holdError } = await (admin as any).from("locapass_youtube_ingestions").update({
         portal_id: input.portalId, candidate_name: input.name, candidate_address: input.address,
         official_url: input.officialUrl ?? existing[0].url, official_url_verified: Boolean(input.officialUrl ?? existing[0].url),
         matched_shop_id: existing[0].id, match_status: "matched_existing",
-        match_reason: `既存店舗に一意一致(「動画の自動追加」オプション未契約のため、公開せず保留): ${input.reason}`.slice(0, 500),
+        match_reason: `既存店舗に一意一致(自動の紐づけは有料店だけの設定で、この店は無料プランかつ「動画の自動追加」オプション未契約のため、公開せず保留): ${input.reason}`.slice(0, 500),
         error_message: null,
       }).eq("id", ingestionId);
       if (holdError) throw new Error(`候補の更新に失敗しました: ${holdError.message}`);

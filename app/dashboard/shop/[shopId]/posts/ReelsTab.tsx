@@ -13,6 +13,7 @@ import { ReelInsights } from "@/components/reels/ReelInsights";
 import { ConfirmSubmitButton } from "@/components/reels/ConfirmSubmitButton";
 import { ShopReelOrderManager, type OrderItem } from "@/components/locapass-dashboard/ShopReelOrderManager";
 import { sortForShopPage } from "@/lib/reels/shopOrder";
+import { isPaidPlan } from "@/lib/recommend/slot";
 import { REELS_PER_ZIP, reelFileUrls } from "@/lib/reels/downloadable";
 
 /**
@@ -32,7 +33,7 @@ export async function ReelsTab({
   const supabase = await createClient();
   const { data: shopRow } = await supabase
     .from("locapass_shops")
-    .select("map_video_enabled, map_preview_reel_id, embed_enabled")
+    .select("map_video_enabled, map_preview_reel_id, embed_enabled, plan")
     .eq("id", shop.id)
     .maybeSingle();
   const { data: reelRows } = await supabase
@@ -154,7 +155,7 @@ export async function ReelsTab({
 
       <ShopReelPostForm shopId={shop.id} portalId={shop.portal_id} />
 
-      <ShopEmbedSection kind="reel" shopId={shop.id} enabled={Boolean(shopRow?.embed_enabled) || viewer.isOperator} />
+      <ShopEmbedSection kind="reel" shopId={shop.id} shopName={shop.name} enabled={Boolean(shopRow?.embed_enabled) || isPaidPlan(shopRow?.plan) || viewer.isOperator} />
 
       {orderItems.length > 1 && <ShopReelOrderManager shopId={shop.id} initial={orderItems} />}
 

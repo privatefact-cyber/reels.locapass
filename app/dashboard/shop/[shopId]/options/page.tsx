@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
-import { OPTION_COLUMNS, statesFromRow } from "@/lib/shop-options";
+import { OPTION_COLUMNS, OPTIONS_INCLUDED_IN_PAID_PLAN, statesFromRow } from "@/lib/shop-options";
+import { isPaidPlan } from "@/lib/recommend/slot";
 
 /** 店舗のオプション一覧(いまはご利用状況の確認のみ。申し込みボタンは準備中)。オン/オフの変更は運営者が行う。 */
 export default async function LocapassShopOptionsPage({ params }: { params: Promise<{ shopId: string }> }) {
@@ -10,8 +11,9 @@ export default async function LocapassShopOptionsPage({ params }: { params: Prom
   if (!viewer) notFound();
 
   const supabase = (await createClient()) as any;
-  const { data: row } = await supabase.from("locapass_shops").select(OPTION_COLUMNS).eq("id", viewer.shop.id).maybeSingle();
-  const states = statesFromRow(row);
+  const { data: row } = await supabase.from("locapass_shops").select(`${OPTION_COLUMNS}, plan`).eq("id", viewer.shop.id).maybeSingle();
+  const paid = isPaidPlan(row?.plan);
+  const states = statesFromRow(row).map((s) => (paid && OPTIONS_INCLUDED_IN_PAID_PLAN.includes(s.key) ? { ...s, enabled: true } : s));
 
   return (
     <div className="space-y-6">

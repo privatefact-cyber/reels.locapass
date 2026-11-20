@@ -53,3 +53,6 @@ export const OPTION_COLUMNS = SHOP_OPTIONS.map((o) => o.column).join(", ");
 export function statesFromRow(row: Record<string, unknown> | null | undefined): ShopOptionState[] {
   return SHOP_OPTIONS.map((o) => ({ key: o.key, label: o.label, description: o.description, enabled: Boolean(row?.[o.column]) }));
 }
+
+/** 有料プラン(free以外)に含まれるオプション。契約の有無に関わらず使える(店舗側の権限判定と、一覧の表示で共通)。 */
+export const OPTIONS_INCLUDED_IN_PAID_PLAN: readonly ShopOptionKey[] = ["embed"];

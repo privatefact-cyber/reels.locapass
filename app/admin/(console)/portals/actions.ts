@@ -403,6 +403,15 @@ export async function setAdSlotLive(enabled: boolean) {
   revalidatePath("/", "layout");
 }
 
+/** 収集した動画の自動の紐づけ・公開を、有料の店舗だけに限るか。スーパー管理者のみ。オフ(既定)なら無料の店舗にも紐づける。 */
+export async function setAutoLinkPaidOnly(enabled: boolean) {
+  await requireRootAdmin();
+  const supabase = await createClient();
+  const { error } = await (supabase as any).rpc("locapass_set_auto_link_paid_only", { p_enabled: enabled });
+  if (error) throw new Error(`自動の紐づけの設定変更に失敗しました: ${error.message}`);
+  revalidatePath("/admin");
+}
+
 /**
  * 店舗ダッシュボードの「LOCAPASS経由の連絡」カードを、店舗に見せるかどうか。スーパー管理者のみ。オフでも集計(連絡ボタンの押下回数)は続く。
  * platform_settings はLUXELAと共通のテーブルなので、locapass用の列だけをRPC経由で切り替える。
