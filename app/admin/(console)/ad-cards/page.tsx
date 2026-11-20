@@ -126,20 +126,60 @@ export default async function AdminAdCardsPage() {
   const pending = shopCards.filter((c) => c.status === "pending");
   const shopName = (c: Card) => (Array.isArray(c.shop) ? c.shop[0]?.name : c.shop?.name) ?? "(店舗名なし)";
 
-  // 直近30日の表示(imp)とタップ(tap)の回数。記録は service role だけが読める。
-  const since = new Date(Date.now() + 9 * 3600 * 1000 - 30 * 86400 * 1000).toISOString().slice(0, 10);
-  const { data: events } = await (createAdminClient() as any)
+  // 広告の表示(imp)とタップ(tap)の記録。直近30日を読む。記録は service role だけが読める。
+  // 表示は「カードの半分以上が画面に入った」とき、ページの表示ごとに1回。ボットと運営のアクセスは数えていない。
+  const jstNow = new Date(Date.now() + 9 * 3600 * 1000);
+  const ymd = (d: Date) => d.toISOString().slice(0, 10);
+  const today = ymd(jstNow);
+  const day7 = ymd(new Date(jstNow.getTime() - 6 * 86400 * 1000));
+  const since = ymd(new Date(jstNow.getTime() - 29 * 86400 * 1000));
+  const admin = createAdminClient() as any;
+  const { data: events } = await admin
     .from("locapass_ad_events")
-    .select("creative, kind")
-    .like("creative", "ad:%")
+    .select("day, slot, creative, kind, vid")
     .gte("day", since)
-    .limit(100000);
+    .limit(200000);
+  type Ev = { day: string; slot: "mid" | "bottom"; creative: string; kind: "imp" | "tap"; vid: string | null };
+  const evs = (events ?? []) as Ev[];
   const stats = new Map<string, { imp: number; tap: number }>();
-  for (const e of (events ?? []) as { creative: string; kind: "imp" | "tap" }[]) {
+  const slotStats = { mid: { imp: 0, tap: 0 }, bottom: { imp: 0, tap: 0 } };
+  const dayStats = new Map<string, { imp: number; tap: number }>();
+  const periods = {
+    today: { imp: 0, tap: 0, vids: new Set<string>() },
+    d7: { imp: 0, tap: 0, vids: new Set<string>() },
+    d30: { imp: 0, tap: 0, vids: new Set<string>() },
+  };
+  for (const e of evs) {
     const s = stats.get(e.creative) ?? { imp: 0, tap: 0 };
     s[e.kind] += 1;
     stats.set(e.creative, s);
+    slotStats[e.slot][e.kind] += 1;
+    const d = dayStats.get(e.day) ?? { imp: 0, tap: 0 };
+    d[e.kind] += 1;
+    dayStats.set(e.day, d);
+    const targets = [periods.d30, ...(e.day >= day7 ? [periods.d7] : []), ...(e.day === today ? [periods.today] : [])];
+    for (const t of targets) {
+      t[e.kind] += 1;
+      // vid は日ごとに変わる匿名のID。「日ごとの人数」を足した、のべの人数になる。
+      if (e.kind === "imp" && e.vid) t.vids.add(`${e.day}|${e.vid}`);
+    }
   }
+  const pct = (tap: number, imp: number) => (imp > 0 ? `${((tap / imp) * 100).toFixed(1)}%` : "-");
+  const n = (v: number) => v.toLocaleString("ja-JP");
+  const dayRows = Array.from({ length: 14 }, (_, i) => {
+    const d = ymd(new Date(jstNow.getTime() - i * 86400 * 1000));
+    return { day: d, ...(dayStats.get(d) ?? { imp: 0, tap: 0 }) };
+  });
+  // 自動カード(auto:<店舗id>)は、店舗名を引いて、店舗ごとに並べる。
+  const autoIds = Array.from(stats.keys()).filter((k) => k.startsWith("auto:")).map((k) => k.slice(5));
+  const autoNames = new Map<string, string>();
+  if (autoIds.length > 0) {
+    const { data: autoShops } = await admin.from("locapass_shops").select("id, name").in("id", autoIds);
+    for (const r of (autoShops ?? []) as { id: string; name: string }[]) autoNames.set(r.id, r.name);
+  }
+  const autoRows = autoIds
+    .map((id) => ({ id, name: autoNames.get(id) ?? "(店舗名なし)", ...(stats.get(`auto:${id}`) ?? { imp: 0, tap: 0 }) }))
+    .sort((a, b) => b.imp - a.imp);
 
   const now = Date.now();
   const statusOf = (c: Card) => {
@@ -159,6 +199,58 @@ export default async function AdminAdCardsPage() {
           日本語で書けば、英語・中国語・アラビア語は自動で翻訳します。
         </p>
       </div>
+
+      <section>
+        <h2 className="mb-1 text-sm font-semibold text-slate-900">広告の表示状況(プラットフォーム全体)</h2>
+        <p className="mb-3 text-[11px] text-slate-500">
+          表示は、広告カードが画面の半分以上に入ったとき、ページを開くごとに1回数えます。ボットと運営のアクセスは数えません。人数は、日ごとの匿名IDを足したのべ人数です。
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {([
+            ["今日", periods.today],
+            ["直近7日", periods.d7],
+            ["直近30日", periods.d30],
+          ] as const).map(([label, p]) => (
+            <div key={label} className="rounded-lg border border-slate-200 bg-white p-3">
+              <p className="text-[11px] text-slate-500">{label}</p>
+              <p className="text-xl font-bold text-slate-900">{n(p.imp)}</p>
+              <p className="text-[11px] text-slate-500">表示 / のべ{n(p.vids.size)}人</p>
+              <p className="mt-1 text-xs text-slate-700">タップ {n(p.tap)}({pct(p.tap, p.imp)})</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700">
+            <p className="mb-1 font-semibold text-slate-900">枠ごと(直近30日)</p>
+            <p>上の枠(横スライド): 表示 {n(slotStats.mid.imp)} / タップ {n(slotStats.mid.tap)}({pct(slotStats.mid.tap, slotStats.mid.imp)})</p>
+            <p>下の枠(バナー): 表示 {n(slotStats.bottom.imp)} / タップ {n(slotStats.bottom.tap)}({pct(slotStats.bottom.tap, slotStats.bottom.imp)})</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700">
+            <p className="mb-1 font-semibold text-slate-900">日ごと(直近14日)</p>
+            <ul className="max-h-40 overflow-y-auto">
+              {dayRows.map((d) => (
+                <li key={d.day} className="flex justify-between gap-2">
+                  <span>{d.day.slice(5)}</span>
+                  <span>表示 {n(d.imp)} / タップ {n(d.tap)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        {autoRows.length > 0 && (
+          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700">
+            <p className="mb-1 font-semibold text-slate-900">自動カード(店舗ごと・直近30日)</p>
+            <ul>
+              {autoRows.map((r) => (
+                <li key={r.id} className="flex justify-between gap-2">
+                  <span className="truncate">{r.name}</span>
+                  <span className="shrink-0">表示 {n(r.imp)} / タップ {n(r.tap)}({pct(r.tap, r.imp)})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
 
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-900">店舗の広告カード(ADオプション)の承認待ち{pending.length > 0 ? `(${pending.length}件)` : ""}</h2>

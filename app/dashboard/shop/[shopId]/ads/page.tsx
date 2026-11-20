@@ -18,6 +18,8 @@ type Card = {
 };
 
 const MAX_CARDS = 3;
+/** 表示回数・タップ数を店舗に見せるか。いまは露出が少ないので見せない(記録は続けていて、運営は /admin/ad-cards で見られる)。 */
+const SHOW_STATS_TO_SHOPS = false;
 const EXCLUDED_PLANS = ["free", "lite"];
 const input = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-500";
 const labelCls = "block text-sm font-semibold text-slate-700";
@@ -119,7 +121,7 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
 
   const since = new Date(Date.now() + 9 * 3600 * 1000 - 30 * 86400 * 1000).toISOString().slice(0, 10);
   const stats = new Map<string, { imp: number; tap: number }>();
-  {
+  if (SHOW_STATS_TO_SHOPS) {
     const { data: events } = await admin
       .from("locapass_ad_events")
       .select("creative, kind")
@@ -151,7 +153,7 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
             カードを登録しなくても、お店の名前・ひとこと・写真から作ったカードが、お店から10km以内にいるお客様に出ています(ボタンは「お店の詳細を見る」で、お店の詳細ページに飛びます)。
             下でカードを登録すると、そのカードに置き換わります。
           </p>
-          {(() => {
+          {SHOW_STATS_TO_SHOPS && (() => {
             const a = stats.get(`auto:${shop.id}`) ?? { imp: 0, tap: 0 };
             return (
               <p className="mt-2 text-xs text-slate-600">
@@ -196,9 +198,11 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
                       </div>
                       <p className="text-sm font-semibold text-slate-900">{c.headline}</p>
                       {c.status === "rejected" && c.reject_reason && <p className="text-xs text-red-600">理由: {c.reject_reason}</p>}
-                      <p className="text-xs text-slate-600">
-                        直近30日: 表示 {s.imp.toLocaleString("ja-JP")} 回 / タップ {s.tap.toLocaleString("ja-JP")} 回(タップ率 {rate})
-                      </p>
+                      {SHOW_STATS_TO_SHOPS && (
+                        <p className="text-xs text-slate-600">
+                          直近30日: 表示 {s.imp.toLocaleString("ja-JP")} 回 / タップ {s.tap.toLocaleString("ja-JP")} 回(タップ率 {rate})
+                        </p>
+                      )}
                       <div className="flex items-center gap-3 pt-1 text-xs">
                         {c.status === "approved" && (
                           <form action={setShopAdCardActive.bind(null, shop.id, c.id, !c.is_active)}>
