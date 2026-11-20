@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getShopForManager } from "@/lib/locapass-dashboard/current-shop";
 import { billingDb, yen } from "@/lib/billing/db";
 import { agreeContract } from "./actions";
+import { shopShowsPromoSlot } from "@/lib/recommend/slot";
+import { getRelatedShops } from "@/lib/recommend/shops";
+import { ShopRecommendSlot } from "@/components/shop/ShopRecommendSlot";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +21,12 @@ export default async function ShopContractPage({ params }: { params: Promise<{ s
   const viewer = await getShopForManager(shopId);
   if (!viewer) notFound();
 
-  const t = billingDb(await createClient());
+  const supabase = await createClient();
+  const t = billingDb(supabase);
+  // 無料掲載の間、自店のページに実際に出ている「この近くのおすすめ」をプレビューする(店舗ページと同じ関数で取る)。
+  const { data: planRow } = await supabase.from("locapass_shops").select("plan").eq("id", shopId).maybeSingle();
+  const showsSlot = shopShowsPromoSlot(planRow?.plan);
+  const slotPreview = showsSlot ? await getRelatedShops(supabase, shopId, { limit: 6 }) : [];
   const [plansRes, termsRes, promosRes, contractRes, invoicesRes] = await Promise.all([
     t.from("locapass_plans").select("code, name, monthly_fee, description").eq("is_public", true).order("sort_order"),
     t.from("locapass_contract_terms").select("id, title, body, published_at").not("published_at", "is", null).order("published_at", { ascending: false }).limit(1),
@@ -60,6 +68,34 @@ export default async function ShopContractPage({ params }: { params: Promise<{ s
               ? ` / 期間割引: ${contract.promo_kind === "percent" ? `${contract.promo_value}%引き` : `${yen(contract.promo_value)}引き`} × 契約月から${contract.promo_months}か月`
               : ""}
           </div>
+        </section>
+      )}
+
+      {showsSlot ? (
+        <section className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
+          <div className="font-bold text-amber-900">無料プランの間、あなたの店舗ページに「この近くのおすすめ」が表示されます</div>
+          {slotPreview.length > 0 ? (
+            <>
+              <p className="text-amber-900">いま、お客様に実際に表示されている内容のプレビューです(タップすると、その店舗のページが開きます)。</p>
+              <div className="rounded-lg bg-slate-900 p-3">
+                <ShopRecommendSlot items={slotPreview} prLabel="PR" preview />
+              </div>
+            </>
+          ) : (
+            <p className="text-amber-900">現在、あなたのページに表示できるおすすめはありません(近くに似たお店が増えると表示されます)。</p>
+          )}
+          <ul className="list-disc space-y-1 pl-5 text-amber-900">
+            <li>有料プランにすると、あなたの店舗ページからこの枠が表示されなくなります。</li>
+            <li>有料プランのお店は、他のお店のページの「おすすめ」に優先して掲載されます(「PR」と表示されます)。</li>
+          </ul>
+        </section>
+      ) : (
+        <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+          <div className="font-bold">有料プランの特典が有効です</div>
+          <ul className="mt-1 list-disc space-y-1 pl-5">
+            <li>あなたの店舗ページには「この近くのおすすめ」(他のお店)を表示しません。</li>
+            <li>無料プランのお店のページの「おすすめ」に、優先して掲載されます(「PR」と表示されます)。</li>
+          </ul>
         </section>
       )}
 

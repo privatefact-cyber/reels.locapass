@@ -127,6 +127,9 @@ export type Dictionary = {
     userPhotosAll: string;
     userPhotosEmpty: string;
     userPhotosCount: (n: number) => string;
+    /** 店舗ページ下部のおすすめ枠(無料掲載の店舗ページだけ)。prは有料掲載の店に付ける広告表記。 */
+    recommendTitle: string;
+    recommendPr: string;
     archiveAllReels: string;
     archiveTimeline: string;
     archiveCalendar: string;
@@ -594,6 +597,8 @@ const ja: Dictionary = {
     userPhotosAll: "すべて見る →",
     userPhotosEmpty: "まだ写真の投稿がありません",
     userPhotosCount: (n: number) => `${n}枚`,
+    recommendTitle: "この近くのおすすめ",
+    recommendPr: "PR",
     archiveAllReels: "すべてのリールを見る →",
     archiveTimeline: "タイムライン",
     archiveCalendar: "カレンダー",
@@ -1060,6 +1065,8 @@ const en: Dictionary = {
     userPhotosAll: "See all →",
     userPhotosEmpty: "No photos posted yet",
     userPhotosCount: (n: number) => `${n} ${n === 1 ? "photo" : "photos"}`,
+    recommendTitle: "Recommended nearby",
+    recommendPr: "Ad",
     archiveAllReels: "All reels →",
     archiveTimeline: "Timeline",
     archiveCalendar: "Calendar",
@@ -1526,6 +1533,8 @@ const zh: Dictionary = {
     userPhotosAll: "查看全部 →",
     userPhotosEmpty: "暂无照片投稿",
     userPhotosCount: (n: number) => `${n}张`,
+    recommendTitle: "附近推荐",
+    recommendPr: "广告",
     archiveAllReels: "查看全部视频 →",
     archiveTimeline: "时间线",
     archiveCalendar: "日历",
@@ -1994,6 +2003,8 @@ const ar: Dictionary = {
     "userPhotosAll": "عرض الكل ←",
     "userPhotosEmpty": "لا توجد صور بعد",
     "userPhotosCount": (n: number) => `${n}`,
+    "recommendTitle": "مقترحات قريبة",
+    "recommendPr": "إعلان",
     "archiveAllReels": "كل الريلز ←",
     "archiveTimeline": "الجدول الزمني",
     "archiveCalendar": "التقويم",

@@ -65,6 +65,9 @@ import { getLatestMurmur } from "@/lib/murmur/queries";
 import { ShopSwipeToArchive } from "@/components/shop/ShopSwipeToArchive";
 import { WhisperRefreshPing } from "@/components/WhisperRefreshPing";
 import { getPublicShopAttributes } from "@/lib/verticals/shopAttributes";
+import { shopShowsPromoSlot } from "@/lib/recommend/slot";
+import { getRelatedShops } from "@/lib/recommend/shops";
+import { ShopRecommendSlot } from "@/components/shop/ShopRecommendSlot";
 import { ShopAttributeBadges } from "@/components/shop/ShopAttributeBadges";
 import { shopPath, shopReelsPath, shopArchivePath, shopPhotosPath, castPath } from "@/lib/locapass/publicUrls";
 import { localizedPageUrls } from "@/lib/i18n/metadata";
@@ -426,6 +429,8 @@ export default async function ShopDetailPage({
   const isMobilePortal = ((portalFeatureRow?.features ?? []) as string[]).includes("mobile");
   // 属性(ペット同伴可・駐車場など)。オンの属性だけを出す(未設定を「不可」とは出さない)。
   const shopAttributes = await getPublicShopAttributes(supabase, shopId, locale);
+  // 無料掲載の店舗ページにだけ「この近くのおすすめ」を出す(有料掲載では取得も表示もしない)。取得に失敗したら枠なしで表示する。
+  const relatedShops = shopShowsPromoSlot(shopRow.plan) ? await getRelatedShops(supabase, shopId, { limit: 6 }) : [];
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")
@@ -917,6 +922,9 @@ export default async function ShopDetailPage({
           )}
         </section>
         )}
+
+        {/* この近くのおすすめ(無料掲載の店舗ページだけ。有料の店が先に並び「PR」が付く) */}
+        <ShopRecommendSlot items={relatedShops} title={t.shop.recommendTitle} prLabel={t.shop.recommendPr} />
       </div>
 
       {/* 店舗AI質問(有料オプション): 画面の下に常駐するチャット欄。下の余白は、最後のコンテンツが隠れないよう確保する。 */}
