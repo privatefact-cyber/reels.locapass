@@ -72,7 +72,7 @@ function Fields({ card }: { card?: Card }) {
             </option>
           ))}
         </select>
-        <p className="mt-1 text-[11px] text-slate-500">この範囲にある無料掲載のお店のページに、近い順に出ます。業種は問いません(ランチを探していた人が、近くのお店を見つけられます)。</p>
+        <p className="mt-1 text-[11px] text-slate-500">お客様の現在地(アクセス元から分かる、市区町村くらいの精度)がお店からこの範囲にあるときに、優先して出ます。業種は問いません(ランチを探していた人が、近くのお店を見つけられます)。範囲内に出す相手がいないときは、ほかの地域にもランダムに出ます。</p>
       </div>
     </div>
   );
@@ -98,7 +98,7 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
         </section>
         <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-700">
           <p>
-            広告カード(ADオプション)は、お店の広告を、お店の近くの無料掲載の店舗ページに出せる機能です。
+            広告カード(ADオプション)は、お店の近くにいるお客様に、無料掲載の店舗ページで広告を出せる機能です。
             カードは最大{MAX_CARDS}枚まで登録でき、表示回数とタップ数をこの画面で確認できます。
           </p>
           <p className="mt-3 text-xs text-slate-500">
@@ -139,7 +139,7 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
         <p className="text-xs text-slate-500">{shop.name}</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-900">広告カード</h1>
         <p className="mt-1 text-sm text-slate-600">
-          お店の広告を、お店の近くの無料掲載の店舗ページに出せます(カードは最大{MAX_CARDS}枚)。登録したカードは、すぐに配信されます。内容は、いつでも直せます。
+          お店の近くにいるお客様に、無料掲載の店舗ページで広告を出せます(カードは最大{MAX_CARDS}枚)。登録したカードは、すぐに配信されます。内容は、いつでも直せます。
           運営が不適切と判断したカードは、配信を止めることがあります。
         </p>
       </section>
@@ -148,7 +148,7 @@ export default async function DashboardAdsPage({ params }: { params: Promise<{ s
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-slate-700">
           <p className="font-semibold text-emerald-800">いまは「自動カード」で配信中です</p>
           <p className="mt-1 text-xs">
-            カードを登録しなくても、お店の名前・ひとこと・写真から作ったカードが、お店から10km以内の無料店ページに出ています(ボタンは「お店の詳細を見る」で、お店の詳細ページに飛びます)。
+            カードを登録しなくても、お店の名前・ひとこと・写真から作ったカードが、お店から10km以内にいるお客様に出ています(ボタンは「お店の詳細を見る」で、お店の詳細ページに飛びます)。
             下でカードを登録すると、そのカードに置き換わります。
           </p>
           {(() => {

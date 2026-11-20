@@ -174,7 +174,7 @@ export default async function AdminAdCardsPage() {
                     <img src={c.image_url} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                   )}
                   <div className="min-w-0 flex-1 space-y-1">
-                    <p className="text-xs text-slate-500">{shopName(c)}{` · お店から${c.radius_km}km以内の無料店ページ`}</p>
+                    <p className="text-xs text-slate-500">{shopName(c)}{` · 現在地がお店から${c.radius_km}km以内のお客様(いなければランダム)`}</p>
                     <p className="text-sm font-semibold text-slate-900">{c.headline}</p>
                     {c.body && <p className="text-xs text-slate-700">{c.body}</p>}
                     <p className="truncate text-xs text-slate-500">ボタン「{c.cta}」→ {c.link_url}</p>

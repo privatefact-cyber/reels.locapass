@@ -1,6 +1,7 @@
 import { sanitizeImageUrl } from "@/lib/utils/sanitize-image-url";
 import { notFound } from "next/navigation";
 import { sanitizeWeekly, weeklyToText } from "@/lib/shop/businessHours";
+import { headers } from "next/headers";
 import Link from "@/components/i18n/LocaleLink";
 import QRCode from "qrcode";
 import type { Metadata } from "next";
@@ -440,7 +441,11 @@ export default async function ShopDetailPage({
     ? await (supabase as any).from("platform_settings").select("locapass_ad_slot_mode").eq("id", true).maybeSingle()
     : { data: null };
   const adMode = showsPromoSlot ? adSlotMode(adPreview, adSlotSetting?.locapass_ad_slot_mode === "live") : "off";
-  const ads = adMode === "live" ? await getAdCreatives({ shopId, locale, lat: shopRow.lat, lng: shopRow.lng, area: shopRow.area }) : { mid: [], bottom: null };
+  // 閲覧者のおおよその現在地(IPアドレスから。市区町村くらいの精度)。広告を、近くのお店のものに寄せるために使う。保存はしない。
+  const hdrs = adMode === "live" ? await headers() : null;
+  const num = (v: string | null | undefined) => (v && Number.isFinite(Number(v)) ? Number(v) : null);
+  const viewerGeo = { lat: num(hdrs?.get("x-vercel-ip-latitude")), lng: num(hdrs?.get("x-vercel-ip-longitude")) };
+  const ads = adMode === "live" ? await getAdCreatives({ shopId, locale, viewerLat: viewerGeo.lat, viewerLng: viewerGeo.lng }) : { mid: [], bottom: null };
   const nowIso = new Date().toISOString();
   const { data: spotRows } = await (supabase as any)
     .from("locapass_shop_events")

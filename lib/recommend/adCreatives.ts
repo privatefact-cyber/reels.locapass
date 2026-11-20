@@ -19,10 +19,11 @@ export type AdCreative = {
 };
 
 /**
- * 広告を出す側のページ(無料掲載の店舗)の情報。有料店のカードは、そのお店から配信範囲(radius_km)の中にあるページにだけ出す。
- * 業種は問わない(ランチを探していて、近くのピラティスが見つかる、という出会いも狙う)。座標が無いときは、同じ地域名(area)で代用する。
+ * 広告を見ている人(閲覧者)の情報。有料店のカードは、閲覧者の現在地(IPアドレスから分かる、市区町村くらいの精度)が
+ * 広告主のお店から配信範囲(radius_km)の中にあるときに出す。業種は問わない。
+ * 範囲の中に出せるカードが無い・現在地が分からないときは、対象のカードの中からランダムに出す(出す先が空にならないように)。
  */
-export type AdContext = { shopId: string; locale: string; lat?: number | null; lng?: number | null; area?: string | null; now?: number };
+export type AdContext = { shopId: string; locale: string; viewerLat?: number | null; viewerLng?: number | null; now?: number };
 
 /** 配信範囲の既定(km)。 */
 export const AD_DEFAULT_RADIUS_KM = 10;
@@ -36,21 +37,13 @@ function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): num
   return 2 * 6371 * Math.asin(Math.sqrt(h));
 }
 
-/** このページが広告主から見て配信範囲の中なら、距離(km)を返す。範囲外なら null。座標が無いときは同じ地域名なら遠めの距離(999)として通す。 */
-function distanceIfInRange(
-  adv: { lat: number | null; lng: number | null; area: string | null },
-  radiusKm: number,
-  ctx: AdContext,
-): number | null {
-  if (adv.lat != null && adv.lng != null && ctx.lat != null && ctx.lng != null) {
-    const d = distanceKm(adv.lat, adv.lng, ctx.lat, ctx.lng);
-    return d <= radiusKm ? d : null;
-  }
-  if (adv.area && ctx.area && adv.area === ctx.area) return 999;
-  return null;
+/** 閲覧者の現在地が分かっているとき、広告主のお店までの距離(km)。分からなければ null。 */
+function viewerDistanceKm(adv: { lat: number | null; lng: number | null }, ctx: AdContext): number | null {
+  if (adv.lat == null || adv.lng == null || ctx.viewerLat == null || ctx.viewerLng == null) return null;
+  return distanceKm(adv.lat, adv.lng, ctx.viewerLat, ctx.viewerLng);
 }
 
-/** ADオプションで広告を出せるプラン(無料・簡易版は不可)。 */
+/** ADオプションで広告を出せないプラン(無料・簡易版)。 */
 const AD_ADVERTISER_EXCLUDED_PLANS = ["free", "lite"];
 
 type Row = {
@@ -69,8 +62,10 @@ type Row = {
   radius_km: number;
   /** 広告主の店舗(運営のカードは null)。 */
   shop: { lat: number | null; lng: number | null; area: string | null; plan: string; status: string; ad_option_enabled: boolean } | null;
-  /** このページとの距離(km)。運営のカードは null。並び順に使う。 */
+  /** 閲覧者との距離(km)。運営のカードや、現在地が不明なときは null。並び順に使う。 */
   dist?: number | null;
+  /** 閲覧者の現在地が配信範囲の中か。 */
+  inRange?: boolean;
 };
 
 function hash(s: string): number {
@@ -114,15 +109,13 @@ async function activeCards(ctx: AdContext, now: number): Promise<Row[]> {
       .map((r) => ({ ...r, shop: Array.isArray(r.shop) ? (r.shop[0] ?? null) : r.shop }) as Row)
       .filter((r) => (!r.starts_at || Date.parse(r.starts_at) <= now) && (!r.ends_at || Date.parse(r.ends_at) > now))
       .flatMap((r): Row[] => {
-        if (!r.shop_id) return [{ ...r, dist: null }]; // 運営のカードは全ページ
+        if (!r.shop_id) return [{ ...r, dist: null, inRange: true }]; // 運営のカードは全員に
         const adv = r.shop;
         if (!adv || r.shop_id === ctx.shopId) return []; // 自分のページには出さない
         if (!adv.ad_option_enabled || adv.status !== "active" || AD_ADVERTISER_EXCLUDED_PLANS.includes(adv.plan)) return [];
-        const dist = distanceIfInRange(adv, r.radius_km ?? AD_DEFAULT_RADIUS_KM, ctx);
-        return dist == null ? [] : [{ ...r, dist }];
-      })
-      // 運営のカードが先、店舗のカードは近い順。
-      .sort((x, y) => (x.dist == null ? 0 : 1) - (y.dist == null ? 0 : 1) || (x.dist ?? 0) - (y.dist ?? 0));
+        const dist = viewerDistanceKm(adv, ctx);
+        return [{ ...r, dist, inRange: dist != null && dist <= (r.radius_km ?? AD_DEFAULT_RADIUS_KM) }];
+      });
   } catch {
     return [];
   }
@@ -132,55 +125,44 @@ type L4 = "ja" | "en" | "zh" | "ar";
 const AUTO_LABEL: Record<L4, string> = { ja: "PR", en: "Ad", zh: "广告", ar: "إعلان" };
 const AUTO_CTA: Record<L4, string> = { ja: "お店の詳細を見る", en: "View shop details", zh: "查看店铺详情", ar: "عرض تفاصيل المتجر" };
 
+type AutoCandidate = { creative: AdCreative; dist: number | null; inRange: boolean };
+
 /**
  * ADオプションの店舗が、配信中(承認済み)の自分のカードが1枚も無いときの自動カード。お店の情報(店名・ひとこと・写真)から作り、
  * リンク先は、その店の詳細ページ。設定をしなくても配信が始まる。お店が自分で公開している情報だけなので、承認は要らない。
- * 配信範囲は既定(AD_DEFAULT_RADIUS_KM)で、近い順に最大4店。
  */
-async function autoCards(ctx: AdContext): Promise<AdCreative[]> {
-  const hasCoords = ctx.lat != null && ctx.lng != null;
-  if (!hasCoords && !ctx.area) return [];
+async function autoCandidates(ctx: AdContext): Promise<AutoCandidate[]> {
   try {
     const admin = createAdminClient() as any;
-    let query = admin
+    const { data: shops } = await admin
       .from("locapass_shops")
-      .select("id, name, slug, tagline, cover_url, icon_url, plan, lat, lng, area, portal:locapass_portals ( slug )")
+      .select("id, name, slug, tagline, cover_url, icon_url, plan, lat, lng, portal:locapass_portals ( slug )")
       .eq("ad_option_enabled", true)
       .eq("status", "active")
-      .neq("id", ctx.shopId);
-    if (hasCoords) {
-      // 範囲の外を先に落とす(1度は約111km)。細かい距離は、あとで測る。
-      const dLat = AD_DEFAULT_RADIUS_KM / 111 + 0.01;
-      const dLng = AD_DEFAULT_RADIUS_KM / (111 * Math.max(0.2, Math.cos((ctx.lat! * Math.PI) / 180))) + 0.01;
-      query = query.gte("lat", ctx.lat! - dLat).lte("lat", ctx.lat! + dLat).gte("lng", ctx.lng! - dLng).lte("lng", ctx.lng! + dLng);
-    } else {
-      query = query.eq("area", ctx.area);
-    }
-    const { data: shops } = await query.limit(60);
-    const ranked = ((shops ?? []) as any[])
-      .filter((r) => !AD_ADVERTISER_EXCLUDED_PLANS.includes(r.plan))
-      .flatMap((r) => {
-        const dist = distanceIfInRange(r, AD_DEFAULT_RADIUS_KM, ctx);
-        return dist == null ? [] : [{ r, dist }];
-      });
-    if (ranked.length === 0) return [];
-    const { data: owned } = await admin.from("locapass_ad_cards").select("shop_id").eq("status", "approved").eq("is_active", true).in("shop_id", ranked.map((x) => x.r.id));
+      .neq("id", ctx.shopId)
+      .limit(200);
+    const eligible = ((shops ?? []) as any[]).filter((r) => !AD_ADVERTISER_EXCLUDED_PLANS.includes(r.plan));
+    if (eligible.length === 0) return [];
+    const { data: owned } = await admin.from("locapass_ad_cards").select("shop_id").eq("status", "approved").eq("is_active", true).in("shop_id", eligible.map((r) => r.id));
     const hasOwn = new Set(((owned ?? []) as { shop_id: string }[]).map((r) => r.shop_id));
     const loc: L4 = (["ja", "en", "zh", "ar"] as const).includes(ctx.locale as L4) ? (ctx.locale as L4) : "en";
-    return ranked
-      .filter((x) => !hasOwn.has(x.r.id))
-      .sort((a, b) => a.dist - b.dist)
-      .slice(0, 4)
-      .map(({ r }) => {
+    return eligible
+      .filter((r) => !hasOwn.has(r.id))
+      .map((r) => {
         const portal = Array.isArray(r.portal) ? r.portal[0] : r.portal;
+        const dist = viewerDistanceKm(r, ctx);
         return {
-          id: `auto:${r.id}`,
-          label: AUTO_LABEL[loc],
-          title: r.name as string,
-          sub: (r.tagline as string | null) ?? "",
-          cta: AUTO_CTA[loc],
-          href: portal?.slug ? `/${portal.slug}/shops/${r.slug}` : "/",
-          imageUrl: (r.cover_url as string | null) ?? (r.icon_url as string | null),
+          dist,
+          inRange: dist != null && dist <= AD_DEFAULT_RADIUS_KM,
+          creative: {
+            id: `auto:${r.id}`,
+            label: AUTO_LABEL[loc],
+            title: r.name as string,
+            sub: (r.tagline as string | null) ?? "",
+            cta: AUTO_CTA[loc],
+            href: portal?.slug ? `/${portal.slug}/shops/${r.slug}` : "/",
+            imageUrl: (r.cover_url as string | null) ?? (r.icon_url as string | null),
+          },
         };
       });
   } catch {
@@ -188,14 +170,26 @@ async function autoCards(ctx: AdContext): Promise<AdCreative[]> {
   }
 }
 
+/** 1つのページに並べる店舗のカードの最大数(運営のカードとは別)。 */
+const MAX_SHOP_CARDS = 4;
+
 export async function getAdCreatives(ctx: AdContext): Promise<{ mid: AdCreative[]; bottom: AdCreative | null }> {
   const now = ctx.now ?? Date.now();
-  const rows = await activeCards(ctx, now);
-  const auto = await autoCards(ctx);
-  const mid = [...rows.filter((r) => r.placement !== "bottom").map((r) => toCreative(r, ctx.locale)), ...auto];
-  const bottomRows = rows.filter((r) => r.placement !== "mid");
   const bucket = Math.floor(now / 3_600_000);
-  const bottomPool: AdCreative[] = [...bottomRows.map((r) => toCreative(r, ctx.locale)), ...auto];
+  const [rows, autos] = await Promise.all([activeCards(ctx, now), autoCandidates(ctx)]);
+
+  // 店舗のカード(登録済み+自動)を、閲覧者の現在地が配信範囲の中のものに絞る。1つも無ければ、全部の中からランダム(時間ごとに安定)。
+  type Cand = { creative: AdCreative; dist: number | null; inRange: boolean; placement: Row["placement"] };
+  const shopCands: Cand[] = [
+    ...rows.filter((r) => r.shop_id).map((r) => ({ creative: toCreative(r, ctx.locale), dist: r.dist ?? null, inRange: !!r.inRange, placement: r.placement })),
+    ...autos.map((a) => ({ ...a, placement: "both" as const })),
+  ];
+  const inRange = shopCands.filter((c) => c.inRange).sort((a, b) => (a.dist ?? 0) - (b.dist ?? 0));
+  const chosen = (inRange.length > 0 ? inRange : [...shopCands].sort((a, b) => hash(`${a.creative.id}|${ctx.shopId}|${bucket}`) - hash(`${b.creative.id}|${ctx.shopId}|${bucket}`))).slice(0, MAX_SHOP_CARDS);
+
+  const operator = rows.filter((r) => !r.shop_id);
+  const mid = [...operator.filter((r) => r.placement !== "bottom").map((r) => toCreative(r, ctx.locale)), ...chosen.filter((c) => c.placement !== "bottom").map((c) => c.creative)];
+  const bottomPool: AdCreative[] = [...operator.filter((r) => r.placement !== "mid").map((r) => toCreative(r, ctx.locale)), ...chosen.filter((c) => c.placement !== "mid").map((c) => c.creative)];
   const bottom = bottomPool.length ? bottomPool[hash(`${ctx.shopId}|bottom|${bucket}`) % bottomPool.length] : null;
   return { mid, bottom };
 }
