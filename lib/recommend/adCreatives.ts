@@ -20,6 +20,9 @@ export type AdCreative = {
 type L = "ja" | "en" | "zh" | "ar";
 const pick = <T,>(m: Record<L, T>, locale: string): T => m[(["ja", "en", "zh", "ar"] as const).includes(locale as L) ? (locale as L) : "en"];
 
+/** false の間はロカわんの広告だけを出す。true にすると、プラン案内・ジャーナル記事と時間ごとに入れ替わる。 */
+const ROTATE_OTHER_CREATIVES = false;
+
 export type AdContext = { shopId: string; locale: string; petOk: boolean; now?: number };
 
 function hash(s: string): number {
@@ -48,15 +51,18 @@ async function latestJournal(): Promise<{ slug: string; title: string; descripti
 
 export async function pickAdCreative(position: AdSlotPosition, ctx: AdContext): Promise<AdCreative | null> {
   const list: AdCreative[] = [];
-  if (ctx.petOk) {
-    list.push({
-      id: "pet",
-      label: pick({ ja: "PR", en: "Ad", zh: "广告", ar: "إعلان" }, ctx.locale),
-      title: pick({ ja: "ロカわん — 愛犬とおでかけ", en: "Locawan — outings with your dog", zh: "Locawan — 带爱犬出门", ar: "Locawan — نزهات مع كلبك" }, ctx.locale),
-      sub: pick({ ja: "ペットと行けるお店・スポットを地図で探せます", en: "Find pet-friendly places on the map", zh: "在地图上找到可带宠物的地方", ar: "ابحث عن أماكن تقبل الحيوانات على الخريطة" }, ctx.locale),
-      cta: pick({ ja: "ロカわんを見る", en: "See Locawan", zh: "查看 Locawan", ar: "عرض Locawan" }, ctx.locale),
-      href: "/pet/app",
-    });
+  // ロカわん連携のお知らせ。いまはこれを全店舗ページ(ペット同伴可かどうかに関係なく)に出す。
+  list.push({
+    id: "pet",
+    label: pick({ ja: "PR", en: "Ad", zh: "广告", ar: "إعلان" }, ctx.locale),
+    title: pick({ ja: "ペットのためのアプリ「ロカわん」が連携しました!", en: "Locawan, the app for pets, is now connected!", zh: "宠物专属应用「Locawan」已联动!", ar: "تطبيق Locawan للحيوانات الأليفة أصبح متصلاً الآن!" }, ctx.locale),
+    sub: pick({ ja: "愛犬の手帳・ペットと行けるお店やスポットの地図・誕生日の通知まで、これ1つで", en: "Your dog's notebook, a map of pet-friendly places and birthday reminders, all in one app", zh: "爱犬手册、可带宠物的店铺地图、生日提醒,一个应用全搞定", ar: "دفتر كلبك وخريطة الأماكن التي تقبل الحيوانات وتذكير أعياد الميلاد في تطبيق واحد" }, ctx.locale),
+    cta: pick({ ja: "ロカわんを見る", en: "See Locawan", zh: "查看 Locawan", ar: "عرض Locawan" }, ctx.locale),
+    href: "/pet/app",
+  });
+  // いまはロカわんだけを出す。下の2つ(掲載店向けのプラン案内・ジャーナル)は、枠を入れ替えて出すときに true にする。
+  if (!ROTATE_OTHER_CREATIVES) {
+    return list[0];
   }
   list.push({
     id: "plan",
