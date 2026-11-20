@@ -1,14 +1,14 @@
 import { createStaticClient } from "@/lib/supabase/static";
-import type { AdSlotPosition } from "@/lib/recommend/adSlots";
+import { pickTranslation } from "@/lib/i18n/contentTranslation";
 
 /**
- * 広告枠に流す自社の中身(いまは外部広告なし)。無料掲載の店舗ページだけで使う。
- *  - pet     : ロカわん(愛犬)の案内。ペット同伴可の店のページにだけ出す(関係のないページには出さない)。
- *  - plan    : 掲載店の方へ、有料掲載でこの枠が消えることの案内(無料と有料の差を伝える)。
- *  - journal : 編集枠。最新のジャーナル記事を紹介する。
- * どれを出すかは、店舗ごと・時間ごとに安定して入れ替わる(同じ人が同じ時間にリロードしても変わらない)。
+ * 広告枠に流すカード。管理画面(/admin/ad-cards)で登録したもの(locapass_ad_cards)を読む。無料掲載の店舗ページだけで使う。
+ *  - 上の枠(mid)    : 有効なカードを並び順に、横スライドで並べる。
+ *  - 下の枠(bottom) : 1枚の横長バナー。店舗・時間ごとに安定して入れ替わる(同じ人が同じ時間にリロードしても変わらない)。
+ * 取得に失敗したときは、何も出さない(ページ本体の表示には影響しない)。
  */
 export type AdCreative = {
+  /** 表示・タップの記録に使う識別子(例: ad:<カードのid>)。 */
   id: string;
   label: string;
   title: string;
@@ -17,13 +17,22 @@ export type AdCreative = {
   href: string;
   imageUrl?: string | null;
 };
-type L = "ja" | "en" | "zh" | "ar";
-const pick = <T,>(m: Record<L, T>, locale: string): T => m[(["ja", "en", "zh", "ar"] as const).includes(locale as L) ? (locale as L) : "en"];
 
-/** false の間はロカわんの広告だけを出す。true にすると、プラン案内・ジャーナル記事と時間ごとに入れ替わる。 */
-const ROTATE_OTHER_CREATIVES = false;
+export type AdContext = { shopId: string; locale: string; now?: number };
 
-export type AdContext = { shopId: string; locale: string; petOk: boolean; now?: number };
+type Row = {
+  id: string;
+  label: string;
+  headline: string;
+  body: string | null;
+  cta: string;
+  link_url: string;
+  image_url: string | null;
+  placement: "mid" | "bottom" | "both";
+  starts_at: string | null;
+  ends_at: string | null;
+  translations: unknown;
+};
 
 function hash(s: string): number {
   let h = 2166136261;
@@ -34,57 +43,42 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
-async function latestJournal(): Promise<{ slug: string; title: string; description: string | null; cover_url: string | null } | null> {
+function toCreative(r: Row, locale: string): AdCreative {
+  const loc = (["ja", "en", "zh", "ar"] as const).includes(locale as "ja") ? (locale as "ja" | "en" | "zh" | "ar") : "en";
+  const t = (value: string | null, key: string) => pickTranslation(loc, value, r.translations, key).text ?? value ?? "";
+  return {
+    id: `ad:${r.id}`,
+    label: t(r.label, "label"),
+    title: t(r.headline, "headline"),
+    sub: t(r.body, "body"),
+    cta: t(r.cta, "cta"),
+    href: r.link_url,
+    imageUrl: r.image_url,
+  };
+}
+
+async function activeCards(now: number): Promise<Row[]> {
   try {
-    const { data } = await (createStaticClient() as any)
-      .from("locapass_journal_posts")
-      .select("slug, title, description, cover_url")
-      .eq("status", "published")
-      .order("published_on", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    return data ?? null;
+    const { data, error } = await (createStaticClient() as any)
+      .from("locapass_ad_cards")
+      .select("id, label, headline, body, cta, link_url, image_url, placement, starts_at, ends_at, translations")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(20);
+    if (error || !data) return [];
+    return (data as Row[]).filter((r) => (!r.starts_at || Date.parse(r.starts_at) <= now) && (!r.ends_at || Date.parse(r.ends_at) > now));
   } catch {
-    return null;
+    return [];
   }
 }
 
-export async function pickAdCreative(position: AdSlotPosition, ctx: AdContext): Promise<AdCreative | null> {
-  const list: AdCreative[] = [];
-  // ロカわん連携のお知らせ。いまはこれを全店舗ページ(ペット同伴可かどうかに関係なく)に出す。
-  list.push({
-    id: "pet",
-    label: pick({ ja: "PR", en: "Ad", zh: "广告", ar: "إعلان" }, ctx.locale),
-    title: pick({ ja: "ペットのためのアプリ「ロカわん」が連携しました!", en: "Locawan, the app for pets, is now connected!", zh: "宠物专属应用「Locawan」已联动!", ar: "تطبيق Locawan للحيوانات الأليفة أصبح متصلاً الآن!" }, ctx.locale),
-    sub: pick({ ja: "愛犬の手帳・ペットと行けるお店やスポットの地図・誕生日の通知まで、これ1つで", en: "Your dog's notebook, a map of pet-friendly places and birthday reminders, all in one app", zh: "爱犬手册、可带宠物的店铺地图、生日提醒,一个应用全搞定", ar: "دفتر كلبك وخريطة الأماكن التي تقبل الحيوانات وتذكير أعياد الميلاد في تطبيق واحد" }, ctx.locale),
-    cta: pick({ ja: "ロカわんを見る", en: "See Locawan", zh: "查看 Locawan", ar: "عرض Locawan" }, ctx.locale),
-    href: "/pet/app",
-  });
-  // いまはロカわんだけを出す。下の2つ(掲載店向けのプラン案内・ジャーナル)は、枠を入れ替えて出すときに true にする。
-  if (!ROTATE_OTHER_CREATIVES) {
-    return list[0];
-  }
-  list.push({
-    id: "plan",
-    label: pick({ ja: "お知らせ", en: "Notice", zh: "通知", ar: "إشعار" }, ctx.locale),
-    title: pick({ ja: "掲載店の方へ", en: "For venue owners", zh: "致店家", ar: "لأصحاب المتاجر" }, ctx.locale),
-    sub: pick({ ja: "有料掲載にすると、このページの広告枠とおすすめ枠が消え、他店ページで優先して紹介されます", en: "Upgrade to remove ads on this page and be featured first on other venues' pages", zh: "升级为付费后,本页的广告将消失,并优先出现在其他店铺页面", ar: "بالترقية تختفي الإعلانات من هذه الصفحة وتظهر متجرك أولاً في صفحات المتاجر الأخرى" }, ctx.locale),
-    cta: pick({ ja: "プランを相談する", en: "Ask about plans", zh: "咨询方案", ar: "اسأل عن الباقات" }, ctx.locale),
-    href: "/support",
-  });
-  const j = await latestJournal();
-  if (j) {
-    list.push({
-      id: `journal:${j.slug}`.slice(0, 80),
-      label: pick({ ja: "特集", en: "Feature", zh: "专题", ar: "مقال" }, ctx.locale),
-      title: j.title,
-      sub: j.description ?? "",
-      cta: pick({ ja: "記事を読む", en: "Read", zh: "阅读", ar: "اقرأ" }, ctx.locale),
-      href: `/journal/${j.slug}`,
-      imageUrl: j.cover_url,
-    });
-  }
-  if (list.length === 0) return null;
-  const bucket = Math.floor((ctx.now ?? Date.now()) / 3_600_000);
-  return list[hash(`${ctx.shopId}|${position}|${bucket}`) % list.length];
+export async function getAdCreatives(ctx: AdContext): Promise<{ mid: AdCreative[]; bottom: AdCreative | null }> {
+  const now = ctx.now ?? Date.now();
+  const rows = await activeCards(now);
+  const mid = rows.filter((r) => r.placement !== "bottom").map((r) => toCreative(r, ctx.locale));
+  const bottomRows = rows.filter((r) => r.placement !== "mid");
+  const bucket = Math.floor(now / 3_600_000);
+  const bottomRow = bottomRows.length ? bottomRows[hash(`${ctx.shopId}|bottom|${bucket}`) % bottomRows.length] : null;
+  return { mid, bottom: bottomRow ? toCreative(bottomRow, ctx.locale) : null };
 }

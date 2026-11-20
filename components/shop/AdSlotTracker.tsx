@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 /** 広告枠の表示(画面に半分以上入ったとき1回)とタップを、/api/ad-event に送る。失敗しても画面には影響しない。 */
-export function AdSlotTracker({ slot, creative, shopId, locale, children }: { slot: "mid" | "bottom"; creative: string; shopId: string; locale: string; children: ReactNode }) {
+export function AdSlotTracker({ slot, creative, shopId, locale, children, className }: { slot: "mid" | "bottom"; creative: string; shopId: string; locale: string; children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const sent = useRef(false);
   const send = (kind: "imp" | "tap") => {
@@ -32,7 +32,7 @@ export function AdSlotTracker({ slot, creative, shopId, locale, children }: { sl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <div ref={ref} onClickCapture={() => send("tap")}>
+    <div ref={ref} data-ad-card="" className={className} onClickCapture={() => send("tap")}>
       {children}
     </div>
   );
