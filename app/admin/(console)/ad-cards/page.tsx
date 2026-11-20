@@ -21,7 +21,7 @@ type Card = {
   shop_id: string | null;
   status: "pending" | "approved" | "rejected";
   reject_reason: string | null;
-  same_category_only: boolean;
+  radius_km: number;
   shop: { name: string } | { name: string }[] | null;
 };
 
@@ -117,7 +117,7 @@ export default async function AdminAdCardsPage() {
   const supabase = await createClient();
   const { data } = await (supabase as any)
     .from("locapass_ad_cards")
-    .select("id, title, label, headline, body, cta, link_url, image_url, placement, is_active, sort_order, starts_at, ends_at, shop_id, status, reject_reason, same_category_only, shop:locapass_shops ( name )")
+    .select("id, title, label, headline, body, cta, link_url, image_url, placement, is_active, sort_order, starts_at, ends_at, shop_id, status, reject_reason, radius_km, shop:locapass_shops ( name )")
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
   const all = (data ?? []) as Card[];
@@ -174,7 +174,7 @@ export default async function AdminAdCardsPage() {
                     <img src={c.image_url} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                   )}
                   <div className="min-w-0 flex-1 space-y-1">
-                    <p className="text-xs text-slate-500">{shopName(c)}{c.same_category_only ? " · 同じ業種のページだけ" : " · 同じエリアの無料店ページ"}</p>
+                    <p className="text-xs text-slate-500">{shopName(c)}{` · お店から${c.radius_km}km以内の無料店ページ`}</p>
                     <p className="text-sm font-semibold text-slate-900">{c.headline}</p>
                     {c.body && <p className="text-xs text-slate-700">{c.body}</p>}
                     <p className="truncate text-xs text-slate-500">ボタン「{c.cta}」→ {c.link_url}</p>

@@ -41,7 +41,10 @@ async function authorize(shopId: string) {
   return { admin, shop, ownPath };
 }
 
-type Parsed = { label: string; headline: string; body: string | null; cta: string; link_url: string; same_category_only: boolean };
+/** 選べる配信範囲(km)。広告主のお店から、この距離の中にある無料・Liteの店舗ページに出る。 */
+const RADIUS_CHOICES = [1, 3, 5, 10, 30, 50];
+
+type Parsed = { label: string; headline: string; body: string | null; cta: string; link_url: string; radius_km: number };
 
 function parse(formData: FormData, ownPath: string): Parsed {
   const headline = String(formData.get("headline") ?? "").trim();
@@ -53,10 +56,12 @@ function parse(formData: FormData, ownPath: string): Parsed {
   if (body && body.length > 200) throw new Error("説明は200文字以内にしてください");
   if (cta.length > 30) throw new Error("ボタンの文言は30文字以内にしてください");
   if ([headline, body ?? "", cta].some((t) => containsNgWord(t))) throw new Error("使えない言葉が含まれています");
+  const radius_km = Number(formData.get("radiusKm") ?? 10);
+  if (!RADIUS_CHOICES.includes(radius_km)) throw new Error("配信範囲が正しくありません");
   // リンク先は、空欄ならお店のページ。外部は https のURLだけ。
   const link_url = rawLink || ownPath;
   if (rawLink && !/^https:\/\//.test(rawLink)) throw new Error("リンク先は https:// から始まるURLにしてください(空欄ならお店のページになります)");
-  return { label: "PR", headline, body, cta, link_url, same_category_only: formData.get("sameCategory") === "on" };
+  return { label: "PR", headline, body, cta, link_url, radius_km };
 }
 
 async function uploadImage(admin: any, shopId: string, file: FormDataEntryValue | null): Promise<string | null> {
