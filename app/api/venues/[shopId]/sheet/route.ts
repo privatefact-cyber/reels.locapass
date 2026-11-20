@@ -52,7 +52,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sho
 
   const nowJst = getJstNow();
   // オプション列は型定義に無いので、別に引く。
-  const { data: aiRow } = await (supabase as any).from("locapass_shops").select("ai_chat_enabled").eq("id", shop.id).maybeSingle();
+  const { data: aiRow } = await (supabase as any).from("locapass_shops").select("ai_chat_enabled, plan").eq("id", shop.id).maybeSingle();
+  // 無料プランは問い合わせを受けられない(アカウントが無く対応できない)ので、予約・問い合わせボタンは出さない。lite以上だけ。
+  const canContact = !!aiRow?.plan && aiRow.plan !== "free";
   const [{ data: castRows, error: castError }, { data: priceRows }, photoPosts] = await Promise.all([
     // 公開用ビュー(個人情報を含まない・公開中店舗の退会していないキャストだけ)。
     supabase.from("locapass_public_casts").select("id, name, issue_no, avatar_url").eq("shop_id", shop.id).order("name").limit(40),
@@ -86,7 +88,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sho
   const phone = (shop.tel as string | null) ?? null;
   const bookingUrl = (shop.booking_url as string | null) ?? null;
   const lineUrl = (shop.line_url as string | null) ?? null;
-  const reserve = bookingUrl
+  const reserve = !canContact
+    ? null
+    : bookingUrl
     ? { href: bookingUrl, label: (shop.booking_label as string | null) ?? null, external: true, destination: bookingDestinationKey(bookingUrl) }
     : lineUrl
       ? { href: lineUrl, label: null, external: true, destination: "line" }

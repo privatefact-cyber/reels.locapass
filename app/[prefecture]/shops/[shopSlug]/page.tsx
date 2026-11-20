@@ -843,7 +843,8 @@ export default async function ShopDetailPage({
             </div>
           )}
 
-          <InquiryButton shopId={store.id} shopName={store.name} />
+          {/* 無料プランは問い合わせを受けられない(アカウントが無い)ので出さない。lite以上のみ。 */}
+          {shopRow.plan && shopRow.plan !== "free" && <InquiryButton shopId={store.id} shopName={store.name} />}
 
           {/* リンク・SNS */}
           {(store.websiteUrl || store.snsLinks.x || store.snsLinks.instagram || store.snsLinks.line) && (
