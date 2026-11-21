@@ -3,7 +3,7 @@
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Search, Store } from "lucide-react";
+import { ChevronLeft, Maximize2, MapPin, Navigation, Play, Plus, Search, Store } from "lucide-react";
 import { PhotoShareButton } from "@/components/photo/PhotoShareButton";
 import type { PhotoArea, PhotoPost } from "@/lib/photo/getPhotoPosts";
 import { LOCALE_CHANGE_EVENT, saveRestore, takeRestore } from "@/lib/i18n/restoreState";
@@ -430,9 +430,10 @@ export function PhotoFeed({
             </button>
             <Link
               href="/photo/new"
-              className="ml-auto shrink-0 rounded-full bg-cta-light px-4 py-1.5 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover"
+              aria-label={t.photo.postButton.replace(/^＋\s*/, "")}
+              className="fixed left-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-hl-400 text-white shadow-lg shadow-black/30 active:scale-95 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-8"
             >
-              {t.photo.postButton}
+              <Plus size={28} />
             </Link>
           </div>
         )}

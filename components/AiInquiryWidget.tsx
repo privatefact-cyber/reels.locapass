@@ -590,6 +590,14 @@ export function AiInquiryWidget({
                 )}
               </div>
             ))}
+            {loading && (
+              <div className="flex w-fit items-center gap-1 rounded-xl border border-main/10 bg-main/5 px-4 py-3" aria-label="…" role="status">
+                <style>{`@keyframes lp-wave{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}`}</style>
+                {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                  <span key={i} className="h-5 w-1 origin-center rounded-full bg-accent" style={{ animation: "lp-wave 1s ease-in-out infinite", animationDelay: `${i * 0.12}s` }} />
+                ))}
+              </div>
+            )}
             {escalated && (
               <div className="rounded-xl border border-accent/20 bg-main/5 px-3 py-2 text-[11px] leading-relaxed text-tone-300">
                 {t.ai.escalatedNotice}
