@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
-import { Bell, BookOpen, Camera, ChevronRight, CircleHelp, Compass, MapPinned, Settings, User, X, Zap } from "lucide-react";
+import { Bell, BookOpen, Camera, ChevronRight, CircleHelp, Compass, MapPinned, MessageCircle, Settings, User, X, Zap } from "lucide-react";
 import { SELECT_FEED_EVENT, type FeedKind } from "@/lib/reels/events";
 import { useLocale, usePublicPathname, useLocaleRouter } from "@/components/i18n/LocaleProvider";
 
@@ -12,6 +12,7 @@ type Props = {
   /** ホーム(子ポータル内ならそのポータルのトップ)。「見る」の選択は、ここのフィードに反映する。 */
   home: string;
   boostHref: string;
+  voiceHref: string;
   accountHref: string;
   hasManagement: boolean;
 };
@@ -27,7 +28,7 @@ const FEEDS: { kind: FeedKind; label: string }[] = [
  * 一番上に「見る」(フィードの切り替え。以前の2段階の選択を1タップにしたもの)を置き、
  * その下にサービス・アカウント・規約への入口をまとめる。入口が増えたら、ここに足す。
  */
-export function MenuSheet({ open, onClose, home, boostHref, accountHref, hasManagement }: Props) {
+export function MenuSheet({ open, onClose, home, boostHref, voiceHref, accountHref, hasManagement }: Props) {
   const router = useLocaleRouter();
   const pathname = usePublicPathname();
   const { t, locale } = useLocale();
@@ -144,6 +145,11 @@ export function MenuSheet({ open, onClose, home, boostHref, accountHref, hasMana
           <Link href={boostHref} className={`${row} font-bold text-amber-400`}>
             <Zap size={18} />
             BOOST
+            <ChevronRight size={16} className="ml-auto text-tone-500" />
+          </Link>
+          <Link href={voiceHref} className={row}>
+            <MessageCircle size={18} className="text-tone-300" />
+            VOICE
             <ChevronRight size={16} className="ml-auto text-tone-500" />
           </Link>
           <Link href="/journal" className={row}>

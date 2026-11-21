@@ -354,6 +354,7 @@ export function ReelFeed({
   ads = [],
   boostCount = 0,
   boostHref = "/boost",
+  voiceHref = "/locapass/murmurs",
 }: {
   /** 初回表示ぶんのリール。続きは reelsHasMore が true の間、/api/reels/feed で足していく。 */
   reels: ReelItem[];
@@ -371,6 +372,8 @@ export function ReelFeed({
   boostCount?: number;
   /** BOOSTピルの行き先。子ポータルでは /{slug}/boost(そのポータルの店舗だけ)。 */
   boostHref?: string;
+  /** VOICE(店の短い投稿)のタイムラインへのピルの行き先。子ポータルでは /{slug}/murmurs。 */
+  voiceHref?: string;
 }) {
   const { locale, t } = useLocale();
   const [reels, setReels] = useState(initialReels);
@@ -1095,6 +1098,9 @@ export function ReelFeed({
               {/* PHOTO: 途中のページを挟まず、そのままフォト(/photo)へ。 */}
               <Link href="/photo" className={pillClass(false)}>
                 SNAP
+              </Link>
+              <Link href={voiceHref} className={pillClass(false)}>
+                VOICE
               </Link>
               <Link
                 href={boostHref}

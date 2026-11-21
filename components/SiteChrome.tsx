@@ -46,6 +46,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
   const inPortal = portalSlugs.includes(firstSegment);
   const eventsHref = inPortal ? `/${firstSegment}/events` : "/events";
   // 検索・NOW・メニューが戻る先。子ポータル内ではそのポータルのトップ(全体トップへ飛ばさない)。
+  const voiceHref = inPortal ? `/${firstSegment}/murmurs` : "/locapass/murmurs";
   const home = inPortal ? `/${firstSegment}` : "/";
 
   return (
@@ -83,6 +84,9 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
               </Link>
               <Link href={inPortal ? `/${firstSegment}/boost` : "/boost"} className="font-bold text-amber-400 transition hover:text-amber-300">
                 ⚡ BOOST
+              </Link>
+              <Link href={voiceHref} className="transition hover:text-accent">
+                VOICE
               </Link>
               <Link href="/map" className="inline-flex items-center gap-1.5 transition hover:text-accent">
                 <MapIcon size={16} />
@@ -162,6 +166,7 @@ export function SiteChrome({ myPageAvatarUrl, myPageInitial, portalSlugs, hasMan
         onClose={() => setMenuOpen(false)}
         home={home}
         boostHref={inPortal ? `/${firstSegment}/boost` : "/boost"}
+        voiceHref={voiceHref}
         accountHref={accountHref}
         hasManagement={hasManagement}
       />

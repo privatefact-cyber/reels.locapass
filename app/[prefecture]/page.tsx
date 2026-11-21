@@ -77,8 +77,8 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
   // このポータルの店舗の緊急ブーストだけ(失敗してもポータル全体は表示する)。
   const boosts = await getActiveBoosts(portal.id).catch(() => []);
   const bt = boostText(locale);
-  // VOICE(店の短い投稿)の最新3件。失敗してもポータル全体は表示する。
-  const voices = await listLatestMurmurs(createStaticClient() as never, portal.id, 3).catch(() => []);
+  // VOICE(店の短い投稿)の最新1件(そのポータルの店だけ。無ければ帯ごと出さない)。失敗してもポータル全体は表示する。
+  const voices = await listLatestMurmurs(createStaticClient() as never, portal.id, 1).catch(() => []);
 
   return (
     <div id="portal-feed" className="space-y-4">
@@ -123,7 +123,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
         </Link>
       )}
       <VoiceStrip items={voices} href={`/${slug}/murmurs`} locale={locale} />
-      <ReelFeed reels={reels} reelsHasMore={reelsHasMore} feedPortalId={portal.id} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} boostHref={`/${slug}/boost`} />
+      <ReelFeed reels={reels} reelsHasMore={reelsHasMore} feedPortalId={portal.id} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} boostHref={`/${slug}/boost`} voiceHref={`/${slug}/murmurs`} />
       {locale === "ja" && <AreaCategoryLinks portalSlug={slug} />}
     </div>
   );
