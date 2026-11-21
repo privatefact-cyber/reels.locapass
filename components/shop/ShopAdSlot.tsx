@@ -37,6 +37,7 @@ function wideImage(url: string | null | undefined): string | undefined {
 /** 上の枠・下の枠で使うカード。画像があれば大きく見せ(上の枠=上半分、下の枠=左側)、無ければ文字だけの形にする。 */
 function AdCard({ creative, position, size }: { creative: AdCreative; position: AdSlotPosition; size: { width: number; height: number } }) {
   const img = wideImage(creative.imageUrl);
+  const pos = `${creative.focus?.x ?? 50}% ${creative.focus?.y ?? 50}%`;
   const labelChip = "inline-block rounded bg-tone-500/30 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-tone-200";
   const frame = "h-full w-full overflow-hidden rounded-xl border border-tone-500/40 bg-panel-900/60";
 
@@ -45,7 +46,7 @@ function AdCard({ creative, position, size }: { creative: AdCreative; position: 
       <aside aria-label={creative.label} data-ad-slot={position} className={frame} style={{ minHeight: size.height }}>
         <AdLink href={creative.href} className="flex h-full min-h-[inherit] items-stretch">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={img} alt="" loading="lazy" decoding="async" width={1200} height={628} className="w-[42%] shrink-0 object-cover" />
+          <img src={img} alt="" loading="lazy" decoding="async" width={1200} height={628} className="w-[42%] shrink-0 object-cover" style={{ objectPosition: pos }} />
           <div className="flex min-w-0 flex-1 flex-col justify-between gap-1 p-3">
             <div className="space-y-0.5">
               <span className={labelChip}>{creative.label}</span>
@@ -64,7 +65,7 @@ function AdCard({ creative, position, size }: { creative: AdCreative; position: 
         <AdLink href={creative.href} className="flex h-full flex-col">
           <div className="relative w-full" style={{ aspectRatio: "1200 / 628" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img} alt="" loading="lazy" decoding="async" width={1200} height={628} className="absolute inset-0 h-full w-full object-cover" />
+            <img src={img} alt="" loading="lazy" decoding="async" width={1200} height={628} className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: pos }} />
             <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">{creative.label}</span>
           </div>
           <div className="flex flex-1 flex-col justify-between gap-1.5 p-3">

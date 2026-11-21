@@ -61,6 +61,15 @@ function parse(formData: FormData): Parsed {
   };
 }
 
+/** 画像の見せたい中心(0〜100%)。 */
+function parseFocus(formData: FormData): { image_focus_x: number; image_focus_y: number } {
+  const clamp = (v: FormDataEntryValue | null) => {
+    const n = Math.round(Number(v ?? 50));
+    return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50;
+  };
+  return { image_focus_x: clamp(formData.get("focusX")), image_focus_y: clamp(formData.get("focusY")) };
+}
+
 async function uploadImage(file: FormDataEntryValue | null): Promise<string | null> {
   if (!(file instanceof File) || file.size === 0) return null;
   // 規格(サイズ・形式・容量)に合わない画像は弾く。
@@ -93,7 +102,7 @@ export async function createAdCard(formData: FormData) {
   const image_url = await uploadImage(formData.get("image"));
   const translations = await translate(p);
   const supabase = await createClient();
-  const { error } = await (supabase as any).from("locapass_ad_cards").insert({ ...p, image_url, translations, is_active: true });
+  const { error } = await (supabase as any).from("locapass_ad_cards").insert({ ...p, ...parseFocus(formData), image_url, translations, is_active: true });
   if (error) throw new Error(`登録に失敗しました: ${error.message}`);
   refresh();
 }
@@ -105,7 +114,7 @@ export async function updateAdCard(id: string, formData: FormData) {
   const removeImage = formData.get("removeImage") === "on";
   const translations = await translate(p);
   const supabase = await createClient();
-  const patch: Record<string, unknown> = { ...p, translations, updated_at: new Date().toISOString() };
+  const patch: Record<string, unknown> = { ...p, ...parseFocus(formData), translations, updated_at: new Date().toISOString() };
   if (newImage) patch.image_url = newImage;
   else if (removeImage) patch.image_url = null;
   const { error } = await (supabase as any).from("locapass_ad_cards").update(patch).eq("id", id);

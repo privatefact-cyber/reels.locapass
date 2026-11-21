@@ -16,6 +16,8 @@ export type AdCreative = {
   cta: string;
   href: string;
   imageUrl?: string | null;
+  /** 画像の見せたい中心(0〜100%)。枠に合わせて切り取るとき、この点が見えるようにする。 */
+  focus?: { x: number; y: number };
 };
 
 /**
@@ -54,6 +56,8 @@ type Row = {
   cta: string;
   link_url: string;
   image_url: string | null;
+  image_focus_x: number;
+  image_focus_y: number;
   placement: "mid" | "bottom" | "both";
   starts_at: string | null;
   ends_at: string | null;
@@ -88,6 +92,7 @@ function toCreative(r: Row, locale: string): AdCreative {
     cta: t(r.cta, "cta"),
     href: r.link_url,
     imageUrl: r.image_url,
+    focus: { x: r.image_focus_x ?? 50, y: r.image_focus_y ?? 50 },
   };
 }
 
@@ -97,7 +102,7 @@ async function activeCards(ctx: AdContext, now: number): Promise<Row[]> {
     const { data, error } = await (createAdminClient() as any)
       .from("locapass_ad_cards")
       .select(
-        "id, label, headline, body, cta, link_url, image_url, placement, starts_at, ends_at, translations, shop_id, radius_km, shop:locapass_shops ( lat, lng, area, plan, status, ad_option_enabled )",
+        "id, label, headline, body, cta, link_url, image_url, image_focus_x, image_focus_y, placement, starts_at, ends_at, translations, shop_id, radius_km, shop:locapass_shops ( lat, lng, area, plan, status, ad_option_enabled )",
       )
       .eq("is_active", true)
       .eq("status", "approved")

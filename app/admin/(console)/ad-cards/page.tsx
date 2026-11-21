@@ -13,6 +13,8 @@ type Card = {
   cta: string;
   link_url: string;
   image_url: string | null;
+  image_focus_x?: number;
+  image_focus_y?: number;
   placement: "mid" | "bottom" | "both";
   is_active: boolean;
   sort_order: number;
@@ -71,15 +73,11 @@ function Fields({ card }: { card?: Card }) {
       </div>
       <div>
         <label className={labelCls}>画像(任意)</label>
-        <AdBannerInput name="image" className="mt-1 block w-full text-sm text-slate-700" />
+        <AdBannerInput name="image" className="mt-1 block w-full text-sm text-slate-700" initialUrl={card?.image_url} initialFocusX={card?.image_focus_x ?? 50} initialFocusY={card?.image_focus_y ?? 50} />
         {card?.image_url && (
-          <div className="mt-2 flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={card.image_url} alt="" className="h-14 w-14 rounded-lg object-cover" />
-            <label className="flex items-center gap-1.5 text-xs text-slate-600">
-              <input type="checkbox" name="removeImage" /> 画像を外す
-            </label>
-          </div>
+          <label className="mt-2 flex items-center gap-1.5 text-xs text-slate-600">
+            <input type="checkbox" name="removeImage" /> 画像を外す
+          </label>
         )}
       </div>
       <div className="grid gap-4 sm:grid-cols-4">
@@ -117,7 +115,7 @@ export default async function AdminAdCardsPage() {
   const supabase = await createClient();
   const { data } = await (supabase as any)
     .from("locapass_ad_cards")
-    .select("id, title, label, headline, body, cta, link_url, image_url, placement, is_active, sort_order, starts_at, ends_at, shop_id, status, reject_reason, radius_km, shop:locapass_shops ( name )")
+    .select("id, title, label, headline, body, cta, link_url, image_url, image_focus_x, image_focus_y, placement, is_active, sort_order, starts_at, ends_at, shop_id, status, reject_reason, radius_km, shop:locapass_shops ( name )")
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
   const all = (data ?? []) as Card[];

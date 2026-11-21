@@ -64,6 +64,15 @@ function parse(formData: FormData, ownPath: string): Parsed {
   return { label: "PR", headline, body, cta, link_url, radius_km };
 }
 
+/** 画像の見せたい中心(0〜100%)。 */
+function parseFocus(formData: FormData): { image_focus_x: number; image_focus_y: number } {
+  const clamp = (v: FormDataEntryValue | null) => {
+    const n = Math.round(Number(v ?? 50));
+    return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50;
+  };
+  return { image_focus_x: clamp(formData.get("focusX")), image_focus_y: clamp(formData.get("focusY")) };
+}
+
 async function uploadImage(admin: any, shopId: string, file: FormDataEntryValue | null): Promise<string | null> {
   if (!(file instanceof File) || file.size === 0) return null;
   // 規格(サイズ・形式・容量)に合わない画像は弾く。
@@ -97,6 +106,7 @@ export async function createShopAdCard(shopId: string, formData: FormData) {
   const translations = await translate(p);
   const { error } = await admin.from("locapass_ad_cards").insert({
     ...p,
+    ...parseFocus(formData),
     title: `${shop.name}`.slice(0, 100),
     placement: "both",
     shop_id: shopId,
@@ -121,7 +131,7 @@ export async function updateShopAdCard(shopId: string, id: string, formData: For
   if (!current) throw new Error("カードが見つかりません");
   // 運営が却下したカードは、直しても自動では配信せず、運営の確認に戻す。
   const nextStatus = AUTO_APPROVE && current.status !== "rejected" ? "approved" : "pending";
-  const patch: Record<string, unknown> = { ...p, translations, status: nextStatus, reject_reason: null, updated_at: new Date().toISOString() };
+  const patch: Record<string, unknown> = { ...p, ...parseFocus(formData), translations, status: nextStatus, reject_reason: null, updated_at: new Date().toISOString() };
   if (newImage) patch.image_url = newImage;
   else if (removeImage) patch.image_url = null;
   const { data, error } = await admin.from("locapass_ad_cards").update(patch).eq("id", id).eq("shop_id", shopId).select("id");
