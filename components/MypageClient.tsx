@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
 import { useRouter } from "next/navigation";
-import { Camera, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
+import { Plus, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -378,10 +378,10 @@ export function MypageClient({
       {/* フォトの投稿ボタン(みんなのフォト /photo に写真・動画を投稿する) */}
       <Link
         href="/photo/new"
-        className="mx-4 mt-4 flex items-center justify-center gap-2 rounded-xl bg-cta-light px-4 py-3 text-sm font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover active:scale-95"
+        aria-label={t.photo.postButton.replace(/^＋\s*/, "")}
+        className="fixed left-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-hl-400 text-white shadow-lg shadow-black/30 active:scale-95 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-8"
       >
-        <Camera size={18} />
-        {t.photo.postButton}
+        <Plus size={28} />
       </Link>
 
       {/* メッセージ(1対1のDM)への入口。フォローし合った相手と、画像も含めてやり取りできる。 */}
@@ -702,9 +702,6 @@ export function MypageClient({
           myPhotos.length === 0 ? (
             <div className="space-y-4">
               <EmptyState text={t.mypage.noPhotos} />
-              <Link href="/photo/new" className="mx-auto block w-fit rounded-full bg-cta-light px-5 py-2 text-xs font-bold tracking-wide text-on-cta-gold transition hover:bg-cta-hover">
-                {t.photo.postButton}
-              </Link>
             </div>
           ) : (
             <MyPostsLibrary posts={myPhotos} portalNames={portalNames} />
