@@ -22,7 +22,7 @@ export function MurmurList({ items, locale, showShop = true, deletableIds = [] }
         return (
           <li key={m.id} className="flex gap-3 border-b border-tone-700/60 px-1 py-4">
             {showShop ? (
-              <Link href={href} className="shrink-0" aria-label={m.shopName}>
+              <Link href={`${href}/murmurs`} className="shrink-0" aria-label={`${m.shopName} VOICE`}>
                 {avatar}
               </Link>
             ) : (
