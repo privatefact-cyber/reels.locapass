@@ -45,7 +45,7 @@ export async function postMurmur(shopId: string, rawBody: string, imagePath: str
   try {
     const { admin, userId } = await authorize(shopId);
     const body = rawBody.replace(/\r\n/g, "\n").trim();
-    if (!body) return { ok: false, error: "ひとことを入力してください" };
+    if (!body) return { ok: false, error: "VOICEを入力してください" };
     if ([...body].length > MURMUR_MAX_LENGTH) return { ok: false, error: `${MURMUR_MAX_LENGTH}文字以内で入力してください` };
     if (containsNgWord(body)) return { ok: false, error: "使えない言葉が含まれています" };
 

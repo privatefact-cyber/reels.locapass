@@ -14,7 +14,7 @@ export function DeleteMurmurButton({ shopId, murmurId }: { shopId: string; murmu
         type="button"
         disabled={pending}
         onClick={() => {
-          if (!confirm("このひとことを削除しますか?")) return;
+          if (!confirm("このVOICEを削除しますか?")) return;
           setError(null);
           startTransition(async () => {
             const r = await deleteMurmur(shopId, murmurId);

@@ -8,7 +8,7 @@ export const POST_KINDS = [
   { key: "normal", label: "通常", icon: "📝", description: "写真や動画を、ずっと残る投稿として出す", path: "/me?kind=normal" },
   { key: "event", label: "イベント", icon: "🎉", description: "イベントやお知らせを載せる", path: "/posts?tab=event" },
   { key: "reel", label: "リール", icon: "🎬", description: "縦型の動画を出す", path: "/me?kind=reel" },
-  { key: "tweet", label: "ツイート", icon: "💬", description: "文字だけのひとこと(写真も1枚つけられます)", path: "/murmurs" },
+  { key: "tweet", label: "VOICE", icon: "💬", description: "文字だけの短い投稿(写真も1枚つけられます)", path: "/murmurs" },
 ] as const;
 
 /** 管理画面の右下に出る、1つだけの「投稿!」ボタン。押すと、投稿の種類を選ぶ画面が下から出る。 */

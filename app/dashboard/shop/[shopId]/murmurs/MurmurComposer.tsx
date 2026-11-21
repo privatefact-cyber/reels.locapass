@@ -75,13 +75,13 @@ export function MurmurComposer({ shopId }: { shopId: string }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <label htmlFor="murmur-text" className="sr-only">ひとこと</label>
+      <label htmlFor="murmur-text" className="sr-only">VOICE</label>
       <textarea
         id="murmur-text"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
-        placeholder="いまのひとことを、気軽に書いてください"
+        placeholder="いまの声(VOICE)を、気軽に書いてください"
         disabled={pending}
         // 16px未満だと、iPhoneでタップしたときに画面が拡大されてしまう。
         className="w-full resize-none rounded-xl border border-slate-300 p-3 text-base text-slate-900 focus:border-slate-900 focus:outline-none disabled:bg-slate-100"

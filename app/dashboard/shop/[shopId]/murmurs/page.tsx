@@ -9,7 +9,7 @@ import { DeleteMurmurButton } from "./DeleteMurmurButton";
 
 type Row = { id: string; body: string; image_url: string | null; created_at: string; author_user_id: string };
 
-/** 店舗管理画面の「ひとこと」。短い文章(と写真1枚)を、スマホからすぐ投稿できる。 */
+/** 店舗管理画面の「VOICE」。短い文章(と写真1枚)を、スマホからすぐ投稿できる。 */
 export default async function DashboardMurmursPage({ params }: { params: Promise<{ shopId: string }> }) {
   const { shopId } = await params;
   const view = await getShopForManager(shopId);
@@ -37,10 +37,10 @@ export default async function DashboardMurmursPage({ params }: { params: Promise
     <div className="mx-auto max-w-xl space-y-5">
       <section>
         <p className="text-xs text-slate-500">{shop.name}</p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">ツイート(ひとこと)</h1>
+        <h1 className="mt-1 text-2xl font-bold text-slate-900">VOICE</h1>
         <p className="mt-1 text-sm text-slate-600">
           動画を撮らなくても、{MURMUR_MAX_LENGTH}文字までの短い文章を、すぐ投稿できます。写真は1枚つけられます。
-          最新の1件は、お店のページに{MURMUR_VISIBLE_DAYS}日間表示されます。過去の分は、ひとこと一覧にずっと残ります。
+          最新の1件は、お店のページに{MURMUR_VISIBLE_DAYS}日間表示されます。過去の分は、VOICE一覧にずっと残ります。
         </p>
       </section>
 

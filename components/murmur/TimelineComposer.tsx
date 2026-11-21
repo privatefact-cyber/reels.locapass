@@ -80,13 +80,13 @@ export function TimelineComposer({ shops }: { shops: ComposerShop[] }) {
         ) : (
           <p className="text-sm font-semibold text-main"><bdi>{shop.name}</bdi></p>
         )}
-        <label htmlFor="timeline-murmur" className="sr-only">ひとこと</label>
+        <label htmlFor="timeline-murmur" className="sr-only">VOICE</label>
         <textarea
           id="timeline-murmur"
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={2}
-          placeholder="いまのひとことを、気軽に書いてください"
+          placeholder="いまの声(VOICE)を、気軽に書いてください"
           disabled={pending}
           // 16px未満だと、iPhoneでタップしたときに画面が拡大されてしまう。
           className="w-full resize-none bg-transparent text-base leading-relaxed text-main placeholder:text-tone-500 focus:outline-none disabled:opacity-60"
