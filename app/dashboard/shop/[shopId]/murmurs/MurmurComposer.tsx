@@ -7,7 +7,7 @@ import { MURMUR_BUCKET, MURMUR_MAX_LENGTH } from "@/lib/murmur/config";
 import { postMurmur, prepareMurmurImageUpload } from "./actions";
 
 /** 写真を長辺1600pxのJPEGに縮める(スマホの大きな写真でも、通信量とアップロード時間を抑える)。 */
-async function downscale(file: File, maxEdge = 1600, quality = 0.85): Promise<Blob> {
+export async function downscale(file: File, maxEdge = 1600, quality = 0.85): Promise<Blob> {
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));

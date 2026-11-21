@@ -10,6 +10,8 @@ import { MURMUR_PAGE_SIZE } from "@/lib/murmur/config";
 import { murmurLabels } from "@/lib/murmur/labels";
 import { listPortalMurmurs } from "@/lib/murmur/queries";
 import { MurmurList } from "@/components/murmur/MurmurList";
+import { TimelineComposer } from "@/components/murmur/TimelineComposer";
+import { getComposerShops } from "@/lib/murmur/composerShops";
 import { MurmurPager } from "@/components/murmur/MurmurPager";
 
 type PageParams = { prefecture: string };
@@ -42,6 +44,7 @@ export default async function PortalMurmursPage({ params, searchParams }: { para
   const t = murmurLabels(locale);
   const { items, total } = await listPortalMurmurs(ctx.supabase as never, ctx.portal.slug === HUB_SLUG ? null : ctx.portal.id, page);
   if (page > 1 && items.length === 0) notFound();
+  const composerShops = page === 1 ? await getComposerShops({ portalId: ctx.portal.slug === HUB_SLUG ? null : ctx.portal.id }) : [];
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-32 pt-6 sm:px-6">
@@ -51,7 +54,8 @@ export default async function PortalMurmursPage({ params, searchParams }: { para
       </Link>
       <h1 className="font-display mt-3 text-2xl font-semibold text-main">{t.timelineTitle}</h1>
       <p className="mt-1 text-sm text-tone-400">{t.timelineLead}</p>
-      <div className="mt-5">
+      <div className="mt-5 border-t border-tone-700/60">
+        {composerShops.length > 0 && <TimelineComposer shops={composerShops} />}
         <MurmurList items={items} locale={locale} />
         <MurmurPager basePath={`/${ctx.portal.slug}/murmurs`} page={page} total={total} pageSize={MURMUR_PAGE_SIZE} locale={locale} />
       </div>
