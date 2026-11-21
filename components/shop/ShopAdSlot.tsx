@@ -4,7 +4,7 @@ import { AdCarousel } from "@/components/shop/AdCarousel";
 import { AdSlotTracker } from "@/components/shop/AdSlotTracker";
 import { AD_SLOT_SIZES, type AdSlotMode, type AdSlotPosition } from "@/lib/recommend/adSlots";
 import type { AdCreative } from "@/lib/recommend/adCreatives";
-import { gridThumb } from "@/lib/images/thumb";
+import { resizedUrl } from "@/lib/images/imgUrl";
 
 /**
  * 広告枠(lib/recommend/adSlots.ts)。無料掲載の店舗ページだけで使う(有料掲載では呼び出し側が mode="off" にする)。
@@ -28,26 +28,64 @@ function AdLink({ href, className, children }: { href: string; className: string
   );
 }
 
+/** 画像つきカードの画像(横長)。サイズを変えられる画像は軽い版にし、変えられないURLはそのまま使う。 */
+function wideImage(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  return resizedUrl(url, { width: 640, height: 335, fit: "cover", quality: 75 }) ?? url;
+}
+
+/** 上の枠・下の枠で使うカード。画像があれば大きく見せ(上の枠=上半分、下の枠=左側)、無ければ文字だけの形にする。 */
 function AdCard({ creative, position, size }: { creative: AdCreative; position: AdSlotPosition; size: { width: number; height: number } }) {
-  const thumb = gridThumb(creative.imageUrl);
-  return (
-    <aside
-      aria-label={creative.label}
-      data-ad-slot={position}
-      className="h-full w-full overflow-hidden rounded-xl border border-tone-500/40 bg-panel-900/60"
-      style={{ minHeight: size.height }}
-    >
-      <AdLink href={creative.href} className="flex h-full min-h-[inherit] flex-col justify-between gap-2 p-3">
-        <div className="flex items-start gap-2">
-          {thumb && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={thumb} alt="" loading="lazy" decoding="async" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
-          )}
-          <div className="min-w-0 space-y-0.5">
-            <span className="inline-block rounded bg-tone-500/30 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-tone-200">{creative.label}</span>
-            <p className="line-clamp-2 text-sm font-bold text-tone-100">{creative.title}</p>
-            {creative.sub && <p className="line-clamp-3 text-xs text-tone-300">{creative.sub}</p>}
+  const img = wideImage(creative.imageUrl);
+  const labelChip = "inline-block rounded bg-tone-500/30 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-tone-200";
+  const frame = "h-full w-full overflow-hidden rounded-xl border border-tone-500/40 bg-panel-900/60";
+
+  if (img && position === "bottom") {
+    return (
+      <aside aria-label={creative.label} data-ad-slot={position} className={frame} style={{ minHeight: size.height }}>
+        <AdLink href={creative.href} className="flex h-full min-h-[inherit] items-stretch">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={img} alt="" loading="lazy" decoding="async" width={1200} height={628} className="w-[42%] shrink-0 object-cover" />
+          <div className="flex min-w-0 flex-1 flex-col justify-between gap-1 p-3">
+            <div className="space-y-0.5">
+              <span className={labelChip}>{creative.label}</span>
+              <p className="line-clamp-2 text-sm font-bold text-tone-100">{creative.title}</p>
+            </div>
+            <span className="self-end text-xs font-semibold text-tone-200 underline">{creative.cta} →</span>
           </div>
+        </AdLink>
+      </aside>
+    );
+  }
+
+  if (img) {
+    return (
+      <aside aria-label={creative.label} data-ad-slot={position} className={frame}>
+        <AdLink href={creative.href} className="flex h-full flex-col">
+          <div className="relative w-full" style={{ aspectRatio: "1200 / 628" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={img} alt="" loading="lazy" decoding="async" width={1200} height={628} className="absolute inset-0 h-full w-full object-cover" />
+            <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">{creative.label}</span>
+          </div>
+          <div className="flex flex-1 flex-col justify-between gap-1.5 p-3">
+            <div className="space-y-0.5">
+              <p className="line-clamp-2 text-sm font-bold text-tone-100">{creative.title}</p>
+              {creative.sub && <p className="line-clamp-2 text-xs text-tone-300">{creative.sub}</p>}
+            </div>
+            <span className="self-end text-xs font-semibold text-tone-200 underline">{creative.cta} →</span>
+          </div>
+        </AdLink>
+      </aside>
+    );
+  }
+
+  return (
+    <aside aria-label={creative.label} data-ad-slot={position} className={frame} style={{ minHeight: size.height }}>
+      <AdLink href={creative.href} className="flex h-full min-h-[inherit] flex-col justify-between gap-2 p-3">
+        <div className="space-y-0.5">
+          <span className={labelChip}>{creative.label}</span>
+          <p className="line-clamp-2 text-sm font-bold text-tone-100">{creative.title}</p>
+          {creative.sub && <p className="line-clamp-3 text-xs text-tone-300">{creative.sub}</p>}
         </div>
         <span className="self-end text-xs font-semibold text-tone-200 underline">{creative.cta} →</span>
       </AdLink>
