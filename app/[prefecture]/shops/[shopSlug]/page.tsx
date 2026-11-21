@@ -844,43 +844,7 @@ export default async function ShopDetailPage({
             </div>
           )}
 
-          {/* 無料プランは問い合わせを受けられない(アカウントが無い)ので出さない。lite以上のみ。 */}
-          {shopRow.plan && shopRow.plan !== "free" && <InquiryButton shopId={store.id} shopName={store.name} />}
-
-          {/* リンク・SNS */}
-          {(store.websiteUrl || store.snsLinks.x || store.snsLinks.instagram || store.snsLinks.line) && (
-            <div className="flex flex-wrap gap-2">
-              {store.websiteUrl && (
-                <LinkPill href={store.websiteUrl} icon={<Globe size={14} />} label={t.shop.officialSite} />
-              )}
-              {store.snsLinks.x && (
-                <LinkPill href={store.snsLinks.x} icon={<AtSign size={14} />} label="X" />
-              )}
-              {store.snsLinks.instagram && (
-                <LinkPill href={store.snsLinks.instagram} icon={<Camera size={14} />} label="Instagram" />
-              )}
-              {store.snsLinks.line && (
-                <LinkPill href={store.snsLinks.line} icon={<MessageCircle size={14} />} label="LINE" />
-              )}
-            </div>
-          )}
-
-          {/* 4. ご利用にあたって */}
-          {store.usageNotes && (
-            <div className="rounded-2xl border border-line/20 bg-panel-900/60 p-5 shadow-2xl backdrop-blur-xl">
-              <p className="text-xs font-semibold text-hl-300/70">{t.shop.usageNotes}</p>
-              <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm text-tone-300">{store.usageNotes}</p>
-            </div>
-          )}
-        </section>
-
-        {/* 広告枠(基本情報の下)。無料掲載の店舗ページだけ */}
-        <ShopAdSlot position="mid" mode={adMode} creatives={ads.mid} shopId={shopId} locale={locale} />
-
-        {/* 在庫車両(掲載アイテム) */}
-        <ShopItemsSection items={shopItems} totalCount={shopItems.length} portalSlug={site.slug} shopSlug={shopRow.slug} officialUrl={shopRow.url} locale={locale} t={t.items} />
-
-        {/* 料金表・イベント */}
+          {/* 料金表・イベント(地図の下) */}
         {hasPriceSection && (
         <section id="price" className="scroll-mt-24 space-y-3">
           {priceItems.length > 0 && (
@@ -941,6 +905,42 @@ export default async function ShopDetailPage({
           )}
         </section>
         )}
+
+          {/* 無料プランは問い合わせを受けられない(アカウントが無い)ので出さない。lite以上のみ。 */}
+          {shopRow.plan && shopRow.plan !== "free" && <InquiryButton shopId={store.id} shopName={store.name} />}
+
+          {/* 4. ご利用にあたって */}
+          {store.usageNotes && (
+            <div className="rounded-2xl border border-line/20 bg-panel-900/60 p-5 shadow-2xl backdrop-blur-xl">
+              <p className="text-xs font-semibold text-hl-300/70">{t.shop.usageNotes}</p>
+              <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm text-tone-300">{store.usageNotes}</p>
+            </div>
+          )}
+
+          {/* リンク・SNS(店舗情報の一番下) */}
+          {(store.websiteUrl || store.snsLinks.x || store.snsLinks.instagram || store.snsLinks.line) && (
+            <div className="flex flex-wrap gap-2">
+              {store.websiteUrl && (
+                <LinkPill href={store.websiteUrl} icon={<Globe size={14} />} label={t.shop.officialSite} />
+              )}
+              {store.snsLinks.x && (
+                <LinkPill href={store.snsLinks.x} icon={<AtSign size={14} />} label="X" />
+              )}
+              {store.snsLinks.instagram && (
+                <LinkPill href={store.snsLinks.instagram} icon={<Camera size={14} />} label="Instagram" />
+              )}
+              {store.snsLinks.line && (
+                <LinkPill href={store.snsLinks.line} icon={<MessageCircle size={14} />} label="LINE" />
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* 広告枠(基本情報の下)。無料掲載の店舗ページだけ */}
+        <ShopAdSlot position="mid" mode={adMode} creatives={ads.mid} shopId={shopId} locale={locale} />
+
+        {/* 在庫車両(掲載アイテム) */}
+        <ShopItemsSection items={shopItems} totalCount={shopItems.length} portalSlug={site.slug} shopSlug={shopRow.slug} officialUrl={shopRow.url} locale={locale} t={t.items} />
 
         {/* この近くのおすすめ(無料掲載の店舗ページだけ。有料の店が先に並び「PR」が付く) */}
         <ShopRecommendSlot items={relatedShops} title={t.shop.recommendTitle} prLabel={t.shop.recommendPr} />
