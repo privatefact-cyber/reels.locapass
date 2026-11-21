@@ -11,6 +11,9 @@ import { getActiveBoosts } from "@/lib/boost/getBoosts";
 import { boostText } from "@/lib/boost/text";
 import { JsonLd } from "@/components/JsonLd";
 import { AreaCategoryLinks } from "@/components/home/AreaCategoryLinks";
+import { VoiceStrip } from "@/components/murmur/VoiceStrip";
+import { listLatestMurmurs } from "@/lib/murmur/queries";
+import { createStaticClient } from "@/lib/supabase/static";
 import { SiteAnnouncement } from "@/components/home/SiteAnnouncement";
 
 export const revalidate = 60;
@@ -26,6 +29,8 @@ export default async function TopPage() {
   // 緊急ブーストが掲載中ならトップに入口を出す(失敗してもトップ全体は表示する)。
   const boosts = await getActiveBoosts().catch(() => []);
   const bt = boostText(locale);
+  // VOICE(店の短い投稿)の最新3件。失敗してもトップ全体は表示する。
+  const voices = await listLatestMurmurs(createStaticClient() as never, null, 3).catch(() => []);
 
   // NOWタブ: 今営業時間内の店舗の最新リール(店舗ごとに1本)。営業時間は店舗の曜日カレンダーで判定し、
   // 未記入の店舗は出さない。失敗してもトップ全体は表示する。
@@ -57,6 +62,8 @@ export default async function TopPage() {
           <span className="rounded-full bg-black px-3 py-0.5 text-xs font-black text-amber-300">{boosts.length}</span>
         </Link>
       )}
+
+      <VoiceStrip items={voices} href="/locapass/murmurs" locale={locale} />
 
       {/* リールフィード（検索・タグ絞り込み付き）。CASTタブはキャストが投稿したリール、
           SHOPタブは店舗のトップサムネイル（縦型メイン画像）グリッド。NOWは今営業中の

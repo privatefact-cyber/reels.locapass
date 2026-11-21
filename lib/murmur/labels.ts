@@ -10,6 +10,7 @@ type Labels = {
   backToShop: string;
   backToPortal: string;
   timelineLink: string;
+  seeMore: string;
 };
 
 const ja: Labels = {
@@ -24,6 +25,7 @@ const ja: Labels = {
   backToShop: "お店のページへ",
   backToPortal: "トップへ",
   timelineLink: "みんなのVOICE",
+  seeMore: "もっと見る",
 };
 const en: Labels = {
   shopTitle: "Shop VOICE",
@@ -37,6 +39,7 @@ const en: Labels = {
   backToShop: "Back to the shop",
   backToPortal: "Back to top",
   timelineLink: "VOICE",
+  seeMore: "See more",
 };
 const zh: Labels = {
   shopTitle: "店铺的VOICE",
@@ -50,6 +53,7 @@ const zh: Labels = {
   backToShop: "返回店铺页面",
   backToPortal: "返回首页",
   timelineLink: "大家的VOICE",
+  seeMore: "查看更多",
 };
 const ar: Labels = {
   shopTitle: "VOICE المتجر",
@@ -63,6 +67,7 @@ const ar: Labels = {
   backToShop: "العودة إلى صفحة المتجر",
   backToPortal: "العودة إلى الرئيسية",
   timelineLink: "VOICE",
+  seeMore: "عرض المزيد",
 };
 
 const TABLE: Record<string, Labels> = { ja, en, zh, ar };

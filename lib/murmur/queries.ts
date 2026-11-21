@@ -82,3 +82,18 @@ export async function listPortalMurmurs(db: Db, portalId: number | null, page: n
   if (error) throw new Error(`タイムラインの取得に失敗しました: ${error.message}`);
   return { items: ((data ?? []) as any[]).map(toItem).filter((x): x is MurmurItem => !!x), total: count ?? 0 };
 }
+
+/** トップに出す、最新のVOICE(新しい順に、少数)。portalId が null のときは全ポータル。 */
+export async function listLatestMurmurs(db: Db, portalId: number | null, limit = 3): Promise<MurmurItem[]> {
+  let q = db
+    .from("locapass_shop_murmurs")
+    .select(portalId == null ? SELECT : SELECT.replace("locapass_shops (", "locapass_shops!inner ("))
+    .is("deleted_at", null);
+  if (portalId != null) q = q.eq("locapass_shops.portal_id", portalId);
+  const { data, error } = await q.order("created_at", { ascending: false }).limit(limit);
+  if (error) {
+    console.error("listLatestMurmurs", error.message);
+    return [];
+  }
+  return ((data ?? []) as any[]).map(toItem).filter((x): x is MurmurItem => !!x);
+}

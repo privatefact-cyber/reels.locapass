@@ -1,5 +1,8 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { VoiceStrip } from "@/components/murmur/VoiceStrip";
+import { listLatestMurmurs } from "@/lib/murmur/queries";
+import { createStaticClient } from "@/lib/supabase/static";
 import { ReelFeed, type ReelItem } from "@/components/ReelFeed";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { getFeaturedShops } from "@/lib/shop/getFeaturedShops";
@@ -74,6 +77,8 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
   // このポータルの店舗の緊急ブーストだけ(失敗してもポータル全体は表示する)。
   const boosts = await getActiveBoosts(portal.id).catch(() => []);
   const bt = boostText(locale);
+  // VOICE(店の短い投稿)の最新3件。失敗してもポータル全体は表示する。
+  const voices = await listLatestMurmurs(createStaticClient() as never, portal.id, 3).catch(() => []);
 
   return (
     <div id="portal-feed" className="space-y-4">
@@ -117,6 +122,7 @@ export default async function AreaPortalPage({ params }: { params: Promise<PageP
           <span className="rounded-full bg-black px-3 py-0.5 text-xs font-black text-amber-300">{boosts.length}</span>
         </Link>
       )}
+      <VoiceStrip items={voices} href={`/${slug}/murmurs`} locale={locale} />
       <ReelFeed reels={reels} reelsHasMore={reelsHasMore} feedPortalId={portal.id} nowReels={nowReels} shops={shopItems} genreChoices={genreChoices} ads={ads} boostCount={boosts.length} boostHref={`/${slug}/boost`} />
       {locale === "ja" && <AreaCategoryLinks portalSlug={slug} />}
     </div>
