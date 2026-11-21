@@ -11,6 +11,7 @@ import { MURMUR_PAGE_SIZE } from "@/lib/murmur/config";
 import { murmurLabels } from "@/lib/murmur/labels";
 import { listShopMurmurs } from "@/lib/murmur/queries";
 import { MurmurList } from "@/components/murmur/MurmurList";
+import { getDeletableMurmurIds } from "@/lib/murmur/deletable";
 import { TimelineComposer } from "@/components/murmur/TimelineComposer";
 import { getComposerShops } from "@/lib/murmur/composerShops";
 import { MurmurPager } from "@/components/murmur/MurmurPager";
@@ -45,6 +46,7 @@ export default async function ShopMurmursPage({ params, searchParams }: { params
   const t = murmurLabels(locale);
   const { items, total } = await listShopMurmurs(ctx.supabase as never, ctx.shop.id, page);
   if (page > 1 && items.length === 0) notFound();
+  const deletableIds = await getDeletableMurmurIds(items);
   const composerShops = page === 1 ? await getComposerShops({ portalId: ctx.portal.id, shopId: ctx.shop.id }) : [];
   const base = `${shopPath(ctx.portal.slug, ctx.shop.slug)}/murmurs`;
 
@@ -57,7 +59,7 @@ export default async function ShopMurmursPage({ params, searchParams }: { params
       <h1 className="font-display mt-3 text-2xl font-semibold text-main"><bdi>{t.archiveTitle(ctx.shop.name)}</bdi></h1>
       <div className="mt-5 border-t border-tone-700/60">
         {composerShops.length > 0 && <TimelineComposer shops={composerShops} />}
-        <MurmurList items={items} locale={locale} showShop={false} />
+        <MurmurList items={items} deletableIds={deletableIds} locale={locale} showShop={false} />
         <MurmurPager basePath={base} page={page} total={total} pageSize={MURMUR_PAGE_SIZE} locale={locale} />
       </div>
     </div>

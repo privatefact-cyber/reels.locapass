@@ -10,6 +10,7 @@ import { MURMUR_PAGE_SIZE } from "@/lib/murmur/config";
 import { murmurLabels } from "@/lib/murmur/labels";
 import { listPortalMurmurs } from "@/lib/murmur/queries";
 import { MurmurList } from "@/components/murmur/MurmurList";
+import { getDeletableMurmurIds } from "@/lib/murmur/deletable";
 import { TimelineComposer } from "@/components/murmur/TimelineComposer";
 import { getComposerShops } from "@/lib/murmur/composerShops";
 import { MurmurPager } from "@/components/murmur/MurmurPager";
@@ -44,6 +45,7 @@ export default async function PortalMurmursPage({ params, searchParams }: { para
   const t = murmurLabels(locale);
   const { items, total } = await listPortalMurmurs(ctx.supabase as never, ctx.portal.slug === HUB_SLUG ? null : ctx.portal.id, page);
   if (page > 1 && items.length === 0) notFound();
+  const deletableIds = await getDeletableMurmurIds(items);
   const composerShops = page === 1 ? await getComposerShops({ portalId: ctx.portal.slug === HUB_SLUG ? null : ctx.portal.id }) : [];
 
   return (
@@ -56,7 +58,7 @@ export default async function PortalMurmursPage({ params, searchParams }: { para
       <p className="mt-1 text-sm text-tone-400">{t.timelineLead}</p>
       <div className="mt-5 border-t border-tone-700/60">
         {composerShops.length > 0 && <TimelineComposer shops={composerShops} />}
-        <MurmurList items={items} locale={locale} />
+        <MurmurList items={items} deletableIds={deletableIds} locale={locale} />
         <MurmurPager basePath={`/${ctx.portal.slug}/murmurs`} page={page} total={total} pageSize={MURMUR_PAGE_SIZE} locale={locale} />
       </div>
     </div>

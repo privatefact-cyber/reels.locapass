@@ -2,9 +2,10 @@ import Link from "@/components/i18n/LocaleLink";
 import { murmurLabels, murmurRelativeTime } from "@/lib/murmur/labels";
 import type { MurmurItem } from "@/lib/murmur/queries";
 import { shopPath } from "@/lib/locapass/publicUrls";
+import { DeleteVoiceButton } from "@/components/murmur/DeleteVoiceButton";
 
 /** ひとこと一覧・タイムライン(店のアイコン・店名・本文・写真・時間)。 */
-export function MurmurList({ items, locale, showShop = true }: { items: MurmurItem[]; locale: string; showShop?: boolean }) {
+export function MurmurList({ items, locale, showShop = true, deletableIds = [] }: { items: MurmurItem[]; locale: string; showShop?: boolean; deletableIds?: string[] }) {
   const t = murmurLabels(locale);
   if (items.length === 0) return <p className="py-10 text-center text-sm text-tone-400">{t.empty}</p>;
   // Threads・Xのように、カードで区切らず、細い線でつなげた1本のタイムライン。左にアイコン、右に店名・本文・写真。
@@ -41,6 +42,7 @@ export function MurmurList({ items, locale, showShop = true }: { items: MurmurIt
                 <time dateTime={m.createdAt} className="shrink-0 text-xs text-tone-400">
                   {murmurRelativeTime(m.createdAt, locale)}
                 </time>
+                {deletableIds.includes(m.id) && <DeleteVoiceButton shopId={m.shopId} murmurId={m.id} />}
               </div>
               <p dir="auto" className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-main">{m.body}</p>
               {m.imageUrl && (
