@@ -120,7 +120,7 @@ export function FoundReportForm({ loggedIn }: { loggedIn: boolean }) {
       </PetCard>
 
       <PetCard className="space-y-3">
-        <h3 className="text-sm font-extrabold text-[#2E9C7C]">📷 写真</h3>
+        <h3 className="text-sm font-extrabold text-[#2E9C7C]">写真</h3>
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview} alt="" className="max-h-64 w-full rounded-2xl object-cover" />

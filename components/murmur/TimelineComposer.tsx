@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { MURMUR_BUCKET, MURMUR_MAX_LENGTH } from "@/lib/murmur/config";
 import { postMurmur, prepareMurmurImageUpload } from "@/app/dashboard/shop/[shopId]/murmurs/actions";
@@ -103,7 +104,7 @@ export function TimelineComposer({ shops }: { shops: ComposerShop[] }) {
         <div className="mt-2 flex items-center gap-3">
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
           <button type="button" onClick={() => fileRef.current?.click()} disabled={pending} aria-label="写真をつける" className="text-xl leading-none disabled:opacity-50">
-            📷
+            <ImagePlus size={22} strokeWidth={1.75} />
           </button>
           <span className={`ml-auto text-xs tabular-nums ${over ? "font-bold text-red-500" : "text-tone-400"}`}>
             {length}/{MURMUR_MAX_LENGTH}

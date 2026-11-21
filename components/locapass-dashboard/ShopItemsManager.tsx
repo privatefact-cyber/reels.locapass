@@ -272,7 +272,7 @@ export function ShopItemsManager({ shopId, items, itemBaseUrl }: { shopId: strin
           <div className="rounded-lg border border-dashed border-sky-300 bg-sky-50 p-3">
             <input ref={certRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => scanCert(e.target.files?.[0])} />
             <button type="button" disabled={scanning} onClick={() => certRef.current?.click()} className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-bold text-white hover:bg-sky-700 disabled:opacity-50">
-              {scanning ? "読み取り中..." : "📷 車検証をスキャンして自動入力"}
+              {scanning ? "読み取り中..." : "車検証をスキャンして自動入力"}
             </button>
             <p className="mt-2 text-xs text-slate-600">車検証の全体が写るように撮影してください。車名・年式・車検・型式などが入ります(走行距離と価格は手入力です)。</p>
             {scanNote && <p className="mt-2 text-xs font-semibold text-emerald-700">{scanNote}</p>}

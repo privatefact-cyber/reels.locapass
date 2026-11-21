@@ -14,7 +14,7 @@ export function ShopAttributeBadges({ attributes }: { attributes: PublicShopAttr
           a.items.map((item) => (
             <li key={`${a.key}:${item.value}`} className="max-w-full">
               <Link href={`/tag/${a.key}?v=${item.value}`} className={CHIP}>
-                <span aria-hidden>{a.icon}</span>
+                {a.icon && <span aria-hidden>{a.icon}</span>}
                 <span className="font-semibold">{item.label}</span>
               </Link>
             </li>
@@ -23,7 +23,7 @@ export function ShopAttributeBadges({ attributes }: { attributes: PublicShopAttr
           <li key={a.key} className="max-w-full">
             {/* タップすると、この属性の店舗一覧(/tag/{属性})へ。 */}
             <Link href={`/tag/${a.key}`} className={CHIP}>
-              <span aria-hidden>{a.icon}</span>
+              {a.icon && <span aria-hidden>{a.icon}</span>}
               <span className="font-semibold">{a.label}</span>
               {a.details.length > 0 && <span className="truncate text-tone-400">{a.details.join(" / ")}</span>}
             </Link>

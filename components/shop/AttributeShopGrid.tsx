@@ -46,7 +46,7 @@ export function AttributeShopGrid({ icon, label, shops }: { icon: string; label:
             <ArrowLeft size={16} className="rtl:rotate-180" />
           </Link>
           <h1 className="min-w-0 flex-1 truncate text-sm font-bold text-main">
-            <span aria-hidden>{icon}</span> {label}
+            {icon && <span aria-hidden>{icon}</span>} {label}
             <span className="ms-2 text-xs font-normal text-tone-400">{tx.count(filtered.length)}</span>
           </h1>
           <button

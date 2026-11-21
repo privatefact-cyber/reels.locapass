@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { MURMUR_BUCKET, MURMUR_MAX_LENGTH } from "@/lib/murmur/config";
 import { postMurmur, prepareMurmurImageUpload } from "./actions";
@@ -108,7 +109,7 @@ export function MurmurComposer({ shopId }: { shopId: string }) {
           disabled={pending}
           className="flex h-12 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 active:bg-slate-100 disabled:opacity-50"
         >
-          📷 {photo ? "写真を変える" : "写真をつける"}
+          <ImagePlus size={18} strokeWidth={1.75} /> {photo ? "写真を変える" : "写真をつける"}
         </button>
         <span className={`ml-auto text-sm tabular-nums ${over ? "font-bold text-red-600" : "text-slate-400"}`}>
           {length}/{MURMUR_MAX_LENGTH}

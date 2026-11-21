@@ -28,7 +28,7 @@ export type AttributeDef = {
   /** true なら、店舗管理画面では選択肢をモーダルのチェックボックスで選ぶ(選択肢が多い属性用)。 */
   modal?: boolean;
   label: L10n;
-  /** 公開ページ・管理画面のチップに出す絵文字。 */
+  /** 公開ページ・管理画面のチップに出す絵文字。空文字なら出さない。 */
   icon: string;
   fields: AttributeField[];
 };
@@ -40,7 +40,7 @@ export const ATTRIBUTES = {
   cuisine: {
     modal: true,
     label: l("料理", "Cuisine", "料理", "المطبخ"),
-    icon: "🍜",
+    icon: "", // 料理は、ジャンルごとに絵文字が変わらず全部ラーメンに見えるため、絵文字なし
     fields: [
       {
         key: "genres",

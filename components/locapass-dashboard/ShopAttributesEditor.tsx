@@ -70,7 +70,7 @@ export function ShopAttributesEditor({
               onClick={() => ("modal" in ATTRIBUTES[key] && ATTRIBUTES[key].modal ? setModalKey(key) : save(key, on ? undefined : {}))}
               className={`${CHIP_BASE} ${on ? CHIP_ON : CHIP_OFF}`}
             >
-              <span aria-hidden>{ATTRIBUTES[key].icon}</span>
+              {ATTRIBUTES[key].icon && <span aria-hidden>{ATTRIBUTES[key].icon}</span>}
               {ATTRIBUTES[key].label.ja}
             </button>
           );
@@ -79,7 +79,7 @@ export function ShopAttributesEditor({
 
       {enabled.filter(isModalKey).map((key) => (
         <p key={key} className="text-sm text-slate-700">
-          <span aria-hidden>{ATTRIBUTES[key].icon}</span> {ATTRIBUTES[key].label.ja}:{" "}
+          {ATTRIBUTES[key].icon && <span aria-hidden>{ATTRIBUTES[key].icon}</span>} {ATTRIBUTES[key].label.ja}:{" "}
           <span className="font-semibold">{attributeDetailSummary(key, values[key], "ja").join(" / ") || "未選択"}</span>
           <button type="button" onClick={() => setModalKey(key)} className="ml-2 text-xs font-semibold text-indigo-600 underline">変更する</button>
           {values[key]?.auto === true && (
@@ -108,7 +108,7 @@ export function ShopAttributesEditor({
             .map((key) => (
               <div key={key} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">
-                  <span aria-hidden>{ATTRIBUTES[key].icon}</span> {ATTRIBUTES[key].label.ja}の詳細
+                  {ATTRIBUTES[key].icon && <span aria-hidden>{ATTRIBUTES[key].icon}</span>} {ATTRIBUTES[key].label.ja}の詳細
                   <span className="ml-2 text-xs font-normal text-slate-400">わかる項目だけで大丈夫です</span>
                 </p>
                 <div className="mt-3 space-y-3">
@@ -250,7 +250,7 @@ function ChecklistModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={ATTRIBUTES[attrKey].label.ja} onClick={onClose}>
       <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="border-b border-slate-200 px-5 py-4">
-          <p className="text-base font-bold text-slate-900"><span aria-hidden>{ATTRIBUTES[attrKey].icon}</span> {ATTRIBUTES[attrKey].label.ja}を選ぶ</p>
+          <p className="text-base font-bold text-slate-900">{ATTRIBUTES[attrKey].icon && <span aria-hidden>{ATTRIBUTES[attrKey].icon}</span>} {ATTRIBUTES[attrKey].label.ja}を選ぶ</p>
           <p className="mt-1 text-xs text-slate-500">当てはまるものをすべてチェックしてください(複数選べます)。お客様の検索やAIの案内に使われます。</p>
         </div>
         <div className="grid flex-1 grid-cols-1 gap-1 overflow-y-auto px-3 py-3 sm:grid-cols-2">

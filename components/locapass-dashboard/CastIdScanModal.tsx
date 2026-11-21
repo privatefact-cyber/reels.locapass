@@ -58,7 +58,7 @@ export function CastIdScanModal({ onResult }: { onResult: (fields: ScannedIdFiel
         onClick={() => setOpen(true)}
         className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
       >
-        📷 免許証・マイナンバーカードをスキャンして自動入力
+        免許証・マイナンバーカードをスキャンして自動入力
       </button>
 
       {open && (
