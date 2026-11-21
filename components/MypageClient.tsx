@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "@/components/i18n/LocaleLink";
 import { useRouter } from "next/navigation";
-import { Plus, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
+import { Camera, Plus, Zap, PenSquare, LogOut, MessageCircle, MessagesSquare, Play, Settings, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { NotificationBell } from "@/components/NotificationBell";
