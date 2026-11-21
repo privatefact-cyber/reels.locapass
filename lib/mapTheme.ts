@@ -11,14 +11,14 @@ export type MapStyleName = "positron" | "liberty" | "bright" | "dark" | "fiord";
 
 /** テーマ → 地図スタイル。ここに無いテーマ(default・nature など)は dark。 */
 export const THEME_MAP_STYLE: Record<string, MapStyleName> = {
-  cafe: "liberty",
-  warm: "liberty",
-  botanical: "liberty",
+  cafe: "positron",
+  warm: "positron",
+  botanical: "positron",
   pure: "positron",
   london: "positron",
   beauty: "positron",
-  newyork: "bright",
-  coastal: "bright",
+  newyork: "positron",
+  coastal: "positron",
   christmas: "fiord",
   default: "dark",
 };
